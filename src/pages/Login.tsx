@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme, COLOR_THEMES, type ColorTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock, User, Route, AlertCircle, Truck, MapPin, Package, ArrowRight } from "lucide-react";
+import { Lock, User, Route, AlertCircle, Truck, MapPin, Package, ArrowRight, Palette } from "lucide-react";
 import { motion } from "framer-motion";
 import logisticsBg from "@/assets/logistics-bg.jpg";
 
