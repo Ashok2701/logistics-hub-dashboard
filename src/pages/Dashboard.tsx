@@ -7,24 +7,26 @@ import {
   Car,
   MapPin,
   TrendingUp,
+  ArrowUpRight,
 } from "lucide-react";
-import { MetricCard, PageHeader } from "@/components/shared/MetricCard";
+import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/components/shared/MetricCard";
+import { motion } from "framer-motion";
 
 const metrics = [
   { title: "Total Vehicles", value: 142, icon: Truck, trend: { value: "+3 this week", positive: true }, status: "active" as const },
   { title: "Active Routes", value: 38, icon: Route, trend: { value: "12 in transit", positive: true }, status: "active" as const },
   { title: "Orders Pending", value: 67, icon: Package, trend: { value: "+8 today", positive: false }, status: "delayed" as const },
-  { title: "Orders Delivered", value: 1284, icon: PackageCheck, trend: { value: "+24 today", positive: true }, status: "delivered" as const },
+  { title: "Orders Delivered", value: "1,284", icon: PackageCheck, trend: { value: "+24 today", positive: true }, status: "delivered" as const },
   { title: "Drivers Available", value: 52, icon: Users, trend: { value: "6 on break", positive: true }, status: "active" as const },
   { title: "Vehicles Available", value: 89, icon: Car, trend: { value: "53 deployed", positive: true }, status: "idle" as const },
 ];
 
 const recentActivity = [
-  { id: "RT-1042", driver: "John Carter", vehicle: "VH-2281", status: "In Transit", eta: "14:30", statusType: "active" },
-  { id: "RT-1041", driver: "Sarah Miles", vehicle: "VH-1193", status: "Delayed", eta: "16:15", statusType: "delayed" },
-  { id: "RT-1040", driver: "Mike Chen", vehicle: "VH-3340", status: "Delivered", eta: "Completed", statusType: "delivered" },
-  { id: "RT-1039", driver: "Lisa Brown", vehicle: "VH-0892", status: "In Transit", eta: "15:45", statusType: "active" },
-  { id: "RT-1038", driver: "Tom Wilson", vehicle: "VH-1567", status: "Idle", eta: "—", statusType: "idle" },
+  { id: "RT-1042", driver: "John Carter", vehicle: "VH-2281", status: "In Transit", statusVariant: "active" as const, eta: "14:30" },
+  { id: "RT-1041", driver: "Sarah Miles", vehicle: "VH-1193", status: "Delayed", statusVariant: "warning" as const, eta: "16:15" },
+  { id: "RT-1040", driver: "Mike Chen", vehicle: "VH-3340", status: "Delivered", statusVariant: "success" as const, eta: "Completed" },
+  { id: "RT-1039", driver: "Lisa Brown", vehicle: "VH-0892", status: "In Transit", statusVariant: "active" as const, eta: "15:45" },
+  { id: "RT-1038", driver: "Tom Wilson", vehicle: "VH-1567", status: "Idle", statusVariant: "muted" as const, eta: "—" },
 ];
 
 export default function Dashboard() {
@@ -33,78 +35,118 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         subtitle="Fleet Status: 94% Operational"
+        actions={
+          <button className="flex items-center gap-1.5 text-sm text-primary font-medium hover:text-primary/80 transition-colors">
+            View Full Report <ArrowUpRight className="w-4 h-4" />
+          </button>
+        }
       />
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        {metrics.map((m) => (
-          <MetricCard key={m.title} {...m} />
+        {metrics.map((m, i) => (
+          <MetricCard key={m.title} {...m} index={i} />
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Routes */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-md overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-foreground">Active Routes</h3>
-            <span className="text-caption text-muted-foreground">{recentActivity.length} routes</span>
-          </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Route ID</th>
-                <th>Driver</th>
-                <th>Vehicle</th>
-                <th>Status</th>
-                <th>ETA</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentActivity.map((r) => (
-                <tr key={r.id} className={`status-ribbon-${r.statusType}`}>
-                  <td className="font-mono text-primary">{r.id}</td>
-                  <td>{r.driver}</td>
-                  <td className="font-mono">{r.vehicle}</td>
-                  <td>
-                    <span className={`inline-flex items-center gap-1.5 text-caption font-medium px-2 py-0.5 rounded-sm ${
-                      r.statusType === "active" ? "bg-primary/10 text-primary" :
-                      r.statusType === "delayed" ? "bg-warning/10 text-warning" :
-                      r.statusType === "delivered" ? "bg-success/10 text-success" :
-                      "bg-muted text-muted-foreground"
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        r.statusType === "active" ? "bg-primary" :
-                        r.statusType === "delayed" ? "bg-warning" :
-                        r.statusType === "delivered" ? "bg-success" :
-                        "bg-muted-foreground"
-                      }`} />
-                      {r.status}
-                    </span>
-                  </td>
-                  <td className="font-mono text-muted-foreground">{r.eta}</td>
+        <div className="lg:col-span-2">
+          <DataTableShell>
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Active Routes</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{recentActivity.length} routes being tracked</p>
+              </div>
+              <button className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View All</button>
+            </div>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Route ID</th>
+                  <th>Driver</th>
+                  <th>Vehicle</th>
+                  <th>Status</th>
+                  <th>ETA</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentActivity.map((r, i) => (
+                  <motion.tr 
+                    key={r.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.05, duration: 0.3 }}
+                    className="group cursor-pointer"
+                  >
+                    <td className="font-mono text-primary font-medium">{r.id}</td>
+                    <td className="text-foreground">{r.driver}</td>
+                    <td className="font-mono text-muted-foreground">{r.vehicle}</td>
+                    <td><StatusBadge status={r.status} variant={r.statusVariant} /></td>
+                    <td className="font-mono text-muted-foreground">{r.eta}</td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </DataTableShell>
         </div>
 
-        {/* Map Widget Placeholder */}
-        <div className="bg-card border border-border rounded-md overflow-hidden">
-          <div className="px-4 py-3 border-b border-border">
+        {/* Map Widget */}
+        <motion.div 
+          className="bg-card rounded-xl border border-border overflow-hidden shadow-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+        >
+          <div className="px-5 py-4 border-b border-border">
             <h3 className="text-sm font-semibold text-foreground">Vehicle Locations</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Real-time GPS tracking</p>
           </div>
-          <div className="h-80 flex items-center justify-center relative bg-secondary/30">
-            <div className="text-center">
-              <MapPin className="w-12 h-12 text-primary/30 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Map Integration</p>
-              <p className="text-caption text-muted-foreground mt-1">Connect Mapbox or Google Maps</p>
-            </div>
+          <div className="h-80 relative bg-secondary/20 overflow-hidden">
+            {/* Faux grid map */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="mapgrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#mapgrid)" />
+            </svg>
+
             {/* Simulated vehicle dots */}
-            <div className="absolute top-1/4 left-1/3 w-3 h-3 bg-primary rounded-full animate-pulse-dot" />
-            <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-success rounded-full" />
-            <div className="absolute bottom-1/3 left-1/2 w-3 h-3 bg-warning rounded-full animate-pulse-dot" />
+            {[
+              { top: "25%", left: "30%", color: "bg-primary", label: "VH-2281" },
+              { top: "45%", left: "65%", color: "bg-success", label: "VH-3340" },
+              { top: "60%", left: "40%", color: "bg-warning", label: "VH-1193" },
+              { top: "35%", left: "75%", color: "bg-primary", label: "VH-0892" },
+              { top: "70%", left: "25%", color: "bg-muted-foreground", label: "VH-1567" },
+            ].map((v, i) => (
+              <motion.div
+                key={i}
+                className="absolute group cursor-pointer"
+                style={{ top: v.top, left: v.left }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.6 + i * 0.1, type: "spring", bounce: 0.5 }}
+              >
+                <div className="relative">
+                  <div className={`w-3.5 h-3.5 rounded-full ${v.color} ring-4 ring-card shadow-lg`} />
+                  <div className={`absolute inset-0 rounded-full ${v.color} animate-ping opacity-30`} />
+                </div>
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-card border border-border rounded-md px-2 py-1 whitespace-nowrap shadow-elevated">
+                  <span className="text-[10px] font-mono font-medium text-foreground">{v.label}</span>
+                </div>
+              </motion.div>
+            ))}
+
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center opacity-40">
+                <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-1" />
+                <p className="text-[10px] text-muted-foreground">Mapbox Integration</p>
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

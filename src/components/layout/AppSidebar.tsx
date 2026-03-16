@@ -8,7 +8,6 @@ import {
   Users,
   Container,
   Link as LinkIcon,
-  MapPin,
   Navigation,
   Radar,
   BarChart3,
@@ -81,7 +80,7 @@ const menuItems: MenuItem[] = [
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(["Fleet Management", "Configuration"]);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(["Fleet Management"]);
   const location = useLocation();
 
   const toggleMenu = (label: string) => {
@@ -95,47 +94,57 @@ export function AppSidebar() {
     children?.some((c) => c.path === location.pathname);
 
   return (
-    <aside
-      className={cn(
-        "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 flex-shrink-0",
-        collapsed ? "w-16" : "w-64"
-      )}
+    <motion.aside
+      animate={{ width: collapsed ? 64 : 260 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="flex flex-col h-screen bg-sidebar border-r border-sidebar-border flex-shrink-0 relative"
     >
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
+      <div className="flex items-center h-[60px] px-4 border-b border-sidebar-border">
+        {!collapsed ? (
+          <motion.div 
+            className="flex items-center gap-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
               <Route className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-sm font-semibold text-sidebar-accent-foreground">Route Planner</h1>
-              <p className="text-[10px] text-sidebar-muted">for Sage X3</p>
+            <div className="overflow-hidden">
+              <h1 className="text-sm font-bold text-sidebar-accent-foreground leading-tight">Route Planner</h1>
+              <p className="text-[10px] text-sidebar-muted leading-tight">for Sage X3</p>
             </div>
-          </div>
-        )}
-        {collapsed && (
-          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center mx-auto">
+          </motion.div>
+        ) : (
+          <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center shadow-glow mx-auto">
             <Route className="w-5 h-5 text-primary-foreground" />
           </div>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2">
-        {menuItems.map((item) => (
-          <div key={item.label} className="mb-0.5">
+      <nav className="flex-1 overflow-y-auto py-3 px-2.5">
+        {menuItems.map((item, idx) => (
+          <div key={item.label} className={idx > 0 ? "mt-0.5" : ""}>
             {item.path ? (
               <Link
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 group relative",
                   isActive(item.path)
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-sidebar-accent text-sidebar-primary shadow-inner-glow"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
                 )}
               >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
+                {isActive(item.path) && (
+                  <motion.div
+                    layoutId="sidebar-active"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full gradient-primary"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                  />
+                )}
+                <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors", isActive(item.path) ? "text-sidebar-primary" : "text-sidebar-muted group-hover:text-sidebar-accent-foreground")} />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             ) : (
@@ -143,22 +152,22 @@ export function AppSidebar() {
                 <button
                   onClick={() => !collapsed && toggleMenu(item.label)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded text-sm w-full transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium w-full transition-all duration-200 group",
                     isChildActive(item.children)
-                      ? "text-sidebar-primary"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      ? "text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
                   )}
                 >
-                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors", isChildActive(item.children) ? "text-sidebar-primary" : "text-sidebar-muted group-hover:text-sidebar-accent-foreground")} />
                   {!collapsed && (
                     <>
                       <span className="flex-1 text-left">{item.label}</span>
-                      <ChevronDown
-                        className={cn(
-                          "w-3.5 h-3.5 transition-transform",
-                          expandedMenus.includes(item.label) && "rotate-180"
-                        )}
-                      />
+                      <motion.div
+                        animate={{ rotate: expandedMenus.includes(item.label) ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronDown className="w-3.5 h-3.5 text-sidebar-muted" />
+                      </motion.div>
                     </>
                   )}
                 </button>
@@ -168,22 +177,22 @@ export function AppSidebar() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="ml-4 border-l border-sidebar-border pl-2 py-0.5">
+                      <div className="ml-[18px] pl-4 border-l border-sidebar-border/50 py-1 space-y-0.5">
                         {item.children.map((child) => (
                           <Link
                             key={child.path}
                             to={child.path}
                             className={cn(
-                              "flex items-center gap-2.5 px-3 py-1.5 rounded text-sm transition-colors",
+                              "flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all duration-200 relative",
                               isActive(child.path)
-                                ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                ? "text-sidebar-primary font-medium bg-sidebar-accent/80"
+                                : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/40"
                             )}
                           >
-                            <child.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                            <child.icon className={cn("w-4 h-4 flex-shrink-0", isActive(child.path) ? "text-sidebar-primary" : "text-sidebar-muted")} />
                             <span>{child.label}</span>
                           </Link>
                         ))}
@@ -198,12 +207,14 @@ export function AppSidebar() {
       </nav>
 
       {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center h-10 border-t border-sidebar-border text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors"
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
-    </aside>
+      <div className="p-2.5 border-t border-sidebar-border">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-center justify-center w-full h-9 rounded-lg text-sidebar-muted hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/60 transition-all duration-200"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+      </div>
+    </motion.aside>
   );
 }

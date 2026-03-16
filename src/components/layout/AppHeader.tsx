@@ -1,9 +1,8 @@
-import { Bell, Search, Sun, Moon, LogOut, User } from "lucide-react";
+import { Bell, Search, Sun, Moon, LogOut, User, Command } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
 
 export function AppHeader() {
   const { theme, toggleTheme } = useTheme();
@@ -16,37 +15,65 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0">
+    <header className="h-[60px] border-b border-border bg-card/80 backdrop-blur-xl flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            className="w-64 pl-9 h-8 text-sm bg-background"
+        {/* Search */}
+        <div className="relative group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <input
+            placeholder="Search anything..."
+            className="w-72 h-9 pl-10 pr-12 rounded-lg bg-secondary/70 border border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20 focus:bg-secondary transition-all"
           />
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted text-[10px] text-muted-foreground font-mono border border-border">
+            <Command className="w-2.5 h-2.5" />K
+          </kbd>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme}>
-          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </Button>
+      <div className="flex items-center gap-1.5">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+        >
+          <motion.div
+            key={theme}
+            initial={{ rotate: -90, opacity: 0 }}
+            animate={{ rotate: 0, opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {theme === "dark" ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+          </motion.div>
+        </button>
 
-        <Button variant="ghost" size="icon" className="h-8 w-8 relative">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
-        </Button>
+        {/* Notifications */}
+        <button className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all relative">
+          <Bell className="w-[18px] h-[18px]" />
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full gradient-primary ring-2 ring-card" />
+        </button>
 
-        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-border">
-          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
-            <User className="w-3.5 h-3.5 text-primary" />
+        {/* Divider */}
+        <div className="w-px h-6 bg-border mx-2" />
+
+        {/* User */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
+            <User className="w-4 h-4 text-primary-foreground" />
           </div>
-          {user && (
-            <span className="text-sm font-medium text-foreground">{user.username}</span>
-          )}
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleLogout}>
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <div className="hidden sm:block">
+            {user && (
+              <>
+                <p className="text-sm font-medium text-foreground leading-tight">{user.username}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight capitalize">{user.role}</p>
+              </>
+            )}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+          >
+            <LogOut className="w-[18px] h-[18px]" />
+          </button>
         </div>
       </div>
     </header>
