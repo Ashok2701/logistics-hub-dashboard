@@ -153,29 +153,29 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-primary-foreground/60 uppercase tracking-wider mb-2 block">Username</label>
+                <label className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2 block">Username</label>
                 <div className="relative group">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30 group-focus-within:text-primary transition-colors" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
                   <input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter username"
                     autoFocus
-                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] text-primary-foreground placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-white/10 border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-white/15 transition-all text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-primary-foreground/60 uppercase tracking-wider mb-2 block">Password</label>
+                <label className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2 block">Password</label>
                 <div className="relative group">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30 group-focus-within:text-primary transition-colors" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter password"
-                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] text-primary-foreground placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-white/10 border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-white/15 transition-all text-sm"
                   />
                 </div>
               </div>
