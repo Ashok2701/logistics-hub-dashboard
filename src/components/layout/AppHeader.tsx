@@ -57,8 +57,8 @@ export function AppHeader() {
 
         {/* User */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
-            <User className="w-4 h-4 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+            <User className="w-4 h-4 text-white" />
           </div>
           <div className="hidden sm:block">
             {user && (

@@ -8,7 +8,7 @@ export function AppLayout() {
       {/* Sidebar stays in dark theme always */}
       <AppSidebar />
       {/* Main area forced to light theme */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[hsl(220,20%,97%)]">
+      <div className="flex-1 flex flex-col min-w-0 bg-[hsl(220,20%,97%)] light">
         <AppHeader />
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
