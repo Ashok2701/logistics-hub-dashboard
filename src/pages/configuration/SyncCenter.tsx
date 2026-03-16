@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageHeader, DataTableShell, StatusDot } from "@/components/shared/MetricCard";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, FileText } from "lucide-react";
+import { RefreshCw, FileText, ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 const syncData = [
   { object: "Customers", intacctCount: 1245, localCount: 1243, lastSync: "2026-03-16 08:30:00", status: "syncing" as const },
@@ -25,57 +25,56 @@ export default function SyncCenter() {
         title="Sync Center"
         subtitle="Data synchronization dashboard"
         actions={
-          <Button size="sm" onClick={() => handleSync("all")}>
-            <RefreshCw className={`w-4 h-4 mr-1 ${syncing === "all" ? "animate-spin" : ""}`} />
+          <button
+            onClick={() => handleSync("all")}
+            className="h-9 px-4 rounded-lg gradient-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-glow hover:shadow-glow-lg hover:opacity-90 transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing === "all" ? "animate-spin" : ""}`} />
             Sync All
-          </Button>
+          </button>
         }
       />
 
       <DataTableShell>
         <table className="data-table">
           <thead>
-            <tr>
-              <th>Object</th>
-              <th>Intacct Count</th>
-              <th>Local Count</th>
-              <th>Status</th>
-              <th>Last Sync</th>
-              <th>Actions</th>
-            </tr>
+            <tr><th>Object</th><th>Intacct Count</th><th>Local Count</th><th>Status</th><th>Last Sync</th><th>Actions</th></tr>
           </thead>
           <tbody>
-            {syncData.map((d) => (
-              <tr key={d.object}>
-                <td className="font-medium">{d.object}</td>
-                <td className="font-mono">{d.intacctCount.toLocaleString()}</td>
-                <td className="font-mono">{d.localCount.toLocaleString()}</td>
+            {syncData.map((d, i) => (
+              <motion.tr key={d.object} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
+                <td className="font-medium text-foreground">{d.object}</td>
+                <td className="font-mono text-foreground">{d.intacctCount.toLocaleString()}</td>
+                <td className="font-mono text-foreground">
+                  {d.localCount.toLocaleString()}
+                  {d.intacctCount !== d.localCount && (
+                    <span className="ml-2 text-[10px] font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded">
+                      -{d.intacctCount - d.localCount}
+                    </span>
+                  )}
+                </td>
                 <td>
                   <div className="flex items-center gap-2">
                     <StatusDot status={syncing === d.object || syncing === "all" ? "syncing" : d.status} />
-                    <span className="text-caption capitalize">{syncing === d.object || syncing === "all" ? "Syncing..." : d.status}</span>
+                    <span className="text-xs capitalize text-muted-foreground">{syncing === d.object || syncing === "all" ? "Syncing..." : d.status}</span>
                   </div>
                 </td>
-                <td className="font-mono text-caption text-muted-foreground">{d.lastSync}</td>
+                <td className="font-mono text-xs text-muted-foreground">{d.lastSync}</td>
                 <td>
                   <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-caption"
+                    <button
                       onClick={() => handleSync(d.object)}
                       disabled={syncing === d.object || syncing === "all"}
+                      className="h-7 px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-all disabled:opacity-40"
                     >
-                      <RefreshCw className={`w-3.5 h-3.5 mr-1 ${syncing === d.object ? "animate-spin" : ""}`} />
-                      Sync
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-7 text-caption">
-                      <FileText className="w-3.5 h-3.5 mr-1" />
-                      Logs
-                    </Button>
+                      <RefreshCw className={`w-3 h-3 ${syncing === d.object ? "animate-spin" : ""}`} /> Sync
+                    </button>
+                    <button className="h-7 px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">
+                      <FileText className="w-3 h-3" /> Logs
+                    </button>
                   </div>
                 </td>
-              </tr>
+              </motion.tr>
             ))}
           </tbody>
         </table>
