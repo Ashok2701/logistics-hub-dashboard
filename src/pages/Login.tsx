@@ -182,8 +182,8 @@ export default function Login() {
 
               <div className="flex items-center justify-between pt-1">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded border-primary-foreground/20 bg-transparent text-primary" />
-                  <span className="text-xs text-primary-foreground/40">Remember me</span>
+                  <input type="checkbox" className="w-3.5 h-3.5 rounded border-white/20 bg-transparent text-primary" />
+                  <span className="text-xs text-white/40">Remember me</span>
                 </label>
                 <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors">Forgot password?</button>
               </div>
