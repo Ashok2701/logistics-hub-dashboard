@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme, COLOR_THEMES, type ColorTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock, User, Route, AlertCircle, Truck, MapPin, Package, ArrowRight } from "lucide-react";
+import { Lock, User, Route, AlertCircle, Truck, MapPin, Package, ArrowRight, Palette } from "lucide-react";
 import { motion } from "framer-motion";
 import logisticsBg from "@/assets/logistics-bg.jpg";
 
@@ -13,6 +14,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { colorTheme, setColorTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,9 +207,48 @@ export default function Login() {
             </form>
 
             <div className="mt-6 pt-5 border-t border-white/10 text-center">
-              <p className="text-xs text-white/35">
+              <p className="text-xs text-white/35 mb-3">
                 Demo credentials: <span className="font-mono text-primary/80">admin</span> / <span className="font-mono text-primary/80">admin</span>
               </p>
+            </div>
+
+            {/* Color Theme Selector */}
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Palette className="w-3.5 h-3.5 text-white/40" />
+                <span className="text-[11px] uppercase tracking-widest text-white/40 font-medium">Theme</span>
+              </div>
+              <div className="flex items-center justify-center gap-2.5">
+                {COLOR_THEMES.map((t) => {
+                  const [h, s, l] = t.hue.split(" ");
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setColorTheme(t.id)}
+                      title={t.label}
+                      className="group relative"
+                    >
+                      <span
+                        className={`block w-7 h-7 rounded-full border-2 transition-all duration-200 ${
+                          colorTheme === t.id
+                            ? "border-white scale-110 shadow-lg"
+                            : "border-white/20 hover:border-white/50 hover:scale-105"
+                        }`}
+                        style={{ background: `hsl(${h}, ${s}, ${l})` }}
+                      />
+                      {colorTheme === t.id && (
+                        <motion.span
+                          layoutId="theme-check"
+                          className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold"
+                        >
+                          ✓
+                        </motion.span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

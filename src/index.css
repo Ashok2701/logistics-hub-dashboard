@@ -67,6 +67,58 @@
     --gradient-end: 263 70% 50%;
   }
 
+  /* ── Color Theme Overrides ── */
+  [data-color-theme="green"] {
+    --primary: 152 69% 41%;
+    --ring: 152 69% 41%;
+    --gradient-start: 152 69% 41%;
+    --gradient-end: 170 60% 35%;
+    --sidebar-primary: 152 69% 41%;
+    --sidebar-ring: 152 69% 41%;
+    --chart-1: 152 69% 41%;
+    --status-active: 152 69% 41%;
+  }
+  [data-color-theme="orange"] {
+    --primary: 25 95% 53%;
+    --ring: 25 95% 53%;
+    --gradient-start: 25 95% 53%;
+    --gradient-end: 15 80% 45%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-ring: 25 95% 53%;
+    --chart-1: 25 95% 53%;
+    --status-active: 25 95% 53%;
+  }
+  [data-color-theme="purple"] {
+    --primary: 263 70% 50%;
+    --ring: 263 70% 50%;
+    --gradient-start: 263 70% 50%;
+    --gradient-end: 280 65% 60%;
+    --sidebar-primary: 263 70% 50%;
+    --sidebar-ring: 263 70% 50%;
+    --chart-1: 263 70% 50%;
+    --status-active: 263 70% 50%;
+  }
+  [data-color-theme="teal"] {
+    --primary: 180 70% 40%;
+    --ring: 180 70% 40%;
+    --gradient-start: 180 70% 40%;
+    --gradient-end: 195 60% 45%;
+    --sidebar-primary: 180 70% 40%;
+    --sidebar-ring: 180 70% 40%;
+    --chart-1: 180 70% 40%;
+    --status-active: 180 70% 40%;
+  }
+  [data-color-theme="rose"] {
+    --primary: 340 75% 55%;
+    --ring: 340 75% 55%;
+    --gradient-start: 340 75% 55%;
+    --gradient-end: 320 65% 50%;
+    --sidebar-primary: 340 75% 55%;
+    --sidebar-ring: 340 75% 55%;
+    --chart-1: 340 75% 55%;
+    --status-active: 340 75% 55%;
+  }
+
   .dark {
     --background: 224 71% 4%;
     --foreground: 220 20% 92%;
