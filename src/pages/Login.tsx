@@ -204,9 +204,9 @@ export default function Login() {
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.06)] text-center">
-              <p className="text-xs text-primary-foreground/30">
-                Demo credentials: <span className="font-mono text-primary/70">admin</span> / <span className="font-mono text-primary/70">admin</span>
+            <div className="mt-6 pt-5 border-t border-white/10 text-center">
+              <p className="text-xs text-white/35">
+                Demo credentials: <span className="font-mono text-primary/80">admin</span> / <span className="font-mono text-primary/80">admin</span>
               </p>
             </div>
           </div>
