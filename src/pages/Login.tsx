@@ -127,18 +127,18 @@ export default function Login() {
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <div className="w-full max-w-sm">
-          {/* Glass card */}
-          <div className="glass rounded-2xl p-8 shadow-elevated">
+          {/* Light frosted glass card */}
+          <div className="rounded-2xl p-8 shadow-2xl backdrop-blur-2xl bg-white/[0.12] border border-white/20">
             {/* Mobile logo */}
             <div className="flex items-center gap-3 mb-8 lg:hidden">
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
                 <Route className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-lg font-semibold text-primary-foreground">Vanguard TMS</span>
+              <span className="text-lg font-semibold text-white">Vanguard TMS</span>
             </div>
 
-            <h2 className="text-xl font-semibold text-primary-foreground mb-1">Welcome back</h2>
-            <p className="text-sm text-primary-foreground/40 mb-6">Sign in to your command center</p>
+            <h2 className="text-xl font-semibold text-white mb-1">Welcome back</h2>
+            <p className="text-sm text-white/50 mb-6">Sign in to your command center</p>
 
             {error && (
               <motion.div 
