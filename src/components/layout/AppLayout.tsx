@@ -4,9 +4,11 @@ import { AppHeader } from "./AppHeader";
 
 export function AppLayout() {
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Sidebar stays in dark theme always */}
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main area forced to light theme */}
+      <div className="flex-1 flex flex-col min-w-0 bg-[hsl(220,20%,97%)] light">
         <AppHeader />
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />

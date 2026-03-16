@@ -97,7 +97,10 @@ export function AppSidebar() {
     <motion.aside
       animate={{ width: collapsed ? 64 : 260 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className="flex flex-col h-screen bg-sidebar border-r border-sidebar-border flex-shrink-0 relative"
+      className="flex flex-col h-screen border-r border-[hsl(225,25%,10%)] flex-shrink-0 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, hsl(224, 71%, 4%) 0%, hsl(217, 91%, 10%) 50%, hsl(263, 70%, 12%) 100%)',
+      }}
     >
       {/* Logo */}
       <div className="flex items-center h-[60px] px-4 border-b border-sidebar-border">

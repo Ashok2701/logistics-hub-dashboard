@@ -15,14 +15,14 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-[60px] border-b border-border bg-card/80 backdrop-blur-xl flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
+    <header className="h-[60px] border-b border-[hsl(220,13%,91%)] bg-white/90 backdrop-blur-xl flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
       <div className="flex items-center gap-3">
         {/* Search */}
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             placeholder="Search anything..."
-            className="w-72 h-9 pl-10 pr-12 rounded-lg bg-secondary/70 border border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20 focus:bg-secondary transition-all"
+            className="w-72 h-9 pl-10 pr-12 rounded-lg bg-[hsl(220,14%,96%)] border border-transparent text-sm text-[hsl(222,47%,11%)] placeholder:text-[hsl(220,9%,46%)] focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20 focus:bg-white transition-all"
           />
           <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted text-[10px] text-muted-foreground font-mono border border-border">
             <Command className="w-2.5 h-2.5" />K
@@ -57,8 +57,8 @@ export function AppHeader() {
 
         {/* User */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
-            <User className="w-4 h-4 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+            <User className="w-4 h-4 text-white" />
           </div>
           <div className="hidden sm:block">
             {user && (

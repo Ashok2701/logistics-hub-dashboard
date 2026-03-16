@@ -127,18 +127,18 @@ export default function Login() {
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <div className="w-full max-w-sm">
-          {/* Glass card */}
-          <div className="glass rounded-2xl p-8 shadow-elevated">
+          {/* Light frosted glass card */}
+          <div className="rounded-2xl p-8 shadow-2xl backdrop-blur-2xl bg-white/[0.12] border border-white/20">
             {/* Mobile logo */}
             <div className="flex items-center gap-3 mb-8 lg:hidden">
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
                 <Route className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-lg font-semibold text-primary-foreground">Vanguard TMS</span>
+              <span className="text-lg font-semibold text-white">Vanguard TMS</span>
             </div>
 
-            <h2 className="text-xl font-semibold text-primary-foreground mb-1">Welcome back</h2>
-            <p className="text-sm text-primary-foreground/40 mb-6">Sign in to your command center</p>
+            <h2 className="text-xl font-semibold text-white mb-1">Welcome back</h2>
+            <p className="text-sm text-white/50 mb-6">Sign in to your command center</p>
 
             {error && (
               <motion.div 
@@ -153,37 +153,37 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-primary-foreground/60 uppercase tracking-wider mb-2 block">Username</label>
+                <label className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2 block">Username</label>
                 <div className="relative group">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30 group-focus-within:text-primary transition-colors" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
                   <input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter username"
                     autoFocus
-                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] text-primary-foreground placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-white/10 border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-white/15 transition-all text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-primary-foreground/60 uppercase tracking-wider mb-2 block">Password</label>
+                <label className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2 block">Password</label>
                 <div className="relative group">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30 group-focus-within:text-primary transition-colors" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter password"
-                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] text-primary-foreground placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+                    className="w-full h-11 pl-11 pr-4 rounded-lg bg-white/10 border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-white/15 transition-all text-sm"
                   />
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-1">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded border-primary-foreground/20 bg-transparent text-primary" />
-                  <span className="text-xs text-primary-foreground/40">Remember me</span>
+                  <input type="checkbox" className="w-3.5 h-3.5 rounded border-white/20 bg-transparent text-primary" />
+                  <span className="text-xs text-white/40">Remember me</span>
                 </label>
                 <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors">Forgot password?</button>
               </div>
@@ -204,9 +204,9 @@ export default function Login() {
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.06)] text-center">
-              <p className="text-xs text-primary-foreground/30">
-                Demo credentials: <span className="font-mono text-primary/70">admin</span> / <span className="font-mono text-primary/70">admin</span>
+            <div className="mt-6 pt-5 border-t border-white/10 text-center">
+              <p className="text-xs text-white/35">
+                Demo credentials: <span className="font-mono text-primary/80">admin</span> / <span className="font-mono text-primary/80">admin</span>
               </p>
             </div>
           </div>
