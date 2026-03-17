@@ -140,7 +140,7 @@ export default function Login() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.45 }}
               >
-                <button type="button" className="text-xs text-white/50 hover:text-white/80 transition-colors">
+                <button type="button" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                   Forgot Password?
                 </button>
               </motion.div>
