@@ -97,13 +97,13 @@ export default function Login() {
               >
                 <label className="text-sm font-medium text-foreground/80 mb-2 block">Username</label>
                 <div className="relative group">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-white/30 group-focus-within:text-primary transition-colors" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter your username"
                     autoFocus
-                    className="w-full h-11 pl-10 pr-4 rounded-lg bg-white/[0.07] border border-white/[0.12] text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm backdrop-blur-sm"
+                    className="w-full h-11 pl-10 pr-4 rounded-lg bg-background/60 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
                   />
                 </div>
               </motion.div>
