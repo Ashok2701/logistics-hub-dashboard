@@ -91,7 +91,7 @@ export default function Login() {
               </h1>
 
               <p className="text-base text-white/45 leading-relaxed max-w-md mb-8">
-                A unified platform for fleet management, route planning, live tracking, and delivery optimization with seamless Sage X3 integration.
+                A unified platform for fleet management, route planning, live tracking, and delivery optimization with seamless Sage Intacct integration.
               </p>
             </motion.div>
 
