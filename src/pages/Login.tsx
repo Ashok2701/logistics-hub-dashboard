@@ -178,7 +178,7 @@ export default function Login() {
         </div>
 
         {/* Footer */}
-        <p className="text-[11px] text-white/20 text-center mt-5">
+        <p className="text-[11px] text-white/60 text-center mt-5 drop-shadow">
           © 2026 Route Planner for Sage Intacct. All rights reserved.
         </p>
       </motion.div>
