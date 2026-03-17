@@ -66,7 +66,7 @@ export default function Login() {
             </div>
             <div>
               <span className="text-xl font-bold text-white tracking-tight">Route Planner</span>
-              <span className="text-sm font-light text-white/40 ml-2">for Sage X3</span>
+              <span className="text-sm font-light text-white/40 ml-2">for Sage Intacct</span>
             </div>
           </motion.div>
 
@@ -91,7 +91,7 @@ export default function Login() {
               </h1>
 
               <p className="text-base text-white/45 leading-relaxed max-w-md mb-8">
-                A unified platform for fleet management, route planning, live tracking, and delivery optimization with seamless Sage X3 integration.
+                A unified platform for fleet management, route planning, live tracking, and delivery optimization with seamless Sage Intacct integration.
               </p>
             </motion.div>
 
@@ -102,7 +102,7 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65, duration: 0.5 }}
             >
-              {["Fleet Tracking", "Route Optimization", "Sage X3", "Real-time GPS"].map((tag) => (
+              {["Fleet Tracking", "Route Optimization", "Sage Intacct", "Real-time GPS"].map((tag) => (
                 <span
                   key={tag}
                   className="px-3 py-1.5 rounded-full text-[11px] font-medium text-white/60 bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm"
@@ -330,7 +330,7 @@ export default function Login() {
 
         {/* Footer */}
         <div className="px-8 pb-5 text-center">
-          <p className="text-[11px] text-muted-foreground/50">© 2026 Route Planner for Sage X3. All rights reserved.</p>
+          <p className="text-[11px] text-muted-foreground/50">© 2026 Route Planner for Sage Intacct. All rights reserved.</p>
         </div>
       </motion.div>
     </div>
