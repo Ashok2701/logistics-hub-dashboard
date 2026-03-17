@@ -167,12 +167,12 @@ export default function Login() {
 
             {/* Demo credentials */}
             <motion.p
-              className="text-xs text-white/30 text-center mt-6"
+              className="text-xs text-muted-foreground text-center mt-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
             >
-              Demo: <code className="font-mono text-primary/80 bg-white/[0.06] px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono text-primary/80 bg-white/[0.06] px-1.5 py-0.5 rounded">admin</code>
+              Demo: <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin</code>
             </motion.p>
           </div>
         </div>
