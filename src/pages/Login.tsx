@@ -30,43 +30,18 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full flex">
-      {/* Left: Background image */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden">
+      {/* Left: Background image — 70% */}
+      <div className="hidden lg:flex lg:w-[70%] relative overflow-hidden">
         <img
           src={loginBg}
           alt="Fleet tracking map"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/40" />
-
-        {/* Overlay branding */}
-        <motion.div
-          className="relative z-10 flex flex-col justify-end p-10"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="bg-black/40 backdrop-blur-md rounded-xl p-5 max-w-sm border border-white/10">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-primary/80 flex items-center justify-center">
-                <Route className="w-4.5 h-4.5 text-primary-foreground" />
-              </div>
-              <div>
-                <h2 className="text-white font-bold text-sm">Route Planner</h2>
-                <p className="text-white/50 text-[10px] uppercase tracking-widest">Sage Intacct</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-white/60 text-xs">
-              <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Fleet</span>
-              <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> Mobile</span>
-              <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Tracking</span>
-            </div>
-          </div>
-        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/30" />
       </div>
 
-      {/* Right: Login form panel */}
-      <div className="w-full lg:w-[460px] xl:w-[500px] flex flex-col items-center justify-center bg-background px-8 py-12 relative">
+      {/* Right: Login form panel — 30% */}
+      <div className="w-full lg:w-[30%] min-w-[340px] flex flex-col items-center justify-center bg-background px-6 py-10 relative">
         {/* Mobile-only background */}
         <img
           src={loginBg}
