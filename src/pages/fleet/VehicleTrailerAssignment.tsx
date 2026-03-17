@@ -14,7 +14,7 @@ export default function VehicleTrailerAssignment() {
   const filtered = mockData.filter((d) => d.vehicle.toLowerCase().includes(search.toLowerCase()) || d.trailer.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <PageHeader title="Vehicle-Trailer Assignment" subtitle="Assign trailers to vehicles"
         actions={
           <button className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200">

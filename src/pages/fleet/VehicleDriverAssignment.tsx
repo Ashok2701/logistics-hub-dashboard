@@ -15,7 +15,7 @@ export default function VehicleDriverAssignment() {
   const filtered = mockData.filter((d) => d.driver.toLowerCase().includes(search.toLowerCase()) || d.vehicle.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <PageHeader title="Vehicle-Driver Assignment" subtitle="Assign drivers to vehicles"
         actions={
           <button className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200">

@@ -15,7 +15,7 @@ export default function Trailers() {
   const filtered = mockData.filter((d) => d.type.toLowerCase().includes(search.toLowerCase()) || d.code.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <PageHeader title="Trailers" subtitle="Manage fleet trailers"
         actions={
           <button className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200">

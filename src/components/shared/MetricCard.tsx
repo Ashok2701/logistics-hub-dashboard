@@ -26,7 +26,7 @@ export function MetricCard({ title, value, icon: Icon, trend, status = "active",
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
       whileHover={{ y: -3, transition: { duration: 0.2 } }}
-      className="bg-card rounded-2xl p-5 shadow-premium hover:shadow-card-hover transition-all duration-200 border border-border/60 relative overflow-hidden group"
+      className="bg-card rounded-2xl p-5 shadow-premium hover:shadow-elevated transition-all duration-200 border border-border/40 relative overflow-hidden group cursor-default"
     >
       {/* Subtle top accent line */}
       <div className={cn(
@@ -104,7 +104,7 @@ interface DataTableShellProps {
 export function DataTableShell({ children }: DataTableShellProps) {
   return (
     <motion.div 
-      className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-premium"
+      className="bg-card rounded-2xl border border-border/40 overflow-hidden shadow-premium hover:shadow-elevated transition-shadow duration-300"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.1 }}
