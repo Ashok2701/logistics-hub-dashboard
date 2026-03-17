@@ -68,16 +68,16 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
     <motion.div 
-      className="flex items-center justify-between mb-6"
+      className="flex items-center justify-between mb-8"
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <div>
-        <h1 className="text-heading font-semibold text-foreground">{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
+        <h1 className="text-xl font-semibold text-foreground tracking-tight">{title}</h1>
+        {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex items-center gap-3">{actions}</div>}
     </motion.div>
   );
 }
