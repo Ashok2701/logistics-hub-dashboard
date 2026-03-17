@@ -330,7 +330,7 @@ export default function Login() {
 
         {/* Footer */}
         <div className="px-8 pb-5 text-center">
-          <p className="text-[11px] text-muted-foreground/50">© 2026 Route Planner for Sage X3. All rights reserved.</p>
+          <p className="text-[11px] text-muted-foreground/50">© 2026 Route Planner for Sage Intacct. All rights reserved.</p>
         </div>
       </motion.div>
     </div>

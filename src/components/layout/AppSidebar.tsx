@@ -94,7 +94,7 @@ export function AppSidebar() {
             </div>
             <div className="overflow-hidden">
               <h1 className="text-sm font-bold text-primary-foreground leading-tight">Route Planner</h1>
-              <p className="text-[10px] text-primary-foreground/50 leading-tight">for Sage X3</p>
+              <p className="text-[10px] text-primary-foreground/50 leading-tight">for Sage Intacct</p>
             </div>
           </motion.div>
         ) : (
