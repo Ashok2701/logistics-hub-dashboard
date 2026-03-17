@@ -66,7 +66,7 @@ export default function Login() {
             </div>
             <div>
               <span className="text-xl font-bold text-white tracking-tight">Route Planner</span>
-              <span className="text-sm font-light text-white/40 ml-2">for Sage X3</span>
+              <span className="text-sm font-light text-white/40 ml-2">for Sage Intacct</span>
             </div>
           </motion.div>
 
