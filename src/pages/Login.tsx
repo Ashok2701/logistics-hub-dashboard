@@ -95,7 +95,7 @@ export default function Login() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
               >
-                <label className="text-sm font-medium text-white/80 mb-2 block">Username</label>
+                <label className="text-sm font-medium text-foreground/80 mb-2 block">Username</label>
                 <div className="relative group">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-white/30 group-focus-within:text-primary transition-colors" />
                   <input
