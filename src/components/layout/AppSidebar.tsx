@@ -164,10 +164,10 @@ export function AppSidebar() {
                             key={child.path}
                             to={child.path}
                             className={cn(
-                              "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-150 relative",
+                            "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-200 relative",
                               isActive(child.path)
-                                ? "text-primary font-medium bg-primary/6"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                ? "text-primary font-medium bg-primary/8 shadow-sm"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
                             )}
                           >
                             <child.icon className={cn("w-4 h-4 flex-shrink-0", isActive(child.path) ? "text-primary" : "text-muted-foreground/70")} />

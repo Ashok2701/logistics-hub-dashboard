@@ -129,7 +129,7 @@ export function StatusBadge({ status, variant = "muted" }: StatusBadgeProps) {
   };
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md", styles[variant])}>
+    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full", styles[variant])}>
       <span className={cn("w-1.5 h-1.5 rounded-full", {
         "bg-primary": variant === "active" || variant === "primary",
         "bg-warning": variant === "warning",
