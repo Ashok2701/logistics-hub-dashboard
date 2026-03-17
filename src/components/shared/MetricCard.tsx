@@ -14,47 +14,36 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, icon: Icon, trend, status = "active", index = 0 }: MetricCardProps) {
   const iconBg = {
-    active: "bg-primary/10 text-primary",
-    delayed: "bg-warning/10 text-warning",
-    delivered: "bg-success/10 text-success",
+    active: "bg-primary/8 text-primary",
+    delayed: "bg-warning/8 text-warning",
+    delivered: "bg-success/8 text-success",
     idle: "bg-muted text-muted-foreground",
-  }[status];
-
-  const ribbon = {
-    active: "border-l-primary",
-    delayed: "border-l-warning",
-    delivered: "border-l-success",
-    idle: "border-l-muted-foreground/40",
   }[status];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
-      className={cn(
-        "relative bg-card rounded-xl border-l-[3px] p-5 shadow-card hover:shadow-card-hover transition-shadow duration-300 gradient-border overflow-hidden",
-        ribbon
-      )}
+      transition={{ delay: index * 0.05, duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+      className="bg-card rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow duration-300 border border-border"
     >
-      <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-primary/[0.02] -translate-y-8 translate-x-8" />
-      <div className="flex items-start justify-between relative">
+      <div className="flex items-start justify-between">
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">{title}</p>
-          <p className="text-2xl font-bold text-foreground mt-2 font-mono tracking-tight">{value}</p>
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
+          <p className="text-2xl font-bold text-foreground mt-2 tracking-tight">{value}</p>
           {trend && (
             <div className="flex items-center gap-1 mt-2">
               <span className={cn(
                 "text-[11px] font-medium px-1.5 py-0.5 rounded-md",
-                trend.positive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                trend.positive ? "bg-success/8 text-success" : "bg-destructive/8 text-destructive"
               )}>
                 {trend.positive ? "↑" : "↓"} {trend.value}
               </span>
             </div>
           )}
         </div>
-        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center", iconBg)}>
+        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", iconBg)}>
           <Icon className="w-5 h-5" />
         </div>
       </div>
@@ -77,7 +66,7 @@ export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
       transition={{ duration: 0.3 }}
     >
       <div>
-        <h1 className="text-heading font-bold text-foreground">{title}</h1>
+        <h1 className="text-heading font-semibold text-foreground">{title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -93,7 +82,7 @@ export function StatusDot({ status }: StatusDotProps) {
   const colors = {
     active: "bg-success",
     syncing: "bg-primary animate-pulse-dot",
-    idle: "bg-status-idle",
+    idle: "bg-muted-foreground/40",
     error: "bg-destructive",
   };
 
@@ -110,7 +99,7 @@ export function DataTableShell({ children }: DataTableShellProps) {
       className="bg-card rounded-xl border border-border overflow-hidden shadow-card"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.1 }}
+      transition={{ duration: 0.35, delay: 0.1 }}
     >
       {children}
     </motion.div>
@@ -124,15 +113,15 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, variant = "muted" }: StatusBadgeProps) {
   const styles = {
-    active: "bg-primary/10 text-primary border-primary/20",
-    warning: "bg-warning/10 text-warning border-warning/20",
-    success: "bg-success/10 text-success border-success/20",
-    muted: "bg-muted text-muted-foreground border-border",
-    primary: "bg-primary/10 text-primary border-primary/20",
+    active: "bg-primary/8 text-primary",
+    warning: "bg-warning/8 text-warning",
+    success: "bg-success/8 text-success",
+    muted: "bg-muted text-muted-foreground",
+    primary: "bg-primary/8 text-primary",
   };
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-md border", styles[variant])}>
+    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md", styles[variant])}>
       <span className={cn("w-1.5 h-1.5 rounded-full", {
         "bg-primary": variant === "active" || variant === "primary",
         "bg-warning": variant === "warning",

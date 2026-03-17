@@ -78,10 +78,10 @@ export function AppSidebar() {
     <motion.aside
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className="flex flex-col h-screen flex-shrink-0 relative overflow-hidden bg-primary shadow-xl"
+      className="flex flex-col h-screen flex-shrink-0 relative overflow-hidden bg-card border-r border-border"
     >
       {/* Logo */}
-      <div className="flex items-center h-[60px] px-4 border-b border-primary-foreground/10">
+      <div className="flex items-center h-[60px] px-4 border-b border-border">
         {!collapsed ? (
           <motion.div
             className="flex items-center gap-3"
@@ -89,17 +89,17 @@ export function AppSidebar() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 flex items-center justify-center flex-shrink-0">
-              <Route className="w-5 h-5 text-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+              <Route className="w-4 h-4 text-primary-foreground" />
             </div>
             <div className="overflow-hidden">
-              <h1 className="text-sm font-bold text-primary-foreground leading-tight">Route Planner</h1>
-              <p className="text-[10px] text-primary-foreground/50 leading-tight">for Sage Intacct</p>
+              <h1 className="text-sm font-semibold text-foreground leading-tight">Route Planner</h1>
+              <p className="text-[10px] text-muted-foreground leading-tight">for Sage Intacct</p>
             </div>
           </motion.div>
         ) : (
-          <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 flex items-center justify-center mx-auto">
-            <Route className="w-5 h-5 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
+            <Route className="w-4 h-4 text-primary-foreground" />
           </div>
         )}
       </div>
@@ -112,20 +112,20 @@ export function AppSidebar() {
               <Link
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 group relative",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 group relative",
                   isActive(item.path)
-                    ? "bg-primary-foreground/20 text-primary-foreground shadow-sm"
-                    : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                    ? "bg-primary/8 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 {isActive(item.path) && (
                   <motion.div
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary-foreground"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-primary"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                   />
                 )}
-                <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive(item.path) ? "text-primary-foreground" : "text-primary-foreground/50")} />
+                <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive(item.path) ? "text-primary" : "text-muted-foreground")} />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             ) : (
@@ -133,18 +133,18 @@ export function AppSidebar() {
                 <button
                   onClick={() => !collapsed && toggleMenu(item.label)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium w-full transition-all duration-200 group",
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium w-full transition-all duration-150 group",
                     isChildActive(item.children)
-                      ? "text-primary-foreground"
-                      : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isChildActive(item.children) ? "text-primary-foreground" : "text-primary-foreground/50")} />
+                  <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isChildActive(item.children) ? "text-foreground" : "text-muted-foreground")} />
                   {!collapsed && (
                     <>
                       <span className="flex-1 text-left">{item.label}</span>
                       <motion.div animate={{ rotate: expandedMenus.includes(item.label) ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                        <ChevronDown className="w-3.5 h-3.5 text-primary-foreground/40" />
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60" />
                       </motion.div>
                     </>
                   )}
@@ -155,22 +155,22 @@ export function AppSidebar() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="ml-[18px] pl-4 border-l border-primary-foreground/15 py-1 space-y-0.5">
+                      <div className="ml-[18px] pl-4 border-l border-border py-1 space-y-0.5">
                         {item.children.map((child) => (
                           <Link
                             key={child.path}
                             to={child.path}
                             className={cn(
-                              "flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all duration-200 relative",
+                              "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-150 relative",
                               isActive(child.path)
-                                ? "text-primary-foreground font-medium bg-primary-foreground/15"
-                                : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/8"
+                                ? "text-primary font-medium bg-primary/6"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
                             )}
                           >
-                            <child.icon className={cn("w-4 h-4 flex-shrink-0", isActive(child.path) ? "text-primary-foreground" : "text-primary-foreground/40")} />
+                            <child.icon className={cn("w-4 h-4 flex-shrink-0", isActive(child.path) ? "text-primary" : "text-muted-foreground/70")} />
                             <span>{child.label}</span>
                           </Link>
                         ))}
@@ -185,21 +185,21 @@ export function AppSidebar() {
       </nav>
 
       {/* User info + collapse */}
-      <div className="border-t border-primary-foreground/10 p-3">
+      <div className="border-t border-border p-3">
         {!collapsed && user && (
           <div className="flex items-center gap-3 px-2 py-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-primary-foreground/20 flex items-center justify-center flex-shrink-0">
-              <Users className="w-4 h-4 text-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Users className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="overflow-hidden">
-              <p className="text-[13px] font-medium text-primary-foreground leading-tight truncate">Logged in as</p>
-              <p className="text-[11px] text-primary-foreground/50 leading-tight truncate capitalize">{user.username}</p>
+              <p className="text-[13px] font-medium text-foreground leading-tight truncate">Logged in as</p>
+              <p className="text-[11px] text-muted-foreground leading-tight truncate capitalize">{user.username}</p>
             </div>
           </div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center justify-center w-full h-9 rounded-lg text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-all duration-200"
+          className="flex items-center justify-center w-full h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
