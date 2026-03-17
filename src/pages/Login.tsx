@@ -70,7 +70,7 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <h2 className="text-2xl font-bold text-white">Login</h2>
+              <h2 className="text-2xl font-bold text-foreground">Login</h2>
             </motion.div>
 
             {/* Error */}
