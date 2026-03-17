@@ -29,69 +29,43 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-background">
-      {/* Left: Hero image */}
-      <div className="hidden lg:block lg:w-[60%] xl:w-[65%] relative overflow-hidden">
-        <img
-          src={loginHero}
-          alt="Fleet logistics tracking map"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(222,47%,6%)]/60 via-[hsl(222,47%,6%)]/30 to-[hsl(222,47%,6%)]/70" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(222,47%,6%)]/50 to-transparent" />
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden">
+      {/* Full-screen background */}
+      <img
+        src={loginHero}
+        alt="Fleet logistics background"
+        className="absolute inset-0 w-full h-full object-cover scale-105 blur-[2px]"
+      />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-[hsl(222,47%,6%)]/65" />
 
-        {/* Overlay branding */}
-        <div className="absolute bottom-10 left-10 right-10 z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2">
-              Fleet Intelligence, Simplified.
-            </h2>
-            <p className="text-white/60 text-sm max-w-md">
-              Real-time tracking, route optimization, and fleet management — all in one platform.
-            </p>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Right: Login panel */}
-      <div className="w-full lg:w-[40%] xl:w-[35%] flex flex-col items-center justify-center px-6 sm:px-10 py-10 relative">
-        {/* Mobile background */}
-        <img src={loginHero} alt="" className="absolute inset-0 w-full h-full object-cover lg:hidden" />
-        <div className="absolute inset-0 bg-background/95 backdrop-blur-sm lg:hidden" />
-
-        <motion.div
-          className="relative z-10 w-full max-w-[380px]"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-        >
+      {/* Centered modal card */}
+      <motion.div
+        className="relative z-10 w-full max-w-[420px] mx-4"
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <div className="bg-card rounded-2xl p-8 sm:p-9 shadow-[0_25px_60px_-12px_rgb(0_0_0/0.4)] border border-border/30">
           {/* Brand header */}
-          <div className="bg-card rounded-2xl p-5 mb-8 border border-border/60 shadow-premium">
-            <div className="flex items-center gap-3.5 mb-3">
-              <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
-                <Route className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-[15px] font-bold text-foreground tracking-tight leading-tight">Route Planner</h1>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mt-0.5">Sage Intacct</p>
-              </div>
+          <div className="flex items-center gap-3.5 mb-2">
+            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
+              <Route className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div className="flex items-center gap-5 text-muted-foreground text-xs pt-1 border-t border-border/50">
-              <span className="flex items-center gap-1.5 pt-2.5"><Truck className="w-3.5 h-3.5" /> Fleet</span>
-              <span className="flex items-center gap-1.5 pt-2.5"><Smartphone className="w-3.5 h-3.5" /> Mobile</span>
-              <span className="flex items-center gap-1.5 pt-2.5"><MapPin className="w-3.5 h-3.5" /> Tracking</span>
+            <div>
+              <h1 className="text-[15px] font-bold text-foreground tracking-tight leading-tight">Route Planner</h1>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mt-0.5">Sage Intacct</p>
             </div>
+          </div>
+          <div className="flex items-center gap-5 text-muted-foreground text-xs mb-8 pb-0 pt-2.5 border-t border-border/40 mt-3">
+            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Fleet</span>
+            <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> Mobile</span>
+            <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Tracking</span>
           </div>
 
           {/* Welcome */}
-          <motion.div className="mb-7" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-            <h2 className="text-[26px] font-bold text-foreground tracking-tight">Welcome back</h2>
-            <p className="text-sm text-muted-foreground mt-1.5">Sign in to manage your fleet operations.</p>
-          </motion.div>
+          <h2 className="text-[26px] font-bold text-foreground tracking-tight">Welcome back</h2>
+          <p className="text-sm text-muted-foreground mt-1.5 mb-7">Sign in to manage your fleet operations.</p>
 
           {/* Error */}
           <AnimatePresence>
@@ -110,7 +84,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Username */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <div>
               <label className="text-sm font-semibold text-foreground mb-2 block">Username</label>
               <div className="relative group">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground/60 group-focus-within:text-primary transition-colors duration-200" />
@@ -122,10 +96,10 @@ export default function Login() {
                   className="w-full h-12 pl-11 pr-4 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-card transition-all duration-200 text-sm"
                 />
               </div>
-            </motion.div>
+            </div>
 
             {/* Password */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <div>
               <label className="text-sm font-semibold text-foreground mb-2 block">Password</label>
               <div className="relative group">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground/60 group-focus-within:text-primary transition-colors duration-200" />
@@ -149,43 +123,36 @@ export default function Login() {
                   Forgot Password?
                 </button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Submit */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 active:scale-[0.98] text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 uppercase tracking-wider"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                ) : (
-                  "Log In"
-                )}
-              </button>
-            </motion.div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 active:scale-[0.98] text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 uppercase tracking-wider"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              ) : (
+                "Log In"
+              )}
+            </button>
           </form>
 
           {/* Demo credentials */}
-          <motion.p
-            className="text-xs text-muted-foreground text-center mt-7"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.45 }}
-          >
+          <p className="text-xs text-muted-foreground text-center mt-7">
             Demo:{" "}
             <code className="font-mono text-primary bg-primary/8 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
             {" / "}
             <code className="font-mono text-primary bg-primary/8 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
         {/* Footer */}
-        <p className="relative z-10 text-[11px] text-muted-foreground/60 text-center mt-auto pt-8">
+        <p className="text-[11px] text-white/40 text-center mt-6">
           © 2026 Route Planner for Sage Intacct. All rights reserved.
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
