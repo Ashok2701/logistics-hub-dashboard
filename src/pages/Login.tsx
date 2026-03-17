@@ -29,44 +29,78 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Background map */}
-      <img
-        src={loginBg}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 bg-black/40" />
+    <div className="min-h-screen w-full flex">
+      {/* Left: Background image */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden">
+        <img
+          src={loginBg}
+          alt="Fleet tracking map"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/40" />
 
-      {/* Login Card */}
-      <motion.div
-        className="relative z-10 w-full max-w-[420px] mx-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Branded header strip */}
-        <div className="bg-primary/80 backdrop-blur-md rounded-t-xl px-6 py-5 flex items-center gap-3 border border-white/10">
-          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <Route className="w-5 h-5 text-primary-foreground" />
+        {/* Overlay branding */}
+        <motion.div
+          className="relative z-10 flex flex-col justify-end p-10"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="bg-black/40 backdrop-blur-md rounded-xl p-5 max-w-sm border border-white/10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/80 flex items-center justify-center">
+                <Route className="w-4.5 h-4.5 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-sm">Route Planner</h2>
+                <p className="text-white/50 text-[10px] uppercase tracking-widest">Sage Intacct</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-white/60 text-xs">
+              <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Fleet</span>
+              <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> Mobile</span>
+              <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Tracking</span>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-primary-foreground tracking-tight">Route Planner</h1>
-            <p className="text-[11px] text-primary-foreground/70 uppercase tracking-wider font-medium">Transport Management System</p>
-          </div>
-        </div>
+        </motion.div>
+      </div>
 
-        {/* Glass card body */}
-        <div className="backdrop-blur-xl bg-white/15 rounded-b-xl px-8 py-8 shadow-2xl shadow-black/30 border border-white/20 border-t-0">
-          {/* Welcome text */}
+      {/* Right: Login form panel */}
+      <div className="w-full lg:w-[460px] xl:w-[500px] flex flex-col items-center justify-center bg-background px-8 py-12 relative">
+        {/* Mobile-only background */}
+        <img
+          src={loginBg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover lg:hidden"
+        />
+        <div className="absolute inset-0 bg-background/95 lg:hidden" />
+
+        <motion.div
+          className="relative z-10 w-full max-w-[360px]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Logo & Title */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
+              <Route className="w-5.5 h-5.5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">Route Planner</h1>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Transport Management System</p>
+            </div>
+          </div>
+
+          {/* Welcome */}
           <motion.div
-            className="text-center mb-6"
+            className="mb-7"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.15 }}
           >
-            <h2 className="text-xl font-bold text-white">Welcome Back!</h2>
-            <p className="text-sm text-white/60 mt-1">Sign in to manage your fleet.</p>
+            <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
+            <p className="text-sm text-muted-foreground mt-1">Sign in to manage your fleet operations.</p>
           </motion.div>
 
           {/* Error */}
@@ -76,30 +110,30 @@ export default function Login() {
                 initial={{ opacity: 0, y: -8, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -8, height: 0 }}
-                className="flex items-center gap-2.5 p-3 rounded-lg bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-sm mb-5"
+                className="flex items-center gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm mb-5"
               >
-                <AlertCircle className="w-4 h-4 text-red-300 flex-shrink-0" />
-                <span className="text-red-200 text-[13px]">{error}</span>
+                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                <span className="text-destructive text-[13px]">{error}</span>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Username */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
+              transition={{ delay: 0.2 }}
             >
-              <label className="text-sm font-semibold text-white/80 mb-1.5 block">Username</label>
+              <label className="text-sm font-semibold text-foreground mb-1.5 block">Username</label>
               <div className="relative group">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary-foreground transition-colors" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g., admin"
                   autoFocus
-                  className="w-full h-11 pl-10 pr-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all text-sm"
+                  className="w-full h-11 pl-10 pr-4 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all text-sm"
                 />
               </div>
             </motion.div>
@@ -108,43 +142,43 @@ export default function Login() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.25 }}
             >
-              <label className="text-sm font-semibold text-white/80 mb-1.5 block">Password</label>
+              <label className="text-sm font-semibold text-foreground mb-1.5 block">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary-foreground transition-colors" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full h-11 pl-10 pr-11 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all text-sm"
+                  className="w-full h-11 pl-10 pr-11 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               <div className="flex justify-end mt-2">
-                <button type="button" className="text-xs text-white/50 hover:text-white/80 font-medium transition-colors">
+                <button type="button" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
                   Forgot Password?
                 </button>
               </div>
             </motion.div>
 
-            {/* Sign In Button */}
+            {/* Sign In */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
+              transition={{ delay: 0.3 }}
             >
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-primary/30 uppercase tracking-wide"
+                className="w-full h-11 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-primary/20 uppercase tracking-wide"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -157,32 +191,20 @@ export default function Login() {
 
           {/* Demo credentials */}
           <motion.p
-            className="text-xs text-white/40 text-center mt-5"
+            className="text-xs text-muted-foreground text-center mt-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.45 }}
           >
-            Demo: <code className="font-mono text-primary-foreground bg-white/10 px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono text-primary-foreground bg-white/10 px-1.5 py-0.5 rounded">admin</code>
+            Demo: <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin</code>
           </motion.p>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Footer features */}
-      <motion.div
-        className="relative z-10 flex items-center gap-6 mt-6 text-white/80 text-xs"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-      >
-        <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Fleet Management</span>
-        <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> Mobile App</span>
-        <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Live Tracking</span>
-      </motion.div>
-
-      {/* Copyright */}
-      <p className="relative z-10 text-[11px] text-white/50 text-center mt-3">
-        © 2026 Route Planner for Sage Intacct. All rights reserved.
-      </p>
+        {/* Copyright */}
+        <p className="relative z-10 text-[11px] text-muted-foreground text-center mt-auto pt-8">
+          © 2026 Route Planner for Sage Intacct. All rights reserved.
+        </p>
+      </div>
     </div>
   );
 }
