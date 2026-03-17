@@ -133,10 +133,10 @@ export function AppSidebar() {
                 <button
                   onClick={() => !collapsed && toggleMenu(item.label)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium w-full transition-all duration-150 group",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium w-full transition-all duration-200 group",
                     isChildActive(item.children)
                       ? "text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                   )}
                 >
                   <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isChildActive(item.children) ? "text-foreground" : "text-muted-foreground")} />
