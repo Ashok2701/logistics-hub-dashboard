@@ -78,7 +78,7 @@ export function AppSidebar() {
     <motion.aside
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className="flex flex-col h-screen flex-shrink-0 relative overflow-hidden bg-card border-r border-border"
+      className="flex flex-col h-screen flex-shrink-0 relative overflow-hidden bg-card border-r border-border/70 shadow-[1px_0_8px_-3px_rgb(0_0_0/0.06)]"
     >
       {/* Logo */}
       <div className="flex items-center h-[60px] px-4 border-b border-border">
@@ -112,10 +112,10 @@ export function AppSidebar() {
               <Link
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 group relative",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group relative",
                   isActive(item.path)
-                    ? "bg-primary/8 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                 )}
               >
                 {isActive(item.path) && (
@@ -133,10 +133,10 @@ export function AppSidebar() {
                 <button
                   onClick={() => !collapsed && toggleMenu(item.label)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium w-full transition-all duration-150 group",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium w-full transition-all duration-200 group",
                     isChildActive(item.children)
                       ? "text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                   )}
                 >
                   <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isChildActive(item.children) ? "text-foreground" : "text-muted-foreground")} />
@@ -164,10 +164,10 @@ export function AppSidebar() {
                             key={child.path}
                             to={child.path}
                             className={cn(
-                              "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-150 relative",
+                            "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-200 relative",
                               isActive(child.path)
-                                ? "text-primary font-medium bg-primary/6"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                ? "text-primary font-medium bg-primary/8 shadow-sm"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
                             )}
                           >
                             <child.icon className={cn("w-4 h-4 flex-shrink-0", isActive(child.path) ? "text-primary" : "text-muted-foreground/70")} />

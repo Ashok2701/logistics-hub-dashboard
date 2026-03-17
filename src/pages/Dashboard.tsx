@@ -92,7 +92,7 @@ export default function Dashboard() {
 
         {/* Map Widget */}
         <motion.div 
-          className="bg-card rounded-xl border border-border overflow-hidden shadow-card"
+          className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-premium"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.35 }}

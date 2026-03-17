@@ -25,15 +25,23 @@ export function MetricCard({ title, value, icon: Icon, trend, status = "active",
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-      whileHover={{ y: -2, transition: { duration: 0.2 } }}
-      className="bg-card rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow duration-300 border border-border"
+      whileHover={{ y: -3, transition: { duration: 0.2 } }}
+      className="bg-card rounded-2xl p-5 shadow-premium hover:shadow-card-hover transition-all duration-200 border border-border/60 relative overflow-hidden group"
     >
+      {/* Subtle top accent line */}
+      <div className={cn(
+        "absolute top-0 left-0 right-0 h-[2px] opacity-60",
+        status === "active" && "bg-primary",
+        status === "delayed" && "bg-warning",
+        status === "delivered" && "bg-success",
+        status === "idle" && "bg-muted-foreground/30",
+      )} />
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
-          <p className="text-2xl font-bold text-foreground mt-2 tracking-tight">{value}</p>
+          <p className="text-[28px] font-bold text-foreground mt-2.5 tracking-tight leading-none">{value}</p>
           {trend && (
-            <div className="flex items-center gap-1 mt-2">
+            <div className="flex items-center gap-1 mt-3">
               <span className={cn(
                 "text-[11px] font-medium px-1.5 py-0.5 rounded-md",
                 trend.positive ? "bg-success/8 text-success" : "bg-destructive/8 text-destructive"
@@ -43,7 +51,7 @@ export function MetricCard({ title, value, icon: Icon, trend, status = "active",
             </div>
           )}
         </div>
-        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", iconBg)}>
+        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105", iconBg)}>
           <Icon className="w-5 h-5" />
         </div>
       </div>
@@ -96,7 +104,7 @@ interface DataTableShellProps {
 export function DataTableShell({ children }: DataTableShellProps) {
   return (
     <motion.div 
-      className="bg-card rounded-xl border border-border overflow-hidden shadow-card"
+      className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-premium"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.1 }}
@@ -121,7 +129,7 @@ export function StatusBadge({ status, variant = "muted" }: StatusBadgeProps) {
   };
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md", styles[variant])}>
+    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full", styles[variant])}>
       <span className={cn("w-1.5 h-1.5 rounded-full", {
         "bg-primary": variant === "active" || variant === "primary",
         "bg-warning": variant === "warning",

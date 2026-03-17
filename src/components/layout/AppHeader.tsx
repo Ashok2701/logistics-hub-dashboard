@@ -15,7 +15,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-[56px] border-b border-border bg-card flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
+    <header className="h-[56px] border-b border-border/70 bg-card/80 backdrop-blur-xl flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
       {/* Search */}
       <div className="flex items-center gap-3">
         <div className="relative group">
