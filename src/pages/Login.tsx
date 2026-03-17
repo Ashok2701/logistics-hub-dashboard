@@ -36,7 +36,7 @@ export default function Login() {
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-black/10" />
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* Login Card */}
       <motion.div
@@ -46,7 +46,7 @@ export default function Login() {
         transition={{ duration: 0.5 }}
       >
         {/* Branded header strip */}
-        <div className="bg-primary rounded-t-xl px-6 py-5 flex items-center gap-3">
+        <div className="bg-primary/80 backdrop-blur-md rounded-t-xl px-6 py-5 flex items-center gap-3 border border-white/10">
           <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <Route className="w-5 h-5 text-primary-foreground" />
           </div>
@@ -56,8 +56,8 @@ export default function Login() {
           </div>
         </div>
 
-        {/* White card body */}
-        <div className="bg-white rounded-b-xl px-8 py-8 shadow-2xl shadow-black/20">
+        {/* Glass card body */}
+        <div className="backdrop-blur-xl bg-white/15 rounded-b-xl px-8 py-8 shadow-2xl shadow-black/30 border border-white/20 border-t-0">
           {/* Welcome text */}
           <motion.div
             className="text-center mb-6"
@@ -65,8 +65,8 @@ export default function Login() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <h2 className="text-xl font-bold text-gray-900">Welcome Back!</h2>
-            <p className="text-sm text-gray-500 mt-1">Sign in to manage your fleet.</p>
+            <h2 className="text-xl font-bold text-white">Welcome Back!</h2>
+            <p className="text-sm text-white/60 mt-1">Sign in to manage your fleet.</p>
           </motion.div>
 
           {/* Error */}
@@ -76,10 +76,10 @@ export default function Login() {
                 initial={{ opacity: 0, y: -8, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -8, height: 0 }}
-                className="flex items-center gap-2.5 p-3 rounded-lg bg-red-50 border border-red-200 text-sm mb-5"
+                className="flex items-center gap-2.5 p-3 rounded-lg bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-sm mb-5"
               >
-                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                <span className="text-red-600 text-[13px]">{error}</span>
+                <AlertCircle className="w-4 h-4 text-red-300 flex-shrink-0" />
+                <span className="text-red-200 text-[13px]">{error}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -91,15 +91,15 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <label className="text-sm font-semibold text-gray-700 mb-1.5 block">Username</label>
+              <label className="text-sm font-semibold text-white/80 mb-1.5 block">Username</label>
               <div className="relative group">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary-foreground transition-colors" />
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g., admin"
                   autoFocus
-                  className="w-full h-11 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm"
+                  className="w-full h-11 pl-10 pr-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all text-sm"
                 />
               </div>
             </motion.div>
@@ -110,26 +110,26 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <label className="text-sm font-semibold text-gray-700 mb-1.5 block">Password</label>
+              <label className="text-sm font-semibold text-white/80 mb-1.5 block">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary-foreground transition-colors" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full h-11 pl-10 pr-11 rounded-lg bg-gray-50 border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm"
+                  className="w-full h-11 pl-10 pr-11 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               <div className="flex justify-end mt-2">
-                <button type="button" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
+                <button type="button" className="text-xs text-white/50 hover:text-white/80 font-medium transition-colors">
                   Forgot Password?
                 </button>
               </div>
@@ -144,7 +144,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg uppercase tracking-wide"
+                className="w-full h-11 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-primary/30 uppercase tracking-wide"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -157,12 +157,12 @@ export default function Login() {
 
           {/* Demo credentials */}
           <motion.p
-            className="text-xs text-gray-400 text-center mt-5"
+            className="text-xs text-white/40 text-center mt-5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            Demo: <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin</code>
+            Demo: <code className="font-mono text-primary-foreground bg-white/10 px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono text-primary-foreground bg-white/10 px-1.5 py-0.5 rounded">admin</code>
           </motion.p>
         </div>
       </motion.div>
