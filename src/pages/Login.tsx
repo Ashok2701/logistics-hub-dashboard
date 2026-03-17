@@ -56,14 +56,21 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Logo & Title */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
-              <Route className="w-5.5 h-5.5 text-primary-foreground" />
+          {/* Branding card like reference */}
+          <div className="bg-muted/60 rounded-xl p-4 mb-7 border border-border">
+            <div className="flex items-center gap-3 mb-2.5">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+                <Route className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-foreground tracking-tight">Route Planner</h1>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Sage Intacct</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight">Route Planner</h1>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Transport Management System</p>
+            <div className="flex items-center gap-4 text-muted-foreground text-xs">
+              <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Fleet</span>
+              <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> Mobile</span>
+              <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Tracking</span>
             </div>
           </div>
 
