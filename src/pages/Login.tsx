@@ -34,10 +34,10 @@ export default function Login() {
       <img
         src={loginHero}
         alt="Fleet logistics background"
-        className="absolute inset-0 w-full h-full object-cover scale-105 blur-[2px]"
+        className="absolute inset-0 w-full h-full object-cover"
       />
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-[hsl(222,47%,6%)]/65" />
+      {/* Gradient overlay — lighter, directional */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,47%,6%)]/40 via-transparent to-[hsl(222,47%,6%)]/50" />
 
       {/* Centered modal card */}
       <motion.div
