@@ -90,11 +90,11 @@ export default {
         "2xl": "calc(var(--radius) + 8px)",
       },
       boxShadow: {
-        "card": "0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03), 0 0 0 1px rgb(0 0 0 / 0.02)",
-        "card-hover": "0 8px 24px -4px rgb(0 0 0 / 0.08), 0 4px 8px -2px rgb(0 0 0 / 0.04)",
-        "elevated": "0 12px 32px -8px rgb(0 0 0 / 0.1), 0 4px 12px -4px rgb(0 0 0 / 0.06)",
-        "soft": "0 1px 2px 0 rgb(0 0 0 / 0.04)",
-        "premium": "0 0 0 1px rgb(0 0 0 / 0.03), 0 2px 4px rgb(0 0 0 / 0.02), 0 8px 16px -4px rgb(0 0 0 / 0.06)",
+        "card": "0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.04), 0 0 0 1px rgb(0 0 0 / 0.03)",
+        "card-hover": "0 10px 28px -6px rgb(0 0 0 / 0.1), 0 4px 10px -3px rgb(0 0 0 / 0.05)",
+        "elevated": "0 14px 36px -8px rgb(0 0 0 / 0.12), 0 6px 14px -4px rgb(0 0 0 / 0.07)",
+        "soft": "0 1px 3px 0 rgb(0 0 0 / 0.05)",
+        "premium": "0 0 0 1px rgb(0 0 0 / 0.04), 0 2px 6px rgb(0 0 0 / 0.03), 0 10px 20px -4px rgb(0 0 0 / 0.07)",
       },
       keyframes: {
         "accordion-down": {

@@ -150,19 +150,19 @@
   }
 
   .data-table td {
-    @apply px-4 py-3.5 border-b border-border/40 text-sm;
+    @apply px-4 py-3.5 border-b border-border/30 text-sm;
   }
 
   .data-table tbody tr {
-    @apply transition-all duration-200;
+    @apply transition-all duration-200 ease-out;
   }
 
   .data-table tbody tr:nth-child(even) td {
-    background: hsl(var(--muted) / 0.3);
+    background: hsl(210 40% 97.5%);
   }
 
   .data-table tbody tr:hover td {
-    background: hsl(var(--primary) / 0.04);
+    background: hsl(214 95% 97%);
   }
 }
 
