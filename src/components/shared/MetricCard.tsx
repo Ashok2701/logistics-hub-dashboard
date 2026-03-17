@@ -104,7 +104,7 @@ interface DataTableShellProps {
 export function DataTableShell({ children }: DataTableShellProps) {
   return (
     <motion.div 
-      className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-premium"
+      className="bg-card rounded-2xl border border-border/40 overflow-hidden shadow-premium hover:shadow-elevated transition-shadow duration-300"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.1 }}

@@ -16,7 +16,7 @@ export default function VehicleCategories() {
   const filtered = mockData.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <PageHeader
         title="Vehicle Categories"
         subtitle="Manage vehicle classification types"

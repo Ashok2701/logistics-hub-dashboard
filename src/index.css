@@ -150,15 +150,19 @@
   }
 
   .data-table td {
-    @apply px-4 py-3 border-b border-border/50 text-sm;
+    @apply px-4 py-3.5 border-b border-border/40 text-sm;
   }
 
   .data-table tbody tr {
-    @apply transition-colors duration-150;
+    @apply transition-all duration-200;
+  }
+
+  .data-table tbody tr:nth-child(even) td {
+    background: hsl(var(--muted) / 0.3);
   }
 
   .data-table tbody tr:hover td {
-    background: hsl(var(--primary) / 0.03);
+    background: hsl(var(--primary) / 0.04);
   }
 }
 
