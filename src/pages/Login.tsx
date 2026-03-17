@@ -102,7 +102,7 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65, duration: 0.5 }}
             >
-              {["Fleet Tracking", "Route Optimization", "Sage X3", "Real-time GPS"].map((tag) => (
+              {["Fleet Tracking", "Route Optimization", "Sage Intacct", "Real-time GPS"].map((tag) => (
                 <span
                   key={tag}
                   className="px-3 py-1.5 rounded-full text-[11px] font-medium text-white/60 bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm"
