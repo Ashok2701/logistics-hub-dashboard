@@ -56,11 +56,11 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="w-14 h-14 rounded-2xl bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30 mb-4">
-                <Route className="w-7 h-7 text-white" />
+              <div className="w-14 h-14 rounded-2xl bg-primary backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30 mb-4">
+                <Route className="w-7 h-7 text-primary-foreground" />
               </div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Route Planner</h1>
-              <p className="text-xs text-white/40 mt-0.5">for Sage Intacct</p>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">Route Planner</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">for Sage Intacct</p>
             </motion.div>
 
             {/* Login heading */}
