@@ -154,10 +154,10 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 rounded-lg bg-[hsl(210,40%,15%)] hover:bg-[hsl(210,40%,20%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 border border-white/[0.08] shadow-lg"
+                  className="w-full h-11 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg"
                 >
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   ) : (
                     "Sign in"
                   )}
