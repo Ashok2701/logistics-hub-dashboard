@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PageHeader, DataTableShell, StatusBadge } from "@/components/shared/MetricCard";
-import { Plus, Search, Edit, Trash2, FolderOpen } from "lucide-react";
+import { RowActions } from "@/components/shared/RowActions";
+import { Plus, Search, FolderOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
 const mockData = [
@@ -33,7 +34,7 @@ export default function Drivers() {
       </div>
       <DataTableShell>
         <table className="data-table">
-          <thead><tr><th>Name</th><th>License</th><th>Phone</th><th>Status</th><th>Total Trips</th><th className="w-20">Actions</th></tr></thead>
+          <thead><tr><th>Name</th><th>License</th><th>Phone</th><th>Status</th><th>Total Trips</th><th className="w-24 text-right">Actions</th></tr></thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-12"><FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" /><p className="text-sm text-muted-foreground">No drivers found</p></td></tr>
@@ -45,12 +46,7 @@ export default function Drivers() {
                   <td className="font-mono text-muted-foreground">{d.phone}</td>
                   <td><StatusBadge status={d.status} variant={d.status === "Available" ? "success" : d.status === "On Route" ? "primary" : "muted"} /></td>
                   <td className="font-mono text-foreground">{d.trips}</td>
-                  <td>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                      <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150"><Edit className="w-3.5 h-3.5" /></button>
-                      <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-all duration-150"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </td>
+                  <td><RowActions /></td>
                 </motion.tr>
               ))
             )}

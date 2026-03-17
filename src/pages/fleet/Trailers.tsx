@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PageHeader, DataTableShell, StatusBadge } from "@/components/shared/MetricCard";
-import { Plus, Search, Edit, Trash2, FolderOpen } from "lucide-react";
+import { RowActions } from "@/components/shared/RowActions";
+import { Plus, Search, FolderOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
 const mockData = [
@@ -32,23 +33,18 @@ export default function Trailers() {
       </div>
       <DataTableShell>
         <table className="data-table">
-          <thead><tr><th>Code</th><th>Type</th><th>Capacity</th><th>Status</th><th className="w-20">Actions</th></tr></thead>
+          <thead><tr><th>Code</th><th>Type</th><th>Capacity</th><th>Status</th><th className="w-24 text-right">Actions</th></tr></thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr><td colSpan={5} className="text-center py-12"><FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" /><p className="text-sm text-muted-foreground">No trailers found</p></td></tr>
             ) : (
-              mockData.map((d, i) => (
+              filtered.map((d, i) => (
                 <motion.tr key={d.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="group cursor-default">
                   <td><span className="font-mono text-xs px-2 py-1 rounded-md bg-muted text-foreground">{d.code}</span></td>
                   <td className="font-medium text-foreground">{d.type}</td>
                   <td className="text-muted-foreground">{d.capacity}</td>
                   <td><StatusBadge status={d.status} variant={d.status === "Available" ? "success" : d.status === "Maintenance" ? "warning" : "primary"} /></td>
-                  <td>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                      <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150"><Edit className="w-3.5 h-3.5" /></button>
-                      <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-all duration-150"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </td>
+                  <td><RowActions /></td>
                 </motion.tr>
               ))
             )}
