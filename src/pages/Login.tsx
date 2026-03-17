@@ -80,10 +80,10 @@ export default function Login() {
                   initial={{ opacity: 0, y: -8, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -8, height: 0 }}
-                  className="flex items-center gap-2.5 p-3 rounded-lg bg-red-500/15 border border-red-500/20 text-sm mb-5"
+                  className="flex items-center gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm mb-5"
                 >
-                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                  <span className="text-red-300 text-[13px]">{error}</span>
+                  <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                  <span className="text-destructive text-[13px]">{error}</span>
                 </motion.div>
               )}
             </AnimatePresence>
