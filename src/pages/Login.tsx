@@ -46,9 +46,9 @@ export default function Login() {
         transition={{ duration: 0.5 }}
       >
         {/* Subtle outer glow card */}
-        <div className="rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] p-2 shadow-2xl shadow-black/30">
+        <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/40 p-2 shadow-2xl shadow-black/20">
           {/* Inner glass card */}
-          <div className="rounded-xl bg-white/[0.08] backdrop-blur-md border border-white/[0.1] px-10 py-10">
+          <div className="rounded-xl bg-white/60 backdrop-blur-md border border-white/30 px-10 py-10">
             {/* Logo */}
             <motion.div
               className="flex flex-col items-center mb-8"
