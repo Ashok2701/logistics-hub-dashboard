@@ -223,28 +223,26 @@ export default function UserManagement() {
 
         {/* Form Card */}
         <div className="bg-card rounded-xl border border-border shadow-card">
-          <div className="p-6 space-y-6 max-w-3xl">
+          <div className="p-6 space-y-6">
             {/* Basic Info */}
             <Section title="Basic Information">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Field label="Username" error={errors.username} required>
                   <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="e.g. jsmith" className="h-9" />
                 </Field>
                 <Field label="Full Name">
                   <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="e.g. John Smith" className="h-9" />
                 </Field>
+                <Field label="Email">
+                  <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
+                </Field>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Field label="Password" error={errors.password}>
                   <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder={editingId ? "Leave blank" : "Min 6 chars"} className="h-9" />
                 </Field>
                 <Field label="Confirm Password" error={errors.confirmPassword}>
                   <Input type="password" value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter" className="h-9" />
-                </Field>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Email">
-                  <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
                 </Field>
                 <Field label="Mobile">
                   <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
