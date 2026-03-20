@@ -1,0 +1,12 @@
+Premium SaaS theme system with 4 built-in themes, Stripe/Linear-inspired.
+- Font: Inter (sans), SF Mono/Fira Code (mono)
+- Themes: Modern Blue (default), Dark Mode, Emerald Fleet, Sunset Orange
+- Theme switcher: Palette icon dropdown in header navbar
+- Theme persistence: localStorage key "vanguard-color-theme"
+- CSS: data-color-theme attribute on html + .dark class for dark mode
+- Cards: white with soft shadows, rounded-2xl, hover lift effects
+- Status colors: soft bg (8% opacity) with colored text, NOT solid badges
+- No heavy gradients, patterns, textures, or decorative elements
+- Sidebar: white bg (light themes), dark bg (dark theme), border-right, active = primary text + left border
+- Tables: theme-aware hover rows using primary/4 opacity
+- Sonner toaster uses custom ThemeContext (removed next-themes dependency)
