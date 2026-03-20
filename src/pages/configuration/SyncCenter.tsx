@@ -27,7 +27,7 @@ export default function SyncCenter() {
         actions={
           <button
             onClick={() => handleSync("all")}
-            className="h-9 px-4 rounded-lg gradient-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-glow hover:shadow-glow-lg hover:opacity-90 transition-all"
+            className="btn-gradient h-9 px-4 rounded-lg text-sm flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${syncing === "all" ? "animate-spin" : ""}`} />
             Sync All
