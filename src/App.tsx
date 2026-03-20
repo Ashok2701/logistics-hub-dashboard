@@ -21,6 +21,10 @@ import DriverReports from "@/pages/reports/DriverReports";
 import VehicleReports from "@/pages/reports/VehicleReports";
 import SyncCenter from "@/pages/configuration/SyncCenter";
 import UserManagement from "@/pages/configuration/UserManagement";
+import SiteManagement from "@/pages/configuration/SiteManagement";
+import CustomerManagement from "@/pages/configuration/CustomerManagement";
+import SupplierManagement from "@/pages/configuration/SupplierManagement";
+import ProductManagement from "@/pages/configuration/ProductManagement";
 import PlaceholderPage from "@/pages/PlaceholderPage";
 import NotFound from "@/pages/NotFound";
 
