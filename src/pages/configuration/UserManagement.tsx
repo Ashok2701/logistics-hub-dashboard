@@ -268,6 +268,12 @@ export default function UserManagement() {
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field label="Status">
+                  <div className="flex items-center gap-3 h-9">
+                    <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
+                    <span className="text-sm">{form.status ? "Active" : "Inactive"}</span>
+                  </div>
+                </Field>
               </div>
             </Section>
 
@@ -336,16 +342,6 @@ export default function UserManagement() {
               </div>
             </Section>
 
-            {/* Status */}
-            <Section title="Status">
-              <div className="flex items-center justify-between px-3 py-3 rounded-lg border border-border">
-                <div>
-                  <p className="text-sm font-medium">{form.status ? "Active" : "Inactive"}</p>
-                  <p className="text-[11px] text-muted-foreground">User can {form.status ? "" : "not "}access the system</p>
-                </div>
-                <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
-              </div>
-            </Section>
           </div>
 
           {/* Footer */}
