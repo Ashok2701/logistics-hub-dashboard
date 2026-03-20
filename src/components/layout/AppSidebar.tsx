@@ -109,21 +109,21 @@ export function AppSidebar() {
         {menuItems.map((item, idx) => (
           <div key={item.label} className={idx > 0 ? "mt-0.5" : ""}>
             {item.path ? (
-              <Link
+               <Link
                 to={item.path}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group relative",
                   isActive(item.path)
-                    ? "bg-white/12 text-white shadow-sm"
+                    ? "bg-white/12 text-white"
                     : "text-white/50 hover:bg-white/8 hover:text-white/80"
                 )}
               >
                 {isActive(item.path) && (
                   <motion.div
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gradient-primary shadow-sm"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                    style={{ boxShadow: '0 0 8px hsl(var(--gradient-start) / 0.5)' }}
+                    style={{ background: `linear-gradient(180deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)))`, boxShadow: '0 0 10px hsl(var(--gradient-start) / 0.6)' }}
                   />
                 )}
                 <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive(item.path) ? "text-white" : "text-white/50")} />

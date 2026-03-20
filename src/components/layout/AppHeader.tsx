@@ -28,16 +28,16 @@ export function AppHeader() {
   }, []);
 
   return (
-    <header className="h-[56px] bg-gradient-header backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 flex-shrink-0 sticky top-0 z-20 shadow-[0_2px_16px_-4px_rgb(0_0_0/0.15)]">
+    <header className="h-[56px] bg-gradient-header backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 flex-shrink-0 sticky top-0 z-20 shadow-[0_1px_3px_rgb(0_0_0/0.1)] border-b border-white/10">
       {/* Search */}
       <div className="flex items-center gap-3">
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 group-focus-within:text-white/80 transition-colors" />
           <input
             placeholder="Search..."
-            className="w-64 h-9 pl-10 pr-12 rounded-lg bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/25 focus:bg-white/15 transition-all backdrop-blur-sm"
+            className="w-64 h-9 pl-10 pr-12 rounded-full bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/30 focus:bg-white/15 focus:ring-2 focus:ring-white/10 transition-all backdrop-blur-sm"
           />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/50 font-mono border border-white/10">
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/10 text-[10px] text-white/50 font-mono border border-white/10">
             <Command className="w-2.5 h-2.5" />K
           </kbd>
         </div>

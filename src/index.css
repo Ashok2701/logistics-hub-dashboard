@@ -329,7 +329,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 2px;
     background: linear-gradient(90deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
     border-radius: 9999px 9999px 0 0;
   }
@@ -341,18 +341,22 @@
   }
 
   .data-table th {
-    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/30;
+    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-secondary/50 first:rounded-tl-none last:rounded-tr-none;
   }
 
   .data-table td {
-    @apply px-4 py-3.5 border-b border-border/30 text-sm;
+    @apply px-4 py-3.5 text-sm;
   }
 
   .data-table tbody tr {
-    @apply transition-all duration-200 ease-out;
+    @apply transition-all duration-200 ease-out border-b border-border/40;
   }
 
-  .data-table tbody tr:hover td {
+  .data-table tbody tr:nth-child(even) {
+    background: hsl(var(--muted) / 0.3);
+  }
+
+  .data-table tbody tr:hover {
     background: hsl(var(--primary) / 0.04);
   }
 
@@ -368,7 +372,21 @@
     box-shadow: 0 4px 16px hsl(var(--gradient-start) / 0.3);
   }
   .btn-gradient:active {
-    transform: scale(0.98);
+    transform: scale(0.97) translateY(0);
+  }
+
+  /* Outline button */
+  .btn-outline-theme {
+    @apply text-sm font-medium px-3 py-1.5 rounded-lg border transition-all duration-200;
+    border-color: hsl(var(--primary) / 0.3);
+    color: hsl(var(--primary));
+  }
+  .btn-outline-theme:hover {
+    background: hsl(var(--primary) / 0.06);
+    border-color: hsl(var(--primary) / 0.5);
+  }
+  .btn-outline-theme:active {
+    transform: scale(0.97);
   }
 }
 

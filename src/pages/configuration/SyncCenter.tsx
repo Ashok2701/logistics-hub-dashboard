@@ -61,15 +61,15 @@ export default function SyncCenter() {
                 </td>
                 <td className="font-mono text-xs text-muted-foreground">{d.lastSync}</td>
                 <td>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1.5">
                     <button
                       onClick={() => handleSync(d.object)}
                       disabled={syncing === d.object || syncing === "all"}
-                      className="h-7 px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-all disabled:opacity-40"
+                      className="btn-outline-theme h-7 px-2.5 text-[11px] flex items-center gap-1 disabled:opacity-40 disabled:pointer-events-none"
                     >
                       <RefreshCw className={`w-3 h-3 ${syncing === d.object ? "animate-spin" : ""}`} /> Sync
                     </button>
-                    <button className="h-7 px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">
+                    <button className="h-7 px-2.5 rounded-lg text-[11px] font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50 transition-all duration-200">
                       <FileText className="w-3 h-3" /> Logs
                     </button>
                   </div>
