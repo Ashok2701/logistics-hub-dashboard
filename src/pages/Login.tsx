@@ -86,35 +86,35 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Username */}
             <div>
-              <label className="text-sm font-semibold text-white mb-2 block">Username</label>
+              <label className="text-sm font-semibold text-foreground mb-2 block">Username</label>
               <div className="relative group">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/40 group-focus-within:text-primary transition-colors duration-200" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g., admin"
                   autoFocus
-                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 focus:bg-white/15 transition-all duration-200 text-sm"
+                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-200 text-sm"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="text-sm font-semibold text-white mb-2 block">Password</label>
+              <label className="text-sm font-semibold text-foreground mb-2 block">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/40 group-focus-within:text-primary transition-colors duration-200" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 focus:bg-white/15 transition-all duration-200 text-sm"
+                  className="w-full h-12 pl-11 pr-12 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-200 text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all duration-200"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -141,12 +141,13 @@ export default function Login() {
           </form>
 
           {/* Demo credentials */}
-          <p className="text-xs text-white/40 text-center mt-7">
+          <p className="text-xs text-muted-foreground text-center mt-7">
             Demo:{" "}
-            <code className="font-mono text-primary bg-primary/15 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
+            <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
             {" / "}
-            <code className="font-mono text-primary bg-primary/15 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
+            <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
           </p>
+          </div>
         </div>
 
         {/* Footer */}
