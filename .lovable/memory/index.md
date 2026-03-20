@@ -1,12 +1,15 @@
-Premium SaaS theme system with 4 built-in themes, Stripe/Linear-inspired.
+Premium SaaS theme preferences: clean, minimal, Stripe/Linear-inspired.
 - Font: Inter (sans), SF Mono/Fira Code (mono)
-- Themes: Modern Blue (default), Dark Mode, Emerald Fleet, Sunset Orange
-- Theme switcher: Palette icon dropdown in header navbar
-- Theme persistence: localStorage key "vanguard-color-theme"
-- CSS: data-color-theme attribute on html + .dark class for dark mode
-- Cards: white with soft shadows, rounded-2xl, hover lift effects
-- Status colors: soft bg (8% opacity) with colored text, NOT solid badges
-- No heavy gradients, patterns, textures, or decorative elements
-- Sidebar: white bg (light themes), dark bg (dark theme), border-right, active = primary text + left border
-- Tables: theme-aware hover rows using primary/4 opacity
-- Sonner toaster uses custom ThemeContext (removed next-themes dependency)
+- Background: light gray (#F8FAFC / 210 40% 98%)
+- Cards: white with soft shadows, rounded-2xl, thin gradient top border
+- Primary: Blue (224 76% 48%)
+- Sidebar: dark gradient bg, active = pill highlight + left accent bar with glow
+- Header: gradient bg with backdrop-blur, rounded-full search bar
+- Status colors: soft bg (10% opacity) with colored text pill badges
+- Gradients ONLY for: header, sidebar, buttons, small accents
+- Content area stays clean/neutral — no color tints
+- Tables: zebra striping, hover highlight, status pills
+- Buttons: .btn-gradient for primary, .btn-outline-theme for secondary
+- Color theme picker in header (4 themes: blue, dark, emerald, orange)
+- Hover: subtle lift on cards, brightness on gradient buttons
+- Micro interactions: 200ms ease-in-out transitions
