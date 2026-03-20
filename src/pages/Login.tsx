@@ -46,7 +46,7 @@ export default function Login() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
       >
-        <div className="bg-card rounded-2xl p-8 sm:p-9 shadow-[0_25px_60px_-12px_rgb(0_0_0/0.4)] border border-border/30">
+        <div className="bg-[hsl(222,47%,11%)] text-white rounded-2xl p-8 sm:p-9 shadow-[0_25px_60px_-12px_rgb(0_0_0/0.4)] border border-white/10">
           {/* Brand header */}
           <div className="flex items-center gap-3.5 mb-2">
             <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
