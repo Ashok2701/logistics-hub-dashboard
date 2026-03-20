@@ -208,16 +208,26 @@ export default function UserManagement() {
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
         {/* Back + Title */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={goBack}
-            className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">{editingId ? "Edit User" : "Add User"}</h1>
-            <p className="text-xs text-muted-foreground">{editingId ? "Update user details and permissions" : "Create a new system user"}</p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goBack}
+              className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">{editingId ? "Edit User" : "Add User"}</h1>
+              <p className="text-xs text-muted-foreground">{editingId ? "Update user details and permissions" : "Create a new system user"}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">
+              Cancel
+            </button>
+            <button onClick={handleSave} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium">
+              {editingId ? "Save Changes" : "Create User"}
+            </button>
           </div>
         </div>
 
