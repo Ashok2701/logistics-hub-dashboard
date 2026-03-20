@@ -20,6 +20,18 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
   {
+    label: "Configuration", icon: Settings,
+    children: [
+      { label: "Sync Center", icon: RefreshCw, path: "/config/sync-center" },
+      { label: "Roles & Permissions", icon: Shield, path: "/config/roles" },
+      { label: "Site Management", icon: Building2, path: "/config/sites" },
+      { label: "Customer", icon: UserCircle, path: "/config/customers" },
+      { label: "Supplier", icon: UserCircle, path: "/config/suppliers" },
+      { label: "Product", icon: Package, path: "/config/products" },
+      { label: "Document Config", icon: FileText, path: "/config/documents" },
+    ],
+  },
+  {
     label: "Fleet Management", icon: Truck,
     children: [
       { label: "Vehicle Categories", icon: Car, path: "/fleet/categories" },
@@ -42,18 +54,6 @@ const menuItems: MenuItem[] = [
     children: [
       { label: "Driver Reports", icon: Users, path: "/reports/drivers" },
       { label: "Vehicle Reports", icon: Truck, path: "/reports/vehicles" },
-    ],
-  },
-  {
-    label: "Configuration", icon: Settings,
-    children: [
-      { label: "Sync Center", icon: RefreshCw, path: "/config/sync-center" },
-      { label: "Roles & Permissions", icon: Shield, path: "/config/roles" },
-      { label: "Site Management", icon: Building2, path: "/config/sites" },
-      { label: "Customer", icon: UserCircle, path: "/config/customers" },
-      { label: "Supplier", icon: UserCircle, path: "/config/suppliers" },
-      { label: "Product", icon: Package, path: "/config/products" },
-      { label: "Document Config", icon: FileText, path: "/config/documents" },
     ],
   },
 ];
