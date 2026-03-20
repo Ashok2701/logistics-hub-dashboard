@@ -48,13 +48,13 @@ export default function Login() {
       >
         <div className="bg-[hsl(222,47%,11%)] text-white rounded-2xl p-8 sm:p-9 shadow-[0_25px_60px_-12px_rgb(0_0_0/0.4)] border border-white/10">
           {/* Brand header */}
-          <div className="flex items-center gap-3.5 mb-2">
+          <div className="flex items-center gap-3.5 mb-2 -mx-8 -mt-8 sm:-mx-9 sm:-mt-9 px-8 sm:px-9 py-5 bg-[hsl(222,47%,15%)] rounded-t-2xl">
             <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
               <Route className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
               <h1 className="text-[15px] font-bold text-white tracking-tight leading-tight">Route Planner</h1>
-              <p className="text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold mt-0.5">Sage Intacct</p>
+              <p className="text-[10px] text-primary uppercase tracking-[0.15em] font-semibold mt-0.5">Sage Intacct</p>
             </div>
           </div>
           <div className="flex items-center gap-5 text-white/50 text-xs mb-8 pb-0 pt-2.5 border-t border-white/10 mt-3">
