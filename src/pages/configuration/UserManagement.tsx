@@ -252,7 +252,7 @@ export default function UserManagement() {
 
             {/* Language */}
             <Section title="Language">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Field label="Primary Language">
                   <Select value={form.primaryLanguage} onValueChange={(v) => setForm((f) => ({ ...f, primaryLanguage: v }))}>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
