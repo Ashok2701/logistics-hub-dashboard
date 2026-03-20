@@ -1,24 +1,20 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { PageHeader } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
-} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Plus, Search, UserPlus, Route, CalendarClock, Radar,
-  Map, BarChart3, Truck, Users, X,
+  Search, UserPlus, Route, CalendarClock, Radar,
+  Map, BarChart3, Truck, Users, ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -99,23 +95,20 @@ const emptyForm = {
 type FormState = typeof emptyForm;
 type FormErrors = Partial<Record<keyof FormState, string>>;
 
+type ViewMode = "list" | "form";
+
 // ─── Component ────────────────────────────────────────────────────
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>(seedUsers);
   const [search, setSearch] = useState("");
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [view, setView] = useState<ViewMode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // Filtered list
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
-    return (
-      u.username.toLowerCase().includes(q) ||
-      u.fullName.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q)
-    );
+    return u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
 
   // ── Helpers ──────────────────────────────────────────────────────
@@ -123,7 +116,7 @@ export default function UserManagement() {
     setEditingId(null);
     setForm(emptyForm);
     setErrors({});
-    setSheetOpen(true);
+    setView("form");
   };
 
   const openEdit = (u: User) => {
@@ -135,15 +128,16 @@ export default function UserManagement() {
       sites: [...u.sites], defaultSite: u.defaultSite, status: u.status === "active",
     });
     setErrors({});
-    setSheetOpen(true);
+    setView("form");
   };
+
+  const goBack = () => setView("list");
 
   const handleDelete = (id: string) => {
     setUsers((prev) => prev.filter((u) => u.id !== id));
     toast({ title: "User removed" });
   };
 
-  // ── Validation ───────────────────────────────────────────────────
   const validate = (): boolean => {
     const e: FormErrors = {};
     if (!form.username.trim()) e.username = "Username is required";
@@ -185,35 +179,192 @@ export default function UserManagement() {
       setUsers((prev) => [newUser, ...prev]);
       toast({ title: "User created" });
     }
-    setSheetOpen(false);
+    setView("list");
   };
 
   const toggleModule = (key: string) =>
     setForm((f) => ({
       ...f,
-      modules: f.modules.includes(key)
-        ? f.modules.filter((m) => m !== key)
-        : [...f.modules, key],
+      modules: f.modules.includes(key) ? f.modules.filter((m) => m !== key) : [...f.modules, key],
     }));
 
   const toggleSite = (site: string) =>
     setForm((f) => {
-      const next = f.sites.includes(site)
-        ? f.sites.filter((s) => s !== site)
-        : [...f.sites, site];
-      return {
-        ...f, sites: next,
-        defaultSite: next.includes(f.defaultSite) ? f.defaultSite : next[0] ?? "",
-      };
+      const next = f.sites.includes(site) ? f.sites.filter((s) => s !== site) : [...f.sites, site];
+      return { ...f, sites: next, defaultSite: next.includes(f.defaultSite) ? f.defaultSite : next[0] ?? "" };
     });
 
-  // ── Module badge helper ──────────────────────────────────────────
   const moduleIcon = (key: string) => {
     const m = MODULES.find((mod) => mod.key === key);
     return m ? <m.icon className="w-3.5 h-3.5" /> : null;
   };
 
   // ── Render ───────────────────────────────────────────────────────
+  if (view === "form") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* Back + Title */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={goBack}
+            className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">{editingId ? "Edit User" : "Add User"}</h1>
+            <p className="text-xs text-muted-foreground">{editingId ? "Update user details and permissions" : "Create a new system user"}</p>
+          </div>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-card rounded-xl border border-border shadow-card">
+          <div className="p-6 space-y-6 max-w-3xl">
+            {/* Basic Info */}
+            <Section title="Basic Information">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Username" error={errors.username} required>
+                  <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="e.g. jsmith" className="h-9" />
+                </Field>
+                <Field label="Full Name">
+                  <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="e.g. John Smith" className="h-9" />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Password" error={errors.password}>
+                  <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder={editingId ? "Leave blank" : "Min 6 chars"} className="h-9" />
+                </Field>
+                <Field label="Confirm Password" error={errors.confirmPassword}>
+                  <Input type="password" value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter" className="h-9" />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Email">
+                  <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
+                </Field>
+                <Field label="Mobile">
+                  <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
+                </Field>
+              </div>
+            </Section>
+
+            {/* Language */}
+            <Section title="Language">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Primary Language">
+                  <Select value={form.primaryLanguage} onValueChange={(v) => setForm((f) => ({ ...f, primaryLanguage: v }))}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Secondary Language">
+                  <Select value={form.secondaryLanguage || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, secondaryLanguage: v === "__none__" ? "" : v }))}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">None</SelectItem>
+                      {LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+            </Section>
+
+            {/* Modules */}
+            <Section title="Modules">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {MODULES.map((m) => (
+                  <label
+                    key={m.key}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer transition-all duration-150",
+                      form.modules.includes(m.key)
+                        ? "border-primary/30 bg-primary/[0.05]"
+                        : "border-border hover:border-border/80 hover:bg-secondary/30"
+                    )}
+                  >
+                    <Checkbox
+                      checked={form.modules.includes(m.key)}
+                      onCheckedChange={() => toggleModule(m.key)}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <m.icon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">{m.label}</span>
+                  </label>
+                ))}
+              </div>
+            </Section>
+
+            {/* Sites */}
+            <Section title="Sites" error={errors.sites}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {SITES.map((site) => (
+                  <label
+                    key={site}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2.5 rounded-lg border cursor-pointer transition-all duration-150",
+                      form.sites.includes(site)
+                        ? "border-primary/30 bg-primary/[0.05]"
+                        : "border-border hover:border-border/80 hover:bg-secondary/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Checkbox
+                        checked={form.sites.includes(site)}
+                        onCheckedChange={() => toggleSite(site)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                      <span className="text-sm">{site}</span>
+                    </div>
+                    {form.sites.includes(site) && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setForm((f) => ({ ...f, defaultSite: site })); }}
+                        className={cn(
+                          "text-[11px] font-medium px-2 py-0.5 rounded-full transition-colors",
+                          form.defaultSite === site
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        )}
+                      >
+                        {form.defaultSite === site ? "Default" : "Set default"}
+                      </button>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </Section>
+
+            {/* Status */}
+            <Section title="Status">
+              <div className="flex items-center justify-between px-3 py-3 rounded-lg border border-border">
+                <div>
+                  <p className="text-sm font-medium">{form.status ? "Active" : "Inactive"}</p>
+                  <p className="text-[11px] text-muted-foreground">User can {form.status ? "" : "not "}access the system</p>
+                </div>
+                <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
+              </div>
+            </Section>
+          </div>
+
+          {/* Footer */}
+          <div className="border-t border-border px-6 py-4 flex items-center justify-end gap-3">
+            <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">
+              Cancel
+            </button>
+            <button onClick={handleSave} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium">
+              {editingId ? "Save Changes" : "Create User"}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // ── List View ───────────────────────────────────────────────────
   return (
     <div>
       <PageHeader title="User & Roles" subtitle="Manage system users and access control" />
@@ -309,152 +460,6 @@ export default function UserManagement() {
           </TableBody>
         </Table>
       </motion.div>
-
-      {/* ── Sheet (Add / Edit) ─────────────────────────────────────── */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
-          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border sticky top-0 bg-card z-10">
-            <SheetTitle className="text-base font-semibold">
-              {editingId ? "Edit User" : "Add User"}
-            </SheetTitle>
-          </SheetHeader>
-
-          <div className="px-6 py-5 space-y-6">
-            {/* Basic Info */}
-            <Section title="Basic Information">
-              <Field label="Username" error={errors.username} required>
-                <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="e.g. jsmith" className="h-9" />
-              </Field>
-              <Field label="Full Name">
-                <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="e.g. John Smith" className="h-9" />
-              </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Password" error={errors.password}>
-                  <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder={editingId ? "Leave blank" : "Min 6 chars"} className="h-9" />
-                </Field>
-                <Field label="Confirm Password" error={errors.confirmPassword}>
-                  <Input type="password" value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter" className="h-9" />
-                </Field>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Email">
-                  <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
-                </Field>
-                <Field label="Mobile">
-                  <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
-                </Field>
-              </div>
-            </Section>
-
-            {/* Language */}
-            <Section title="Language">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Primary Language">
-                  <Select value={form.primaryLanguage} onValueChange={(v) => setForm((f) => ({ ...f, primaryLanguage: v }))}>
-                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Secondary Language">
-                  <Select value={form.secondaryLanguage || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, secondaryLanguage: v === "__none__" ? "" : v }))}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="None" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">None</SelectItem>
-                      {LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </div>
-            </Section>
-
-            {/* Modules */}
-            <Section title="Modules">
-              <div className="grid grid-cols-2 gap-2">
-                {MODULES.map((m) => (
-                  <label
-                    key={m.key}
-                    className={cn(
-                      "flex items-center gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer transition-all duration-150",
-                      form.modules.includes(m.key)
-                        ? "border-primary/30 bg-primary/[0.05]"
-                        : "border-border hover:border-border/80 hover:bg-secondary/30"
-                    )}
-                  >
-                    <Checkbox
-                      checked={form.modules.includes(m.key)}
-                      onCheckedChange={() => toggleModule(m.key)}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <m.icon className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm">{m.label}</span>
-                  </label>
-                ))}
-              </div>
-            </Section>
-
-            {/* Sites */}
-            <Section title="Sites" error={errors.sites}>
-              <div className="space-y-2">
-                {SITES.map((site) => (
-                  <label
-                    key={site}
-                    className={cn(
-                      "flex items-center justify-between px-3 py-2.5 rounded-lg border cursor-pointer transition-all duration-150",
-                      form.sites.includes(site)
-                        ? "border-primary/30 bg-primary/[0.05]"
-                        : "border-border hover:border-border/80 hover:bg-secondary/30"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Checkbox
-                        checked={form.sites.includes(site)}
-                        onCheckedChange={() => toggleSite(site)}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <span className="text-sm">{site}</span>
-                    </div>
-                    {form.sites.includes(site) && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); setForm((f) => ({ ...f, defaultSite: site })); }}
-                        className={cn(
-                          "text-[11px] font-medium px-2 py-0.5 rounded-full transition-colors",
-                          form.defaultSite === site
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                        )}
-                      >
-                        {form.defaultSite === site ? "Default" : "Set default"}
-                      </button>
-                    )}
-                  </label>
-                ))}
-              </div>
-            </Section>
-
-            {/* Status */}
-            <Section title="Status">
-              <div className="flex items-center justify-between px-3 py-3 rounded-lg border border-border">
-                <div>
-                  <p className="text-sm font-medium">{form.status ? "Active" : "Inactive"}</p>
-                  <p className="text-[11px] text-muted-foreground">User can {form.status ? "" : "not "}access the system</p>
-                </div>
-                <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
-              </div>
-            </Section>
-          </div>
-
-          {/* Footer */}
-          <div className="sticky bottom-0 border-t border-border bg-card px-6 py-4 flex items-center justify-end gap-3">
-            <button onClick={() => setSheetOpen(false)} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">
-              Cancel
-            </button>
-            <button onClick={handleSave} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium">
-              {editingId ? "Save Changes" : "Create User"}
-            </button>
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
