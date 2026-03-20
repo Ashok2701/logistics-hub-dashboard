@@ -20,7 +20,7 @@ export default function Vehicles() {
     <div>
       <PageHeader title="Vehicles" subtitle="Fleet vehicle inventory"
         actions={
-          <button className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200">
+          <button className="btn-gradient h-9 px-4 rounded-lg text-sm flex items-center gap-2">
             <Plus className="w-4 h-4" /> Add Vehicle
           </button>
         }
