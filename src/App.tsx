@@ -20,6 +20,7 @@ import LiveTracking from "@/pages/operations/LiveTracking";
 import DriverReports from "@/pages/reports/DriverReports";
 import VehicleReports from "@/pages/reports/VehicleReports";
 import SyncCenter from "@/pages/configuration/SyncCenter";
+import UserManagement from "@/pages/configuration/UserManagement";
 import PlaceholderPage from "@/pages/PlaceholderPage";
 import NotFound from "@/pages/NotFound";
 
