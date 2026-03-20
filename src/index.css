@@ -5,7 +5,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* ========== Modern Blue (default light) ========== */
+  :root,
+  [data-color-theme="blue"] {
     --font-sans: 'Inter', system-ui, sans-serif;
     --font-mono: 'SF Mono', 'Fira Code', monospace;
 
@@ -39,6 +41,9 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 224 76% 48%;
@@ -69,7 +74,9 @@
     --gradient-end: 262 83% 58%;
   }
 
-  .dark {
+  /* ========== Dark Mode ========== */
+  .dark,
+  [data-color-theme="dark"] {
     --background: 222 47% 6%;
     --foreground: 210 40% 92%;
 
@@ -79,8 +86,8 @@
     --popover: 222 47% 8%;
     --popover-foreground: 210 40% 92%;
 
-    --primary: 224 76% 56%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 222 47% 6%;
 
     --secondary: 222 40% 12%;
     --secondary-foreground: 210 40% 92%;
@@ -91,7 +98,7 @@
     --accent: 222 40% 14%;
     --accent-foreground: 210 40% 92%;
 
-    --destructive: 0 62% 31%;
+    --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
@@ -100,19 +107,159 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
+    --info: 199 89% 48%;
+    --info-foreground: 222 47% 6%;
+
     --border: 222 30% 14%;
     --input: 222 30% 14%;
-    --ring: 224 76% 56%;
+    --ring: 199 89% 48%;
 
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 215 16% 55%;
-    --sidebar-primary: 224 76% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 222 47% 6%;
     --sidebar-accent: 222 40% 10%;
     --sidebar-accent-foreground: 210 40% 92%;
     --sidebar-border: 222 30% 12%;
-    --sidebar-ring: 224 76% 56%;
+    --sidebar-ring: 199 89% 48%;
     --sidebar-muted: 215 16% 40%;
+
+    --chart-1: 199 89% 48%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 340 75% 55%;
+
+    --gradient-start: 199 89% 48%;
+    --gradient-end: 262 83% 58%;
+  }
+
+  /* ========== Emerald Fleet ========== */
+  [data-color-theme="emerald"] {
+    --background: 152 30% 97%;
+    --foreground: 160 47% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 47% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 47% 8%;
+
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 152 30% 95%;
+    --secondary-foreground: 160 47% 8%;
+
+    --muted: 152 30% 95%;
+    --muted-foreground: 155 16% 43%;
+
+    --accent: 152 30% 95%;
+    --accent-foreground: 160 47% 8%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 69% 41%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 155 25% 88%;
+    --input: 155 25% 88%;
+    --ring: 160 84% 39%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 155 16% 43%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 152 30% 95%;
+    --sidebar-accent-foreground: 160 47% 8%;
+    --sidebar-border: 155 25% 88%;
+    --sidebar-ring: 160 84% 39%;
+    --sidebar-muted: 155 16% 53%;
+
+    --chart-1: 160 84% 39%;
+    --chart-2: 152 69% 41%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 340 75% 55%;
+
+    --status-active: 160 84% 39%;
+    --status-delayed: 38 92% 50%;
+    --status-delivered: 152 69% 41%;
+    --status-idle: 155 16% 53%;
+
+    --gradient-start: 160 84% 39%;
+    --gradient-end: 152 69% 41%;
+  }
+
+  /* ========== Sunset Orange ========== */
+  [data-color-theme="orange"] {
+    --background: 30 40% 98%;
+    --foreground: 20 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 47% 11%;
+
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 40% 96%;
+    --secondary-foreground: 20 47% 11%;
+
+    --muted: 30 40% 96%;
+    --muted-foreground: 25 16% 45%;
+
+    --accent: 30 40% 96%;
+    --accent-foreground: 20 47% 11%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 25 25% 90%;
+    --input: 25 25% 90%;
+    --ring: 25 95% 53%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 25 16% 45%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 30 40% 96%;
+    --sidebar-accent-foreground: 20 47% 11%;
+    --sidebar-border: 25 25% 90%;
+    --sidebar-ring: 25 95% 53%;
+    --sidebar-muted: 25 16% 55%;
+
+    --chart-1: 25 95% 53%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 16 85% 51%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 340 75% 55%;
+
+    --status-active: 25 95% 53%;
+    --status-delayed: 38 92% 50%;
+    --status-delivered: 142 71% 45%;
+    --status-idle: 25 16% 55%;
+
+    --gradient-start: 25 95% 53%;
+    --gradient-end: 16 85% 51%;
   }
 }
 
@@ -157,12 +304,8 @@
     @apply transition-all duration-200 ease-out;
   }
 
-  .data-table tbody tr:nth-child(even) td {
-    background: hsl(210 40% 97.5%);
-  }
-
   .data-table tbody tr:hover td {
-    background: hsl(214 95% 97%);
+    background: hsl(var(--primary) / 0.04);
   }
 }
 
