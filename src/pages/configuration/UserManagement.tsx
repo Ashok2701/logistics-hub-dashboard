@@ -268,6 +268,12 @@ export default function UserManagement() {
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field label="Status">
+                  <div className="flex items-center gap-3 h-9">
+                    <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
+                    <span className="text-sm">{form.status ? "Active" : "Inactive"}</span>
+                  </div>
+                </Field>
               </div>
             </Section>
 
