@@ -1,4 +1,4 @@
-import { Bell, Search, LogOut, User, Command, Palette, Check } from "lucide-react";
+import { Bell, LogOut, User, Palette, Check } from "lucide-react";
 import { useTheme, COLOR_THEMES, type ColorTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
