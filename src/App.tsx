@@ -56,10 +56,10 @@ function AppRoutes() {
         <Route path="reports/vehicles" element={<VehicleReports />} />
         <Route path="config/sync-center" element={<SyncCenter />} />
         <Route path="config/roles" element={<UserManagement />} />
-        <Route path="config/sites" element={<PlaceholderPage title="Site Management" subtitle="Manage operational sites and warehouses" />} />
-        <Route path="config/customers" element={<PlaceholderPage title="Customers" subtitle="Customer master data" />} />
-        <Route path="config/suppliers" element={<PlaceholderPage title="Suppliers" subtitle="Supplier master data" />} />
-        <Route path="config/products" element={<PlaceholderPage title="Products" subtitle="Product catalog management" />} />
+        <Route path="config/sites" element={<SiteManagement />} />
+        <Route path="config/customers" element={<CustomerManagement />} />
+        <Route path="config/suppliers" element={<SupplierManagement />} />
+        <Route path="config/products" element={<ProductManagement />} />
         <Route path="config/documents" element={<PlaceholderPage title="Document Configuration" subtitle="Configure document templates" />} />
       </Route>
       <Route path="*" element={<NotFound />} />
