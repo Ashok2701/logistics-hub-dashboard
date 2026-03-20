@@ -51,7 +51,7 @@ function AppRoutes() {
         <Route path="reports/drivers" element={<DriverReports />} />
         <Route path="reports/vehicles" element={<VehicleReports />} />
         <Route path="config/sync-center" element={<SyncCenter />} />
-        <Route path="config/roles" element={<PlaceholderPage title="Roles & Permissions" subtitle="Manage user roles and access control" />} />
+        <Route path="config/roles" element={<UserManagement />} />
         <Route path="config/sites" element={<PlaceholderPage title="Site Management" subtitle="Manage operational sites and warehouses" />} />
         <Route path="config/customers" element={<PlaceholderPage title="Customers" subtitle="Customer master data" />} />
         <Route path="config/suppliers" element={<PlaceholderPage title="Suppliers" subtitle="Supplier master data" />} />
