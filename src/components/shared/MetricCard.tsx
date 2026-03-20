@@ -13,11 +13,18 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ title, value, icon: Icon, trend, status = "active", index = 0 }: MetricCardProps) {
-  const iconBg = {
-    active: "bg-primary/8 text-primary",
-    delayed: "bg-warning/8 text-warning",
-    delivered: "bg-success/8 text-success",
+  const iconStyle = {
+    active: "bg-gradient-to-br from-[hsl(var(--gradient-start))] to-[hsl(var(--gradient-end))] text-white shadow-lg",
+    delayed: "bg-gradient-to-br from-warning to-[hsl(38,92%,40%)] text-white shadow-lg shadow-warning/20",
+    delivered: "bg-gradient-to-br from-success to-[hsl(142,71%,35%)] text-white shadow-lg shadow-success/20",
     idle: "bg-muted text-muted-foreground",
+  }[status];
+
+  const tintBg = {
+    active: "bg-[hsl(var(--gradient-start)/0.03)]",
+    delayed: "bg-[hsl(var(--status-delayed)/0.03)]",
+    delivered: "bg-[hsl(var(--status-delivered)/0.03)]",
+    idle: "",
   }[status];
 
   return (
@@ -25,17 +32,12 @@ export function MetricCard({ title, value, icon: Icon, trend, status = "active",
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
-      className="bg-card rounded-2xl p-5 shadow-premium hover:shadow-elevated transition-all duration-200 border border-border/40 relative overflow-hidden group cursor-default"
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className={cn(
+        "bg-card rounded-2xl p-5 shadow-premium hover:shadow-elevated transition-all duration-300 border border-border/40 relative overflow-hidden group cursor-default gradient-border-top",
+        tintBg
+      )}
     >
-      {/* Subtle top accent line */}
-      <div className={cn(
-        "absolute top-0 left-0 right-0 h-[2px] opacity-60",
-        status === "active" && "bg-primary",
-        status === "delayed" && "bg-warning",
-        status === "delivered" && "bg-success",
-        status === "idle" && "bg-muted-foreground/30",
-      )} />
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
@@ -51,7 +53,7 @@ export function MetricCard({ title, value, icon: Icon, trend, status = "active",
             </div>
           )}
         </div>
-        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105", iconBg)}>
+        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110", iconStyle)}>
           <Icon className="w-5 h-5" />
         </div>
       </div>

@@ -35,7 +35,7 @@ export default function Dashboard() {
         title="Dashboard"
         subtitle="Fleet overview and real-time operations"
         actions={
-          <button className="flex items-center gap-1.5 text-sm text-primary font-medium hover:text-primary/80 transition-colors">
+          <button className="btn-gradient flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg">
             View Report <ArrowUpRight className="w-4 h-4" />
           </button>
         }
@@ -57,7 +57,7 @@ export default function Dashboard() {
                 <h3 className="text-sm font-semibold text-foreground">Active Routes</h3>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{recentActivity.length} routes being tracked</p>
               </div>
-              <button className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View All</button>
+              <button className="btn-gradient text-xs px-3 py-1.5 rounded-lg">View All</button>
             </div>
             <table className="data-table">
               <thead>

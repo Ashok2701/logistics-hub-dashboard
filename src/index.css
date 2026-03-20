@@ -49,6 +49,14 @@
     --ring: 224 76% 48%;
     --radius: 0.75rem;
 
+    /* Gradient system */
+    --gradient-start: 224 76% 48%;
+    --gradient-end: 224 76% 28%;
+    --gradient-sidebar-start: 222 47% 14%;
+    --gradient-sidebar-end: 222 47% 8%;
+    --gradient-header-start: 224 76% 48%;
+    --gradient-header-end: 224 76% 36%;
+
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 215 16% 47%;
     --sidebar-primary: 224 76% 48%;
@@ -69,9 +77,6 @@
     --status-delayed: 38 92% 50%;
     --status-delivered: 142 71% 45%;
     --status-idle: 215 16% 57%;
-
-    --gradient-start: 224 76% 48%;
-    --gradient-end: 262 83% 58%;
   }
 
   /* ========== Dark Mode ========== */
@@ -114,6 +119,13 @@
     --input: 222 30% 14%;
     --ring: 199 89% 48%;
 
+    --gradient-start: 222 47% 6%;
+    --gradient-end: 222 40% 12%;
+    --gradient-sidebar-start: 222 47% 5%;
+    --gradient-sidebar-end: 222 47% 3%;
+    --gradient-header-start: 222 47% 8%;
+    --gradient-header-end: 222 47% 5%;
+
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 215 16% 55%;
     --sidebar-primary: 199 89% 48%;
@@ -130,8 +142,10 @@
     --chart-4: 262 83% 58%;
     --chart-5: 340 75% 55%;
 
-    --gradient-start: 199 89% 48%;
-    --gradient-end: 262 83% 58%;
+    --status-active: 199 89% 48%;
+    --status-delayed: 38 92% 50%;
+    --status-delivered: 142 71% 45%;
+    --status-idle: 215 16% 40%;
   }
 
   /* ========== Emerald Fleet ========== */
@@ -173,6 +187,13 @@
     --input: 155 25% 88%;
     --ring: 160 84% 39%;
 
+    --gradient-start: 160 84% 39%;
+    --gradient-end: 160 84% 25%;
+    --gradient-sidebar-start: 160 47% 12%;
+    --gradient-sidebar-end: 160 47% 6%;
+    --gradient-header-start: 160 84% 39%;
+    --gradient-header-end: 160 84% 30%;
+
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 155 16% 43%;
     --sidebar-primary: 160 84% 39%;
@@ -193,9 +214,6 @@
     --status-delayed: 38 92% 50%;
     --status-delivered: 152 69% 41%;
     --status-idle: 155 16% 53%;
-
-    --gradient-start: 160 84% 39%;
-    --gradient-end: 152 69% 41%;
   }
 
   /* ========== Sunset Orange ========== */
@@ -237,6 +255,13 @@
     --input: 25 25% 90%;
     --ring: 25 95% 53%;
 
+    --gradient-start: 25 95% 53%;
+    --gradient-end: 16 85% 38%;
+    --gradient-sidebar-start: 20 47% 14%;
+    --gradient-sidebar-end: 20 47% 8%;
+    --gradient-header-start: 25 95% 53%;
+    --gradient-header-end: 16 85% 42%;
+
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 25 16% 45%;
     --sidebar-primary: 25 95% 53%;
@@ -257,9 +282,6 @@
     --status-delayed: 38 92% 50%;
     --status-delivered: 142 71% 45%;
     --status-idle: 25 16% 55%;
-
-    --gradient-start: 25 95% 53%;
-    --gradient-end: 16 85% 51%;
   }
 }
 
@@ -280,10 +302,36 @@
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gradient-end)));
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+  }
+
+  .bg-gradient-header {
+    background: linear-gradient(135deg, hsl(var(--gradient-header-start)), hsl(var(--gradient-header-end)));
+  }
+
+  .bg-gradient-sidebar {
+    background: linear-gradient(180deg, hsl(var(--gradient-sidebar-start)), hsl(var(--gradient-sidebar-end)));
+  }
+
+  .gradient-border-top {
+    position: relative;
+  }
+  .gradient-border-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    border-radius: 9999px 9999px 0 0;
   }
 }
 
@@ -306,6 +354,21 @@
 
   .data-table tbody tr:hover td {
     background: hsl(var(--primary) / 0.04);
+  }
+
+  /* Gradient button */
+  .btn-gradient {
+    @apply relative overflow-hidden text-white font-semibold;
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    transition: all 200ms ease-in-out;
+  }
+  .btn-gradient:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px hsl(var(--gradient-start) / 0.3);
+  }
+  .btn-gradient:active {
+    transform: scale(0.98);
   }
 }
 
@@ -356,10 +419,26 @@
   100% { transform: scale(2); opacity: 0; }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
 .animate-float-delayed {
   animation: float 8s ease-in-out 2s infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.06) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
 }
