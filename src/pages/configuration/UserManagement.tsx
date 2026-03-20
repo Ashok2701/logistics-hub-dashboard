@@ -354,15 +354,6 @@ export default function UserManagement() {
 
           </div>
 
-          {/* Footer */}
-          <div className="border-t border-border px-6 py-4 flex items-center justify-end gap-3">
-            <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">
-              Cancel
-            </button>
-            <button onClick={handleSave} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium">
-              {editingId ? "Save Changes" : "Create User"}
-            </button>
-          </div>
         </div>
       </motion.div>
     );
