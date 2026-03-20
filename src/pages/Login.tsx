@@ -53,19 +53,19 @@ export default function Login() {
               <Route className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-[15px] font-bold text-foreground tracking-tight leading-tight">Route Planner</h1>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mt-0.5">Sage Intacct</p>
+              <h1 className="text-[15px] font-bold text-white tracking-tight leading-tight">Route Planner</h1>
+              <p className="text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold mt-0.5">Sage Intacct</p>
             </div>
           </div>
-          <div className="flex items-center gap-5 text-muted-foreground text-xs mb-8 pb-0 pt-2.5 border-t border-border/40 mt-3">
+          <div className="flex items-center gap-5 text-white/50 text-xs mb-8 pb-0 pt-2.5 border-t border-white/10 mt-3">
             <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Fleet</span>
             <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> Mobile</span>
             <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Tracking</span>
           </div>
 
           {/* Welcome */}
-          <h2 className="text-[26px] font-bold text-foreground tracking-tight">Welcome back</h2>
-          <p className="text-sm text-muted-foreground mt-1.5 mb-7">Sign in to manage your fleet operations.</p>
+          <h2 className="text-[26px] font-bold text-white tracking-tight">Welcome back</h2>
+          <p className="text-sm text-white/60 mt-1.5 mb-7">Sign in to manage your fleet operations.</p>
 
           {/* Error */}
           <AnimatePresence>
@@ -74,10 +74,10 @@ export default function Login() {
                 initial={{ opacity: 0, y: -8, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -8, height: 0 }}
-                className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/8 border border-destructive/15 text-sm mb-5"
+                className="flex items-center gap-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm mb-5"
               >
-                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-                <span className="text-destructive text-[13px]">{error}</span>
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <span className="text-red-400 text-[13px]">{error}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -85,35 +85,35 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Username */}
             <div>
-              <label className="text-sm font-semibold text-foreground mb-2 block">Username</label>
+              <label className="text-sm font-semibold text-white mb-2 block">Username</label>
               <div className="relative group">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground/60 group-focus-within:text-primary transition-colors duration-200" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/40 group-focus-within:text-primary transition-colors duration-200" />
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g., admin"
                   autoFocus
-                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-card transition-all duration-200 text-sm"
+                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 focus:bg-white/15 transition-all duration-200 text-sm"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="text-sm font-semibold text-foreground mb-2 block">Password</label>
+              <label className="text-sm font-semibold text-white mb-2 block">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground/60 group-focus-within:text-primary transition-colors duration-200" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/40 group-focus-within:text-primary transition-colors duration-200" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full h-12 pl-11 pr-12 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:bg-card transition-all duration-200 text-sm"
+                  className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 focus:bg-white/15 transition-all duration-200 text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted transition-all duration-200"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all duration-200"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -140,11 +140,11 @@ export default function Login() {
           </form>
 
           {/* Demo credentials */}
-          <p className="text-xs text-muted-foreground text-center mt-7">
+          <p className="text-xs text-white/40 text-center mt-7">
             Demo:{" "}
-            <code className="font-mono text-primary bg-primary/8 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
+            <code className="font-mono text-primary bg-primary/15 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
             {" / "}
-            <code className="font-mono text-primary bg-primary/8 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
+            <code className="font-mono text-primary bg-primary/15 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
           </p>
         </div>
 
