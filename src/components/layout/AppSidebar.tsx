@@ -78,10 +78,10 @@ export function AppSidebar() {
     <motion.aside
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className="flex flex-col h-screen flex-shrink-0 relative overflow-hidden bg-card border-r border-border/70 shadow-[1px_0_8px_-3px_rgb(0_0_0/0.06)]"
+      className="flex flex-col h-screen flex-shrink-0 relative overflow-hidden bg-gradient-sidebar shadow-[2px_0_16px_-4px_rgb(0_0_0/0.15)]"
     >
       {/* Logo */}
-      <div className="flex items-center h-[60px] px-4 border-b border-border">
+      <div className="flex items-center h-[60px] px-4 border-b border-white/8">
         {!collapsed ? (
           <motion.div
             className="flex items-center gap-3"
@@ -89,17 +89,17 @@ export function AppSidebar() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-              <Route className="w-4 h-4 text-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-lg shadow-black/20">
+              <Route className="w-4 h-4 text-white" />
             </div>
             <div className="overflow-hidden">
-              <h1 className="text-sm font-semibold text-foreground leading-tight">Route Planner</h1>
-              <p className="text-[10px] text-muted-foreground leading-tight">for Sage Intacct</p>
+              <h1 className="text-sm font-semibold text-white leading-tight">Route Planner</h1>
+              <p className="text-[10px] text-white/40 leading-tight">for Sage Intacct</p>
             </div>
           </motion.div>
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-            <Route className="w-4 h-4 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-black/20">
+            <Route className="w-4 h-4 text-white" />
           </div>
         )}
       </div>
@@ -114,18 +114,19 @@ export function AppSidebar() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group relative",
                   isActive(item.path)
-                    ? "bg-primary/10 text-primary shadow-sm"
-                    : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                    ? "bg-white/12 text-white shadow-sm"
+                    : "text-white/50 hover:bg-white/8 hover:text-white/80"
                 )}
               >
                 {isActive(item.path) && (
                   <motion.div
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-primary"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gradient-primary shadow-sm"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                    style={{ boxShadow: '0 0 8px hsl(var(--gradient-start) / 0.5)' }}
                   />
                 )}
-                <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive(item.path) ? "text-primary" : "text-muted-foreground")} />
+                <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive(item.path) ? "text-white" : "text-white/50")} />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             ) : (
@@ -135,16 +136,16 @@ export function AppSidebar() {
                   className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium w-full transition-all duration-200 group",
                     isChildActive(item.children)
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                      ? "text-white"
+                      : "text-white/50 hover:bg-white/8 hover:text-white/80"
                   )}
                 >
-                  <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isChildActive(item.children) ? "text-foreground" : "text-muted-foreground")} />
+                  <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0", isChildActive(item.children) ? "text-white" : "text-white/50")} />
                   {!collapsed && (
                     <>
                       <span className="flex-1 text-left">{item.label}</span>
                       <motion.div animate={{ rotate: expandedMenus.includes(item.label) ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60" />
+                        <ChevronDown className="w-3.5 h-3.5 text-white/30" />
                       </motion.div>
                     </>
                   )}
@@ -158,7 +159,7 @@ export function AppSidebar() {
                       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="ml-[18px] pl-4 border-l border-border py-1 space-y-0.5">
+                      <div className="ml-[18px] pl-4 border-l border-white/10 py-1 space-y-0.5">
                         {item.children.map((child) => (
                           <Link
                             key={child.path}
@@ -166,11 +167,11 @@ export function AppSidebar() {
                             className={cn(
                             "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-all duration-200 relative",
                               isActive(child.path)
-                                ? "text-primary font-medium bg-primary/8 shadow-sm"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                                ? "text-white font-medium bg-white/12 shadow-sm"
+                                : "text-white/45 hover:text-white/75 hover:bg-white/6"
                             )}
                           >
-                            <child.icon className={cn("w-4 h-4 flex-shrink-0", isActive(child.path) ? "text-primary" : "text-muted-foreground/70")} />
+                            <child.icon className={cn("w-4 h-4 flex-shrink-0", isActive(child.path) ? "text-white" : "text-white/40")} />
                             <span>{child.label}</span>
                           </Link>
                         ))}
@@ -185,21 +186,21 @@ export function AppSidebar() {
       </nav>
 
       {/* User info + collapse */}
-      <div className="border-t border-border p-3">
+      <div className="border-t border-white/8 p-3">
         {!collapsed && user && (
           <div className="flex items-center gap-3 px-2 py-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <Users className="w-4 h-4 text-muted-foreground" />
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+              <Users className="w-4 h-4 text-white/60" />
             </div>
             <div className="overflow-hidden">
-              <p className="text-[13px] font-medium text-foreground leading-tight truncate">Logged in as</p>
-              <p className="text-[11px] text-muted-foreground leading-tight truncate capitalize">{user.username}</p>
+              <p className="text-[13px] font-medium text-white/80 leading-tight truncate">Logged in as</p>
+              <p className="text-[11px] text-white/40 leading-tight truncate capitalize">{user.username}</p>
             </div>
           </div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center justify-center w-full h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150"
+          className="flex items-center justify-center w-full h-8 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/8 transition-all duration-150"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>

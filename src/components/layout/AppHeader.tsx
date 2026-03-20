@@ -28,16 +28,16 @@ export function AppHeader() {
   }, []);
 
   return (
-    <header className="h-[56px] border-b border-border/50 bg-card/85 backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 flex-shrink-0 sticky top-0 z-20 shadow-soft">
+    <header className="h-[56px] bg-gradient-header backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 flex-shrink-0 sticky top-0 z-20 shadow-[0_2px_16px_-4px_rgb(0_0_0/0.15)]">
       {/* Search */}
       <div className="flex items-center gap-3">
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 group-focus-within:text-white/80 transition-colors" />
           <input
             placeholder="Search..."
-            className="w-64 h-9 pl-10 pr-12 rounded-lg bg-muted border border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border focus:bg-card transition-all"
+            className="w-64 h-9 pl-10 pr-12 rounded-lg bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/25 focus:bg-white/15 transition-all backdrop-blur-sm"
           />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-card text-[10px] text-muted-foreground font-mono border border-border">
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/50 font-mono border border-white/10">
             <Command className="w-2.5 h-2.5" />K
           </kbd>
         </div>
@@ -48,7 +48,7 @@ export function AppHeader() {
         <div className="relative" ref={pickerRef}>
           <button
             onClick={() => setShowThemePicker(!showThemePicker)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
             title="Change theme"
           >
             <Palette className="w-4 h-4" />
@@ -94,29 +94,29 @@ export function AppHeader() {
         </div>
 
         {/* Notifications */}
-        <button className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all relative">
+        <button className="w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all relative">
           <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
         </button>
 
-        <div className="w-px h-5 bg-border mx-2" />
+        <div className="w-px h-5 bg-white/15 mx-2" />
 
         {/* User */}
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-            <User className="w-3.5 h-3.5 text-primary" />
+          <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center">
+            <User className="w-3.5 h-3.5 text-white/80" />
           </div>
           <div className="hidden sm:block">
             {user && (
               <>
-                <p className="text-sm font-medium text-foreground leading-tight">{user.username}</p>
-                <p className="text-[10px] text-muted-foreground leading-tight capitalize">{user.role}</p>
+                <p className="text-sm font-medium text-white leading-tight">{user.username}</p>
+                <p className="text-[10px] text-white/50 leading-tight capitalize">{user.role}</p>
               </>
             )}
           </div>
           <button
             onClick={handleLogout}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-all"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:text-red-300 hover:bg-white/10 transition-all"
           >
             <LogOut className="w-4 h-4" />
           </button>
