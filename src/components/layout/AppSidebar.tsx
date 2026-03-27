@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, Truck, Car, Users, Container,
   Link as LinkIcon, Navigation, Radar, BarChart3, Settings,
-  RefreshCw, Shield, Building2, UserCircle, Package, FileText,
+  RefreshCw, Shield, Building2, UserCircle, Package, FileText, Calendar,
   ChevronDown, ChevronLeft, ChevronRight, Route, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,7 @@ const menuItems: MenuItem[] = [
       { label: "Driver Reports", icon: Users, path: "/reports/drivers" },
       { label: "Vehicle Reports", icon: Truck, path: "/reports/vehicles" },
       { label: "POD Tracking", icon: FileText, path: "/reports/pod-tracking" },
+      { label: "Order Calendar", icon: Calendar, path: "/reports/calendar" },
     ],
   },
 ];
