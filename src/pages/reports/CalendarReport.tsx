@@ -119,7 +119,12 @@ const typeColor: Record<string, string> = {
   DELIVERY: "border-l-primary",
   PICKUP: "border-l-amber-500",
   "SHIPMENT PREP": "border-l-violet-500",
+  ORDER: "border-l-emerald-500",
+  "PICK TICKET": "border-l-cyan-500",
+  "SALES RETURN": "border-l-rose-500",
 };
+
+const ORDER_TYPES = ["ORDER", "DELIVERY", "PICK TICKET", "SALES RETURN", "PICKUP", "SHIPMENT PREP"] as const;
 
 type ViewMode = "month" | "week" | "day";
 
