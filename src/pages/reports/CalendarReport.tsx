@@ -20,7 +20,7 @@ interface Order {
   site: string;
   customer: string;
   customerName: string;
-  type: "DELIVERY" | "PICKUP" | "SHIPMENT PREP";
+  type: "DELIVERY" | "PICKUP" | "SHIPMENT PREP" | "ORDER" | "PICK TICKET" | "SALES RETURN";
   status: "Completed" | "Planned" | "In Progress" | "To Plan";
   date: Date;
   time: string;
