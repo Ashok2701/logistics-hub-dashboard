@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, addWeeks, subWeeks, isSameMonth, isSameDay, startOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, X, Truck, User, Route, MapPin, Package, Clock, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Truck, User, Route, MapPin, Package, Clock, Calendar as CalendarIcon, ChevronDown, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface OrderProduct {
   productId: string;
