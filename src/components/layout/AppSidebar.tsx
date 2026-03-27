@@ -54,6 +54,7 @@ const menuItems: MenuItem[] = [
     children: [
       { label: "Driver Reports", icon: Users, path: "/reports/drivers" },
       { label: "Vehicle Reports", icon: Truck, path: "/reports/vehicles" },
+      { label: "POD Tracking", icon: FileText, path: "/reports/pod-tracking" },
     ],
   },
 ];

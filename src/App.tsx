@@ -19,6 +19,7 @@ import RoutePlanner from "@/pages/operations/RoutePlanner";
 import LiveTracking from "@/pages/operations/LiveTracking";
 import DriverReports from "@/pages/reports/DriverReports";
 import VehicleReports from "@/pages/reports/VehicleReports";
+import PODTracking from "@/pages/reports/PODTracking";
 import SyncCenter from "@/pages/configuration/SyncCenter";
 import UserManagement from "@/pages/configuration/UserManagement";
 import SiteManagement from "@/pages/configuration/SiteManagement";
@@ -54,6 +55,7 @@ function AppRoutes() {
         <Route path="operations/live-tracking" element={<LiveTracking />} />
         <Route path="reports/drivers" element={<DriverReports />} />
         <Route path="reports/vehicles" element={<VehicleReports />} />
+        <Route path="reports/pod-tracking" element={<PODTracking />} />
         <Route path="config/sync-center" element={<SyncCenter />} />
         <Route path="config/roles" element={<UserManagement />} />
         <Route path="config/sites" element={<SiteManagement />} />
