@@ -8,8 +8,8 @@ export function AppLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 bg-background">
         <AppHeader />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-          <div className="max-w-[1400px] mx-auto">
+        <main className="flex-1 overflow-y-auto p-0">
+          <div className="w-full">
             <Outlet />
           </div>
         </main>
