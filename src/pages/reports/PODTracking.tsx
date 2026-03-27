@@ -94,6 +94,7 @@ export default function PODTracking() {
   const [groupBy, setGroupBy] = useState<"site" | "date" | "type" | "none">("site");
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const filterSections: FilterSection[] = useMemo(() => {
     const siteCounts: Record<string, number> = {};
