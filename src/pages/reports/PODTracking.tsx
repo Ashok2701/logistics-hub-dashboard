@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Group, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { Search, Group, ChevronDown, ChevronRight, FileText, PanelLeftClose, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PODLineItem {
@@ -94,6 +94,7 @@ export default function PODTracking() {
   const [groupBy, setGroupBy] = useState<"site" | "date" | "type" | "none">("site");
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const filterSections: FilterSection[] = useMemo(() => {
     const siteCounts: Record<string, number> = {};
@@ -219,47 +220,67 @@ export default function PODTracking() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Toggle Button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="absolute z-20 flex items-center justify-center w-5 h-10 bg-card border border-border rounded-r-md shadow-sm hover:bg-muted transition-colors"
+          style={{ left: sidebarOpen ? '190px' : '0px', top: '50%', transform: 'translateY(-50%)' }}
+          title={sidebarOpen ? "Hide filters" : "Show filters"}
+        >
+          {sidebarOpen ? <PanelLeftClose className="w-3 h-3 text-muted-foreground" /> : <PanelLeft className="w-3 h-3 text-muted-foreground" />}
+        </button>
+
         {/* Left Filter Sidebar */}
-        <div className="w-[190px] flex-shrink-0 border-r border-border bg-card overflow-y-auto">
-          {filterSections.map((section) => (
-            <div key={section.key} className="border-b border-border">
-              <button
-                onClick={() => toggleFilterSection(section.key)}
-                className="flex items-center gap-1.5 w-full px-3 py-2 bg-primary/8 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/12 transition-colors"
-              >
-                {expandedFilters.includes(section.key) ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
-                {section.label}
-              </button>
-              <AnimatePresence>
-                {expandedFilters.includes(section.key) && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
-                    <div className="px-2 py-1.5 space-y-0.5">
-                      {section.options.map((opt) => (
-                        <label
-                          key={opt.value}
-                          className={cn(
-                            "flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[11px] cursor-pointer transition-colors hover:bg-muted",
-                            selectedFilters[section.key].includes(opt.value) && "bg-primary/8 text-primary font-medium"
-                          )}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedFilters[section.key].includes(opt.value)}
-                            onChange={() => toggleFilter(section.key, opt.value)}
-                            className="rounded border-border text-primary focus:ring-primary/20 w-2.5 h-2.5"
-                          />
-                          <span className="text-foreground">{opt.value}</span>
-                          <span className="text-muted-foreground ml-auto text-[10px]">({opt.count})</span>
-                        </label>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </div>
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 190, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex-shrink-0 border-r border-border bg-card overflow-y-auto overflow-x-hidden"
+            >
+              {filterSections.map((section) => (
+                <div key={section.key} className="border-b border-border">
+                  <button
+                    onClick={() => toggleFilterSection(section.key)}
+                    className="flex items-center gap-1.5 w-full px-3 py-2 bg-primary/8 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/12 transition-colors"
+                  >
+                    {expandedFilters.includes(section.key) ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+                    {section.label}
+                  </button>
+                  <AnimatePresence>
+                    {expandedFilters.includes(section.key) && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
+                        <div className="px-2 py-1.5 space-y-0.5">
+                          {section.options.map((opt) => (
+                            <label
+                              key={opt.value}
+                              className={cn(
+                                "flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[11px] cursor-pointer transition-colors hover:bg-muted",
+                                selectedFilters[section.key].includes(opt.value) && "bg-primary/8 text-primary font-medium"
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedFilters[section.key].includes(opt.value)}
+                                onChange={() => toggleFilter(section.key, opt.value)}
+                                className="rounded border-border text-primary focus:ring-primary/20 w-2.5 h-2.5"
+                              />
+                              <span className="text-foreground">{opt.value}</span>
+                              <span className="text-muted-foreground ml-auto text-[10px]">({opt.count})</span>
+                            </label>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
