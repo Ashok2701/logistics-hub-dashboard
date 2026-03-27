@@ -228,6 +228,32 @@ export default function CalendarReport() {
           <CalendarIcon className="w-4 h-4 text-primary" />
           <h1 className="text-sm font-bold text-primary uppercase tracking-wide">Order Calendar</h1>
           <span className="text-[10px] text-muted-foreground">Schedule & delivery overview</span>
+          {/* Type Filter Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border border-border rounded-md hover:bg-muted transition-colors bg-background"
+            >
+              <Filter className="w-3 h-3 text-muted-foreground" />
+              {typeFilterLabel}
+              <ChevronDown className={cn("w-3 h-3 text-muted-foreground transition-transform", typeDropdownOpen && "rotate-180")} />
+            </button>
+            {typeDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-popover border border-border rounded-md shadow-lg z-50 py-1">
+                <label className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[11px] font-semibold text-foreground border-b border-border mb-0.5">
+                  <Checkbox checked={isAllSelected} onCheckedChange={toggleAll} className="h-3.5 w-3.5" />
+                  All
+                </label>
+                {ORDER_TYPES.map((type) => (
+                  <label key={type} className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[11px] text-foreground">
+                    <Checkbox checked={selectedTypes.has(type)} onCheckedChange={() => toggleType(type)} className="h-3.5 w-3.5" />
+                    <span className={cn("w-1.5 h-1.5 rounded-full", typeColor[type]?.replace("border-l-", "bg-"))} />
+                    {type.charAt(0) + type.slice(1).toLowerCase().replace(/_/g, " ")}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {/* View Mode Toggle */}
