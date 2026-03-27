@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, addWeeks, subWeeks, isSameMonth, isSameDay, startOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, X, Truck, User, Route, MapPin, Package, Clock, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Truck, User, Route, MapPin, Package, Clock, Calendar as CalendarIcon, ChevronDown, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface OrderProduct {
   productId: string;
@@ -19,7 +20,7 @@ interface Order {
   site: string;
   customer: string;
   customerName: string;
-  type: "DELIVERY" | "PICKUP" | "SHIPMENT PREP";
+  type: "DELIVERY" | "PICKUP" | "SHIPMENT PREP" | "ORDER" | "PICK TICKET" | "SALES RETURN";
   status: "Completed" | "Planned" | "In Progress" | "To Plan";
   date: Date;
   time: string;
@@ -118,7 +119,12 @@ const typeColor: Record<string, string> = {
   DELIVERY: "border-l-primary",
   PICKUP: "border-l-amber-500",
   "SHIPMENT PREP": "border-l-violet-500",
+  ORDER: "border-l-emerald-500",
+  "PICK TICKET": "border-l-cyan-500",
+  "SALES RETURN": "border-l-rose-500",
 };
+
+const ORDER_TYPES = ["ORDER", "DELIVERY", "PICK TICKET", "SALES RETURN", "PICKUP", "SHIPMENT PREP"] as const;
 
 type ViewMode = "month" | "week" | "day";
 
@@ -126,6 +132,38 @@ export default function CalendarReport() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 26));
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(ORDER_TYPES));
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const isAllSelected = selectedTypes.size === ORDER_TYPES.length;
+
+  const toggleType = (type: string) => {
+    setSelectedTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (isAllSelected) setSelectedTypes(new Set());
+    else setSelectedTypes(new Set(ORDER_TYPES));
+  };
+
+  const typeFilterLabel = isAllSelected ? "All Types" : selectedTypes.size === 0 ? "None" : `${selectedTypes.size} selected`;
 
   const navigate = (dir: "prev" | "next") => {
     if (viewMode === "month") setCurrentDate(dir === "prev" ? subMonths(currentDate, 1) : addMonths(currentDate, 1));
@@ -143,7 +181,6 @@ export default function CalendarReport() {
     return format(currentDate, "EEEE, MMMM d, yyyy");
   }, [currentDate, viewMode]);
 
-  // Generate calendar days for month view
   const monthDays = useMemo(() => {
     const ms = startOfMonth(currentDate);
     const me = endOfMonth(currentDate);
@@ -158,13 +195,12 @@ export default function CalendarReport() {
     return days;
   }, [currentDate]);
 
-  // Generate week days
   const weekDays = useMemo(() => {
     const ws = startOfWeek(currentDate, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(ws, i));
   }, [currentDate]);
 
-  const getOrdersForDate = (date: Date) => sampleOrders.filter((o) => isSameDay(o.date, date));
+  const getOrdersForDate = (date: Date) => sampleOrders.filter((o) => isSameDay(o.date, date) && selectedTypes.has(o.type));
 
   const OrderChip = ({ order }: { order: Order }) => {
     const sc = statusConfig[order.status] || statusConfig.Planned;
@@ -192,6 +228,32 @@ export default function CalendarReport() {
           <CalendarIcon className="w-4 h-4 text-primary" />
           <h1 className="text-sm font-bold text-primary uppercase tracking-wide">Order Calendar</h1>
           <span className="text-[10px] text-muted-foreground">Schedule & delivery overview</span>
+          {/* Type Filter Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border border-border rounded-md hover:bg-muted transition-colors bg-background"
+            >
+              <Filter className="w-3 h-3 text-muted-foreground" />
+              {typeFilterLabel}
+              <ChevronDown className={cn("w-3 h-3 text-muted-foreground transition-transform", typeDropdownOpen && "rotate-180")} />
+            </button>
+            {typeDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-popover border border-border rounded-md shadow-lg z-50 py-1">
+                <label className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[11px] font-semibold text-foreground border-b border-border mb-0.5">
+                  <Checkbox checked={isAllSelected} onCheckedChange={toggleAll} className="h-3.5 w-3.5" />
+                  All
+                </label>
+                {ORDER_TYPES.map((type) => (
+                  <label key={type} className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[11px] text-foreground">
+                    <Checkbox checked={selectedTypes.has(type)} onCheckedChange={() => toggleType(type)} className="h-3.5 w-3.5" />
+                    <span className={cn("w-1.5 h-1.5 rounded-full", typeColor[type]?.replace("border-l-", "bg-"))} />
+                    {type.charAt(0) + type.slice(1).toLowerCase().replace(/_/g, " ")}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {/* View Mode Toggle */}
