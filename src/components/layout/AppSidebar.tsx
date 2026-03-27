@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Truck, Car, Users, Container,
   Link as LinkIcon, Navigation, Radar, BarChart3, Settings,
   RefreshCw, Shield, Building2, UserCircle, Package, FileText,
-  ChevronDown, ChevronLeft, ChevronRight, Route, FileText, type LucideIcon,
+  ChevronDown, ChevronLeft, ChevronRight, Route, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
