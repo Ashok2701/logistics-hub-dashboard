@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Group, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { Search, Group, ChevronDown, ChevronRight, FileText, PanelLeftClose, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PODLineItem {
