@@ -132,6 +132,38 @@ export default function CalendarReport() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 26));
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(ORDER_TYPES));
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const isAllSelected = selectedTypes.size === ORDER_TYPES.length;
+
+  const toggleType = (type: string) => {
+    setSelectedTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (isAllSelected) setSelectedTypes(new Set());
+    else setSelectedTypes(new Set(ORDER_TYPES));
+  };
+
+  const typeFilterLabel = isAllSelected ? "All Types" : selectedTypes.size === 0 ? "None" : `${selectedTypes.size} selected`;
 
   const navigate = (dir: "prev" | "next") => {
     if (viewMode === "month") setCurrentDate(dir === "prev" ? subMonths(currentDate, 1) : addMonths(currentDate, 1));
@@ -149,7 +181,6 @@ export default function CalendarReport() {
     return format(currentDate, "EEEE, MMMM d, yyyy");
   }, [currentDate, viewMode]);
 
-  // Generate calendar days for month view
   const monthDays = useMemo(() => {
     const ms = startOfMonth(currentDate);
     const me = endOfMonth(currentDate);
@@ -164,13 +195,12 @@ export default function CalendarReport() {
     return days;
   }, [currentDate]);
 
-  // Generate week days
   const weekDays = useMemo(() => {
     const ws = startOfWeek(currentDate, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(ws, i));
   }, [currentDate]);
 
-  const getOrdersForDate = (date: Date) => sampleOrders.filter((o) => isSameDay(o.date, date));
+  const getOrdersForDate = (date: Date) => sampleOrders.filter((o) => isSameDay(o.date, date) && selectedTypes.has(o.type));
 
   const OrderChip = ({ order }: { order: Order }) => {
     const sc = statusConfig[order.status] || statusConfig.Planned;
