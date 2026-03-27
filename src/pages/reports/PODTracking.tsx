@@ -220,7 +220,7 @@ export default function PODTracking() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Toggle Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
