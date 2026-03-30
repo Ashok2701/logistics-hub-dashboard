@@ -22,6 +22,7 @@ import VehicleReports from "@/pages/reports/VehicleReports";
 import PODTracking from "@/pages/reports/PODTracking";
 import CalendarReport from "@/pages/reports/CalendarReport";
 import RouteList from "@/pages/reports/RouteList";
+import KPITransportation from "@/pages/reports/KPITransportation";
 import SyncCenter from "@/pages/configuration/SyncCenter";
 import UserManagement from "@/pages/configuration/UserManagement";
 import SiteManagement from "@/pages/configuration/SiteManagement";
@@ -60,6 +61,7 @@ function AppRoutes() {
         <Route path="reports/pod-tracking" element={<PODTracking />} />
         <Route path="reports/calendar" element={<CalendarReport />} />
         <Route path="reports/route-list" element={<RouteList />} />
+        <Route path="reports/kpi-transportation" element={<KPITransportation />} />
         <Route path="config/sync-center" element={<SyncCenter />} />
         <Route path="config/roles" element={<UserManagement />} />
         <Route path="config/sites" element={<SiteManagement />} />

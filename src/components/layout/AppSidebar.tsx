@@ -57,6 +57,7 @@ const menuItems: MenuItem[] = [
       { label: "POD Tracking", icon: FileText, path: "/reports/pod-tracking" },
       { label: "Order Calendar", icon: Calendar, path: "/reports/calendar" },
       { label: "Route List", icon: Route, path: "/reports/route-list" },
+      { label: "KPI Transportation", icon: BarChart3, path: "/reports/kpi-transportation" },
     ],
   },
 ];
