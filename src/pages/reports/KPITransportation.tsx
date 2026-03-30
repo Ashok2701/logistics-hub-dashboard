@@ -14,17 +14,6 @@ import {
 } from "recharts";
 
 // --- Types ---
-interface KPIMetric {
-  id: string;
-  title: string;
-  icon: LucideIcon;
-  value: number | string;
-  month: string;
-  prevMonth: string;
-  prevValue: number | string;
-  trend: "up" | "down";
-}
-
 interface DetailRecord {
   kpi: string;
   site: string;
@@ -34,57 +23,120 @@ interface DetailRecord {
   stops: number;
   distance: number;
   travelTime: number;
-  date: string;
+  period: string; // "March 2026", "February 2026", etc.
 }
 
-// --- All detail records ---
+interface ChartRow {
+  site: string;
+  nbStops: number;
+  nbRoutes: number;
+  distance: number;
+  travelTime: number;
+  period: string;
+}
+
+// --- Raw data with period ---
 const allRecords: DetailRecord[] = [
-  { kpi: "fleet", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, date: "2026-03-15" },
-  { kpi: "fleet", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 6, stops: 32, distance: 980, travelTime: 14.2, date: "2026-03-15" },
-  { kpi: "fleet", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, date: "2026-02-14" },
-  { kpi: "fleet", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, date: "2026-03-14" },
-  { kpi: "fleet", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 7, stops: 38, distance: 1100, travelTime: 16.3, date: "2026-01-13" },
-  { kpi: "routes", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 3, stops: 18, distance: 450, travelTime: 6.5, date: "2026-03-15" },
-  { kpi: "routes", site: "CAT01", vehicle: "VH-1003", driver: "Tom Brown", routes: 5, stops: 27, distance: 720, travelTime: 10.8, date: "2026-03-15" },
-  { kpi: "routes", site: "IRE01", vehicle: "VH-2002", driver: "Patrick Kelly", routes: 2, stops: 12, distance: 340, travelTime: 5.2, date: "2026-02-14" },
-  { kpi: "routes", site: "UK01", vehicle: "VH-3002", driver: "David Clark", routes: 6, stops: 35, distance: 950, travelTime: 13.7, date: "2026-03-13" },
-  { kpi: "routes", site: "FR01", vehicle: "VH-4002", driver: "Jean Martin", routes: 4, stops: 22, distance: 680, travelTime: 9.9, date: "2026-01-12" },
-  { kpi: "travel", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, date: "2026-03-15" },
-  { kpi: "travel", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 6, stops: 32, distance: 980, travelTime: 14.2, date: "2026-03-15" },
-  { kpi: "travel", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, date: "2026-02-14" },
-  { kpi: "travel", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, date: "2026-03-13" },
-  { kpi: "distance", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, date: "2026-03-15" },
-  { kpi: "distance", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, date: "2026-02-14" },
-  { kpi: "distance", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, date: "2026-03-14" },
-  { kpi: "distance", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 7, stops: 38, distance: 1100, travelTime: 16.3, date: "2026-01-13" },
-  { kpi: "distance", site: "FR01", vehicle: "VH-4003", driver: "Luc Bernard", routes: 3, stops: 15, distance: 480, travelTime: 7.1, date: "2026-01-12" },
+  // March 2026
+  { kpi: "fleet", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, period: "March 2026" },
+  { kpi: "fleet", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 6, stops: 32, distance: 980, travelTime: 14.2, period: "March 2026" },
+  { kpi: "fleet", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, period: "March 2026" },
+  { kpi: "routes", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 3, stops: 18, distance: 450, travelTime: 6.5, period: "March 2026" },
+  { kpi: "routes", site: "CAT01", vehicle: "VH-1003", driver: "Tom Brown", routes: 5, stops: 27, distance: 720, travelTime: 10.8, period: "March 2026" },
+  { kpi: "routes", site: "UK01", vehicle: "VH-3002", driver: "David Clark", routes: 6, stops: 35, distance: 950, travelTime: 13.7, period: "March 2026" },
+  { kpi: "travel", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, period: "March 2026" },
+  { kpi: "travel", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 6, stops: 32, distance: 980, travelTime: 14.2, period: "March 2026" },
+  { kpi: "travel", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, period: "March 2026" },
+  { kpi: "distance", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, period: "March 2026" },
+  { kpi: "distance", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, period: "March 2026" },
+  // February 2026
+  { kpi: "fleet", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, period: "February 2026" },
+  { kpi: "fleet", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 10, stops: 55, distance: 1500, travelTime: 22.0, period: "February 2026" },
+  { kpi: "fleet", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 9, stops: 48, distance: 1300, travelTime: 19.5, period: "February 2026" },
+  { kpi: "fleet", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 8, stops: 42, distance: 1150, travelTime: 17.0, period: "February 2026" },
+  { kpi: "routes", site: "IRE01", vehicle: "VH-2002", driver: "Patrick Kelly", routes: 2, stops: 12, distance: 340, travelTime: 5.2, period: "February 2026" },
+  { kpi: "routes", site: "CAT01", vehicle: "VH-1003", driver: "Tom Brown", routes: 7, stops: 40, distance: 900, travelTime: 13.5, period: "February 2026" },
+  { kpi: "travel", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, period: "February 2026" },
+  { kpi: "travel", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 10, stops: 55, distance: 1500, travelTime: 22.0, period: "February 2026" },
+  { kpi: "travel", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 8, stops: 42, distance: 1150, travelTime: 17.0, period: "February 2026" },
+  { kpi: "distance", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, period: "February 2026" },
+  { kpi: "distance", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 10, stops: 55, distance: 1500, travelTime: 22.0, period: "February 2026" },
+  { kpi: "distance", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 9, stops: 48, distance: 1300, travelTime: 19.5, period: "February 2026" },
+  { kpi: "distance", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 8, stops: 42, distance: 1150, travelTime: 17.0, period: "February 2026" },
+  // January 2026
+  { kpi: "fleet", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 7, stops: 38, distance: 1100, travelTime: 16.3, period: "January 2026" },
+  { kpi: "fleet", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 12, stops: 65, distance: 1800, travelTime: 26.0, period: "January 2026" },
+  { kpi: "fleet", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 6, stops: 30, distance: 900, travelTime: 13.0, period: "January 2026" },
+  { kpi: "routes", site: "FR01", vehicle: "VH-4002", driver: "Jean Martin", routes: 4, stops: 22, distance: 680, travelTime: 9.9, period: "January 2026" },
+  { kpi: "routes", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 9, stops: 50, distance: 1400, travelTime: 20.0, period: "January 2026" },
+  { kpi: "travel", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 7, stops: 38, distance: 1100, travelTime: 16.3, period: "January 2026" },
+  { kpi: "travel", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 12, stops: 65, distance: 1800, travelTime: 26.0, period: "January 2026" },
+  { kpi: "travel", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 6, stops: 30, distance: 900, travelTime: 13.0, period: "January 2026" },
+  { kpi: "distance", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 7, stops: 38, distance: 1100, travelTime: 16.3, period: "January 2026" },
+  { kpi: "distance", site: "FR01", vehicle: "VH-4003", driver: "Luc Bernard", routes: 3, stops: 15, distance: 480, travelTime: 7.1, period: "January 2026" },
+  { kpi: "distance", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 12, stops: 65, distance: 1800, travelTime: 26.0, period: "January 2026" },
 ];
 
-const chartDataRaw = [
-  { site: "CAT01", nbStops: 3000, nbRoutes: 745, distance: 103000, travelTime: 2000 },
-  { site: "IRE01", nbStops: 153, nbRoutes: 220, distance: 10000, travelTime: 169 },
-  { site: "UK01", nbStops: 980, nbRoutes: 410, distance: 52000, travelTime: 870 },
-  { site: "FR01", nbStops: 1200, nbRoutes: 520, distance: 67000, travelTime: 1100 },
+const chartDataByPeriod: ChartRow[] = [
+  // March 2026
+  { site: "CAT01", nbStops: 3000, nbRoutes: 745, distance: 103000, travelTime: 2000, period: "March 2026" },
+  { site: "UK01", nbStops: 980, nbRoutes: 410, distance: 52000, travelTime: 870, period: "March 2026" },
+  // February 2026
+  { site: "CAT01", nbStops: 4200, nbRoutes: 980, distance: 135000, travelTime: 2800, period: "February 2026" },
+  { site: "IRE01", nbStops: 153, nbRoutes: 220, distance: 10000, travelTime: 169, period: "February 2026" },
+  { site: "UK01", nbStops: 1400, nbRoutes: 580, distance: 72000, travelTime: 1200, period: "February 2026" },
+  { site: "FR01", nbStops: 1200, nbRoutes: 520, distance: 67000, travelTime: 1100, period: "February 2026" },
+  // January 2026
+  { site: "CAT01", nbStops: 5000, nbRoutes: 1100, distance: 160000, travelTime: 3200, period: "January 2026" },
+  { site: "IRE01", nbStops: 300, nbRoutes: 350, distance: 18000, travelTime: 320, period: "January 2026" },
+  { site: "FR01", nbStops: 1500, nbRoutes: 650, distance: 80000, travelTime: 1400, period: "January 2026" },
 ];
 
-const metrics: KPIMetric[] = [
-  { id: "fleet", title: "FLEET USAGE", icon: Truck, value: 22, month: "March", prevMonth: "February 2026", prevValue: 50, trend: "down" },
-  { id: "routes", title: "ROUTES", icon: Route, value: 22, month: "March 2026", prevMonth: "February 2026", prevValue: 50, trend: "down" },
-  { id: "travel", title: "TRAVEL TIME", icon: Clock, value: "67.43", month: "March 2026", prevMonth: "February 2026", prevValue: "140.50", trend: "down" },
-  { id: "distance", title: "TOTAL DISTANCE", icon: MapPin, value: "2.18 K", month: "March 2026", prevMonth: "February 2026", prevValue: "4.67 K", trend: "down" },
-];
-
-const periodToMonth: Record<string, string> = {
-  "March 2026": "2026-03",
-  "February 2026": "2026-02",
-  "January 2026": "2026-01",
+const periods = ["March 2026", "February 2026", "January 2026"];
+const prevPeriodMap: Record<string, string> = {
+  "March 2026": "February 2026",
+  "February 2026": "January 2026",
+  "January 2026": "December 2025",
 };
 
 const allSites = ["CAT01", "IRE01", "UK01", "FR01"];
 
+const metricDefs = [
+  { id: "fleet", title: "FLEET USAGE", icon: Truck },
+  { id: "routes", title: "ROUTES", icon: Route },
+  { id: "travel", title: "TRAVEL TIME", icon: Clock },
+  { id: "distance", title: "TOTAL DISTANCE", icon: MapPin },
+] as const;
+
+// --- Helpers ---
+function computeMetricValue(records: DetailRecord[], metricId: string): number {
+  const recs = records.filter(r => r.kpi === metricId);
+  switch (metricId) {
+    case "fleet": return new Set(recs.map(r => r.vehicle)).size;
+    case "routes": return recs.reduce((s, r) => s + r.routes, 0);
+    case "travel": return Math.round(recs.reduce((s, r) => s + r.travelTime, 0) * 100) / 100;
+    case "distance": return recs.reduce((s, r) => s + r.distance, 0);
+    default: return 0;
+  }
+}
+
+function formatValue(metricId: string, val: number): string {
+  if (metricId === "travel") return val.toFixed(2);
+  if (metricId === "distance") return val >= 1000 ? `${(val / 1000).toFixed(2)} K` : String(val);
+  return String(val);
+}
+
 // --- KPI Card ---
-function KPICard({ metric, onClick, isSelected }: { metric: KPIMetric; onClick: () => void; isSelected: boolean }) {
-  const Icon = metric.icon;
+function KPICard({ metricId, title, icon: Icon, currentValue, currentLabel, prevValue, prevLabel, onClick, isSelected }: {
+  metricId: string; title: string; icon: LucideIcon;
+  currentValue: string; currentLabel: string;
+  prevValue: string; prevLabel: string;
+  onClick: () => void; isSelected: boolean;
+}) {
+  const cur = parseFloat(currentValue) || 0;
+  const prev = parseFloat(prevValue) || 0;
+  const trend = cur >= prev ? "up" : "down";
+
   return (
     <motion.div
       whileHover={{ y: -2 }}
@@ -97,11 +149,11 @@ function KPICard({ metric, onClick, isSelected }: { metric: KPIMetric; onClick: 
       <div className="flex items-center justify-center mb-1">
         <Icon className="w-5 h-5 text-muted-foreground" />
       </div>
-      <h3 className="text-[11px] font-bold text-center tracking-wider text-muted-foreground">{metric.title}</h3>
-      <p className="text-[10px] text-center text-muted-foreground">{metric.month}</p>
+      <h3 className="text-[11px] font-bold text-center tracking-wider text-muted-foreground">{title}</h3>
+      <p className="text-[10px] text-center text-muted-foreground">{currentLabel}</p>
       <div className="flex items-center justify-center gap-2 mt-3">
-        <span className="text-3xl font-bold text-foreground">{metric.value}</span>
-        {metric.trend === "down" ? (
+        <span className="text-3xl font-bold text-foreground">{currentValue}</span>
+        {trend === "down" ? (
           <TrendingDown className="w-5 h-5 text-destructive" />
         ) : (
           <TrendingUp className="w-5 h-5 text-success" />
@@ -109,7 +161,7 @@ function KPICard({ metric, onClick, isSelected }: { metric: KPIMetric; onClick: 
       </div>
       <div className="h-px bg-border/40 my-3" />
       <p className="text-[10px] text-center text-muted-foreground">
-        {metric.prevMonth}: <span className="font-semibold text-foreground">{metric.prevValue}</span>
+        {prevLabel}: <span className="font-semibold text-foreground">{prevValue}</span>
       </p>
     </motion.div>
   );
@@ -165,7 +217,7 @@ function DetailView({ records, title, siteName, onBack }: { records: DetailRecor
                 <th className="text-right p-3 font-semibold text-muted-foreground text-xs">Stops</th>
                 <th className="text-right p-3 font-semibold text-muted-foreground text-xs">Distance (km)</th>
                 <th className="text-right p-3 font-semibold text-muted-foreground text-xs">Travel Time (hrs)</th>
-                <th className="text-left p-3 font-semibold text-muted-foreground text-xs">Date</th>
+                <th className="text-left p-3 font-semibold text-muted-foreground text-xs">Period</th>
               </tr>
             </thead>
             <tbody>
@@ -178,7 +230,7 @@ function DetailView({ records, title, siteName, onBack }: { records: DetailRecor
                   <td className="p-3 text-right font-mono">{r.stops}</td>
                   <td className="p-3 text-right font-mono">{r.distance.toLocaleString()}</td>
                   <td className="p-3 text-right font-mono">{r.travelTime}</td>
-                  <td className="p-3 text-muted-foreground">{r.date}</td>
+                  <td className="p-3 text-muted-foreground">{r.period}</td>
                 </tr>
               ))}
               {filtered.length === 0 && (
@@ -200,40 +252,47 @@ export default function KPITransportation() {
   const [filterSite, setFilterSite] = useState("all");
   const [filterPeriod, setFilterPeriod] = useState("March 2026");
 
-  const monthPrefix = periodToMonth[filterPeriod] || "";
+  const prevPeriod = prevPeriodMap[filterPeriod] || "";
 
-  // Filter chart data by site
+  // Chart data filtered by period + site
   const chartData = useMemo(() => {
-    if (filterSite === "all") return chartDataRaw;
-    return chartDataRaw.filter(d => d.site === filterSite);
-  }, [filterSite]);
+    let data = chartDataByPeriod.filter(d => d.period === filterPeriod);
+    if (filterSite !== "all") data = data.filter(d => d.site === filterSite);
+    return data;
+  }, [filterPeriod, filterSite]);
 
-  // Filter detail records by site + period
-  const filteredRecords = useMemo(() => {
+  // Current period records filtered by site
+  const currentRecords = useMemo(() => {
     return allRecords.filter(r => {
+      const periodMatch = r.period === filterPeriod;
       const siteMatch = filterSite === "all" || r.site === filterSite;
-      const periodMatch = !monthPrefix || r.date.startsWith(monthPrefix);
-      return siteMatch && periodMatch;
+      return periodMatch && siteMatch;
     });
-  }, [filterSite, monthPrefix]);
+  }, [filterPeriod, filterSite]);
 
-  // Detail records for the selected metric (+ optional clicked site from chart)
+  // Previous period records filtered by site
+  const prevRecords = useMemo(() => {
+    if (!prevPeriod) return [];
+    return allRecords.filter(r => {
+      const periodMatch = r.period === prevPeriod;
+      const siteMatch = filterSite === "all" || r.site === filterSite;
+      return periodMatch && siteMatch;
+    });
+  }, [prevPeriod, filterSite]);
+
+  // Detail records for the selected metric
   const detailRecords = useMemo(() => {
     if (!selectedMetric) return [];
-    let records = filteredRecords.filter(r => r.kpi === selectedMetric);
-    if (clickedSite) {
-      records = records.filter(r => r.site === clickedSite);
-    }
+    let records = currentRecords.filter(r => r.kpi === selectedMetric);
+    if (clickedSite) records = records.filter(r => r.site === clickedSite);
     return records;
-  }, [selectedMetric, filteredRecords, clickedSite]);
-
-  const selectedMetricData = metrics.find(m => m.id === selectedMetric);
+  }, [selectedMetric, currentRecords, clickedSite]);
 
   const handleBarClick = (data: any) => {
     if (data?.activePayload?.[0]?.payload?.site) {
       const site = data.activePayload[0].payload.site;
       setClickedSite(site);
-      setSelectedMetric("fleet"); // default to fleet detail when clicking chart bar
+      setSelectedMetric("fleet");
     }
   };
 
@@ -241,6 +300,8 @@ export default function KPITransportation() {
     setSelectedMetric(null);
     setClickedSite(null);
   };
+
+  const selectedDef = metricDefs.find(m => m.id === selectedMetric);
 
   return (
     <div className="flex h-full">
@@ -268,9 +329,7 @@ export default function KPITransportation() {
                     onChange={e => setFilterPeriod(e.target.value)}
                     className="w-full h-9 rounded-lg border border-border/50 bg-background px-3 text-sm"
                   >
-                    <option>March 2026</option>
-                    <option>February 2026</option>
-                    <option>January 2026</option>
+                    {periods.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
@@ -303,11 +362,11 @@ export default function KPITransportation() {
         <PageHeader title="KPI Transportation" subtitle="Transportation performance metrics and analytics" />
 
         <AnimatePresence mode="wait">
-          {selectedMetric && selectedMetricData ? (
+          {selectedMetric && selectedDef ? (
             <DetailView
               key="detail"
               records={detailRecords}
-              title={selectedMetricData.title}
+              title={selectedDef.title}
               siteName={clickedSite || undefined}
               onBack={handleBack}
             />
@@ -318,19 +377,19 @@ export default function KPITransportation() {
                 <div className="xl:col-span-2">
                   <DataTableShell>
                     <div className="p-5">
-                      <h3 className="text-sm font-semibold text-foreground mb-4">Transportation KPI Period and Vehicle</h3>
+                      <h3 className="text-sm font-semibold text-foreground mb-4">Transportation KPI — {filterPeriod}</h3>
                       <div className="h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart data={chartData} onClick={handleBarClick} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                            <XAxis dataKey="site" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} label={{ value: "SITE", position: "insideBottom", offset: -5, style: { fontSize: 11, fill: "hsl(var(--muted-foreground))" } }} />
-                            <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} label={{ value: "Nb of Stops, NB of Routes", angle: -90, position: "insideLeft", style: { fontSize: 10, fill: "hsl(var(--muted-foreground))" } }} />
-                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} label={{ value: "Distance", angle: 90, position: "insideRight", style: { fontSize: 10, fill: "hsl(var(--muted-foreground))" } }} />
+                            <XAxis dataKey="site" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                            <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                             <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
                             <Legend wrapperStyle={{ fontSize: "11px" }} />
                             <Bar yAxisId="left" dataKey="nbStops" name="Nb of Stops" fill="hsl(var(--primary))" opacity={0.7} radius={[4, 4, 0, 0]} cursor="pointer" />
-                            <Bar yAxisId="left" dataKey="nbRoutes" name="NB of Routes (Sum)" fill="hsl(var(--accent-foreground))" opacity={0.6} radius={[4, 4, 0, 0]} cursor="pointer" />
-                            <Bar yAxisId="left" dataKey="travelTime" name="Total Travel Time (Sum)" fill="hsl(var(--destructive))" opacity={0.6} radius={[4, 4, 0, 0]} cursor="pointer" />
+                            <Bar yAxisId="left" dataKey="nbRoutes" name="NB of Routes" fill="hsl(var(--accent-foreground))" opacity={0.6} radius={[4, 4, 0, 0]} cursor="pointer" />
+                            <Bar yAxisId="left" dataKey="travelTime" name="Travel Time" fill="hsl(var(--destructive))" opacity={0.6} radius={[4, 4, 0, 0]} cursor="pointer" />
                             <Line yAxisId="right" type="monotone" dataKey="distance" name="Distance" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", r: 4 }} />
                           </ComposedChart>
                         </ResponsiveContainer>
@@ -339,16 +398,26 @@ export default function KPITransportation() {
                   </DataTableShell>
                 </div>
 
-                {/* KPI Cards */}
+                {/* KPI Cards — dynamically computed */}
                 <div className="grid grid-cols-2 gap-4 content-start">
-                  {metrics.map(m => (
-                    <KPICard
-                      key={m.id}
-                      metric={m}
-                      onClick={() => { setClickedSite(null); setSelectedMetric(m.id); }}
-                      isSelected={selectedMetric === m.id}
-                    />
-                  ))}
+                  {metricDefs.map(m => {
+                    const curVal = computeMetricValue(currentRecords, m.id);
+                    const prvVal = computeMetricValue(prevRecords, m.id);
+                    return (
+                      <KPICard
+                        key={m.id}
+                        metricId={m.id}
+                        title={m.title}
+                        icon={m.icon}
+                        currentValue={formatValue(m.id, curVal)}
+                        currentLabel={filterPeriod}
+                        prevValue={formatValue(m.id, prvVal)}
+                        prevLabel={prevPeriod || "N/A"}
+                        onClick={() => { setClickedSite(null); setSelectedMetric(m.id); }}
+                        isSelected={selectedMetric === m.id}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>
