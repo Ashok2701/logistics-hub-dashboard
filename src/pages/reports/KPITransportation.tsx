@@ -37,15 +37,35 @@ interface DetailRecord {
   date: string;
 }
 
-// --- Sample Data ---
-const chartData = [
+// --- All detail records (flat) ---
+const allRecords: (DetailRecord & { kpi: string })[] = [
+  { kpi: "fleet", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, date: "2026-03-15" },
+  { kpi: "fleet", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 6, stops: 32, distance: 980, travelTime: 14.2, date: "2026-03-15" },
+  { kpi: "fleet", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, date: "2026-03-14" },
+  { kpi: "fleet", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, date: "2026-03-14" },
+  { kpi: "fleet", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 7, stops: 38, distance: 1100, travelTime: 16.3, date: "2026-03-13" },
+  { kpi: "routes", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 3, stops: 18, distance: 450, travelTime: 6.5, date: "2026-03-15" },
+  { kpi: "routes", site: "CAT01", vehicle: "VH-1003", driver: "Tom Brown", routes: 5, stops: 27, distance: 720, travelTime: 10.8, date: "2026-03-15" },
+  { kpi: "routes", site: "IRE01", vehicle: "VH-2002", driver: "Patrick Kelly", routes: 2, stops: 12, distance: 340, travelTime: 5.2, date: "2026-03-14" },
+  { kpi: "routes", site: "UK01", vehicle: "VH-3002", driver: "David Clark", routes: 6, stops: 35, distance: 950, travelTime: 13.7, date: "2026-03-13" },
+  { kpi: "routes", site: "FR01", vehicle: "VH-4002", driver: "Jean Martin", routes: 4, stops: 22, distance: 680, travelTime: 9.9, date: "2026-03-12" },
+  { kpi: "travel", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, date: "2026-03-15" },
+  { kpi: "travel", site: "CAT01", vehicle: "VH-1002", driver: "Mike Johnson", routes: 6, stops: 32, distance: 980, travelTime: 14.2, date: "2026-03-15" },
+  { kpi: "travel", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, date: "2026-03-14" },
+  { kpi: "travel", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, date: "2026-03-13" },
+  { kpi: "distance", site: "CAT01", vehicle: "VH-1001", driver: "John Smith", routes: 8, stops: 45, distance: 1200, travelTime: 18.5, date: "2026-03-15" },
+  { kpi: "distance", site: "IRE01", vehicle: "VH-2001", driver: "Sean O'Brien", routes: 4, stops: 22, distance: 650, travelTime: 9.8, date: "2026-03-14" },
+  { kpi: "distance", site: "UK01", vehicle: "VH-3001", driver: "James Wilson", routes: 5, stops: 28, distance: 870, travelTime: 12.1, date: "2026-03-14" },
+  { kpi: "distance", site: "FR01", vehicle: "VH-4001", driver: "Pierre Dupont", routes: 7, stops: 38, distance: 1100, travelTime: 16.3, date: "2026-03-13" },
+  { kpi: "distance", site: "FR01", vehicle: "VH-4003", driver: "Luc Bernard", routes: 3, stops: 15, distance: 480, travelTime: 7.1, date: "2026-03-12" },
+];
+
+const chartDataRaw = [
   { site: "CAT01", nbStops: 3000, nbRoutes: 745, distance: 103000, travelTime: 2000 },
   { site: "IRE01", nbStops: 153, nbRoutes: 220, distance: 10000, travelTime: 169 },
   { site: "UK01", nbStops: 980, nbRoutes: 410, distance: 52000, travelTime: 870 },
   { site: "FR01", nbStops: 1200, nbRoutes: 520, distance: 67000, travelTime: 1100 },
 ];
-
-const metrics: KPIMetric[] = [
   { id: "fleet", title: "FLEET USAGE", icon: Truck, value: 22, month: "March", prevMonth: "February 2026", prevValue: 50, trend: "down" },
   { id: "routes", title: "ROUTES", icon: Route, value: 22, month: "March 2026", prevMonth: "February 2026", prevValue: 50, trend: "down" },
   { id: "travel", title: "TRAVEL TIME", icon: Clock, value: "67.43", month: "March 2026", prevMonth: "February 2026", prevValue: "140.50", trend: "down" },
