@@ -28,13 +28,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulate API delay
     await new Promise((r) => setTimeout(r, 800));
 
-    if (username === "admin" && password === "admin") {
-      const userData = { username: "admin", role: "admin" };
+    const validUsers: Record<string, { password: string; role: string }> = {
+      admin: { password: "admin", role: "admin" },
+      Tema: { password: "1234", role: "user" },
+    };
+
+    const account = validUsers[username];
+    if (account && account.password === password) {
+      const userData = { username, role: account.role };
       localStorage.setItem("vanguard-user", JSON.stringify(userData));
       localStorage.setItem("vanguard-token", "simulated-jwt-token");
       setUser(userData);
     } else {
-      throw new Error("Invalid credentials. Try admin/admin");
+      throw new Error("Invalid credentials. Try admin/admin or Tema/1234");
     }
   };
 
