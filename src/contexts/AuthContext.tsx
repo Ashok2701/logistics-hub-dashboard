@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 
-const API_BASE = "http://tmssolutions.tema-systems.com:8082/api/v1";
+const API_BASE = "https://tmssolutions.tema-systems.com:8040/api/v1";
 
 export interface UserPermissions {
   fleetmgmtflg?: boolean;
