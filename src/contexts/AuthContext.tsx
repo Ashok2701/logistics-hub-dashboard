@@ -1,9 +1,32 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+
+const API_BASE = "http://tmssolutions.tema-systems.com:8082/api/v1";
+
+export interface UserPermissions {
+  fleetmgmtflg?: boolean;
+  routeplannerflg?: boolean;
+  schedulerflg?: boolean;
+  mapviewrpflg?: boolean;
+  calendarrpflg?: boolean;
+  screportsflg?: boolean;
+  usermgmtflg?: boolean;
+  addPicktcktflg?: boolean;
+  removePicktcktflg?: boolean;
+  [key: string]: boolean | undefined;
+}
+
+export interface AuthUser {
+  username: string;
+  xusrname?: string;
+  role: string;
+  accessToken?: string;
+  xact?: boolean;
+  permissions?: UserPermissions;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: { username: string; role: string } | null;
+  user: AuthUser | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -16,32 +39,65 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<{ username: string; role: string } | null>(() => {
+  const [user, setUser] = useState<AuthUser | null>(() => {
     const stored = localStorage.getItem("vanguard-user");
     return stored ? JSON.parse(stored) : null;
   });
 
   const login = async (username: string, password: string) => {
-    // Simulated JWT auth - replace with real API call
     if (!username || !password) throw new Error("Username and password required");
-    
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 800));
 
-    const validUsers: Record<string, { password: string; role: string }> = {
-      admin: { password: "admin", role: "admin" },
-      Tema: { password: "1234", role: "user" },
+    let res: Response;
+    try {
+      res = await fetch(`${API_BASE}/user/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+    } catch (e) {
+      throw new Error("Cannot reach server. Check network or CORS settings.");
+    }
+
+    if (!res.ok) {
+      let msg = `Login failed (${res.status})`;
+      try {
+        const err = await res.json();
+        msg = err.message || err.error || msg;
+      } catch {}
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
+
+    if (!data.accessToken || data.xact === false) {
+      throw new Error(data.message || "Invalid credentials");
+    }
+
+    const {
+      accessToken,
+      xusrname,
+      xact,
+      username: uname,
+      ...flags
+    } = data;
+
+    const permissions: UserPermissions = {};
+    Object.keys(flags).forEach((k) => {
+      if (k.endsWith("flg")) permissions[k] = !!flags[k];
+    });
+
+    const userData: AuthUser = {
+      username: uname || username,
+      xusrname,
+      role: permissions.usermgmtflg ? "admin" : "user",
+      accessToken,
+      xact,
+      permissions,
     };
 
-    const account = validUsers[username];
-    if (account && account.password === password) {
-      const userData = { username, role: account.role };
-      localStorage.setItem("vanguard-user", JSON.stringify(userData));
-      localStorage.setItem("vanguard-token", "simulated-jwt-token");
-      setUser(userData);
-    } else {
-      throw new Error("Invalid credentials. Try admin/admin or Tema/1234");
-    }
+    localStorage.setItem("vanguard-user", JSON.stringify(userData));
+    localStorage.setItem("vanguard-token", accessToken);
+    setUser(userData);
   };
 
   const logout = () => {
