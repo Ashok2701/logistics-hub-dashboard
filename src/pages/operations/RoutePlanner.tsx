@@ -2,9 +2,9 @@ import { useMemo, useState, type DragEvent } from "react";
 import { motion } from "framer-motion";
 import {
   Truck, Container, Users, Calendar as CalIcon, ChevronLeft, ChevronRight,
-  RefreshCw, Lock, Unlock, CheckCheck, Trash2, Route as RouteIcon, Sigma,
-  PackageOpen, PackageCheck, PackageX, ArrowDownToLine, ArrowUpFromLine,
-  Search, Map as MapIcon, List, GripVertical, X,
+  RefreshCw, Lock, Unlock, CheckCheck, Trash2, Route as RouteIcon,
+  PackageCheck, PackageX, ArrowDownToLine, ArrowUpFromLine,
+  Search, Map as MapIcon, List, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
