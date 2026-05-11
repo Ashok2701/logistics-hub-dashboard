@@ -140,12 +140,8 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo credentials */}
           <p className="text-xs text-muted-foreground text-center mt-7">
-            Demo:{" "}
-            <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
-            {" / "}
-            <code className="font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-md text-[11px] font-semibold">admin</code>
+            Authenticated via TMS Solutions backend
           </p>
           </div>
         </div>
