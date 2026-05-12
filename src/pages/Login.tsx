@@ -30,19 +30,19 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full flex bg-background">
-      {/* LEFT — Brand / hero */}
-      <div className="hidden lg:flex relative flex-1 overflow-hidden bg-[hsl(222,47%,7%)]">
+      {/* LEFT — Brand / hero (light) */}
+      <div className="hidden lg:flex relative flex-1 overflow-hidden bg-[hsl(210,40%,98%)]">
         {/* background image */}
         <img
           src={fleetBg}
-          alt="Fleet logistics network at night"
-          className="absolute inset-0 w-full h-full object-cover opacity-60"
+          alt="Fleet logistics route network"
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* gradient overlay for legibility */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,47%,7%)]/85 via-[hsl(222,47%,9%)]/55 to-[hsl(224,76%,18%)]/70" />
+        {/* soft white overlay for legibility */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/40 to-[hsl(199,89%,90%)]/40" />
         {/* glow accents */}
-        <div className="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full bg-primary/20 blur-3xl animate-float pointer-events-none" />
-        <div className="absolute -bottom-40 -right-20 w-[460px] h-[460px] rounded-full bg-[hsl(199,89%,48%)]/20 blur-3xl animate-float-delayed pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full bg-primary/10 blur-3xl animate-float pointer-events-none" />
+        <div className="absolute -bottom-40 -right-20 w-[460px] h-[460px] rounded-full bg-[hsl(199,89%,48%)]/10 blur-3xl animate-float-delayed pointer-events-none" />
 
         {/* content */}
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 w-full">
@@ -52,32 +52,32 @@ export default function Login() {
               <Route className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-[17px] font-bold text-white tracking-tight leading-tight">Route Planner</h1>
-              <p className="text-[10px] text-white/60 uppercase tracking-[0.18em] font-semibold mt-0.5">Universal ERP Edition</p>
+              <h1 className="text-[17px] font-bold text-foreground tracking-tight leading-tight">Route Planner</h1>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.18em] font-semibold mt-0.5">Universal ERP Edition</p>
             </div>
           </div>
 
-          {/* hero copy + animated route svg */}
+          {/* hero copy */}
           <div className="space-y-10">
             <div>
-              <h2 className="text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.1]">
+              <h2 className="text-4xl xl:text-5xl font-bold text-foreground tracking-tight leading-[1.1]">
                 Plan smarter routes.<br />
-                <span className="text-gradient bg-gradient-to-r from-primary to-[hsl(199,89%,60%)] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-primary to-[hsl(199,89%,48%)] bg-clip-text text-transparent">
                   Move every load faster.
                 </span>
               </h2>
-              <p className="text-white/60 text-[15px] mt-5 max-w-md leading-relaxed">
-                A modern Transport Management Suite that connects with any ERP — Sage, SAP, Oracle, NetSuite, Dynamics & more.
+              <p className="text-muted-foreground text-[15px] mt-5 max-w-md leading-relaxed">
+                A modern Transport Management Suite for fleet, deliveries and route optimization.
               </p>
             </div>
 
             {/* animated route illustration */}
-            <div className="relative h-44 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden">
+            <div className="relative h-44 rounded-2xl border border-border bg-white/60 backdrop-blur-sm overflow-hidden shadow-sm">
               <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 180" fill="none">
                 <defs>
                   <linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="hsl(var(--primary))" />
-                    <stop offset="100%" stopColor="hsl(199 89% 60%)" />
+                    <stop offset="100%" stopColor="hsl(199 89% 48%)" />
                   </linearGradient>
                 </defs>
                 <path
@@ -99,7 +99,7 @@ export default function Login() {
                   </g>
                 ))}
               </svg>
-              <div className="absolute bottom-3 left-4 flex items-center gap-2 text-white/50 text-[11px] font-medium">
+              <div className="absolute bottom-3 left-4 flex items-center gap-2 text-muted-foreground text-[11px] font-medium">
                 <MapPin className="w-3 h-3" /> Live route optimization
               </div>
             </div>
@@ -111,9 +111,9 @@ export default function Login() {
                 { icon: Package, label: "Deliveries" },
                 { icon: BarChart3, label: "Analytics" },
               ].map((f) => (
-                <div key={f.label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+                <div key={f.label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/70 border border-border shadow-sm">
                   <f.icon className="w-4 h-4 text-primary" />
-                  <span className="text-white/80 text-xs font-medium">{f.label}</span>
+                  <span className="text-foreground text-xs font-medium">{f.label}</span>
                 </div>
               ))}
             </div>
@@ -121,7 +121,7 @@ export default function Login() {
 
           {/* tagline footer */}
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-semibold">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
               Built for modern logistics teams
             </p>
           </div>
