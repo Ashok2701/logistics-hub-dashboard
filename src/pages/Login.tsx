@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Lock, User, Route, AlertCircle, Eye, EyeOff, Truck, MapPin, Package, BarChart3, CheckCircle2 } from "lucide-react";
+import { Lock, User, Route, AlertCircle, Eye, EyeOff, Truck, MapPin, Package, BarChart3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import fleetBg from "@/assets/login-fleet-bg.jpg";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -30,23 +31,18 @@ export default function Login() {
   return (
     <div className="min-h-screen w-full flex bg-background">
       {/* LEFT — Brand / hero */}
-      <div className="hidden lg:flex relative flex-1 overflow-hidden bg-[hsl(222,47%,9%)]">
-        {/* animated gradient mesh */}
-        <div className="absolute inset-0 opacity-80">
-          <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-primary/30 blur-3xl animate-float" />
-          <div className="absolute -bottom-40 -right-20 w-[520px] h-[520px] rounded-full bg-[hsl(262,83%,58%)]/25 blur-3xl animate-float-delayed" />
-          <div className="absolute top-1/3 right-1/4 w-[320px] h-[320px] rounded-full bg-[hsl(199,89%,48%)]/20 blur-3xl animate-float" />
-        </div>
-
-        {/* subtle grid */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              "linear-gradient(hsl(0 0% 100%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 0% 100%) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
+      <div className="hidden lg:flex relative flex-1 overflow-hidden bg-[hsl(222,47%,7%)]">
+        {/* background image */}
+        <img
+          src={fleetBg}
+          alt="Fleet logistics network at night"
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
         />
+        {/* gradient overlay for legibility */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,47%,7%)]/85 via-[hsl(222,47%,9%)]/55 to-[hsl(224,76%,18%)]/70" />
+        {/* glow accents */}
+        <div className="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full bg-primary/20 blur-3xl animate-float pointer-events-none" />
+        <div className="absolute -bottom-40 -right-20 w-[460px] h-[460px] rounded-full bg-[hsl(199,89%,48%)]/20 blur-3xl animate-float-delayed pointer-events-none" />
 
         {/* content */}
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 w-full">
