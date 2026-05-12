@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Lock, User, Route, AlertCircle, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
+import { Lock, User, Route, AlertCircle, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import logisticsBg from "@/assets/login-logistics-bg.jpg";
+import terminalHero from "@/assets/login-terminal-hero.jpg";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -30,160 +30,184 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden flex items-center justify-center px-4 py-8 font-sans">
-      {/* Background image */}
-      <img
-        src={logisticsBg}
-        alt="Global logistics network"
-        className="absolute inset-0 w-full h-full object-cover scale-105"
-      />
-      {/* Premium blue gradient wash */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(212,90%,52%)]/70 via-[hsl(218,85%,38%)]/55 to-[hsl(224,80%,22%)]/85" />
-      {/* Subtle vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_30%,_rgba(8,20,48,0.55)_100%)]" />
+    <div className="min-h-screen w-full flex bg-slate-50 font-sans">
+      {/* LEFT — Hero */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden">
+        <img
+          src={terminalHero}
+          alt="Modern logistics shipping terminal at dusk"
+          className="absolute inset-0 w-full h-full object-cover opacity-70"
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-950/95 via-blue-950/55 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-transparent to-slate-950/60" />
 
-      {/* Floating glow orbs */}
-      <motion.div
-        animate={{ y: [0, -18, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[8%] left-[6%] w-[380px] h-[380px] rounded-full bg-[hsl(199,95%,65%)]/35 blur-[110px]"
-      />
-      <motion.div
-        animate={{ y: [0, 20, 0] }}
-        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-[-12%] right-[-6%] w-[520px] h-[520px] rounded-full bg-[hsl(225,85%,45%)]/45 blur-[120px]"
-      />
+        <div className="relative z-10 p-12 xl:p-16 flex flex-col justify-between w-full">
+          {/* Brand */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/40">
+              <Route className="w-6 h-6 text-white" strokeWidth={2.4} />
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-white">Route Planner</span>
+          </motion.div>
 
-      {/* Glass card */}
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-[440px]"
-      >
-        {/* Outer ring glow */}
-        <div className="absolute -inset-px rounded-[26px] bg-gradient-to-br from-white/50 via-white/10 to-white/30 opacity-80 blur-[1px]" />
+          {/* Headline */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="max-w-md"
+          >
+            <span className="inline-block text-[11px] font-semibold tracking-[0.25em] uppercase text-blue-300/90 mb-4 px-3 py-1 rounded-full border border-blue-300/25 bg-blue-500/10 backdrop-blur-sm">
+              TMS for any ERP
+            </span>
+            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-[1.1] tracking-tight">
+              Precision logistics for the modern enterprise.
+            </h1>
+            <p className="text-blue-100/80 text-base xl:text-lg leading-relaxed mt-5">
+              Optimize your fleet, plan smarter routes, and streamline dispatch — fully integrated with your ERP.
+            </p>
 
-        <div className="relative rounded-[24px] border border-white/25 bg-white/[0.08] backdrop-blur-2xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)] overflow-hidden">
-          {/* Top sheen */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-          <div className="absolute -top-24 -right-20 w-64 h-64 rounded-full bg-white/15 blur-3xl pointer-events-none" />
+            {/* Stat strip */}
+            <div className="mt-10 grid grid-cols-3 gap-6 max-w-md">
+              {[
+                { v: "248", l: "Active Fleet" },
+                { v: "98.4%", l: "On-Time" },
+                { v: "1.4k", l: "Routes / day" },
+              ].map((s) => (
+                <div key={s.l}>
+                  <div className="text-2xl font-bold text-white tracking-tight">{s.v}</div>
+                  <div className="text-[11px] uppercase tracking-wider text-blue-200/70 mt-0.5">{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
 
-          <div className="relative p-9 sm:p-10">
-            {/* Brand */}
-            <div className="flex items-center gap-3 mb-7">
-              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-white to-white/85 flex items-center justify-center shadow-[0_8px_24px_-6px_rgba(0,0,0,0.4)]">
-                <Route className="w-[22px] h-[22px] text-[hsl(218,85%,32%)]" strokeWidth={2.4} />
-                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[hsl(142,71%,50%)] border-2 border-white" />
-              </div>
-              <div className="leading-tight">
-                <p className="text-[10px] font-semibold text-white/70 tracking-[0.28em] uppercase">Route Planner</p>
-                <h1 className="text-[28px] font-bold text-white tracking-tight">Welcome back</h1>
+          <div className="flex items-center justify-between text-xs text-blue-200/50">
+            <span>© 2026 Route Planner Systems</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              All systems operational
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT — Form */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 lg:p-16 xl:p-24 bg-white">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-sm"
+        >
+          {/* Mobile brand */}
+          <div className="mb-8 lg:hidden flex items-center gap-2">
+            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Route className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900">Route Planner</span>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
+            <p className="text-slate-500 mt-2 text-sm">Enter your credentials to access the command center.</p>
+          </div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 mb-5"
+            >
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <span className="text-red-700 text-[13px]">{error}</span>
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="username" className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. j.smith"
+                  autoFocus
+                  className="w-full h-12 pl-10 pr-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                />
               </div>
             </div>
 
-            <p className="text-sm text-white/75 mb-6 -mt-2">
-              Sign in to your transportation command center.
-            </p>
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 p-3 rounded-xl bg-red-500/15 border border-red-300/30 mb-4"
-              >
-                <AlertCircle className="w-4 h-4 text-red-100 flex-shrink-0" />
-                <span className="text-red-50 text-[13px]">{error}</span>
-              </motion.div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username */}
-              <div>
-                <label className="text-[11px] font-semibold text-white/85 mb-1.5 block tracking-wider uppercase">
-                  Username
-                </label>
-                <div className="group relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 group-focus-within:text-white transition-colors" />
-                  <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="username@company.com"
-                    autoFocus
-                    className="w-full h-12 pl-11 pr-3 rounded-xl bg-white/10 border border-white/20 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/60 focus:bg-white/15 focus:ring-4 focus:ring-white/10 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="text-[11px] font-semibold text-white/85 mb-1.5 block tracking-wider uppercase">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Password
                 </label>
-                <div className="group relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 group-focus-within:text-white transition-colors" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••"
-                    className="w-full h-12 pl-11 pr-11 rounded-xl bg-white/10 border border-white/20 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/60 focus:bg-white/15 focus:ring-4 focus:ring-white/10 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/55 hover:text-white transition"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-[13px] pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-white/85 hover:text-white transition">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                    className="w-4 h-4 rounded accent-[hsl(199,95%,55%)] cursor-pointer"
-                  />
-                  Remember me
-                </label>
-                <button type="button" className="text-white/85 hover:text-white font-medium hover:underline underline-offset-4">
+                <button type="button" className="text-xs font-semibold text-blue-600 hover:text-blue-700">
                   Forgot password?
                 </button>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full h-12 mt-3 rounded-xl bg-gradient-to-r from-[hsl(199,95%,55%)] via-[hsl(210,90%,50%)] to-[hsl(220,85%,45%)] text-white font-semibold text-[15px] shadow-[0_10px_30px_-8px_rgba(33,150,243,0.6)] hover:shadow-[0_14px_36px_-8px_rgba(33,150,243,0.8)] active:scale-[0.985] transition-all disabled:opacity-60 overflow-hidden"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                <span className="relative flex items-center justify-center gap-2">
-                  {loading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>Sign in <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
-                  )}
-                </span>
-              </button>
-            </form>
-
-            {/* Trust line */}
-            <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] text-white/60">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Secured · TMS for any ERP</span>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-12 pl-10 pr-10 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Bottom strip */}
-          <div className="relative px-9 py-3.5 bg-black/20 border-t border-white/10 flex items-center justify-between text-[10px] text-white/55">
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer"
+              />
+              Remember me
+            </label>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="group w-full h-12 mt-2 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-semibold text-sm shadow-xl shadow-slate-900/10 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Sign in
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
             <span>v1.0.0</span>
-            <span>© 2026 Route Planner · TMS Solutions</span>
+            <span className="italic">Precision in Motion</span>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }
