@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Lock, User, Route, AlertCircle, Eye, EyeOff, Truck, MapPin, Package, BarChart3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import fleetBg from "@/assets/login-fleet-bg.jpg";
+import fleetBg from "@/assets/login-fleet-bg-light.jpg";
 
 export default function Login() {
   const [username, setUsername] = useState("");
