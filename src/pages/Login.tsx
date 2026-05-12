@@ -119,18 +119,11 @@ export default function Login() {
             </div>
           </div>
 
-          {/* ERP badges */}
+          {/* tagline footer */}
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-semibold mb-3">
-              Integrates with leading ERPs
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-semibold">
+              Built for modern logistics teams
             </p>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-white/70 text-sm font-semibold tracking-wide">
-              {["Sage", "SAP", "Oracle", "NetSuite", "Dynamics 365"].map((n) => (
-                <span key={n} className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-primary/80" /> {n}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </div>
