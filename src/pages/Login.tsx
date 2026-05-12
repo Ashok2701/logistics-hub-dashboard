@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Lock, User, Route, AlertCircle, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import terminalHero from "@/assets/login-terminal-hero.jpg";
+import terminalHero from "@/assets/login-fleet-hero.jpg";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -35,7 +35,7 @@ export default function Login() {
       <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden">
         <img
           src={terminalHero}
-          alt="Modern logistics shipping terminal at dusk"
+          alt="Fleet of delivery trucks at a distribution center at sunset"
           className="absolute inset-0 w-full h-full object-cover opacity-70"
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-950/95 via-blue-950/55 to-transparent" />
