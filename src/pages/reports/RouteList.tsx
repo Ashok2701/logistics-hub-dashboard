@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { PageHeader } from "@/components/shared/MetricCard";
+import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Globe, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -385,7 +385,7 @@ export default function RouteList() {
                                       <td className="px-4 py-2.5 text-foreground">{doc.docType}</td>
                                       <td className="px-4 py-2.5 text-foreground">{doc.arvTime}</td>
                                       <td className="px-4 py-2.5 text-foreground">{doc.depTime}</td>
-                                      <td className="px-4 py-2.5 text-foreground">{doc.status}</td>
+                                      <td className="px-4 py-2.5"><StatusBadge status={doc.status} variant={doc.status === "Completed" ? "success" : "primary"} /></td>
                                     </tr>
                                   ))}
                                 </tbody>

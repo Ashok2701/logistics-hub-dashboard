@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { PageHeader } from "@/components/shared/MetricCard";
+import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -415,15 +415,7 @@ export default function UserManagement() {
                 <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{u.email}</TableCell>
                 <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{u.mobile}</TableCell>
                 <TableCell>
-                  <span className={cn(
-                    "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full",
-                    u.status === "active"
-                      ? "bg-success/10 text-success"
-                      : "bg-muted text-muted-foreground"
-                  )}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", u.status === "active" ? "bg-success" : "bg-muted-foreground/40")} />
-                    {u.status === "active" ? "Active" : "Inactive"}
-                  </span>
+                  <StatusBadge status={u.status === "active" ? "Active" : "Inactive"} variant={u.status === "active" ? "success" : "muted"} />
                 </TableCell>
                 <TableCell className="hidden xl:table-cell">
                   <div className="flex items-center gap-1 flex-wrap">
