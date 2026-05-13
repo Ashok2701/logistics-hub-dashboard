@@ -6,10 +6,17 @@ import {
   Users,
   Car,
   MapPin,
-  ArrowUpRight,
+  AlertTriangle,
+  Clock,
+  TrendingUp,
+  Fuel,
+  Wrench,
+  CheckCircle,
+  Bell,
 } from "lucide-react";
 import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/components/shared/MetricCard";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const metrics = [
   { title: "Total Vehicles", value: 142, icon: Truck, trend: { value: "+3 this week", positive: true }, status: "active" as const },
