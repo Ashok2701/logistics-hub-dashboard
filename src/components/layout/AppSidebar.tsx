@@ -84,6 +84,15 @@ export function AppSidebar() {
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
       className="flex flex-col h-screen flex-shrink-0 relative overflow-hidden bg-gradient-sidebar shadow-[inset_-1px_0_0_rgb(255_255_255/0.06),2px_0_12px_-4px_rgb(0_0_0/0.2)]"
     >
+      {/* Themed accent glow */}
+      <div
+        className="pointer-events-none absolute -top-24 -left-16 w-72 h-72 rounded-full opacity-40 blur-3xl"
+        style={{ background: `radial-gradient(circle, hsl(var(--primary) / 0.55), transparent 70%)` }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 -right-20 w-64 h-64 rounded-full opacity-25 blur-3xl"
+        style={{ background: `radial-gradient(circle, hsl(var(--gradient-end) / 0.6), transparent 70%)` }}
+      />
       {/* Logo */}
       <div className="flex items-center h-[60px] px-4 border-b border-white/8">
         {!collapsed ? (
