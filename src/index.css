@@ -52,8 +52,8 @@
     /* Gradient system */
     --gradient-start: 224 76% 48%;
     --gradient-end: 224 76% 28%;
-    --gradient-sidebar-start: 222 47% 14%;
-    --gradient-sidebar-end: 222 47% 8%;
+    --gradient-sidebar-start: 224 70% 22%;
+    --gradient-sidebar-end: 224 76% 12%;
     --gradient-header-start: 224 76% 48%;
     --gradient-header-end: 224 76% 36%;
 
@@ -189,8 +189,8 @@
 
     --gradient-start: 160 84% 39%;
     --gradient-end: 160 84% 25%;
-    --gradient-sidebar-start: 160 47% 12%;
-    --gradient-sidebar-end: 160 47% 6%;
+    --gradient-sidebar-start: 160 60% 18%;
+    --gradient-sidebar-end: 162 75% 9%;
     --gradient-header-start: 160 84% 39%;
     --gradient-header-end: 160 84% 30%;
 
@@ -257,8 +257,8 @@
 
     --gradient-start: 25 95% 53%;
     --gradient-end: 16 85% 38%;
-    --gradient-sidebar-start: 20 47% 14%;
-    --gradient-sidebar-end: 20 47% 8%;
+    --gradient-sidebar-start: 20 65% 20%;
+    --gradient-sidebar-end: 16 80% 11%;
     --gradient-header-start: 25 95% 53%;
     --gradient-header-end: 16 85% 42%;
 
