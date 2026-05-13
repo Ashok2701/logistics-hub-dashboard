@@ -35,27 +35,51 @@ const recentActivity = [
   { id: "RT-1038", driver: "Tom Wilson", vehicle: "VH-1567", status: "Idle", statusVariant: "muted" as const, eta: "—" },
 ];
 
+const tmsKpis = [
+  { title: "On-Time Delivery", value: "94.2%", icon: CheckCircle, trend: { value: "+1.5% vs last week", positive: true }, status: "active" as const },
+  { title: "Avg Transit Time", value: "3.2 hrs", icon: Clock, trend: { value: "-12 min improvement", positive: true }, status: "active" as const },
+  { title: "Fuel Efficiency", value: "8.4 km/l", icon: Fuel, trend: { value: "+0.3 vs target", positive: true }, status: "active" as const },
+  { title: "Maintenance Due", value: "7", icon: Wrench, trend: { value: "3 urgent", positive: false }, status: "delayed" as const },
+];
+
+const alerts = [
+  { type: "delay" as const, message: "Route RT-1041 delayed by 45 min — Weather advisory", time: "10 min ago" },
+  { type: "warning" as const, message: "Vehicle VH-2281 requires tire inspection", time: "25 min ago" },
+  { type: "info" as const, message: "New order batch #8921 assigned to Route RT-1045", time: "1 hr ago" },
+  { type: "delay" as const, message: "Driver Tom Wilson exceeded daily drive limit", time: "2 hrs ago" },
+  { type: "warning" as const, message: "Fuel level below 20% on VH-1567", time: "3 hrs ago" },
+];
+
+const todaySummary = [
+  { label: "Orders Shipped", value: 128 },
+  { label: "Orders Delivered", value: 94 },
+  { label: "Orders In Transit", value: 34 },
+  { label: "Exceptions", value: 3 },
+];
+
 export default function Dashboard() {
   return (
     <div>
       <PageHeader
         title="Dashboard"
         subtitle="Fleet overview and real-time operations"
-        actions={
-          <button className="btn-gradient flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg">
-            View Report <ArrowUpRight className="w-4 h-4" />
-          </button>
-        }
       />
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+      {/* Primary Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-5">
         {metrics.map((m, i) => (
           <MetricCard key={m.title} {...m} index={i} />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* TMS KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {tmsKpis.map((k, i) => (
+          <MetricCard key={k.title} {...k} index={i} />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
         {/* Recent Routes */}
         <div className="lg:col-span-2">
           <DataTableShell>
@@ -78,7 +102,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {recentActivity.map((r, i) => (
-                  <motion.tr 
+                  <motion.tr
                     key={r.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -98,7 +122,7 @@ export default function Dashboard() {
         </div>
 
         {/* Map Widget */}
-        <motion.div 
+        <motion.div
           className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-premium"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -150,6 +174,74 @@ export default function Dashboard() {
                 <p className="text-[10px] text-muted-foreground">Map Integration</p>
               </div>
             </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bottom Row: Today's Summary + Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Today's Summary */}
+        <motion.div
+          className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.35 }}
+        >
+          <div className="px-5 py-4 border-b border-border">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Today&apos;s Summary</h3>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Daily operations snapshot</p>
+          </div>
+          <div className="p-5 grid grid-cols-2 gap-4">
+            {todaySummary.map((s) => (
+              <div key={s.label} className="bg-secondary/40 rounded-xl p-4 text-center">
+                <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Alerts & Notifications */}
+        <motion.div
+          className="lg:col-span-2 bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.35 }}
+        >
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Alerts &amp; Notifications</h3>
+            </div>
+            <span className="text-[11px] font-medium bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">{alerts.length} new</span>
+          </div>
+          <div className="divide-y divide-border/40">
+            {alerts.map((a, i) => (
+              <motion.div
+                key={i}
+                className="px-5 py-3.5 flex items-start gap-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + i * 0.05, duration: 0.3 }}
+              >
+                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5", {
+                  "bg-destructive/10 text-destructive": a.type === "delay",
+                  "bg-warning/10 text-warning": a.type === "warning",
+                  "bg-primary/10 text-primary": a.type === "info",
+                })}>
+                  {a.type === "delay" && <AlertTriangle className="w-4 h-4" />}
+                  {a.type === "warning" && <Wrench className="w-4 h-4" />}
+                  {a.type === "info" && <CheckCircle className="w-4 h-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground leading-snug">{a.message}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">{a.time}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </div>
