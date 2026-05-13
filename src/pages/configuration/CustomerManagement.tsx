@@ -205,9 +205,7 @@ export default function CustomerManagement() {
                 <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{c.contactPerson}</TableCell>
                 <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{c.paymentTerms}</TableCell>
                 <TableCell>
-                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full", c.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", c.status === "active" ? "bg-success" : "bg-muted-foreground/40")} />{c.status === "active" ? "Active" : "Inactive"}
-                  </span>
+                  <StatusBadge status={c.status === "active" ? "Active" : "Inactive"} variant={c.status === "active" ? "success" : "muted"} />
                 </TableCell>
                 <TableCell><RowActions onEdit={() => openEdit(c)} onDelete={() => handleDelete(c.id)} /></TableCell>
               </TableRow>

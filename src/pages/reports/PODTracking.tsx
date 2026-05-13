@@ -171,13 +171,6 @@ interface FilterSection {
   options: { value: string; count: number }[];
 }
 
-const statusColor: Record<string, string> = {
-  Completed: "text-emerald-600",
-  Planned: "text-red-500",
-  "In Progress": "text-amber-500",
-  Skipped: "text-muted-foreground",
-  "To Plan": "text-blue-500",
-};
 
 /* ─── POD Detail Page ─── */
 function PODDetailView({ record, onBack }: { record: PODRecord; onBack: () => void }) {
@@ -702,7 +695,7 @@ export default function PODTracking() {
                                 <td className="px-2 py-1.5 font-mono text-primary text-[10px]">{r.document}</td>
                                 <td className="px-2 py-1.5 text-foreground">{r.date}</td>
                                 <td className="px-2 py-1.5 text-foreground">{r.type}</td>
-                                <td className={cn("px-2 py-1.5 font-semibold", statusColor[r.status] || "text-foreground")}>{r.status}</td>
+                                <td className="px-2 py-1.5"><StatusBadge status={r.status} variant={r.status === "Completed" ? "success" : r.status === "In Progress" ? "warning" : r.status === "Planned" ? "primary" : "muted"} /></td>
                                 <td className="px-2 py-1.5 text-foreground">{r.bp}</td>
                                 <td className="px-2 py-1.5 text-foreground">{r.bpName}</td>
                                 <td className="px-2 py-1.5 text-foreground">{r.city}</td>

@@ -292,16 +292,10 @@ export default function SiteManagement() {
                 <TableCell className="text-sm">{s.description}</TableCell>
                 <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{s.city}{s.state ? `, ${s.state}` : ""}</TableCell>
                 <TableCell>
-                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full", s.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", s.active ? "bg-success" : "bg-muted-foreground/40")} />
-                    {s.active ? "Active" : "Inactive"}
-                  </span>
+                  <StatusBadge status={s.active ? "Active" : "Inactive"} variant={s.active ? "success" : "muted"} />
                 </TableCell>
                 <TableCell>
-                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full", s.tmsActive ? "bg-blue-500/10 text-blue-600" : "bg-muted text-muted-foreground")}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", s.tmsActive ? "bg-blue-500" : "bg-muted-foreground/40")} />
-                    {s.tmsActive ? "Active" : "Inactive"}
-                  </span>
+                  <StatusBadge status={s.tmsActive ? "Active" : "Inactive"} variant={s.tmsActive ? "primary" : "muted"} />
                 </TableCell>
                 <TableCell><RowActions onEdit={() => openEdit(s)} onDelete={() => handleDelete(s.id)} /></TableCell>
               </TableRow>

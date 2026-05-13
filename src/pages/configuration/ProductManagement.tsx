@@ -203,9 +203,7 @@ export default function ProductManagement() {
                 <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{p.weight}</TableCell>
                 <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{p.unit}</TableCell>
                 <TableCell>
-                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full", p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", p.status === "active" ? "bg-success" : "bg-muted-foreground/40")} />{p.status === "active" ? "Active" : "Inactive"}
-                  </span>
+                  <StatusBadge status={p.status === "active" ? "Active" : "Inactive"} variant={p.status === "active" ? "success" : "muted"} />
                 </TableCell>
                 <TableCell><RowActions onEdit={() => openEdit(p)} onDelete={() => handleDelete(p.id)} /></TableCell>
               </TableRow>

@@ -211,9 +211,7 @@ export default function SupplierManagement() {
                   <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, idx) => <span key={idx} className={cn("w-2 h-2 rounded-full", idx < s.rating ? "bg-amber-400" : "bg-muted")} />)}</div>
                 </TableCell>
                 <TableCell>
-                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full", s.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", s.status === "active" ? "bg-success" : "bg-muted-foreground/40")} />{s.status === "active" ? "Active" : "Inactive"}
-                  </span>
+                  <StatusBadge status={s.status === "active" ? "Active" : "Inactive"} variant={s.status === "active" ? "success" : "muted"} />
                 </TableCell>
                 <TableCell><RowActions onEdit={() => openEdit(s)} onDelete={() => handleDelete(s.id)} /></TableCell>
               </TableRow>
