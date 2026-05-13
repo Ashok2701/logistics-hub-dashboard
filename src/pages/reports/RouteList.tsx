@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { PageHeader } from "@/components/shared/MetricCard";
+import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Globe, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";

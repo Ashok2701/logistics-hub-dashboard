@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { PageHeader } from "@/components/shared/MetricCard";
+import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,

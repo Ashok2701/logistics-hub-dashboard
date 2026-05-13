@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Group, ChevronDown, ChevronRight, FileText, PanelLeftClose, PanelLeft, ArrowLeft, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StatusBadge } from "@/components/shared/MetricCard";
 
 interface PODLineItem {
   docNum: string;
