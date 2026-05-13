@@ -337,27 +337,51 @@
 
 @layer components {
   .data-table {
-    @apply w-full text-sm;
+    @apply w-full text-sm border-separate border-spacing-0;
+  }
+
+  .data-table thead tr {
+    background: linear-gradient(135deg, hsl(var(--gradient-header-start)), hsl(var(--gradient-header-end)));
   }
 
   .data-table th {
-    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-secondary/50 first:rounded-tl-none last:rounded-tr-none;
+    @apply px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-white/95 border-b-2;
+    border-color: hsl(var(--primary) / 0.4);
+  }
+
+  .data-table th:first-child {
+    @apply rounded-tl-xl;
+  }
+  .data-table th:last-child {
+    @apply rounded-tr-xl;
   }
 
   .data-table td {
-    @apply px-4 py-3.5 text-sm;
+    @apply px-5 py-4 text-sm border-b border-border/50;
   }
 
   .data-table tbody tr {
-    @apply transition-all duration-200 ease-out border-b border-border/40;
+    @apply transition-all duration-200 ease-out;
+    background: hsl(var(--card));
   }
 
   .data-table tbody tr:nth-child(even) {
-    background: hsl(var(--muted) / 0.3);
+    background: hsl(var(--muted) / 0.45);
   }
 
   .data-table tbody tr:hover {
-    background: hsl(var(--primary) / 0.04);
+    background: hsl(var(--primary) / 0.08);
+    box-shadow: inset 3px 0 0 hsl(var(--primary));
+  }
+
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .data-table tbody tr:last-child td:first-child {
+    @apply rounded-bl-xl;
+  }
+  .data-table tbody tr:last-child td:last-child {
+    @apply rounded-br-xl;
   }
 
   /* Gradient button */
