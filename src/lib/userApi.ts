@@ -74,22 +74,73 @@ export interface ApiUser {
   raw?: any;
 }
 
+// Backend module flag ↔ UI module key
+export const MODULE_FLAG_MAP: Record<string, string> = {
+  route_planner: "routeplannerflg",
+  scheduler: "schedulerflg",
+  calendar: "calendarrpflg",
+  map_view: "mapviewrpflg",
+  fleet_mgmt: "fleetmgmtflg",
+  reports: "screportsflg",
+  user_mgmt: "usermgmtflg",
+  add_pick_ticket: "addPickTcktflg",
+  remove_pick_ticket: "removePickTcktflg",
+};
+
 export function mapApiUser(r: any): ApiUser {
   const username = r.username ?? r.xlogin ?? r.login ?? "";
   const active =
-    r.status === "active" || r.xact === true || r.active === true || r.isActive === true;
+    r.xact === true || r.status === "active" || r.active === true || r.isActive === true;
+  const modules: string[] = [];
+  for (const [uiKey, flag] of Object.entries(MODULE_FLAG_MAP)) {
+    if (r[flag] === true) modules.push(uiKey);
+  }
+  const sites: string[] = Array.isArray(r.alignedSites)
+    ? r.alignedSites.map((s: any) => (typeof s === "string" ? s : s?.siteId ?? s?.name ?? String(s)))
+    : Array.isArray(r.sites) ? r.sites : [];
   return {
-    id: String(r.id ?? r.xid ?? username),
+    id: String(r.auuid ?? r.id ?? r.xid ?? username),
     username,
-    fullName: r.fullName ?? r.xfullnam ?? r.xfullname ?? r.name ?? "",
+    fullName: r.xusrname ?? r.fullName ?? r.xfullnam ?? r.name ?? "",
     email: r.email ?? r.xemail ?? "",
-    mobile: r.mobile ?? r.xmobile ?? r.phone ?? "",
+    mobile: r.phone ?? r.mobile ?? r.tel ?? r.xmobile ?? "",
     status: active ? "active" : "inactive",
-    modules: Array.isArray(r.modules) ? r.modules : [],
-    sites: Array.isArray(r.sites) ? r.sites : [],
-    defaultSite: r.defaultSite ?? r.xdefsite ?? "",
-    primaryLanguage: r.primaryLanguage ?? r.xprilang ?? "English",
-    secondaryLanguage: r.secondaryLanguage ?? r.xseclang ?? "",
+    modules,
+    sites,
+    defaultSite: r.defaultSite ?? r.xdefsite ?? sites[0] ?? "",
+    primaryLanguage: r.lngmain ?? r.primaryLanguage ?? r.xprilang ?? "English",
+    secondaryLanguage: r.lansec ?? r.secondaryLanguage ?? r.xseclang ?? "",
     raw: r,
   };
+}
+
+// Build backend payload from UI form
+export function buildApiPayload(form: {
+  username: string;
+  fullName: string;
+  email: string;
+  mobile: string;
+  password?: string;
+  primaryLanguage: string;
+  secondaryLanguage: string;
+  modules: string[];
+  sites: string[];
+  defaultSite: string;
+  status: boolean;
+}): Record<string, any> {
+  const payload: Record<string, any> = {
+    username: form.username.trim(),
+    xusrname: form.fullName,
+    email: form.email,
+    phone: form.mobile,
+    xact: form.status,
+    lngmain: form.primaryLanguage,
+    lansec: form.secondaryLanguage,
+    alignedSites: form.sites,
+  };
+  if (form.password) payload.password = form.password;
+  for (const [uiKey, flag] of Object.entries(MODULE_FLAG_MAP)) {
+    payload[flag] = form.modules.includes(uiKey);
+  }
+  return payload;
 }
