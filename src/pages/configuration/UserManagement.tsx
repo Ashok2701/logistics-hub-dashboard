@@ -472,7 +472,9 @@ export default function UserManagement() {
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm">
-                  No users found
+                  {loading ? (
+                    <span className="inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading users…</span>
+                  ) : "No users found"}
                 </TableCell>
               </TableRow>
             )}
