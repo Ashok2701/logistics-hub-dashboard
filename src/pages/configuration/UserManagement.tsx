@@ -37,12 +37,14 @@ interface User {
 
 const MODULES = [
   { key: "route_planner", label: "Route Planner", icon: Route },
-  { key: "scheduling", label: "Scheduling", icon: CalendarClock },
-  { key: "tracking", label: "Tracking", icon: Radar },
-  { key: "map", label: "Map", icon: Map },
+  { key: "scheduler", label: "Scheduler", icon: CalendarClock },
+  { key: "calendar", label: "Calendar", icon: CalendarClock },
+  { key: "map_view", label: "Map View", icon: Map },
+  { key: "fleet_mgmt", label: "Fleet Management", icon: Truck },
   { key: "reports", label: "Reports", icon: BarChart3 },
-  { key: "fleet", label: "Fleet", icon: Truck },
   { key: "user_mgmt", label: "User Management", icon: Users },
+  { key: "add_pick_ticket", label: "Add Pick Ticket", icon: Radar },
+  { key: "remove_pick_ticket", label: "Remove Pick Ticket", icon: Radar },
 ];
 
 const SITES = [
