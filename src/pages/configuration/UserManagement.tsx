@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { userApi, mapApiUser } from "@/lib/userApi";
+import { userApi, mapApiUser, buildApiPayload } from "@/lib/userApi";
 
 // ─── Types ────────────────────────────────────────────────────────
 interface User {
