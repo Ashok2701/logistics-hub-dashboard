@@ -464,7 +464,7 @@ export default function UserManagement() {
                   <span className="text-sm text-muted-foreground tabular-nums">{u.sites.length} site{u.sites.length !== 1 ? "s" : ""}</span>
                 </TableCell>
                 <TableCell>
-                  <RowActions onEdit={() => openEdit(u)} onDelete={() => handleDelete(u.id)} />
+                  <RowActions onEdit={() => openEdit(u)} onDelete={() => handleDelete(u)} />
                 </TableCell>
               </TableRow>
             ))}
