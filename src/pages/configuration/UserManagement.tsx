@@ -256,7 +256,8 @@ export default function UserManagement() {
             <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">
               Cancel
             </button>
-            <button onClick={handleSave} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium">
+            <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-60">
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {editingId ? "Save Changes" : "Create User"}
             </button>
           </div>
@@ -393,7 +394,7 @@ export default function UserManagement() {
   // ── List View ───────────────────────────────────────────────────
   return (
     <div>
-      <PageHeader title="User & Roles" subtitle="Manage system users and access control" />
+      <PageHeader title="Users" subtitle="Manage system users and access control" />
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
