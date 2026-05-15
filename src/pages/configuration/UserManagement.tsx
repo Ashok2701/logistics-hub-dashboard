@@ -179,19 +179,18 @@ export default function UserManagement() {
     return Object.keys(e).length === 0;
   };
 
-  const buildPayload = () => ({
-    username: form.username.trim(),
+  const buildPayload = () => buildApiPayload({
+    username: form.username,
     fullName: form.fullName,
     email: form.email,
     mobile: form.mobile,
-    ...(form.password ? { password: form.password } : {}),
+    password: form.password,
     primaryLanguage: form.primaryLanguage,
     secondaryLanguage: form.secondaryLanguage,
     modules: form.modules,
     sites: form.sites,
     defaultSite: form.defaultSite,
-    status: form.status ? "active" : "inactive",
-    xact: form.status,
+    status: form.status,
   });
 
   const handleSave = async () => {
