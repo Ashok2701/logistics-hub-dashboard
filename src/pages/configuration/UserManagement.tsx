@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
@@ -14,10 +14,11 @@ import {
 } from "@/components/ui/select";
 import {
   Search, UserPlus, Route, CalendarClock, Radar,
-  Map, BarChart3, Truck, Users, ArrowLeft,
+  Map, BarChart3, Truck, Users, ArrowLeft, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { userApi, mapApiUser } from "@/lib/userApi";
 
 // ─── Types ────────────────────────────────────────────────────────
 interface User {
@@ -99,12 +100,32 @@ type ViewMode = "list" | "form";
 
 // ─── Component ────────────────────────────────────────────────────
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>(seedUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<ViewMode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      let raw: any;
+      try { raw = await userApi.list(); }
+      catch { raw = await userApi.getUsers(); }
+      const arr: any[] = Array.isArray(raw) ? raw : raw?.data ?? raw?.users ?? [];
+      setUsers(arr.map(mapApiUser) as User[]);
+    } catch (e: any) {
+      toast({ title: "Failed to load users", description: e.message, variant: "destructive" });
+      setUsers(seedUsers);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadUsers(); }, []);
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
@@ -133,9 +154,14 @@ export default function UserManagement() {
 
   const goBack = () => setView("list");
 
-  const handleDelete = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    toast({ title: "User removed" });
+  const handleDelete = async (u: User) => {
+    try {
+      await userApi.remove(u.username);
+      toast({ title: "User removed" });
+      setUsers((prev) => prev.filter((x) => x.id !== u.id));
+    } catch (e: any) {
+      toast({ title: "Delete failed", description: e.message, variant: "destructive" });
+    }
   };
 
   const validate = (): boolean => {
@@ -151,35 +177,40 @@ export default function UserManagement() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSave = () => {
+  const buildPayload = () => ({
+    username: form.username.trim(),
+    fullName: form.fullName,
+    email: form.email,
+    mobile: form.mobile,
+    ...(form.password ? { password: form.password } : {}),
+    primaryLanguage: form.primaryLanguage,
+    secondaryLanguage: form.secondaryLanguage,
+    modules: form.modules,
+    sites: form.sites,
+    defaultSite: form.defaultSite,
+    status: form.status ? "active" : "inactive",
+    xact: form.status,
+  });
+
+  const handleSave = async () => {
     if (!validate()) return;
-    if (editingId) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editingId
-            ? {
-                ...u, username: form.username.trim(), fullName: form.fullName,
-                email: form.email, mobile: form.mobile, modules: form.modules,
-                sites: form.sites, defaultSite: form.defaultSite,
-                primaryLanguage: form.primaryLanguage, secondaryLanguage: form.secondaryLanguage,
-                status: form.status ? "active" : "inactive",
-              }
-            : u,
-        ),
-      );
-      toast({ title: "User updated" });
-    } else {
-      const newUser: User = {
-        id: crypto.randomUUID(), username: form.username.trim(),
-        fullName: form.fullName, email: form.email, mobile: form.mobile,
-        status: form.status ? "active" : "inactive", modules: form.modules,
-        sites: form.sites, defaultSite: form.defaultSite,
-        primaryLanguage: form.primaryLanguage, secondaryLanguage: form.secondaryLanguage,
-      };
-      setUsers((prev) => [newUser, ...prev]);
-      toast({ title: "User created" });
+    setSaving(true);
+    try {
+      if (editingId) {
+        const target = users.find((u) => u.id === editingId);
+        await userApi.update(target?.username || form.username.trim(), buildPayload());
+        toast({ title: "User updated" });
+      } else {
+        await userApi.create(buildPayload());
+        toast({ title: "User created" });
+      }
+      setView("list");
+      await loadUsers();
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
-    setView("list");
   };
 
   const toggleModule = (key: string) =>
@@ -225,7 +256,8 @@ export default function UserManagement() {
             <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">
               Cancel
             </button>
-            <button onClick={handleSave} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium">
+            <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-60">
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {editingId ? "Save Changes" : "Create User"}
             </button>
           </div>
@@ -362,7 +394,7 @@ export default function UserManagement() {
   // ── List View ───────────────────────────────────────────────────
   return (
     <div>
-      <PageHeader title="User & Roles" subtitle="Manage system users and access control" />
+      <PageHeader title="Users" subtitle="Manage system users and access control" />
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
@@ -433,14 +465,16 @@ export default function UserManagement() {
                   <span className="text-sm text-muted-foreground tabular-nums">{u.sites.length} site{u.sites.length !== 1 ? "s" : ""}</span>
                 </TableCell>
                 <TableCell>
-                  <RowActions onEdit={() => openEdit(u)} onDelete={() => handleDelete(u.id)} />
+                  <RowActions onEdit={() => openEdit(u)} onDelete={() => handleDelete(u)} />
                 </TableCell>
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm">
-                  No users found
+                  {loading ? (
+                    <span className="inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading users…</span>
+                  ) : "No users found"}
                 </TableCell>
               </TableRow>
             )}
