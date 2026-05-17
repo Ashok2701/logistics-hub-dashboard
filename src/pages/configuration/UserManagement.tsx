@@ -206,17 +206,33 @@ export default function UserManagement() {
       modules: f.modules.includes(key) ? f.modules.filter((m) => m !== key) : [...f.modules, key],
     }));
 
-  const addSite = (siteName: string) =>
+  const addEmptyRow = () =>
+    setForm((f) => ({ ...f, sites: [...f.sites, ""] }));
+
+  const setSiteAt = (index: number, siteName: string) =>
     setForm((f) => {
-      if (f.sites.includes(siteName)) return f;
-      const next = [...f.sites, siteName];
-      return { ...f, sites: next, defaultSite: f.defaultSite || siteName };
+      // prevent duplicates
+      if (siteName && f.sites.some((s, i) => i !== index && s === siteName)) {
+        toast({ title: "Site already added", variant: "destructive" });
+        return f;
+      }
+      const next = [...f.sites];
+      const prev = next[index];
+      next[index] = siteName;
+      const newDefault =
+        f.defaultSite === prev ? siteName : f.defaultSite || siteName;
+      return { ...f, sites: next, defaultSite: newDefault };
     });
 
-  const removeSite = (siteName: string) =>
+  const removeSiteAt = (index: number) =>
     setForm((f) => {
-      const next = f.sites.filter((s) => s !== siteName);
-      return { ...f, sites: next, defaultSite: f.defaultSite === siteName ? (next[0] ?? "") : f.defaultSite };
+      const removed = f.sites[index];
+      const next = f.sites.filter((_, i) => i !== index);
+      const newDefault =
+        f.defaultSite === removed
+          ? next.find((s) => s) ?? ""
+          : f.defaultSite;
+      return { ...f, sites: next, defaultSite: newDefault };
     });
 
   const moduleIcon = (key: string) => {
