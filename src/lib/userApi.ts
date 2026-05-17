@@ -117,6 +117,13 @@ export function mapApiUser(r: any): ApiUser {
     defaultSite: r.defaultSite ?? r.xdefsite ?? sites[0] ?? "",
     primaryLanguage: r.lngmain ?? r.primaryLanguage ?? r.xprilang ?? "English",
     secondaryLanguage: r.lansec ?? r.secondaryLanguage ?? r.xseclang ?? "",
+    addressLine1: r.addressLine1 ?? r.xaddr1 ?? r.address1 ?? "",
+    addressLine2: r.addressLine2 ?? r.xaddr2 ?? r.address2 ?? "",
+    country: r.country ?? r.xcountry ?? "",
+    postalCode: r.postalCode ?? r.xpostal ?? r.zip ?? "",
+    city: r.city ?? r.xcity ?? "",
+    region: r.region ?? r.xregion ?? r.state ?? "",
+    telephone: r.telephone ?? r.xtel ?? r.tel ?? "",
     raw: r,
   };
 }
@@ -134,6 +141,13 @@ export function buildApiPayload(form: {
   sites: string[];
   defaultSite: string;
   status: boolean;
+  addressLine1?: string;
+  addressLine2?: string;
+  country?: string;
+  postalCode?: string;
+  city?: string;
+  region?: string;
+  telephone?: string;
 }): Record<string, any> {
   const payload: Record<string, any> = {
     username: form.username.trim(),
