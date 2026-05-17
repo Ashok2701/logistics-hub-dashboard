@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
 import {
@@ -266,252 +266,19 @@ export default function UserManagement() {
           </div>
         </div>
 
-        {/* Card with tabs */}
-        <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
-          {/* Tab bar */}
-          <div className="flex items-center gap-1 px-2 sm:px-4 border-b border-border bg-secondary/30 overflow-x-auto">
-            {TABS.map((t) => {
-              const active = tab === t.key;
-              const errCount = tabErrorCount[t.key];
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  className={cn(
-                    "relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors",
-                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <t.icon className="w-4 h-4" />
-                  <span>{t.label}</span>
-                  {errCount > 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
-                  )}
-                  {active && (
-                    <motion.span
-                      layoutId="tab-underline"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Tab content */}
-          <div className="p-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={tab}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2 }}
-              >
-                {tab === "home" && (
-                  <div className="space-y-6">
-                    <Section title="Account">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <Field label="User ID" error={errors.username} required>
-                          <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="e.g. E100" className="h-9" disabled={!!editingId} />
-                        </Field>
-                        <Field label="Full Name">
-                          <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="e.g. John Smith" className="h-9" />
-                        </Field>
-                        <Field label="Email">
-                          <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
-                        </Field>
-                        <Field label="Password" error={errors.password} required={!editingId}>
-                          <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder={editingId ? "Leave blank to keep" : "Min 4 chars"} className="h-9" />
-                        </Field>
-                        <Field label="Confirm Password" error={errors.confirmPassword}>
-                          <Input type="password" value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter" className="h-9" />
-                        </Field>
-                        <Field label="Mobile">
-                          <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
-                        </Field>
-                      </div>
-                    </Section>
-
-                    <Section title="Preferences">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <Field label="Primary Language" required>
-                          <Select value={form.primaryLanguage} onValueChange={(v) => setForm((f) => ({ ...f, primaryLanguage: v }))}>
-                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                            <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </Field>
-                        <Field label="Second Language">
-                          <Select value={form.secondaryLanguage || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, secondaryLanguage: v === "__none__" ? "" : v }))}>
-                            <SelectTrigger className="h-9"><SelectValue placeholder="None" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="__none__">None</SelectItem>
-                              {LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                        <Field label="Status">
-                          <div className="flex items-center gap-3 h-9 px-3 rounded-md border border-border bg-secondary/30">
-                            <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
-                            <span className="text-sm">{form.status ? "Active" : "Inactive"}</span>
-                          </div>
-                        </Field>
-                      </div>
-                    </Section>
-                  </div>
-                )}
-
-                {tab === "address" && (
-                  <Section title="Address Detail">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <Field label="Address Line 1">
-                        <Input value={form.addressLine1} onChange={(e) => setForm((f) => ({ ...f, addressLine1: e.target.value }))} className="h-9" />
-                      </Field>
-                      <Field label="Address Line 2">
-                        <Input value={form.addressLine2} onChange={(e) => setForm((f) => ({ ...f, addressLine2: e.target.value }))} className="h-9" />
-                      </Field>
-                      <Field label="Country">
-                        <Select value={form.country || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, country: v === "__none__" ? "" : v }))}>
-                          <SelectTrigger className="h-9"><SelectValue placeholder="Select country" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">—</SelectItem>
-                            {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Field label="Postal Code" required error={errors.postalCode}>
-                        <Input value={form.postalCode} onChange={(e) => setForm((f) => ({ ...f, postalCode: e.target.value }))} className="h-9" />
-                      </Field>
-                      <Field label="City">
-                        <Input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} className="h-9" />
-                      </Field>
-                      <Field label="Region / State">
-                        <Input value={form.region} onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))} className="h-9" />
-                      </Field>
-                      <Field label="Telephone" required error={errors.telephone}>
-                        <Input value={form.telephone} onChange={(e) => setForm((f) => ({ ...f, telephone: e.target.value }))} className="h-9" />
-                      </Field>
-                    </div>
-                  </Section>
-                )}
-
-                {tab === "modules" && (
-                  <Section title="Module Access" subtitle="Select which modules this user can access">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-                      {MODULES.map((m) => {
-                        const selected = form.modules.includes(m.key);
-                        return (
-                          <button
-                            key={m.key}
-                            type="button"
-                            onClick={() => toggleModule(m.key)}
-                            className={cn(
-                              "group relative flex items-center gap-3 px-3.5 py-3 rounded-lg border text-left transition-all duration-150",
-                              selected
-                                ? "border-primary/40 bg-primary/[0.06] shadow-sm"
-                                : "border-border hover:border-border/80 hover:bg-secondary/40"
-                            )}
-                          >
-                            <div className={cn(
-                              "w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
-                              selected ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
-                            )}>
-                              <m.icon className="w-4 h-4" />
-                            </div>
-                            <span className="text-sm font-medium flex-1 truncate">{m.label}</span>
-                            <div className={cn(
-                              "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
-                              selected ? "bg-primary border-primary text-primary-foreground" : "border-border"
-                            )}>
-                              {selected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </Section>
-                )}
-
-                {tab === "sites" && (
-                  <Section
-                    title="User Assigned Sites"
-                    subtitle="Assign sites and pick one default"
-                    error={errors.sites}
-                    action={
-                      <Select value="__add__" onValueChange={(v) => v !== "__add__" && addSite(v)}>
-                        <SelectTrigger className="h-9 w-[180px] btn-gradient text-primary-foreground border-0 [&>svg]:opacity-80">
-                          <div className="flex items-center gap-1.5"><Plus className="w-4 h-4" /><span>Add Site</span></div>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SITES.filter((s) => !form.sites.includes(s.name)).map((s) => (
-                            <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                          ))}
-                          {SITES.every((s) => form.sites.includes(s.name)) && (
-                            <div className="px-2 py-1.5 text-xs text-muted-foreground">All sites added</div>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    }
-                  >
-                    <div className="rounded-lg border border-border overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Site ID</TableHead>
-                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Description</TableHead>
-                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-center">Default</TableHead>
-                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {form.sites.length === 0 && (
-                            <TableRow>
-                              <TableCell colSpan={4} className="text-center py-10 text-sm text-muted-foreground">
-                                No sites assigned. Click <span className="font-medium text-foreground">Add Site</span> to begin.
-                              </TableCell>
-                            </TableRow>
-                          )}
-                          {form.sites.map((siteName) => {
-                            const meta = SITES.find((s) => s.name === siteName);
-                            const isDefault = form.defaultSite === siteName;
-                            return (
-                              <TableRow key={siteName}>
-                                <TableCell className="text-sm font-medium">{siteName}</TableCell>
-                                <TableCell className="text-sm text-muted-foreground">{meta?.description ?? "—"}</TableCell>
-                                <TableCell className="text-center">
-                                  <button
-                                    type="button"
-                                    onClick={() => setForm((f) => ({ ...f, defaultSite: siteName }))}
-                                    className={cn(
-                                      "inline-flex items-center justify-center w-5 h-5 rounded-full border-2 transition-colors",
-                                      isDefault ? "border-primary" : "border-muted-foreground/40 hover:border-primary/60"
-                                    )}
-                                    aria-label="Set default"
-                                  >
-                                    {isDefault && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                                  </button>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <button
-                                    type="button"
-                                    onClick={() => removeSite(siteName)}
-                                    className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </Section>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
+        {/* Card with sticky tabs + stacked scroll-spy sections */}
+        <FormSections
+          tab={tab}
+          setTab={setTab}
+          tabErrorCount={tabErrorCount}
+          form={form}
+          setForm={setForm}
+          errors={errors}
+          editingId={editingId}
+          toggleModule={toggleModule}
+          addSite={addSite}
+          removeSite={removeSite}
+        />
       </motion.div>
     );
   }
@@ -631,6 +398,313 @@ function Field({ label, required, error, children }: { label: string; required?:
       </Label>
       {children}
       {error && <p className="text-[11px] text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+// ─── FormSections: stacked sections with sticky scroll-spy tabs ───
+interface FormSectionsProps {
+  tab: TabKey;
+  setTab: (t: TabKey) => void;
+  tabErrorCount: Record<TabKey, number>;
+  form: FormState;
+  setForm: React.Dispatch<React.SetStateAction<FormState>>;
+  errors: FormErrors;
+  editingId: string | null;
+  toggleModule: (k: string) => void;
+  addSite: (s: string) => void;
+  removeSite: (s: string) => void;
+}
+
+function FormSections({
+  tab, setTab, tabErrorCount, form, setForm, errors, editingId,
+  toggleModule, addSite, removeSite,
+}: FormSectionsProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Record<TabKey, HTMLElement | null>>({
+    home: null, address: null, modules: null, sites: null,
+  });
+  const isProgrammaticScroll = useRef(false);
+
+  // Scroll-spy via IntersectionObserver
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isProgrammaticScroll.current) return;
+        // pick the entry closest to the top edge that is intersecting
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const key = (visible[0].target as HTMLElement).dataset.tabKey as TabKey;
+          if (key) setTab(key);
+        }
+      },
+      { root, rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    );
+    Object.values(sectionRefs.current).forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, [setTab]);
+
+  const scrollToTab = (key: TabKey) => {
+    const el = sectionRefs.current[key];
+    const root = scrollRef.current;
+    if (!el || !root) return;
+    isProgrammaticScroll.current = true;
+    setTab(key);
+    const top = el.offsetTop - 8;
+    root.scrollTo({ top, behavior: "smooth" });
+    window.setTimeout(() => { isProgrammaticScroll.current = false; }, 600);
+  };
+
+  const registerRef = (key: TabKey) => (el: HTMLElement | null) => {
+    sectionRefs.current[key] = el;
+  };
+
+  return (
+    <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden flex flex-col" style={{ maxHeight: "calc(100vh - 180px)" }}>
+      {/* Sticky tab bar */}
+      <div className="flex items-center gap-1 px-2 sm:px-4 border-b border-border bg-card overflow-x-auto flex-shrink-0">
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          const errCount = tabErrorCount[t.key];
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => scrollToTab(t.key)}
+              className={cn(
+                "relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors",
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <t.icon className="w-4 h-4" />
+              <span>{t.label}</span>
+              {errCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-destructive" />}
+              {active && (
+                <motion.span
+                  layoutId="tab-underline"
+                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Scrollable stacked sections */}
+      <div ref={scrollRef} className="overflow-y-auto flex-1 scroll-smooth">
+        <div className="divide-y divide-border">
+          {/* HOME */}
+          <section ref={registerRef("home")} data-tab-key="home" className="p-6 space-y-6 scroll-mt-4">
+            <SectionHeader title="Home" subtitle="Account & preferences" />
+            <Section title="Account">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Field label="User ID" error={errors.username} required>
+                  <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="e.g. E100" className="h-9" disabled={!!editingId} />
+                </Field>
+                <Field label="Full Name">
+                  <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="e.g. John Smith" className="h-9" />
+                </Field>
+                <Field label="Email">
+                  <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
+                </Field>
+                <Field label="Password" error={errors.password} required={!editingId}>
+                  <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder={editingId ? "Leave blank to keep" : "Min 4 chars"} className="h-9" />
+                </Field>
+                <Field label="Confirm Password" error={errors.confirmPassword}>
+                  <Input type="password" value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter" className="h-9" />
+                </Field>
+                <Field label="Mobile">
+                  <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
+                </Field>
+              </div>
+            </Section>
+            <Section title="Preferences">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Field label="Primary Language" required>
+                  <Select value={form.primaryLanguage} onValueChange={(v) => setForm((f) => ({ ...f, primaryLanguage: v }))}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Second Language">
+                  <Select value={form.secondaryLanguage || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, secondaryLanguage: v === "__none__" ? "" : v }))}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">None</SelectItem>
+                      {LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Status">
+                  <div className="flex items-center gap-3 h-9 px-3 rounded-md border border-border bg-secondary/30">
+                    <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
+                    <span className="text-sm">{form.status ? "Active" : "Inactive"}</span>
+                  </div>
+                </Field>
+              </div>
+            </Section>
+          </section>
+
+          {/* ADDRESS */}
+          <section ref={registerRef("address")} data-tab-key="address" className="p-6 space-y-6 scroll-mt-4">
+            <SectionHeader title="Address Detail" subtitle="Postal address and contact" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Field label="Address Line 1">
+                <Input value={form.addressLine1} onChange={(e) => setForm((f) => ({ ...f, addressLine1: e.target.value }))} className="h-9" />
+              </Field>
+              <Field label="Address Line 2">
+                <Input value={form.addressLine2} onChange={(e) => setForm((f) => ({ ...f, addressLine2: e.target.value }))} className="h-9" />
+              </Field>
+              <Field label="Country">
+                <Select value={form.country || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, country: v === "__none__" ? "" : v }))}>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Select country" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">—</SelectItem>
+                    {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Postal Code" required error={errors.postalCode}>
+                <Input value={form.postalCode} onChange={(e) => setForm((f) => ({ ...f, postalCode: e.target.value }))} className="h-9" />
+              </Field>
+              <Field label="City">
+                <Input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} className="h-9" />
+              </Field>
+              <Field label="Region / State">
+                <Input value={form.region} onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))} className="h-9" />
+              </Field>
+              <Field label="Telephone" required error={errors.telephone}>
+                <Input value={form.telephone} onChange={(e) => setForm((f) => ({ ...f, telephone: e.target.value }))} className="h-9" />
+              </Field>
+            </div>
+          </section>
+
+          {/* MODULES */}
+          <section ref={registerRef("modules")} data-tab-key="modules" className="p-6 space-y-6 scroll-mt-4">
+            <SectionHeader title="Modules" subtitle="Select which modules this user can access" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {MODULES.map((m) => {
+                const selected = form.modules.includes(m.key);
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => toggleModule(m.key)}
+                    className={cn(
+                      "group relative flex items-center gap-3 px-3.5 py-3 rounded-lg border text-left transition-all duration-150",
+                      selected ? "border-primary/40 bg-primary/[0.06] shadow-sm" : "border-border hover:border-border/80 hover:bg-secondary/40"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
+                      selected ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
+                    )}>
+                      <m.icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium flex-1 truncate">{m.label}</span>
+                    <div className={cn(
+                      "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                      selected ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                    )}>
+                      {selected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* SITES */}
+          <section ref={registerRef("sites")} data-tab-key="sites" className="p-6 space-y-6 scroll-mt-4">
+            <div className="flex items-start justify-between gap-3">
+              <SectionHeader title="User Assigned Sites" subtitle="Assign sites and pick one default" error={errors.sites} />
+              <Select value="__add__" onValueChange={(v) => v !== "__add__" && addSite(v)}>
+                <SelectTrigger className="h-9 w-[180px] btn-gradient text-primary-foreground border-0 [&>svg]:opacity-80">
+                  <div className="flex items-center gap-1.5"><Plus className="w-4 h-4" /><span>Add Site</span></div>
+                </SelectTrigger>
+                <SelectContent>
+                  {SITES.filter((s) => !form.sites.includes(s.name)).map((s) => (
+                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                  ))}
+                  {SITES.every((s) => form.sites.includes(s.name)) && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">All sites added</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Site ID</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Description</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-center">Default</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {form.sites.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-10 text-sm text-muted-foreground">
+                        No sites assigned. Click <span className="font-medium text-foreground">Add Site</span> to begin.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {form.sites.map((siteName) => {
+                    const meta = SITES.find((s) => s.name === siteName);
+                    const isDefault = form.defaultSite === siteName;
+                    return (
+                      <TableRow key={siteName}>
+                        <TableCell className="text-sm font-medium">{siteName}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{meta?.description ?? "—"}</TableCell>
+                        <TableCell className="text-center">
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, defaultSite: siteName }))}
+                            className={cn(
+                              "inline-flex items-center justify-center w-5 h-5 rounded-full border-2 transition-colors",
+                              isDefault ? "border-primary" : "border-muted-foreground/40 hover:border-primary/60"
+                            )}
+                            aria-label="Set default"
+                          >
+                            {isDefault && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                          </button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <button
+                            type="button"
+                            onClick={() => removeSite(siteName)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+            {/* spacer so last section can scroll fully under tab bar */}
+            <div className="h-32" />
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ title, subtitle, error }: { title: string; subtitle?: string; error?: string }) {
+  return (
+    <div>
+      <h2 className="text-base font-semibold text-foreground">{title}</h2>
+      {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      {error && <p className="text-[11px] text-destructive mt-1">{error}</p>}
     </div>
   );
 }
