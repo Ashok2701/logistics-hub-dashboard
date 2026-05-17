@@ -12,10 +12,12 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Search, UserPlus, Route, CalendarClock, Radar,
   Map, BarChart3, Truck, Users, ArrowLeft, Loader2,
-  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check,
+  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check, ChevronsUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
