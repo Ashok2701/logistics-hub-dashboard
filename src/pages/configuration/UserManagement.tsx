@@ -294,8 +294,9 @@ export default function UserManagement() {
           errors={errors}
           editingId={editingId}
           toggleModule={toggleModule}
-          addSite={addSite}
-          removeSite={removeSite}
+          addEmptyRow={addEmptyRow}
+          setSiteAt={setSiteAt}
+          removeSiteAt={removeSiteAt}
         />
       </motion.div>
     );
