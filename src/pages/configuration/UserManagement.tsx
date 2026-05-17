@@ -731,3 +731,69 @@ function SectionHeader({ title, subtitle, error }: { title: string; subtitle?: s
     </div>
   );
 }
+
+// ─── SiteCombobox: searchable Site ID picker ──────────────────────
+function SiteCombobox({
+  value,
+  disabledValues,
+  onChange,
+}: {
+  value: string;
+  disabledValues: Set<string>;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = SITES.find((s) => s.name === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "h-9 w-full inline-flex items-center justify-between gap-2 rounded-md border bg-background px-3 text-sm transition-colors",
+            value ? "border-border" : "border-dashed border-primary/40 text-muted-foreground",
+            "hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+          )}
+        >
+          <span className={cn("truncate", !value && "italic")}>
+            {selected ? selected.name : "Select site…"}
+          </span>
+          <ChevronsUpDown className="w-4 h-4 opacity-50 flex-shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[280px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search site…" className="h-9" />
+          <CommandList>
+            <CommandEmpty>No site found.</CommandEmpty>
+            <CommandGroup>
+              {SITES.map((s) => {
+                const isDisabled = disabledValues.has(s.name);
+                const isSelected = value === s.name;
+                return (
+                  <CommandItem
+                    key={s.id}
+                    value={`${s.name} ${s.description}`}
+                    disabled={isDisabled}
+                    onSelect={() => {
+                      onChange(s.name);
+                      setOpen(false);
+                    }}
+                    className={cn(isDisabled && "opacity-40")}
+                  >
+                    <Check className={cn("w-4 h-4 mr-2", isSelected ? "opacity-100" : "opacity-0")} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate">{s.name}</span>
+                      <span className="text-[11px] text-muted-foreground truncate">{s.description}</span>
+                    </div>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
