@@ -158,6 +158,14 @@ export function buildApiPayload(form: {
     lngmain: form.primaryLanguage,
     lansec: form.secondaryLanguage,
     alignedSites: form.sites,
+    xdefsite: form.defaultSite,
+    addressLine1: form.addressLine1 ?? "",
+    addressLine2: form.addressLine2 ?? "",
+    country: form.country ?? "",
+    postalCode: form.postalCode ?? "",
+    city: form.city ?? "",
+    region: form.region ?? "",
+    telephone: form.telephone ?? "",
   };
   if (form.password) payload.password = form.password;
   for (const [uiKey, flag] of Object.entries(MODULE_FLAG_MAP)) {
