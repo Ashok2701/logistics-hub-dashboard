@@ -71,6 +71,13 @@ export interface ApiUser {
   defaultSite: string;
   primaryLanguage: string;
   secondaryLanguage: string;
+  addressLine1: string;
+  addressLine2: string;
+  country: string;
+  postalCode: string;
+  city: string;
+  region: string;
+  telephone: string;
   raw?: any;
 }
 
