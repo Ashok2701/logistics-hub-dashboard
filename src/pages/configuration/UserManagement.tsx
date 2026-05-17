@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
 import {
@@ -15,6 +15,7 @@ import {
 import {
   Search, UserPlus, Route, CalendarClock, Radar,
   Map, BarChart3, Truck, Users, ArrowLeft, Loader2,
+  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -33,6 +34,13 @@ interface User {
   defaultSite: string;
   primaryLanguage: string;
   secondaryLanguage: string;
+  addressLine1: string;
+  addressLine2: string;
+  country: string;
+  postalCode: string;
+  city: string;
+  region: string;
+  telephone: string;
 }
 
 const MODULES = [
@@ -48,63 +56,43 @@ const MODULES = [
 ];
 
 const SITES = [
-  "HQ Warehouse", "North Distribution", "South Hub",
-  "East Logistics Park", "West Terminal",
+  { id: "HQ", name: "HQ Warehouse", description: "Primary distribution center" },
+  { id: "NORTH", name: "North Distribution", description: "Northern regional hub" },
+  { id: "SOUTH", name: "South Hub", description: "Southern operations" },
+  { id: "EAST", name: "East Logistics Park", description: "East coast facility" },
+  { id: "WEST", name: "West Terminal", description: "West coast terminal" },
 ];
 
-const LANGUAGES = [
-  "English", "Arabic", "French", "Spanish", "Hindi", "German",
-];
-
-// ─── Seed data ────────────────────────────────────────────────────
-const seedUsers: User[] = [
-  {
-    id: "1", username: "jthompson", fullName: "James Thompson",
-    email: "james.t@fleet.io", mobile: "+1 555-0142",
-    status: "active", modules: ["route_planner", "tracking", "fleet"],
-    sites: ["HQ Warehouse", "North Distribution"], defaultSite: "HQ Warehouse",
-    primaryLanguage: "English", secondaryLanguage: "Arabic",
-  },
-  {
-    id: "2", username: "snguyen", fullName: "Sarah Nguyen",
-    email: "sarah.n@fleet.io", mobile: "+1 555-0198",
-    status: "active", modules: ["reports", "fleet", "scheduling"],
-    sites: ["South Hub"], defaultSite: "South Hub",
-    primaryLanguage: "English", secondaryLanguage: "",
-  },
-  {
-    id: "3", username: "mrobinson", fullName: "Marcus Robinson",
-    email: "marcus.r@fleet.io", mobile: "+1 555-0271",
-    status: "inactive", modules: ["map", "tracking"],
-    sites: ["East Logistics Park", "West Terminal"], defaultSite: "East Logistics Park",
-    primaryLanguage: "English", secondaryLanguage: "Spanish",
-  },
-  {
-    id: "4", username: "apatel", fullName: "Anita Patel",
-    email: "anita.p@fleet.io", mobile: "+1 555-0334",
-    status: "active", modules: ["route_planner", "scheduling", "reports", "user_mgmt"],
-    sites: ["HQ Warehouse", "South Hub", "North Distribution"], defaultSite: "HQ Warehouse",
-    primaryLanguage: "English", secondaryLanguage: "Hindi",
-  },
-];
+const COUNTRIES = ["United States of America", "Canada", "Mexico", "United Kingdom", "Germany", "France", "India", "United Arab Emirates"];
+const LANGUAGES = ["English", "Arabic", "French", "Spanish", "Hindi", "German"];
 
 // ─── Form state ───────────────────────────────────────────────────
 const emptyForm = {
   username: "", fullName: "", password: "", confirmPassword: "",
   email: "", mobile: "", primaryLanguage: "English", secondaryLanguage: "",
   modules: [] as string[], sites: [] as string[], defaultSite: "", status: true,
+  addressLine1: "", addressLine2: "", country: "", postalCode: "",
+  city: "", region: "", telephone: "",
 };
 
 type FormState = typeof emptyForm;
 type FormErrors = Partial<Record<keyof FormState, string>>;
-
 type ViewMode = "list" | "form";
+type TabKey = "home" | "address" | "modules" | "sites";
+
+const TABS: { key: TabKey; label: string; icon: any }[] = [
+  { key: "home", label: "Home", icon: Home },
+  { key: "address", label: "Address Detail", icon: MapPin },
+  { key: "modules", label: "Modules", icon: LayoutGrid },
+  { key: "sites", label: "User Assigned Sites", icon: Building2 },
+];
 
 // ─── Component ────────────────────────────────────────────────────
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<ViewMode>("list");
+  const [tab, setTab] = useState<TabKey>("home");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -121,7 +109,7 @@ export default function UserManagement() {
       setUsers(arr.map(mapApiUser) as User[]);
     } catch (e: any) {
       toast({ title: "Failed to load users", description: e.message, variant: "destructive" });
-      setUsers(seedUsers);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -134,11 +122,11 @@ export default function UserManagement() {
     return u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
 
-  // ── Helpers ──────────────────────────────────────────────────────
   const openAdd = () => {
     setEditingId(null);
     setForm(emptyForm);
     setErrors({});
+    setTab("home");
     setView("form");
   };
 
@@ -149,8 +137,11 @@ export default function UserManagement() {
       email: u.email, mobile: u.mobile, primaryLanguage: u.primaryLanguage,
       secondaryLanguage: u.secondaryLanguage, modules: [...u.modules],
       sites: [...u.sites], defaultSite: u.defaultSite, status: u.status === "active",
+      addressLine1: u.addressLine1, addressLine2: u.addressLine2, country: u.country,
+      postalCode: u.postalCode, city: u.city, region: u.region, telephone: u.telephone,
     });
     setErrors({});
+    setTab("home");
     setView("form");
   };
 
@@ -168,41 +159,34 @@ export default function UserManagement() {
 
   const validate = (): boolean => {
     const e: FormErrors = {};
-    if (!form.username.trim()) e.username = "Username is required";
+    if (!form.username.trim()) e.username = "Required";
     else if (!editingId && users.some((u) => u.username === form.username.trim()))
-      e.username = "Username already exists";
-    if (!editingId && form.password.length < 6) e.password = "Min 6 characters";
+      e.username = "Already exists";
+    if (!editingId && form.password.length < 4) e.password = "Min 4 characters";
     if (form.password && form.password !== form.confirmPassword)
       e.confirmPassword = "Passwords do not match";
+    if (!form.postalCode.trim()) e.postalCode = "Required";
+    if (!form.telephone.trim()) e.telephone = "Required";
     if (form.sites.length === 0) e.sites = "Select at least one site";
     setErrors(e);
+    // jump to first tab containing an error
+    if (e.username || e.password || e.confirmPassword) setTab("home");
+    else if (e.postalCode || e.telephone) setTab("address");
+    else if (e.sites) setTab("sites");
     return Object.keys(e).length === 0;
   };
-
-  const buildPayload = () => buildApiPayload({
-    username: form.username,
-    fullName: form.fullName,
-    email: form.email,
-    mobile: form.mobile,
-    password: form.password,
-    primaryLanguage: form.primaryLanguage,
-    secondaryLanguage: form.secondaryLanguage,
-    modules: form.modules,
-    sites: form.sites,
-    defaultSite: form.defaultSite,
-    status: form.status,
-  });
 
   const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
     try {
+      const payload = buildApiPayload({ ...form });
       if (editingId) {
         const target = users.find((u) => u.id === editingId);
-        await userApi.update(target?.username || form.username.trim(), buildPayload());
+        await userApi.update(target?.username || form.username.trim(), payload);
         toast({ title: "User updated" });
       } else {
-        await userApi.create(buildPayload());
+        await userApi.create(payload);
         toast({ title: "User created" });
       }
       setView("list");
@@ -220,10 +204,17 @@ export default function UserManagement() {
       modules: f.modules.includes(key) ? f.modules.filter((m) => m !== key) : [...f.modules, key],
     }));
 
-  const toggleSite = (site: string) =>
+  const addSite = (siteName: string) =>
     setForm((f) => {
-      const next = f.sites.includes(site) ? f.sites.filter((s) => s !== site) : [...f.sites, site];
-      return { ...f, sites: next, defaultSite: next.includes(f.defaultSite) ? f.defaultSite : next[0] ?? "" };
+      if (f.sites.includes(siteName)) return f;
+      const next = [...f.sites, siteName];
+      return { ...f, sites: next, defaultSite: f.defaultSite || siteName };
+    });
+
+  const removeSite = (siteName: string) =>
+    setForm((f) => {
+      const next = f.sites.filter((s) => s !== siteName);
+      return { ...f, sites: next, defaultSite: f.defaultSite === siteName ? (next[0] ?? "") : f.defaultSite };
     });
 
   const moduleIcon = (key: string) => {
@@ -231,162 +222,295 @@ export default function UserManagement() {
     return m ? <m.icon className="w-3.5 h-3.5" /> : null;
   };
 
-  // ── Render ───────────────────────────────────────────────────────
+  // ── Form View ─────────────────────────────────────────────────────
   if (view === "form") {
+    const tabErrorCount: Record<TabKey, number> = {
+      home: ["username", "password", "confirmPassword"].filter((k) => errors[k as keyof FormErrors]).length,
+      address: ["postalCode", "telephone"].filter((k) => errors[k as keyof FormErrors]).length,
+      modules: 0,
+      sites: errors.sites ? 1 : 0,
+    };
+
     return (
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Back + Title */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button
               onClick={goBack}
-              className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150"
+              className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">{editingId ? "Edit User" : "Add User"}</h1>
-              <p className="text-xs text-muted-foreground">{editingId ? "Update user details and permissions" : "Create a new system user"}</p>
+              <h1 className="text-lg font-semibold text-foreground">
+                {editingId ? "Update User" : "New User"}
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                {editingId ? `Editing ${form.username}` : "Create a new system user"}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">
+          <div className="flex items-center gap-2">
+            <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors">
               Cancel
             </button>
             <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-60">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {editingId ? "Save Changes" : "Create User"}
+              {editingId ? "Update" : "Create"}
             </button>
           </div>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-card rounded-xl border border-border shadow-card">
-          <div className="p-6 space-y-6">
-            {/* Basic Info */}
-            <Section title="Basic Information">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Field label="Username" error={errors.username} required>
-                  <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="e.g. jsmith" className="h-9" />
-                </Field>
-                <Field label="Full Name">
-                  <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="e.g. John Smith" className="h-9" />
-                </Field>
-                <Field label="Email">
-                  <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
-                </Field>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Field label="Password" error={errors.password}>
-                  <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder={editingId ? "Leave blank" : "Min 6 chars"} className="h-9" />
-                </Field>
-                <Field label="Confirm Password" error={errors.confirmPassword}>
-                  <Input type="password" value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter" className="h-9" />
-                </Field>
-                <Field label="Mobile">
-                  <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
-                </Field>
-              </div>
-            </Section>
-
-            {/* Language */}
-            <Section title="Language">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Field label="Primary Language">
-                  <Select value={form.primaryLanguage} onValueChange={(v) => setForm((f) => ({ ...f, primaryLanguage: v }))}>
-                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Secondary Language">
-                  <Select value={form.secondaryLanguage || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, secondaryLanguage: v === "__none__" ? "" : v }))}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="None" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">None</SelectItem>
-                      {LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Status">
-                  <div className="flex items-center gap-3 h-9">
-                    <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
-                    <span className="text-sm">{form.status ? "Active" : "Inactive"}</span>
-                  </div>
-                </Field>
-              </div>
-            </Section>
-
-            {/* Modules */}
-            <Section title="Modules">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                {MODULES.map((m) => (
-                  <label
-                    key={m.key}
-                    className={cn(
-                      "flex items-center gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer transition-all duration-150",
-                      form.modules.includes(m.key)
-                        ? "border-primary/30 bg-primary/[0.05]"
-                        : "border-border hover:border-border/80 hover:bg-secondary/30"
-                    )}
-                  >
-                    <Checkbox
-                      checked={form.modules.includes(m.key)}
-                      onCheckedChange={() => toggleModule(m.key)}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+        {/* Card with tabs */}
+        <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
+          {/* Tab bar */}
+          <div className="flex items-center gap-1 px-2 sm:px-4 border-b border-border bg-secondary/30 overflow-x-auto">
+            {TABS.map((t) => {
+              const active = tab === t.key;
+              const errCount = tabErrorCount[t.key];
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={cn(
+                    "relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors",
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <t.icon className="w-4 h-4" />
+                  <span>{t.label}</span>
+                  {errCount > 0 && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                  )}
+                  {active && (
+                    <motion.span
+                      layoutId="tab-underline"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
                     />
-                    <m.icon className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm">{m.label}</span>
-                  </label>
-                ))}
-              </div>
-            </Section>
-
-            {/* Sites */}
-            <Section title="Sites" error={errors.sites}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {SITES.map((site) => (
-                  <label
-                    key={site}
-                    className={cn(
-                      "flex items-center justify-between px-3 py-2.5 rounded-lg border cursor-pointer transition-all duration-150",
-                      form.sites.includes(site)
-                        ? "border-primary/30 bg-primary/[0.05]"
-                        : "border-border hover:border-border/80 hover:bg-secondary/30"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Checkbox
-                        checked={form.sites.includes(site)}
-                        onCheckedChange={() => toggleSite(site)}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <span className="text-sm">{site}</span>
-                    </div>
-                    {form.sites.includes(site) && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); setForm((f) => ({ ...f, defaultSite: site })); }}
-                        className={cn(
-                          "text-[11px] font-medium px-2 py-0.5 rounded-full transition-colors",
-                          form.defaultSite === site
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                        )}
-                      >
-                        {form.defaultSite === site ? "Default" : "Set default"}
-                      </button>
-                    )}
-                  </label>
-                ))}
-              </div>
-            </Section>
-
+                  )}
+                </button>
+              );
+            })}
           </div>
 
+          {/* Tab content */}
+          <div className="p-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+              >
+                {tab === "home" && (
+                  <div className="space-y-6">
+                    <Section title="Account">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Field label="User ID" error={errors.username} required>
+                          <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="e.g. E100" className="h-9" disabled={!!editingId} />
+                        </Field>
+                        <Field label="Full Name">
+                          <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="e.g. John Smith" className="h-9" />
+                        </Field>
+                        <Field label="Email">
+                          <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="name@company.com" className="h-9" />
+                        </Field>
+                        <Field label="Password" error={errors.password} required={!editingId}>
+                          <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder={editingId ? "Leave blank to keep" : "Min 4 chars"} className="h-9" />
+                        </Field>
+                        <Field label="Confirm Password" error={errors.confirmPassword}>
+                          <Input type="password" value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter" className="h-9" />
+                        </Field>
+                        <Field label="Mobile">
+                          <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
+                        </Field>
+                      </div>
+                    </Section>
+
+                    <Section title="Preferences">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Field label="Primary Language" required>
+                          <Select value={form.primaryLanguage} onValueChange={(v) => setForm((f) => ({ ...f, primaryLanguage: v }))}>
+                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                            <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </Field>
+                        <Field label="Second Language">
+                          <Select value={form.secondaryLanguage || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, secondaryLanguage: v === "__none__" ? "" : v }))}>
+                            <SelectTrigger className="h-9"><SelectValue placeholder="None" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">None</SelectItem>
+                              {LANGUAGES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                        <Field label="Status">
+                          <div className="flex items-center gap-3 h-9 px-3 rounded-md border border-border bg-secondary/30">
+                            <Switch checked={form.status} onCheckedChange={(v) => setForm((f) => ({ ...f, status: v }))} />
+                            <span className="text-sm">{form.status ? "Active" : "Inactive"}</span>
+                          </div>
+                        </Field>
+                      </div>
+                    </Section>
+                  </div>
+                )}
+
+                {tab === "address" && (
+                  <Section title="Address Detail">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <Field label="Address Line 1">
+                        <Input value={form.addressLine1} onChange={(e) => setForm((f) => ({ ...f, addressLine1: e.target.value }))} className="h-9" />
+                      </Field>
+                      <Field label="Address Line 2">
+                        <Input value={form.addressLine2} onChange={(e) => setForm((f) => ({ ...f, addressLine2: e.target.value }))} className="h-9" />
+                      </Field>
+                      <Field label="Country">
+                        <Select value={form.country || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, country: v === "__none__" ? "" : v }))}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Select country" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">—</SelectItem>
+                            {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                      <Field label="Postal Code" required error={errors.postalCode}>
+                        <Input value={form.postalCode} onChange={(e) => setForm((f) => ({ ...f, postalCode: e.target.value }))} className="h-9" />
+                      </Field>
+                      <Field label="City">
+                        <Input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} className="h-9" />
+                      </Field>
+                      <Field label="Region / State">
+                        <Input value={form.region} onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))} className="h-9" />
+                      </Field>
+                      <Field label="Telephone" required error={errors.telephone}>
+                        <Input value={form.telephone} onChange={(e) => setForm((f) => ({ ...f, telephone: e.target.value }))} className="h-9" />
+                      </Field>
+                    </div>
+                  </Section>
+                )}
+
+                {tab === "modules" && (
+                  <Section title="Module Access" subtitle="Select which modules this user can access">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                      {MODULES.map((m) => {
+                        const selected = form.modules.includes(m.key);
+                        return (
+                          <button
+                            key={m.key}
+                            type="button"
+                            onClick={() => toggleModule(m.key)}
+                            className={cn(
+                              "group relative flex items-center gap-3 px-3.5 py-3 rounded-lg border text-left transition-all duration-150",
+                              selected
+                                ? "border-primary/40 bg-primary/[0.06] shadow-sm"
+                                : "border-border hover:border-border/80 hover:bg-secondary/40"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
+                              selected ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
+                            )}>
+                              <m.icon className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium flex-1 truncate">{m.label}</span>
+                            <div className={cn(
+                              "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                              selected ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                            )}>
+                              {selected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Section>
+                )}
+
+                {tab === "sites" && (
+                  <Section
+                    title="User Assigned Sites"
+                    subtitle="Assign sites and pick one default"
+                    error={errors.sites}
+                    action={
+                      <Select value="__add__" onValueChange={(v) => v !== "__add__" && addSite(v)}>
+                        <SelectTrigger className="h-9 w-[180px] btn-gradient text-primary-foreground border-0 [&>svg]:opacity-80">
+                          <div className="flex items-center gap-1.5"><Plus className="w-4 h-4" /><span>Add Site</span></div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SITES.filter((s) => !form.sites.includes(s.name)).map((s) => (
+                            <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                          ))}
+                          {SITES.every((s) => form.sites.includes(s.name)) && (
+                            <div className="px-2 py-1.5 text-xs text-muted-foreground">All sites added</div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    }
+                  >
+                    <div className="rounded-lg border border-border overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Site ID</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Description</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-center">Default</TableHead>
+                            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {form.sites.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} className="text-center py-10 text-sm text-muted-foreground">
+                                No sites assigned. Click <span className="font-medium text-foreground">Add Site</span> to begin.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          {form.sites.map((siteName) => {
+                            const meta = SITES.find((s) => s.name === siteName);
+                            const isDefault = form.defaultSite === siteName;
+                            return (
+                              <TableRow key={siteName}>
+                                <TableCell className="text-sm font-medium">{siteName}</TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{meta?.description ?? "—"}</TableCell>
+                                <TableCell className="text-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => setForm((f) => ({ ...f, defaultSite: siteName }))}
+                                    className={cn(
+                                      "inline-flex items-center justify-center w-5 h-5 rounded-full border-2 transition-colors",
+                                      isDefault ? "border-primary" : "border-muted-foreground/40 hover:border-primary/60"
+                                    )}
+                                    aria-label="Set default"
+                                  >
+                                    {isDefault && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                                  </button>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSite(siteName)}
+                                    className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Section>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </motion.div>
     );
@@ -397,7 +521,6 @@ export default function UserManagement() {
     <div>
       <PageHeader title="Users" subtitle="Manage system users and access control" />
 
-      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
@@ -413,7 +536,6 @@ export default function UserManagement() {
         </button>
       </div>
 
-      {/* Table */}
       <motion.div
         className="bg-card rounded-xl border border-border shadow-card overflow-hidden"
         initial={{ opacity: 0, y: 8 }}
@@ -437,11 +559,7 @@ export default function UserManagement() {
             {filtered.map((u, i) => (
               <TableRow
                 key={u.id}
-                className={cn(
-                  "transition-colors duration-150",
-                  i % 2 === 1 && "bg-secondary/20",
-                  "hover:bg-primary/[0.03]"
-                )}
+                className={cn("transition-colors duration-150", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.03]")}
               >
                 <TableCell className="font-medium text-sm">{u.username}</TableCell>
                 <TableCell className="text-sm">{u.fullName}</TableCell>
@@ -487,12 +605,18 @@ export default function UserManagement() {
 }
 
 // ─── Subcomponents ────────────────────────────────────────────────
-function Section({ title, error, children }: { title: string; error?: string; children: React.ReactNode }) {
+function Section({
+  title, subtitle, error, action, children,
+}: { title: string; subtitle?: string; error?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        {error && <span className="text-[11px] text-destructive">{error}</span>}
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+          {error && <p className="text-[11px] text-destructive mt-1">{error}</p>}
+        </div>
+        {action}
       </div>
       {children}
     </div>
