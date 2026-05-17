@@ -12,10 +12,12 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Search, UserPlus, Route, CalendarClock, Radar,
   Map, BarChart3, Truck, Users, ArrowLeft, Loader2,
-  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check,
+  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check, ChevronsUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -204,17 +206,33 @@ export default function UserManagement() {
       modules: f.modules.includes(key) ? f.modules.filter((m) => m !== key) : [...f.modules, key],
     }));
 
-  const addSite = (siteName: string) =>
+  const addEmptyRow = () =>
+    setForm((f) => ({ ...f, sites: [...f.sites, ""] }));
+
+  const setSiteAt = (index: number, siteName: string) =>
     setForm((f) => {
-      if (f.sites.includes(siteName)) return f;
-      const next = [...f.sites, siteName];
-      return { ...f, sites: next, defaultSite: f.defaultSite || siteName };
+      // prevent duplicates
+      if (siteName && f.sites.some((s, i) => i !== index && s === siteName)) {
+        toast({ title: "Site already added", variant: "destructive" });
+        return f;
+      }
+      const next = [...f.sites];
+      const prev = next[index];
+      next[index] = siteName;
+      const newDefault =
+        f.defaultSite === prev ? siteName : f.defaultSite || siteName;
+      return { ...f, sites: next, defaultSite: newDefault };
     });
 
-  const removeSite = (siteName: string) =>
+  const removeSiteAt = (index: number) =>
     setForm((f) => {
-      const next = f.sites.filter((s) => s !== siteName);
-      return { ...f, sites: next, defaultSite: f.defaultSite === siteName ? (next[0] ?? "") : f.defaultSite };
+      const removed = f.sites[index];
+      const next = f.sites.filter((_, i) => i !== index);
+      const newDefault =
+        f.defaultSite === removed
+          ? next.find((s) => s) ?? ""
+          : f.defaultSite;
+      return { ...f, sites: next, defaultSite: newDefault };
     });
 
   const moduleIcon = (key: string) => {
@@ -276,8 +294,9 @@ export default function UserManagement() {
           errors={errors}
           editingId={editingId}
           toggleModule={toggleModule}
-          addSite={addSite}
-          removeSite={removeSite}
+          addEmptyRow={addEmptyRow}
+          setSiteAt={setSiteAt}
+          removeSiteAt={removeSiteAt}
         />
       </motion.div>
     );
@@ -412,13 +431,14 @@ interface FormSectionsProps {
   errors: FormErrors;
   editingId: string | null;
   toggleModule: (k: string) => void;
-  addSite: (s: string) => void;
-  removeSite: (s: string) => void;
+  addEmptyRow: () => void;
+  setSiteAt: (index: number, s: string) => void;
+  removeSiteAt: (index: number) => void;
 }
 
 function FormSections({
   tab, setTab, tabErrorCount, form, setForm, errors, editingId,
-  toggleModule, addSite, removeSite,
+  toggleModule, addEmptyRow, setSiteAt, removeSiteAt,
 }: FormSectionsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<TabKey, HTMLElement | null>>({
@@ -623,28 +643,22 @@ function FormSections({
           <section ref={registerRef("sites")} data-tab-key="sites" className="p-6 space-y-6 scroll-mt-4">
             <div className="flex items-start justify-between gap-3">
               <SectionHeader title="User Assigned Sites" subtitle="Assign sites and pick one default" error={errors.sites} />
-              <Select value="__add__" onValueChange={(v) => v !== "__add__" && addSite(v)}>
-                <SelectTrigger className="h-9 w-[180px] btn-gradient text-primary-foreground border-0 [&>svg]:opacity-80">
-                  <div className="flex items-center gap-1.5"><Plus className="w-4 h-4" /><span>Add Site</span></div>
-                </SelectTrigger>
-                <SelectContent>
-                  {SITES.filter((s) => !form.sites.includes(s.name)).map((s) => (
-                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                  ))}
-                  {SITES.every((s) => form.sites.includes(s.name)) && (
-                    <div className="px-2 py-1.5 text-xs text-muted-foreground">All sites added</div>
-                  )}
-                </SelectContent>
-              </Select>
+              <button
+                type="button"
+                onClick={addEmptyRow}
+                className="btn-gradient h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-1.5 flex-shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Add Site
+              </button>
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Site ID</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 w-[260px]">Site ID</TableHead>
                     <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Description</TableHead>
-                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-center">Default</TableHead>
-                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Action</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-center w-[100px]">Default</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-right w-[80px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -655,20 +669,29 @@ function FormSections({
                       </TableCell>
                     </TableRow>
                   )}
-                  {form.sites.map((siteName) => {
+                  {form.sites.map((siteName, index) => {
                     const meta = SITES.find((s) => s.name === siteName);
-                    const isDefault = form.defaultSite === siteName;
+                    const isDefault = !!siteName && form.defaultSite === siteName;
+                    const takenElsewhere = new Set(form.sites.filter((_, i) => i !== index));
                     return (
-                      <TableRow key={siteName}>
-                        <TableCell className="text-sm font-medium">{siteName}</TableCell>
+                      <TableRow key={index}>
+                        <TableCell>
+                          <SiteCombobox
+                            value={siteName}
+                            disabledValues={takenElsewhere}
+                            onChange={(v) => setSiteAt(index, v)}
+                          />
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{meta?.description ?? "—"}</TableCell>
                         <TableCell className="text-center">
                           <button
                             type="button"
-                            onClick={() => setForm((f) => ({ ...f, defaultSite: siteName }))}
+                            disabled={!siteName}
+                            onClick={() => siteName && setForm((f) => ({ ...f, defaultSite: siteName }))}
                             className={cn(
                               "inline-flex items-center justify-center w-5 h-5 rounded-full border-2 transition-colors",
-                              isDefault ? "border-primary" : "border-muted-foreground/40 hover:border-primary/60"
+                              isDefault ? "border-primary" : "border-muted-foreground/40 hover:border-primary/60",
+                              !siteName && "opacity-30 cursor-not-allowed"
                             )}
                             aria-label="Set default"
                           >
@@ -678,7 +701,7 @@ function FormSections({
                         <TableCell className="text-right">
                           <button
                             type="button"
-                            onClick={() => removeSite(siteName)}
+                            onClick={() => removeSiteAt(index)}
                             className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -706,5 +729,71 @@ function SectionHeader({ title, subtitle, error }: { title: string; subtitle?: s
       {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       {error && <p className="text-[11px] text-destructive mt-1">{error}</p>}
     </div>
+  );
+}
+
+// ─── SiteCombobox: searchable Site ID picker ──────────────────────
+function SiteCombobox({
+  value,
+  disabledValues,
+  onChange,
+}: {
+  value: string;
+  disabledValues: Set<string>;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = SITES.find((s) => s.name === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "h-9 w-full inline-flex items-center justify-between gap-2 rounded-md border bg-background px-3 text-sm transition-colors",
+            value ? "border-border" : "border-dashed border-primary/40 text-muted-foreground",
+            "hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+          )}
+        >
+          <span className={cn("truncate", !value && "italic")}>
+            {selected ? selected.name : "Select site…"}
+          </span>
+          <ChevronsUpDown className="w-4 h-4 opacity-50 flex-shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[280px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search site…" className="h-9" />
+          <CommandList>
+            <CommandEmpty>No site found.</CommandEmpty>
+            <CommandGroup>
+              {SITES.map((s) => {
+                const isDisabled = disabledValues.has(s.name);
+                const isSelected = value === s.name;
+                return (
+                  <CommandItem
+                    key={s.id}
+                    value={`${s.name} ${s.description}`}
+                    disabled={isDisabled}
+                    onSelect={() => {
+                      onChange(s.name);
+                      setOpen(false);
+                    }}
+                    className={cn(isDisabled && "opacity-40")}
+                  >
+                    <Check className={cn("w-4 h-4 mr-2", isSelected ? "opacity-100" : "opacity-0")} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate">{s.name}</span>
+                      <span className="text-[11px] text-muted-foreground truncate">{s.description}</span>
+                    </div>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
