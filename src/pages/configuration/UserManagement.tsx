@@ -643,28 +643,22 @@ function FormSections({
           <section ref={registerRef("sites")} data-tab-key="sites" className="p-6 space-y-6 scroll-mt-4">
             <div className="flex items-start justify-between gap-3">
               <SectionHeader title="User Assigned Sites" subtitle="Assign sites and pick one default" error={errors.sites} />
-              <Select value="__add__" onValueChange={(v) => v !== "__add__" && addSite(v)}>
-                <SelectTrigger className="h-9 w-[180px] btn-gradient text-primary-foreground border-0 [&>svg]:opacity-80">
-                  <div className="flex items-center gap-1.5"><Plus className="w-4 h-4" /><span>Add Site</span></div>
-                </SelectTrigger>
-                <SelectContent>
-                  {SITES.filter((s) => !form.sites.includes(s.name)).map((s) => (
-                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                  ))}
-                  {SITES.every((s) => form.sites.includes(s.name)) && (
-                    <div className="px-2 py-1.5 text-xs text-muted-foreground">All sites added</div>
-                  )}
-                </SelectContent>
-              </Select>
+              <button
+                type="button"
+                onClick={addEmptyRow}
+                className="btn-gradient h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-1.5 flex-shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Add Site
+              </button>
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Site ID</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 w-[260px]">Site ID</TableHead>
                     <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70">Description</TableHead>
-                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-center">Default</TableHead>
-                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Action</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-center w-[100px]">Default</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 text-right w-[80px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -675,20 +669,29 @@ function FormSections({
                       </TableCell>
                     </TableRow>
                   )}
-                  {form.sites.map((siteName) => {
+                  {form.sites.map((siteName, index) => {
                     const meta = SITES.find((s) => s.name === siteName);
-                    const isDefault = form.defaultSite === siteName;
+                    const isDefault = !!siteName && form.defaultSite === siteName;
+                    const takenElsewhere = new Set(form.sites.filter((_, i) => i !== index));
                     return (
-                      <TableRow key={siteName}>
-                        <TableCell className="text-sm font-medium">{siteName}</TableCell>
+                      <TableRow key={index}>
+                        <TableCell>
+                          <SiteCombobox
+                            value={siteName}
+                            disabledValues={takenElsewhere}
+                            onChange={(v) => setSiteAt(index, v)}
+                          />
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{meta?.description ?? "—"}</TableCell>
                         <TableCell className="text-center">
                           <button
                             type="button"
-                            onClick={() => setForm((f) => ({ ...f, defaultSite: siteName }))}
+                            disabled={!siteName}
+                            onClick={() => siteName && setForm((f) => ({ ...f, defaultSite: siteName }))}
                             className={cn(
                               "inline-flex items-center justify-center w-5 h-5 rounded-full border-2 transition-colors",
-                              isDefault ? "border-primary" : "border-muted-foreground/40 hover:border-primary/60"
+                              isDefault ? "border-primary" : "border-muted-foreground/40 hover:border-primary/60",
+                              !siteName && "opacity-30 cursor-not-allowed"
                             )}
                             aria-label="Set default"
                           >
@@ -698,7 +701,7 @@ function FormSections({
                         <TableCell className="text-right">
                           <button
                             type="button"
-                            onClick={() => removeSite(siteName)}
+                            onClick={() => removeSiteAt(index)}
                             className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
