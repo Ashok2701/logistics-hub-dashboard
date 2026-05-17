@@ -431,13 +431,14 @@ interface FormSectionsProps {
   errors: FormErrors;
   editingId: string | null;
   toggleModule: (k: string) => void;
-  addSite: (s: string) => void;
-  removeSite: (s: string) => void;
+  addEmptyRow: () => void;
+  setSiteAt: (index: number, s: string) => void;
+  removeSiteAt: (index: number) => void;
 }
 
 function FormSections({
   tab, setTab, tabErrorCount, form, setForm, errors, editingId,
-  toggleModule, addSite, removeSite,
+  toggleModule, addEmptyRow, setSiteAt, removeSiteAt,
 }: FormSectionsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<TabKey, HTMLElement | null>>({
