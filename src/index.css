@@ -302,7 +302,7 @@
   /* Light primary-tinted background for all data grid headers */
   table > thead,
   table > thead > tr {
-    background-color: hsl(var(--primary) / 0.08);
+    background-color: hsl(var(--primary) / 0.08) !important;
   }
 }
 
