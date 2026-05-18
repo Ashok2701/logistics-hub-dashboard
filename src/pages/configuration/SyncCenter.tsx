@@ -56,12 +56,12 @@ export default function SyncCenter() {
             {sorted.map((d, i) => (
               <motion.tr key={d.object} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
                 <td className="font-medium text-foreground">{d.object}</td>
-                <td className="font-mono text-foreground">{d.intacctCount.toLocaleString()}</td>
+                <td className="font-mono text-foreground">{d.erpCount.toLocaleString()}</td>
                 <td className="font-mono text-foreground">
                   {d.localCount.toLocaleString()}
-                  {d.intacctCount !== d.localCount && (
+                  {d.erpCount !== d.localCount && (
                     <span className="ml-2 text-[10px] font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded">
-                      -{d.intacctCount - d.localCount}
+                      -{d.erpCount - d.localCount}
                     </span>
                   )}
                 </td>
