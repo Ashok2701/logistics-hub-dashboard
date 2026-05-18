@@ -450,11 +450,12 @@ interface FormSectionsProps {
   addEmptyRow: () => void;
   setSiteAt: (index: number, s: string) => void;
   removeSiteAt: (index: number) => void;
+  siteOptions: ApiSite[];
 }
 
 function FormSections({
   tab, setTab, tabErrorCount, form, setForm, errors, editingId,
-  toggleModule, addEmptyRow, setSiteAt, removeSiteAt,
+  toggleModule, addEmptyRow, setSiteAt, removeSiteAt, siteOptions,
 }: FormSectionsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<TabKey, HTMLElement | null>>({
