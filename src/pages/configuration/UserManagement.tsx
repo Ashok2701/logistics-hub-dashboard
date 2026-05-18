@@ -121,6 +121,17 @@ export default function UserManagement() {
 
   useEffect(() => { loadUsers(); }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await transportApi.listSites();
+        if (list.length) setSiteOptions(list);
+      } catch (e: any) {
+        toast({ title: "Failed to load sites", description: e.message, variant: "destructive" });
+      }
+    })();
+  }, []);
+
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     return u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
