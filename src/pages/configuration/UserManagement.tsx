@@ -755,13 +755,15 @@ function SiteCombobox({
   value,
   disabledValues,
   onChange,
+  options,
 }: {
   value: string;
   disabledValues: Set<string>;
   onChange: (v: string) => void;
+  options: ApiSite[];
 }) {
   const [open, setOpen] = useState(false);
-  const selected = SITES.find((s) => s.name === value);
+  const selected = options.find((s) => s.name === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
