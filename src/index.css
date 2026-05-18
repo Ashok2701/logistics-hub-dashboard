@@ -298,6 +298,12 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
+
+  /* Light primary-tinted background for all data grid headers */
+  table > thead,
+  table > thead > tr {
+    background-color: hsl(var(--primary) / 0.08) !important;
+  }
 }
 
 @layer utilities {
