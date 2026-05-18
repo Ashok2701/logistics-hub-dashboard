@@ -39,11 +39,11 @@ export interface ApiSite {
 }
 
 export function mapApiSite(r: any): ApiSite {
-  const code = r.code ?? r.siteCode ?? r.siteId ?? r.xcode ?? r.xsiteid ?? r.id ?? "";
+  const code = r.fcy ?? r.code ?? r.siteCode ?? r.siteId ?? r.xcode ?? r.xsiteid ?? r.id ?? "";
   const description =
-    r.description ?? r.siteName ?? r.name ?? r.xdesc ?? r.xname ?? "";
+    r.fcynam ?? r.description ?? r.siteName ?? r.name ?? r.xdesc ?? r.xname ?? "";
   return {
-    id: String(r.id ?? r.auuid ?? r.xid ?? code),
+    id: String(r.id ?? r.auuid ?? r.xid ?? r.fcyNumber ?? code),
     code: String(code),
     name: String(code),
     description: String(description),
