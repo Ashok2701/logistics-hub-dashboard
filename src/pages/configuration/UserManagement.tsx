@@ -101,6 +101,7 @@ export default function UserManagement() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [siteOptions, setSiteOptions] = useState<ApiSite[]>(FALLBACK_SITES);
 
   const loadUsers = async () => {
     setLoading(true);
