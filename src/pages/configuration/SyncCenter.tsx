@@ -45,7 +45,7 @@ export default function SyncCenter() {
           <thead>
             <tr>
               <SortableTh sortKey="object" sort={sort}>Object</SortableTh>
-              <SortableTh sortKey="intacctCount" sort={sort}>Intacct Count</SortableTh>
+              <SortableTh sortKey="erpCount" sort={sort}>ERP Count</SortableTh>
               <SortableTh sortKey="localCount" sort={sort}>Local Count</SortableTh>
               <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
               <SortableTh sortKey="lastSync" sort={sort}>Last Sync</SortableTh>
