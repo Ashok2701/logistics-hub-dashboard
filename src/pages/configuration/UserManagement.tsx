@@ -788,7 +788,7 @@ function SiteCombobox({
           <CommandList>
             <CommandEmpty>No site found.</CommandEmpty>
             <CommandGroup>
-              {SITES.map((s) => {
+              {options.map((s) => {
                 const isDisabled = disabledValues.has(s.name);
                 const isSelected = value === s.name;
                 return (
