@@ -777,7 +777,7 @@ function SiteCombobox({
           )}
         >
           <span className={cn("truncate", !value && "italic")}>
-            {selected ? selected.name : "Select site…"}
+            {selected ? `${selected.name}${selected.description ? ` - ${selected.description}` : ""}` : "Select site…"}
           </span>
           <ChevronsUpDown className="w-4 h-4 opacity-50 flex-shrink-0" />
         </button>
@@ -803,9 +803,9 @@ function SiteCombobox({
                     className={cn(isDisabled && "opacity-40")}
                   >
                     <Check className={cn("w-4 h-4 mr-2", isSelected ? "opacity-100" : "opacity-0")} />
-                    <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-sm font-medium truncate">{s.name}</span>
-                      <span className="text-[11px] text-muted-foreground truncate">{s.description}</span>
+                      {s.description && <span className="text-sm text-muted-foreground truncate">- {s.description}</span>}
                     </div>
                   </CommandItem>
                 );
