@@ -6,11 +6,11 @@ import { RefreshCw, FileText, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const syncData = [
-  { object: "Customers", intacctCount: 1245, localCount: 1243, lastSync: "2026-03-16 08:30:00", status: "syncing" as const },
-  { object: "Products", intacctCount: 3891, localCount: 3891, lastSync: "2026-03-16 08:15:00", status: "active" as const },
-  { object: "Orders", intacctCount: 8723, localCount: 8720, lastSync: "2026-03-16 07:45:00", status: "error" as const },
-  { object: "Suppliers", intacctCount: 456, localCount: 456, lastSync: "2026-03-16 08:30:00", status: "active" as const },
-  { object: "Entities", intacctCount: 28, localCount: 28, lastSync: "2026-03-16 06:00:00", status: "idle" as const },
+  { object: "Customers", erpCount: 1245, localCount: 1243, lastSync: "2026-03-16 08:30:00", status: "syncing" as const },
+  { object: "Products", erpCount: 3891, localCount: 3891, lastSync: "2026-03-16 08:15:00", status: "active" as const },
+  { object: "Orders", erpCount: 8723, localCount: 8720, lastSync: "2026-03-16 07:45:00", status: "error" as const },
+  { object: "Suppliers", erpCount: 456, localCount: 456, lastSync: "2026-03-16 08:30:00", status: "active" as const },
+  { object: "Entities", erpCount: 28, localCount: 28, lastSync: "2026-03-16 06:00:00", status: "idle" as const },
 ];
 
 export default function SyncCenter() {
@@ -45,7 +45,7 @@ export default function SyncCenter() {
           <thead>
             <tr>
               <SortableTh sortKey="object" sort={sort}>Object</SortableTh>
-              <SortableTh sortKey="intacctCount" sort={sort}>Intacct Count</SortableTh>
+              <SortableTh sortKey="erpCount" sort={sort}>ERP Count</SortableTh>
               <SortableTh sortKey="localCount" sort={sort}>Local Count</SortableTh>
               <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
               <SortableTh sortKey="lastSync" sort={sort}>Last Sync</SortableTh>
@@ -56,12 +56,12 @@ export default function SyncCenter() {
             {sorted.map((d, i) => (
               <motion.tr key={d.object} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
                 <td className="font-medium text-foreground">{d.object}</td>
-                <td className="font-mono text-foreground">{d.intacctCount.toLocaleString()}</td>
+                <td className="font-mono text-foreground">{d.erpCount.toLocaleString()}</td>
                 <td className="font-mono text-foreground">
                   {d.localCount.toLocaleString()}
-                  {d.intacctCount !== d.localCount && (
+                  {d.erpCount !== d.localCount && (
                     <span className="ml-2 text-[10px] font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded">
-                      -{d.intacctCount - d.localCount}
+                      -{d.erpCount - d.localCount}
                     </span>
                   )}
                 </td>
