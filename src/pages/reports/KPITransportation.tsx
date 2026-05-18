@@ -5,6 +5,8 @@ import {
   ChevronLeft, ChevronRight, Filter, Search, type LucideIcon,
 } from "lucide-react";
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -180,6 +182,7 @@ function DetailView({ records, title, siteName, onBack }: { records: DetailRecor
       r.driver.toLowerCase().includes(q)
     );
   }, [records, search]);
+  const sort = useSortable(filtered);
 
   return (
     <motion.div
