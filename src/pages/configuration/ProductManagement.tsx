@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
+import { SortableTableHead } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -72,6 +74,8 @@ export default function ProductManagement() {
     const q = search.toLowerCase();
     return p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.category.includes(q);
   });
+  const sort = useSortable(filtered);
+  const sorted = sort.sorted;
 
   const openAdd = () => { setEditingId(null); setForm(emptyForm); setErrors({}); setView("form"); };
   const openEdit = (p: Product) => {
@@ -185,17 +189,17 @@ export default function ProductManagement() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">SKU</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Category</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Weight</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Unit</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</TableHead>
+              <SortableTableHead sortKey="sku" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">SKU</SortableTableHead>
+              <SortableTableHead sortKey="name" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</SortableTableHead>
+              <SortableTableHead sortKey="category" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Category</SortableTableHead>
+              <SortableTableHead sortKey="weight" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Weight</SortableTableHead>
+              <SortableTableHead sortKey="unit" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Unit</SortableTableHead>
+              <SortableTableHead sortKey="status" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</SortableTableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((p, i) => (
+            {sorted.map((p, i) => (
               <TableRow key={p.id} className={cn("transition-colors duration-150", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.03]")}>
                 <TableCell className="font-medium text-sm font-mono">{p.sku}</TableCell>
                 <TableCell className="text-sm">{p.name}</TableCell>
@@ -208,7 +212,7 @@ export default function ProductManagement() {
                 <TableCell><RowActions onEdit={() => openEdit(p)} onDelete={() => handleDelete(p.id)} /></TableCell>
               </TableRow>
             ))}
-            {filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">No products found</TableCell></TableRow>}
+            {sorted.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">No products found</TableCell></TableRow>}
           </TableBody>
         </Table>
       </motion.div>

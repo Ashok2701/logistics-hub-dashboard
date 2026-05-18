@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Globe, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -163,8 +165,9 @@ export default function RouteList() {
     return counts;
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const sort = useSortable(filtered);
+  const totalPages = Math.max(1, Math.ceil(sort.sorted.length / pageSize));
+  const paginated = sort.sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const openMap = (r: RouteRecord) => {
     setSelectedRoute(r);
@@ -274,25 +277,25 @@ export default function RouteList() {
                 <thead>
                   <tr className="bg-muted/60 border-b border-border">
                     <th className="px-2 py-2.5 text-left font-semibold text-muted-foreground w-8"></th>
-                    <th className="px-3 py-2.5 text-left font-semibold text-muted-foreground whitespace-nowrap">Route Code</th>
-                    <th className="px-3 py-2.5 text-left font-semibold text-muted-foreground">Vehicle</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground">Trip</th>
-                    <th className="px-3 py-2.5 text-left font-semibold text-muted-foreground">Driver ID</th>
-                    <th className="px-3 py-2.5 text-left font-semibold text-muted-foreground">Carrier</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Dep Date</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Dep Time</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Ret Date</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Ret Time</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Dep Date</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Dep Time</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Ret Date</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Ret Time</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Dep Date</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Dep Time</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Ret Date</th>
-                    <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Ret Time</th>
-                    <th className="px-3 py-2.5 text-right font-semibold text-muted-foreground whitespace-nowrap">Dist (Km)</th>
-                    <th className="px-3 py-2.5 text-right font-semibold text-muted-foreground whitespace-nowrap">Time(H)</th>
+                    <SortableTh sortKey="routeCode" sort={sort} className="px-3 py-2.5 text-left font-semibold text-muted-foreground whitespace-nowrap">Route Code</SortableTh>
+                    <SortableTh sortKey="vehicle" sort={sort} className="px-3 py-2.5 text-left font-semibold text-muted-foreground">Vehicle</SortableTh>
+                    <SortableTh sortKey="trip" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground">Trip</SortableTh>
+                    <SortableTh sortKey="driverId" sort={sort} className="px-3 py-2.5 text-left font-semibold text-muted-foreground">Driver ID</SortableTh>
+                    <SortableTh sortKey="carrier" sort={sort} className="px-3 py-2.5 text-left font-semibold text-muted-foreground">Carrier</SortableTh>
+                    <SortableTh sortKey="schedDepDate" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Dep Date</SortableTh>
+                    <SortableTh sortKey="schedDepTime" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Dep Time</SortableTh>
+                    <SortableTh sortKey="schedRetDate" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Ret Date</SortableTh>
+                    <SortableTh sortKey="schedRetTime" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(120,80%,85%)]">Sched Ret Time</SortableTh>
+                    <SortableTh sortKey="corrDepDate" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Dep Date</SortableTh>
+                    <SortableTh sortKey="corrDepTime" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Dep Time</SortableTh>
+                    <SortableTh sortKey="corrRetDate" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Ret Date</SortableTh>
+                    <SortableTh sortKey="corrRetTime" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(30,90%,85%)]">Corr Ret Time</SortableTh>
+                    <SortableTh sortKey="actDepDate" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Dep Date</SortableTh>
+                    <SortableTh sortKey="actDepTime" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Dep Time</SortableTh>
+                    <SortableTh sortKey="actRetDate" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Ret Date</SortableTh>
+                    <SortableTh sortKey="actRetTime" sort={sort} align="center" className="px-3 py-2.5 text-center font-semibold text-muted-foreground whitespace-nowrap bg-[hsl(195,80%,80%)]">Act Ret Time</SortableTh>
+                    <SortableTh sortKey="distanceKm" sort={sort} align="right" className="px-3 py-2.5 text-right font-semibold text-muted-foreground whitespace-nowrap">Dist (Km)</SortableTh>
+                    <SortableTh sortKey="timeH" sort={sort} align="right" className="px-3 py-2.5 text-right font-semibold text-muted-foreground whitespace-nowrap">Time(H)</SortableTh>
                     <th className="px-3 py-2.5 text-center font-semibold text-muted-foreground">Map</th>
                   </tr>
                 </thead>

@@ -15,6 +15,8 @@ import {
   Bell,
 } from "lucide-react";
 import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +60,8 @@ const todaySummary = [
 ];
 
 export default function Dashboard() {
+  const sort = useSortable(recentActivity);
+  const sortedActivity = sort.sorted;
   return (
     <div>
       <PageHeader
@@ -93,15 +97,15 @@ export default function Dashboard() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Route ID</th>
-                  <th>Driver</th>
-                  <th>Vehicle</th>
-                  <th>Status</th>
-                  <th>ETA</th>
+                  <SortableTh sortKey="id" sort={sort}>Route ID</SortableTh>
+                  <SortableTh sortKey="driver" sort={sort}>Driver</SortableTh>
+                  <SortableTh sortKey="vehicle" sort={sort}>Vehicle</SortableTh>
+                  <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
+                  <SortableTh sortKey="eta" sort={sort}>ETA</SortableTh>
                 </tr>
               </thead>
               <tbody>
-                {recentActivity.map((r, i) => (
+                {sortedActivity.map((r, i) => (
                   <motion.tr
                     key={r.id}
                     initial={{ opacity: 0, x: -8 }}

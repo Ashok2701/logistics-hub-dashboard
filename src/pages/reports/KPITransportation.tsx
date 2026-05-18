@@ -5,6 +5,8 @@ import {
   ChevronLeft, ChevronRight, Filter, Search, type LucideIcon,
 } from "lucide-react";
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -180,6 +182,7 @@ function DetailView({ records, title, siteName, onBack }: { records: DetailRecor
       r.driver.toLowerCase().includes(q)
     );
   }, [records, search]);
+  const sort = useSortable(filtered);
 
   return (
     <motion.div
@@ -210,18 +213,18 @@ function DetailView({ records, title, siteName, onBack }: { records: DetailRecor
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/50 bg-muted/30">
-                <th className="text-left p-3 font-semibold text-muted-foreground text-xs">Site</th>
-                <th className="text-left p-3 font-semibold text-muted-foreground text-xs">Vehicle</th>
-                <th className="text-left p-3 font-semibold text-muted-foreground text-xs">Driver</th>
-                <th className="text-right p-3 font-semibold text-muted-foreground text-xs">Routes</th>
-                <th className="text-right p-3 font-semibold text-muted-foreground text-xs">Stops</th>
-                <th className="text-right p-3 font-semibold text-muted-foreground text-xs">Distance (km)</th>
-                <th className="text-right p-3 font-semibold text-muted-foreground text-xs">Travel Time (hrs)</th>
-                <th className="text-left p-3 font-semibold text-muted-foreground text-xs">Period</th>
+                <SortableTh sortKey="site" sort={sort} className="text-left p-3 font-semibold text-muted-foreground text-xs">Site</SortableTh>
+                <SortableTh sortKey="vehicle" sort={sort} className="text-left p-3 font-semibold text-muted-foreground text-xs">Vehicle</SortableTh>
+                <SortableTh sortKey="driver" sort={sort} className="text-left p-3 font-semibold text-muted-foreground text-xs">Driver</SortableTh>
+                <SortableTh sortKey="routes" sort={sort} align="right" className="text-right p-3 font-semibold text-muted-foreground text-xs">Routes</SortableTh>
+                <SortableTh sortKey="stops" sort={sort} align="right" className="text-right p-3 font-semibold text-muted-foreground text-xs">Stops</SortableTh>
+                <SortableTh sortKey="distance" sort={sort} align="right" className="text-right p-3 font-semibold text-muted-foreground text-xs">Distance (km)</SortableTh>
+                <SortableTh sortKey="travelTime" sort={sort} align="right" className="text-right p-3 font-semibold text-muted-foreground text-xs">Travel Time (hrs)</SortableTh>
+                <SortableTh sortKey="period" sort={sort} className="text-left p-3 font-semibold text-muted-foreground text-xs">Period</SortableTh>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r, i) => (
+              {sort.sorted.map((r, i) => (
                 <tr key={i} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
                   <td className="p-3 font-medium">{r.site}</td>
                   <td className="p-3">{r.vehicle}</td>

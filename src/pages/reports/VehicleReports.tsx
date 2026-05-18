@@ -1,4 +1,6 @@
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
 
@@ -25,6 +27,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function VehicleReports() {
+  const sort = useSortable(vehicleData);
+  const sorted = sort.sorted;
   return (
     <div>
       <PageHeader title="Vehicle Reports" subtitle="Fleet utilization analytics" />
@@ -60,9 +64,14 @@ export default function VehicleReports() {
           <h3 className="text-sm font-semibold text-foreground">Detailed Breakdown</h3>
         </div>
         <table className="data-table">
-          <thead><tr><th>Vehicle</th><th>Trips</th><th>Distance (km)</th><th>Utilization</th></tr></thead>
+          <thead><tr>
+            <SortableTh sortKey="plate" sort={sort}>Vehicle</SortableTh>
+            <SortableTh sortKey="trips" sort={sort}>Trips</SortableTh>
+            <SortableTh sortKey="distance" sort={sort}>Distance (km)</SortableTh>
+            <SortableTh sortKey="utilization" sort={sort}>Utilization</SortableTh>
+          </tr></thead>
           <tbody>
-            {vehicleData.map((d, i) => (
+            {sorted.map((d, i) => (
               <motion.tr key={d.plate} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 + i * 0.04 }}>
                 <td><span className="font-mono text-xs px-2 py-1 rounded bg-secondary text-foreground">{d.plate}</span></td>
                 <td className="font-mono text-foreground">{d.trips}</td>

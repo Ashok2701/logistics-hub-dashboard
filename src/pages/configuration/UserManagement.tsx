@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
+import { SortableTableHead } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -123,6 +125,8 @@ export default function UserManagement() {
     const q = search.toLowerCase();
     return u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
+  const sort = useSortable(filtered);
+  const sorted = sort.sorted;
 
   const openAdd = () => {
     setEditingId(null);
@@ -331,18 +335,18 @@ export default function UserManagement() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Username</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Full Name</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Email</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Mobile</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</TableHead>
+              <SortableTableHead sortKey="username" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Username</SortableTableHead>
+              <SortableTableHead sortKey="fullName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Full Name</SortableTableHead>
+              <SortableTableHead sortKey="email" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Email</SortableTableHead>
+              <SortableTableHead sortKey="mobile" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Mobile</SortableTableHead>
+              <SortableTableHead sortKey="status" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</SortableTableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden xl:table-cell">Modules</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Sites</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((u, i) => (
+            {sorted.map((u, i) => (
               <TableRow
                 key={u.id}
                 className={cn("transition-colors duration-150", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.03]")}
@@ -374,7 +378,7 @@ export default function UserManagement() {
                 </TableCell>
               </TableRow>
             ))}
-            {filtered.length === 0 && (
+            {sorted.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm">
                   {loading ? (

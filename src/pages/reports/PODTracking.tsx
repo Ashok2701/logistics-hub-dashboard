@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Group, ChevronDown, ChevronRight, FileText, PanelLeftClose, PanelLeft, ArrowLeft, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 
 interface PODLineItem {
   docNum: string;
@@ -468,16 +470,18 @@ export default function PODTracking() {
     });
   }, [selectedFilters, search]);
 
+  const sort = useSortable(filteredData);
+
   const groupedData = useMemo(() => {
-    if (groupBy === "none") return { "All Records": filteredData };
+    if (groupBy === "none") return { "All Records": sort.sorted };
     const groups: Record<string, PODRecord[]> = {};
-    filteredData.forEach((r) => {
+    sort.sorted.forEach((r) => {
       const key = groupBy === "site" ? r.site : groupBy === "date" ? r.date : r.type;
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
     });
     return groups;
-  }, [filteredData, groupBy]);
+  }, [sort.sorted, groupBy]);
 
   useMemo(() => {
     setExpandedGroups(Object.keys(groupedData));
@@ -654,11 +658,17 @@ export default function PODTracking() {
                       <table className="w-full text-[11px]">
                         <thead>
                           <tr className="border-b border-border bg-primary/8">
-                            {columns.map((col) => (
-                              <th key={col.key} className={cn("px-2 py-1.5 text-left font-bold text-primary uppercase tracking-wider text-[10px] whitespace-nowrap", col.width)}>
-                                {col.label}
-                              </th>
-                            ))}
+                            {columns.map((col) =>
+                              col.key === "expand" || col.key === "pod" ? (
+                                <th key={col.key} className={cn("px-2 py-1.5 text-left font-bold text-primary uppercase tracking-wider text-[10px] whitespace-nowrap", col.width)}>
+                                  {col.label}
+                                </th>
+                              ) : (
+                                <SortableTh key={col.key} sortKey={col.key} sort={sort} className={cn("px-2 py-1.5 text-left font-bold text-primary uppercase tracking-wider text-[10px] whitespace-nowrap", col.width)}>
+                                  {col.label}
+                                </SortableTh>
+                              )
+                            )}
                           </tr>
                         </thead>
                         <tbody>

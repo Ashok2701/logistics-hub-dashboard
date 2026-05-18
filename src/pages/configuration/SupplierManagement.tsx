@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
+import { SortableTableHead } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -72,6 +74,8 @@ export default function SupplierManagement() {
     const q = search.toLowerCase();
     return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.contactPerson.toLowerCase().includes(q);
   });
+  const sort = useSortable(filtered);
+  const sorted = sort.sorted;
 
   const openAdd = () => { setEditingId(null); setForm(emptyForm); setErrors({}); setView("form"); };
   const openEdit = (s: Supplier) => {
@@ -191,17 +195,17 @@ export default function SupplierManagement() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Code</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Category</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Contact</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Rating</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</TableHead>
+              <SortableTableHead sortKey="code" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Code</SortableTableHead>
+              <SortableTableHead sortKey="name" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</SortableTableHead>
+              <SortableTableHead sortKey="category" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Category</SortableTableHead>
+              <SortableTableHead sortKey="contactPerson" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Contact</SortableTableHead>
+              <SortableTableHead sortKey="rating" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Rating</SortableTableHead>
+              <SortableTableHead sortKey="status" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</SortableTableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((s, i) => (
+            {sorted.map((s, i) => (
               <TableRow key={s.id} className={cn("transition-colors duration-150", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.03]")}>
                 <TableCell className="font-medium text-sm font-mono">{s.code}</TableCell>
                 <TableCell className="text-sm">{s.name}</TableCell>
@@ -216,7 +220,7 @@ export default function SupplierManagement() {
                 <TableCell><RowActions onEdit={() => openEdit(s)} onDelete={() => handleDelete(s.id)} /></TableCell>
               </TableRow>
             ))}
-            {filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">No suppliers found</TableCell></TableRow>}
+            {sorted.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">No suppliers found</TableCell></TableRow>}
           </TableBody>
         </Table>
       </motion.div>
