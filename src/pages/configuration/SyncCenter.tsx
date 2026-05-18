@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { PageHeader, DataTableShell, StatusDot } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { RefreshCw, FileText, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -13,6 +15,9 @@ const syncData = [
 
 export default function SyncCenter() {
   const [syncing, setSyncing] = useState<string | null>(null);
+
+  const sort = useSortable(syncData);
+  const sorted = sort.sorted;
 
   const handleSync = (object: string) => {
     setSyncing(object);
@@ -38,10 +43,17 @@ export default function SyncCenter() {
       <DataTableShell>
         <table className="data-table">
           <thead>
-            <tr><th>Object</th><th>Intacct Count</th><th>Local Count</th><th>Status</th><th>Last Sync</th><th>Actions</th></tr>
+            <tr>
+              <SortableTh sortKey="object" sort={sort}>Object</SortableTh>
+              <SortableTh sortKey="intacctCount" sort={sort}>Intacct Count</SortableTh>
+              <SortableTh sortKey="localCount" sort={sort}>Local Count</SortableTh>
+              <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
+              <SortableTh sortKey="lastSync" sort={sort}>Last Sync</SortableTh>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody>
-            {syncData.map((d, i) => (
+            {sorted.map((d, i) => (
               <motion.tr key={d.object} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
                 <td className="font-medium text-foreground">{d.object}</td>
                 <td className="font-mono text-foreground">{d.intacctCount.toLocaleString()}</td>
