@@ -299,10 +299,16 @@
     @apply font-semibold tracking-tight;
   }
 
-  /* Light primary-tinted background for all data grid headers */
+  /* Theme-tinted background for all data grid headers */
   table > thead,
   table > thead > tr {
-    background-color: hsl(var(--primary) / 0.08) !important;
+    background-image: linear-gradient(180deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.10)) !important;
+    border-bottom: 1px solid hsl(var(--primary) / 0.25) !important;
+  }
+  table > thead th {
+    color: hsl(var(--primary)) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em;
   }
 }
 
