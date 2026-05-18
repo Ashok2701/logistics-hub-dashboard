@@ -687,7 +687,7 @@ function FormSections({
                     </TableRow>
                   )}
                   {form.sites.map((siteName, index) => {
-                    const meta = SITES.find((s) => s.name === siteName);
+                    const meta = siteOptions.find((s) => s.name === siteName);
                     const isDefault = !!siteName && form.defaultSite === siteName;
                     const takenElsewhere = new Set(form.sites.filter((_, i) => i !== index));
                     return (
@@ -697,6 +697,7 @@ function FormSections({
                             value={siteName}
                             disabledValues={takenElsewhere}
                             onChange={(v) => setSiteAt(index, v)}
+                            options={siteOptions}
                           />
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{meta?.description ?? "—"}</TableCell>
