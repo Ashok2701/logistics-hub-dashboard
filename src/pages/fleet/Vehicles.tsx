@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { PageHeader, DataTableShell, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { Plus, Search, FolderOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -15,6 +17,8 @@ const mockData = [
 export default function Vehicles() {
   const [search, setSearch] = useState("");
   const filtered = mockData.filter((d) => d.plate.toLowerCase().includes(search.toLowerCase()) || d.driver.toLowerCase().includes(search.toLowerCase()));
+  const sort = useSortable(filtered);
+  const sorted = sort.sorted;
 
   return (
     <div>
@@ -34,12 +38,19 @@ export default function Vehicles() {
       </div>
       <DataTableShell>
         <table className="data-table">
-          <thead><tr><th>Plate</th><th>VIN</th><th>Type</th><th>Status</th><th>Driver</th><th className="w-24 text-right">Actions</th></tr></thead>
+          <thead><tr>
+            <SortableTh sortKey="plate" sort={sort}>Plate</SortableTh>
+            <SortableTh sortKey="vin" sort={sort}>VIN</SortableTh>
+            <SortableTh sortKey="type" sort={sort}>Type</SortableTh>
+            <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
+            <SortableTh sortKey="driver" sort={sort}>Driver</SortableTh>
+            <th className="w-24 text-right">Actions</th>
+          </tr></thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-12"><FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" /><p className="text-sm text-muted-foreground">No vehicles found</p></td></tr>
             ) : (
-              filtered.map((d, i) => (
+              sorted.map((d, i) => (
                 <motion.tr key={d.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="group cursor-default">
                   <td className="font-mono font-medium text-foreground">{d.plate}</td>
                   <td className="font-mono text-xs text-muted-foreground">{d.vin}</td>

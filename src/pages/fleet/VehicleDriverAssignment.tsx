@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { PageHeader, DataTableShell, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { Plus, Search, FolderOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -13,6 +15,8 @@ const mockData = [
 export default function VehicleDriverAssignment() {
   const [search, setSearch] = useState("");
   const filtered = mockData.filter((d) => d.vehicle.toLowerCase().includes(search.toLowerCase()) || d.driver.toLowerCase().includes(search.toLowerCase()));
+  const sort = useSortable(filtered);
+  const sorted = sort.sorted;
 
   return (
     <div>
@@ -32,12 +36,18 @@ export default function VehicleDriverAssignment() {
       </div>
       <DataTableShell>
         <table className="data-table">
-          <thead><tr><th>Vehicle</th><th>Driver</th><th>Assigned Date</th><th>Status</th><th className="w-24 text-right">Actions</th></tr></thead>
+          <thead><tr>
+            <SortableTh sortKey="vehicle" sort={sort}>Vehicle</SortableTh>
+            <SortableTh sortKey="driver" sort={sort}>Driver</SortableTh>
+            <SortableTh sortKey="assignedDate" sort={sort}>Assigned Date</SortableTh>
+            <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
+            <th className="w-24 text-right">Actions</th>
+          </tr></thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr><td colSpan={5} className="text-center py-12"><FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" /><p className="text-sm text-muted-foreground">No assignments found</p></td></tr>
             ) : (
-              filtered.map((d, i) => (
+              sorted.map((d, i) => (
                 <motion.tr key={d.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="group cursor-default">
                   <td className="font-mono font-medium text-foreground">{d.vehicle}</td>
                   <td className="text-foreground">{d.driver}</td>

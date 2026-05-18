@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { PageHeader, DataTableShell, StatusBadge } from "@/components/shared/MetricCard";
 import { RowActions } from "@/components/shared/RowActions";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { Plus, Search, FolderOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -14,6 +16,8 @@ const mockData = [
 export default function Trailers() {
   const [search, setSearch] = useState("");
   const filtered = mockData.filter((d) => d.type.toLowerCase().includes(search.toLowerCase()) || d.code.toLowerCase().includes(search.toLowerCase()));
+  const sort = useSortable(filtered);
+  const sorted = sort.sorted;
 
   return (
     <div>
@@ -33,12 +37,18 @@ export default function Trailers() {
       </div>
       <DataTableShell>
         <table className="data-table">
-          <thead><tr><th>Code</th><th>Type</th><th>Capacity</th><th>Status</th><th className="w-24 text-right">Actions</th></tr></thead>
+          <thead><tr>
+            <SortableTh sortKey="code" sort={sort}>Code</SortableTh>
+            <SortableTh sortKey="type" sort={sort}>Type</SortableTh>
+            <SortableTh sortKey="capacity" sort={sort}>Capacity</SortableTh>
+            <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
+            <th className="w-24 text-right">Actions</th>
+          </tr></thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr><td colSpan={5} className="text-center py-12"><FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" /><p className="text-sm text-muted-foreground">No trailers found</p></td></tr>
             ) : (
-              filtered.map((d, i) => (
+              sorted.map((d, i) => (
                 <motion.tr key={d.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="group cursor-default">
                   <td><span className="font-mono text-xs px-2 py-1 rounded-md bg-muted text-foreground">{d.code}</span></td>
                   <td className="font-medium text-foreground">{d.type}</td>
