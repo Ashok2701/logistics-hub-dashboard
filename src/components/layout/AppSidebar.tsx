@@ -107,7 +107,7 @@ export function AppSidebar() {
             </div>
             <div className="overflow-hidden">
               <h1 className="text-sm font-semibold text-white leading-tight">Route Planner</h1>
-              <p className="text-[10px] text-white/40 leading-tight">for Sage Intacct</p>
+              <p className="text-[10px] text-white/40 leading-tight">Universal ERP Edition</p>
             </div>
           </motion.div>
         ) : (
