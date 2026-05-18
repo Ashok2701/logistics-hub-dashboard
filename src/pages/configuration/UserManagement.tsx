@@ -777,7 +777,7 @@ function SiteCombobox({
           )}
         >
           <span className={cn("truncate", !value && "italic")}>
-            {selected ? selected.name : "Select site…"}
+            {selected ? `${selected.name}${selected.description ? ` - ${selected.description}` : ""}` : "Select site…"}
           </span>
           <ChevronsUpDown className="w-4 h-4 opacity-50 flex-shrink-0" />
         </button>
