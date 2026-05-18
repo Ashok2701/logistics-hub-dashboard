@@ -1,4 +1,6 @@
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
+import { SortableTh } from "@/components/shared/SortableTh";
+import { useSortable } from "@/hooks/useSortable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
 
@@ -25,6 +27,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function DriverReports() {
+  const sort = useSortable(driverData);
+  const sorted = sort.sorted;
   return (
     <div>
       <PageHeader title="Driver Reports" subtitle="Performance analytics by driver" />
@@ -60,9 +64,14 @@ export default function DriverReports() {
           <h3 className="text-sm font-semibold text-foreground">Detailed Breakdown</h3>
         </div>
         <table className="data-table">
-          <thead><tr><th>Driver</th><th>Total Deliveries</th><th>Distance (km)</th><th>Avg per Trip</th></tr></thead>
+          <thead><tr>
+            <SortableTh sortKey="name" sort={sort}>Driver</SortableTh>
+            <SortableTh sortKey="deliveries" sort={sort}>Total Deliveries</SortableTh>
+            <SortableTh sortKey="distance" sort={sort}>Distance (km)</SortableTh>
+            <th>Avg per Trip</th>
+          </tr></thead>
           <tbody>
-            {driverData.map((d, i) => (
+            {sorted.map((d, i) => (
               <motion.tr key={d.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 + i * 0.04 }}>
                 <td className="font-medium text-foreground">{d.name}</td>
                 <td className="font-mono text-foreground">{d.deliveries}</td>
