@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { userApi, mapApiUser, buildApiPayload } from "@/lib/userApi";
+import { transportApi, type ApiSite } from "@/lib/transportApi";
 
 // ─── Types ────────────────────────────────────────────────────────
 interface User {
@@ -59,12 +60,10 @@ const MODULES = [
   { key: "remove_pick_ticket", label: "Remove Pick Ticket", icon: Radar },
 ];
 
-const SITES = [
-  { id: "HQ", name: "HQ Warehouse", description: "Primary distribution center" },
-  { id: "NORTH", name: "North Distribution", description: "Northern regional hub" },
-  { id: "SOUTH", name: "South Hub", description: "Southern operations" },
-  { id: "EAST", name: "East Logistics Park", description: "East coast facility" },
-  { id: "WEST", name: "West Terminal", description: "West coast terminal" },
+const FALLBACK_SITES: ApiSite[] = [
+  { id: "HQ", code: "HQ", name: "HQ", description: "Primary distribution center" },
+  { id: "NORTH", code: "NORTH", name: "NORTH", description: "Northern regional hub" },
+  { id: "SOUTH", code: "SOUTH", name: "SOUTH", description: "Southern operations" },
 ];
 
 const COUNTRIES = ["United States of America", "Canada", "Mexico", "United Kingdom", "Germany", "France", "India", "United Arab Emirates"];
@@ -102,6 +101,7 @@ export default function UserManagement() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [siteOptions, setSiteOptions] = useState<ApiSite[]>(FALLBACK_SITES);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -120,6 +120,17 @@ export default function UserManagement() {
   };
 
   useEffect(() => { loadUsers(); }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await transportApi.listSites();
+        if (list.length) setSiteOptions(list);
+      } catch (e: any) {
+        toast({ title: "Failed to load sites", description: e.message, variant: "destructive" });
+      }
+    })();
+  }, []);
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
@@ -301,6 +312,7 @@ export default function UserManagement() {
           addEmptyRow={addEmptyRow}
           setSiteAt={setSiteAt}
           removeSiteAt={removeSiteAt}
+          siteOptions={siteOptions}
         />
       </motion.div>
     );
@@ -438,11 +450,12 @@ interface FormSectionsProps {
   addEmptyRow: () => void;
   setSiteAt: (index: number, s: string) => void;
   removeSiteAt: (index: number) => void;
+  siteOptions: ApiSite[];
 }
 
 function FormSections({
   tab, setTab, tabErrorCount, form, setForm, errors, editingId,
-  toggleModule, addEmptyRow, setSiteAt, removeSiteAt,
+  toggleModule, addEmptyRow, setSiteAt, removeSiteAt, siteOptions,
 }: FormSectionsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<TabKey, HTMLElement | null>>({
@@ -674,7 +687,7 @@ function FormSections({
                     </TableRow>
                   )}
                   {form.sites.map((siteName, index) => {
-                    const meta = SITES.find((s) => s.name === siteName);
+                    const meta = siteOptions.find((s) => s.name === siteName);
                     const isDefault = !!siteName && form.defaultSite === siteName;
                     const takenElsewhere = new Set(form.sites.filter((_, i) => i !== index));
                     return (
@@ -684,6 +697,7 @@ function FormSections({
                             value={siteName}
                             disabledValues={takenElsewhere}
                             onChange={(v) => setSiteAt(index, v)}
+                            options={siteOptions}
                           />
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{meta?.description ?? "—"}</TableCell>
@@ -741,13 +755,15 @@ function SiteCombobox({
   value,
   disabledValues,
   onChange,
+  options,
 }: {
   value: string;
   disabledValues: Set<string>;
   onChange: (v: string) => void;
+  options: ApiSite[];
 }) {
   const [open, setOpen] = useState(false);
-  const selected = SITES.find((s) => s.name === value);
+  const selected = options.find((s) => s.name === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -772,7 +788,7 @@ function SiteCombobox({
           <CommandList>
             <CommandEmpty>No site found.</CommandEmpty>
             <CommandGroup>
-              {SITES.map((s) => {
+              {options.map((s) => {
                 const isDisabled = disabledValues.has(s.name);
                 const isSelected = value === s.name;
                 return (
