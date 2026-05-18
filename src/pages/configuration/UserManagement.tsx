@@ -60,12 +60,10 @@ const MODULES = [
   { key: "remove_pick_ticket", label: "Remove Pick Ticket", icon: Radar },
 ];
 
-const SITES = [
-  { id: "HQ", name: "HQ Warehouse", description: "Primary distribution center" },
-  { id: "NORTH", name: "North Distribution", description: "Northern regional hub" },
-  { id: "SOUTH", name: "South Hub", description: "Southern operations" },
-  { id: "EAST", name: "East Logistics Park", description: "East coast facility" },
-  { id: "WEST", name: "West Terminal", description: "West coast terminal" },
+const FALLBACK_SITES: ApiSite[] = [
+  { id: "HQ", code: "HQ", name: "HQ", description: "Primary distribution center" },
+  { id: "NORTH", code: "NORTH", name: "NORTH", description: "Northern regional hub" },
+  { id: "SOUTH", code: "SOUTH", name: "SOUTH", description: "Southern operations" },
 ];
 
 const COUNTRIES = ["United States of America", "Canada", "Mexico", "United Kingdom", "Germany", "France", "India", "United Arab Emirates"];
