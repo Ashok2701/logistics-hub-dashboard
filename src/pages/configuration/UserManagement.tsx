@@ -312,6 +312,7 @@ export default function UserManagement() {
           addEmptyRow={addEmptyRow}
           setSiteAt={setSiteAt}
           removeSiteAt={removeSiteAt}
+          siteOptions={siteOptions}
         />
       </motion.div>
     );
