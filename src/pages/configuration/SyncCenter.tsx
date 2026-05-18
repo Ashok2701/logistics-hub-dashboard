@@ -6,11 +6,11 @@ import { RefreshCw, FileText, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const syncData = [
-  { object: "Customers", intacctCount: 1245, localCount: 1243, lastSync: "2026-03-16 08:30:00", status: "syncing" as const },
-  { object: "Products", intacctCount: 3891, localCount: 3891, lastSync: "2026-03-16 08:15:00", status: "active" as const },
-  { object: "Orders", intacctCount: 8723, localCount: 8720, lastSync: "2026-03-16 07:45:00", status: "error" as const },
-  { object: "Suppliers", intacctCount: 456, localCount: 456, lastSync: "2026-03-16 08:30:00", status: "active" as const },
-  { object: "Entities", intacctCount: 28, localCount: 28, lastSync: "2026-03-16 06:00:00", status: "idle" as const },
+  { object: "Customers", erpCount: 1245, localCount: 1243, lastSync: "2026-03-16 08:30:00", status: "syncing" as const },
+  { object: "Products", erpCount: 3891, localCount: 3891, lastSync: "2026-03-16 08:15:00", status: "active" as const },
+  { object: "Orders", erpCount: 8723, localCount: 8720, lastSync: "2026-03-16 07:45:00", status: "error" as const },
+  { object: "Suppliers", erpCount: 456, localCount: 456, lastSync: "2026-03-16 08:30:00", status: "active" as const },
+  { object: "Entities", erpCount: 28, localCount: 28, lastSync: "2026-03-16 06:00:00", status: "idle" as const },
 ];
 
 export default function SyncCenter() {
