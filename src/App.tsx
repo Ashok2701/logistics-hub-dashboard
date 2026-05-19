@@ -29,6 +29,7 @@ import SiteManagement from "@/pages/configuration/SiteManagement";
 import CustomerManagement from "@/pages/configuration/CustomerManagement";
 import SupplierManagement from "@/pages/configuration/SupplierManagement";
 import ProductManagement from "@/pages/configuration/ProductManagement";
+import DocumentConfiguration from "@/pages/configuration/DocumentConfiguration";
 import PlaceholderPage from "@/pages/PlaceholderPage";
 import NotFound from "@/pages/NotFound";
 
@@ -68,7 +69,7 @@ function AppRoutes() {
         <Route path="config/customers" element={<CustomerManagement />} />
         <Route path="config/suppliers" element={<SupplierManagement />} />
         <Route path="config/products" element={<ProductManagement />} />
-        <Route path="config/documents" element={<PlaceholderPage title="Document Configuration" subtitle="Configure document templates" />} />
+        <Route path="config/documents" element={<DocumentConfiguration />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
