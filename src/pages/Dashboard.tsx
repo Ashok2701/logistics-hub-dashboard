@@ -41,14 +41,6 @@ const tmsKpis = [
   { title: "Maintenance Due", value: "7", icon: Wrench, trend: { value: "3 urgent", positive: false }, status: "delayed" as const },
 ];
 
-const alerts = [
-  { type: "delay" as const, message: "Route RT-1041 delayed by 45 min — Weather advisory", time: "10 min ago" },
-  { type: "warning" as const, message: "Vehicle VH-2281 requires tire inspection", time: "25 min ago" },
-  { type: "info" as const, message: "New order batch #8921 assigned to Route RT-1045", time: "1 hr ago" },
-  { type: "delay" as const, message: "Driver Tom Wilson exceeded daily drive limit", time: "2 hrs ago" },
-  { type: "warning" as const, message: "Fuel level below 20% on VH-1567", time: "3 hrs ago" },
-];
-
 const todaySummary = [
   { label: "Orders Shipped", value: 128 },
   { label: "Orders Delivered", value: 94 },
