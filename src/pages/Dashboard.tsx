@@ -5,14 +5,11 @@ import {
   PackageCheck,
   Users,
   Car,
-  MapPin,
-  AlertTriangle,
   Clock,
   TrendingUp,
   Fuel,
   Wrench,
   CheckCircle,
-  Bell,
 } from "lucide-react";
 import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
