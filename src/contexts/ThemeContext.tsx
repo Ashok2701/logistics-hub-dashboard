@@ -18,9 +18,9 @@ const ThemeContext = createContext<{
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("vanguard-color-theme") as ColorTheme) || "blue";
+      return (localStorage.getItem("vanguard-color-theme") as ColorTheme) || "light";
     }
-    return "blue";
+    return "light";
   });
 
   useEffect(() => {
