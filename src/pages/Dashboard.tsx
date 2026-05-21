@@ -80,9 +80,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
         {/* Recent Routes */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <DataTableShell>
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div>
@@ -121,63 +120,6 @@ export default function Dashboard() {
             </table>
           </DataTableShell>
         </div>
-
-        {/* Map Widget */}
-        <motion.div
-          className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-premium"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.35 }}
-        >
-          <div className="px-5 py-4 border-b border-border">
-            <h3 className="text-sm font-semibold text-foreground">Vehicle Locations</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Real-time GPS tracking</p>
-          </div>
-          <div className="h-80 relative bg-muted/30 overflow-hidden">
-            {/* Subtle grid */}
-            <svg className="absolute inset-0 w-full h-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="mapgrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#mapgrid)" />
-            </svg>
-
-            {/* Vehicle dots */}
-            {[
-              { top: "25%", left: "30%", status: "bg-primary", label: "VH-2281" },
-              { top: "45%", left: "65%", status: "bg-success", label: "VH-3340" },
-              { top: "60%", left: "40%", status: "bg-warning", label: "VH-1193" },
-              { top: "35%", left: "75%", status: "bg-primary", label: "VH-0892" },
-              { top: "70%", left: "25%", status: "bg-muted-foreground/50", label: "VH-1567" },
-            ].map((v, i) => (
-              <motion.div
-                key={i}
-                className="absolute group cursor-pointer"
-                style={{ top: v.top, left: v.left }}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5 + i * 0.08, type: "spring", bounce: 0.4 }}
-              >
-                <div className="relative">
-                  <div className={`w-3 h-3 rounded-full ${v.status} ring-3 ring-card shadow-sm`} />
-                </div>
-                <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-card border border-border rounded-md px-2 py-1 whitespace-nowrap shadow-elevated">
-                  <span className="text-[10px] font-mono font-medium text-foreground">{v.label}</span>
-                </div>
-              </motion.div>
-            ))}
-
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center opacity-30">
-                <MapPin className="w-6 h-6 text-muted-foreground mx-auto mb-1" />
-                <p className="text-[10px] text-muted-foreground">Map Integration</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
 
       {/* Bottom Row: Today's Summary + Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
