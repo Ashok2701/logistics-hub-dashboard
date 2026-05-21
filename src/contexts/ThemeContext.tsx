@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type ColorTheme = "blue" | "dark" | "emerald" | "orange";
+export type ColorTheme = "light" | "blue" | "dark" | "emerald" | "orange";
 
 export const COLOR_THEMES: { id: ColorTheme; label: string; description: string; preview: string }[] = [
+  { id: "light", label: "Light", description: "Apple-inspired minimal", preview: "#F5F5F7" },
   { id: "blue", label: "Modern Blue", description: "Clean SaaS default", preview: "#2563EB" },
   { id: "dark", label: "Dark Mode", description: "Easy on the eyes", preview: "#38BDF8" },
   { id: "emerald", label: "Emerald Fleet", description: "Nature-inspired", preview: "#059669" },
@@ -17,9 +18,9 @@ const ThemeContext = createContext<{
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("vanguard-color-theme") as ColorTheme) || "blue";
+      return (localStorage.getItem("vanguard-color-theme") as ColorTheme) || "light";
     }
-    return "blue";
+    return "light";
   });
 
   useEffect(() => {
