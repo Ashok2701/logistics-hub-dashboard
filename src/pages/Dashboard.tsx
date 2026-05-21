@@ -113,73 +113,29 @@ export default function Dashboard() {
           </DataTableShell>
         </div>
 
-      {/* Bottom Row: Today's Summary + Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Today's Summary */}
-        <motion.div
-          className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.35 }}
-        >
-          <div className="px-5 py-4 border-b border-border">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Today&apos;s Summary</h3>
+      {/* Bottom Row: Today's Summary */}
+      <motion.div
+        className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.35 }}
+      >
+        <div className="px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Today&apos;s Summary</h3>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Daily operations snapshot</p>
+        </div>
+        <div className="p-5 grid grid-cols-2 gap-4">
+          {todaySummary.map((s) => (
+            <div key={s.label} className="bg-secondary/40 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{s.value}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">{s.label}</p>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Daily operations snapshot</p>
-          </div>
-          <div className="p-5 grid grid-cols-2 gap-4">
-            {todaySummary.map((s) => (
-              <div key={s.label} className="bg-secondary/40 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Alerts & Notifications */}
-        <motion.div
-          className="lg:col-span-2 bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45, duration: 0.35 }}
-        >
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Alerts &amp; Notifications</h3>
-            </div>
-            <span className="text-[11px] font-medium bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">{alerts.length} new</span>
-          </div>
-          <div className="divide-y divide-border/40">
-            {alerts.map((a, i) => (
-              <motion.div
-                key={i}
-                className="px-5 py-3.5 flex items-start gap-3 hover:bg-muted/30 transition-colors cursor-pointer"
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + i * 0.05, duration: 0.3 }}
-              >
-                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5", {
-                  "bg-destructive/10 text-destructive": a.type === "delay",
-                  "bg-warning/10 text-warning": a.type === "warning",
-                  "bg-primary/10 text-primary": a.type === "info",
-                })}>
-                  {a.type === "delay" && <AlertTriangle className="w-4 h-4" />}
-                  {a.type === "warning" && <Wrench className="w-4 h-4" />}
-                  {a.type === "info" && <CheckCircle className="w-4 h-4" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground leading-snug">{a.message}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">{a.time}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }
