@@ -5,8 +5,80 @@
 @tailwind utilities;
 
 @layer base {
-  /* ========== Modern Blue (default light) ========== */
+  /* ========== Light (Apple-inspired, DEFAULT) ========== */
   :root,
+  [data-color-theme="light"] {
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', monospace;
+
+    --background: 0 0% 100%;
+    --foreground: 220 9% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 9% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 9% 13%;
+
+    --primary: 220 9% 13%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 13%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 6% 45%;
+
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 9% 13%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 211 100% 50%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 211 100% 50%;
+    --radius: 0.75rem;
+
+    --gradient-start: 220 9% 20%;
+    --gradient-end: 220 9% 10%;
+    --gradient-sidebar-start: 0 0% 99%;
+    --gradient-sidebar-end: 220 14% 96%;
+    --gradient-header-start: 0 0% 100%;
+    --gradient-header-end: 220 14% 98%;
+
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 220 6% 35%;
+    --sidebar-primary: 220 9% 13%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 220 9% 13%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 211 100% 50%;
+    --sidebar-muted: 220 6% 55%;
+
+    --chart-1: 211 100% 50%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 340 75% 55%;
+
+    --status-active: 211 100% 50%;
+    --status-delayed: 38 92% 50%;
+    --status-delivered: 142 71% 45%;
+    --status-idle: 220 6% 55%;
+  }
+
+  /* ========== Modern Blue ========== */
   [data-color-theme="blue"] {
     --font-sans: 'Inter', system-ui, sans-serif;
     --font-mono: 'SF Mono', 'Fira Code', monospace;
