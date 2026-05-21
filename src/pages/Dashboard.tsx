@@ -15,7 +15,6 @@ import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/component
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 const metrics = [
   { title: "Total Vehicles", value: 142, icon: Truck, trend: { value: "+3 this week", positive: true }, status: "active" as const },
