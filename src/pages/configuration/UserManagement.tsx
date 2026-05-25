@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { userApi, mapApiUser, buildApiPayload } from "@/lib/userApi";
 import { transportApi, type ApiSite } from "@/lib/transportApi";
+import { getRoles, getRoleById, getUserRoleId, setUserRoleId, subscribeRoles, type Role } from "@/lib/rolesStore";
 
 // ─── Types ────────────────────────────────────────────────────────
 interface User {
@@ -76,17 +77,17 @@ const emptyForm = {
   modules: [] as string[], sites: [] as string[], defaultSite: "", status: true,
   addressLine1: "", addressLine2: "", country: "", postalCode: "",
   city: "", region: "", telephone: "",
+  roleId: "" as string,
 };
 
 type FormState = typeof emptyForm;
 type FormErrors = Partial<Record<keyof FormState, string>>;
 type ViewMode = "list" | "form";
-type TabKey = "home" | "address" | "modules" | "sites";
+type TabKey = "home" | "address" | "sites";
 
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "home", label: "Home", icon: Home },
   { key: "address", label: "Address Detail", icon: MapPin },
-  { key: "modules", label: "Modules", icon: LayoutGrid },
   { key: "sites", label: "User Assigned Sites", icon: Building2 },
 ];
 
