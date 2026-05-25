@@ -260,9 +260,8 @@ export default function UserManagement() {
   // ── Form View ─────────────────────────────────────────────────────
   if (view === "form") {
     const tabErrorCount: Record<TabKey, number> = {
-      home: ["username", "password", "confirmPassword"].filter((k) => errors[k as keyof FormErrors]).length,
+      home: ["username", "password", "confirmPassword", "roleId"].filter((k) => errors[k as keyof FormErrors]).length,
       address: ["postalCode", "telephone"].filter((k) => errors[k as keyof FormErrors]).length,
-      modules: 0,
       sites: errors.sites ? 1 : 0,
     };
 
