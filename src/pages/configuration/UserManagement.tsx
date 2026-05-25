@@ -366,7 +366,7 @@ export default function UserManagement() {
               <SortableTableHead sortKey="email" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Email</SortableTableHead>
               <SortableTableHead sortKey="mobile" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Mobile</SortableTableHead>
               <SortableTableHead sortKey="status" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</SortableTableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden xl:table-cell">Modules</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden xl:table-cell">Role</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Sites</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
@@ -385,16 +385,16 @@ export default function UserManagement() {
                   <StatusBadge status={u.status === "active" ? "Active" : "Inactive"} variant={u.status === "active" ? "success" : "muted"} />
                 </TableCell>
                 <TableCell className="hidden xl:table-cell">
-                  <div className="flex items-center gap-1 flex-wrap">
-                    {u.modules.slice(0, 3).map((m) => (
-                      <span key={m} className="w-7 h-7 rounded-lg bg-primary/8 text-primary flex items-center justify-center" title={MODULES.find((mod) => mod.key === m)?.label}>
-                        {moduleIcon(m)}
+                  {(() => {
+                    const role = roles.find((r) => r.id === getUserRoleId(u.username));
+                    return role ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/8 text-primary text-xs font-medium">
+                        <Shield className="w-3 h-3" /> {role.name}
                       </span>
-                    ))}
-                    {u.modules.length > 3 && (
-                      <span className="text-[11px] text-muted-foreground font-medium">+{u.modules.length - 3}</span>
-                    )}
-                  </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">No role</span>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="hidden lg:table-cell">
                   <span className="text-sm text-muted-foreground tabular-nums">{u.sites.length} site{u.sites.length !== 1 ? "s" : ""}</span>
