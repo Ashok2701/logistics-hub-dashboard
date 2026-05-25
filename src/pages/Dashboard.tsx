@@ -17,12 +17,15 @@ import { useSortable } from "@/hooks/useSortable";
 import { motion } from "framer-motion";
 
 const metrics = [
+  // Vehicles group
   { title: "Total Vehicles", value: 142, icon: Truck, trend: { value: "+3 this week", positive: true }, status: "active" as const },
+  { title: "Vehicles Available", value: 89, icon: Car, trend: { value: "53 deployed", positive: true }, status: "idle" as const },
+  // Drivers group
+  { title: "Drivers Available", value: 52, icon: Users, trend: { value: "6 on break", positive: true }, status: "active" as const },
+  // Routes / Orders group
   { title: "Active Routes", value: 38, icon: Route, trend: { value: "12 in transit", positive: true }, status: "active" as const },
   { title: "Orders Pending", value: 67, icon: Package, trend: { value: "+8 today", positive: false }, status: "delayed" as const },
   { title: "Orders Delivered", value: "1,284", icon: PackageCheck, trend: { value: "+24 today", positive: true }, status: "delivered" as const },
-  { title: "Drivers Available", value: 52, icon: Users, trend: { value: "6 on break", positive: true }, status: "active" as const },
-  { title: "Vehicles Available", value: 89, icon: Car, trend: { value: "53 deployed", positive: true }, status: "idle" as const },
 ];
 
 const recentActivity = [
