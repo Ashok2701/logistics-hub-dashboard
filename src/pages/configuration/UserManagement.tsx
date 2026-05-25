@@ -191,12 +191,13 @@ export default function UserManagement() {
     if (!editingId && form.password.length < 4) e.password = "Min 4 characters";
     if (form.password && form.password !== form.confirmPassword)
       e.confirmPassword = "Passwords do not match";
+    if (!form.roleId) e.roleId = "Required";
     if (!form.postalCode.trim()) e.postalCode = "Required";
     if (!form.telephone.trim()) e.telephone = "Required";
     if (form.sites.length === 0) e.sites = "Select at least one site";
     setErrors(e);
     // jump to first tab containing an error
-    if (e.username || e.password || e.confirmPassword) setTab("home");
+    if (e.username || e.password || e.confirmPassword || e.roleId) setTab("home");
     else if (e.postalCode || e.telephone) setTab("address");
     else if (e.sites) setTab("sites");
     return Object.keys(e).length === 0;
@@ -206,7 +207,10 @@ export default function UserManagement() {
     if (!validate()) return;
     setSaving(true);
     try {
-      const payload = buildApiPayload({ ...form });
+      // Derive modules from selected role (mock — role drives access).
+      const role = getRoleById(form.roleId);
+      const formWithModules = { ...form, modules: role?.modules ?? [] };
+      const payload = buildApiPayload(formWithModules);
       if (editingId) {
         const target = users.find((u) => u.id === editingId);
         await userApi.update(target?.username || form.username.trim(), payload);
@@ -215,6 +219,8 @@ export default function UserManagement() {
         await userApi.create(payload);
         toast({ title: "User created" });
       }
+      // Persist role assignment locally (frontend-only mock).
+      setUserRoleId(form.username.trim(), form.roleId);
       setView("list");
       await loadUsers();
     } catch (e: any) {
