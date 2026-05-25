@@ -60,76 +60,21 @@ export default function Dashboard() {
         subtitle="Fleet overview and real-time operations"
       />
 
-      {/* Primary Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-5">
-        {metrics.map((m, i) => (
-          <MetricCard key={m.title} {...m} index={i} />
-        ))}
-      </div>
-
-      {/* TMS KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {tmsKpis.map((k, i) => (
-          <MetricCard key={k.title} {...k} index={i} />
-        ))}
-      </div>
-
-        {/* Recent Routes */}
-        <div className="lg:col-span-3">
-          <DataTableShell>
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Active Routes</h3>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{recentActivity.length} routes being tracked</p>
-              </div>
-              <button className="btn-gradient text-xs px-3 py-1.5 rounded-lg">View All</button>
-            </div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <SortableTh sortKey="id" sort={sort}>Route ID</SortableTh>
-                  <SortableTh sortKey="driver" sort={sort}>Driver</SortableTh>
-                  <SortableTh sortKey="vehicle" sort={sort}>Vehicle</SortableTh>
-                  <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
-                  <SortableTh sortKey="eta" sort={sort}>ETA</SortableTh>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedActivity.map((r, i) => (
-                  <motion.tr
-                    key={r.id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + i * 0.04, duration: 0.3 }}
-                    className="group cursor-pointer"
-                  >
-                    <td className="font-mono text-primary font-medium">{r.id}</td>
-                    <td className="text-foreground">{r.driver}</td>
-                    <td className="font-mono text-muted-foreground">{r.vehicle}</td>
-                    <td><StatusBadge status={r.status} variant={r.statusVariant} /></td>
-                    <td className="font-mono text-muted-foreground">{r.eta}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </DataTableShell>
-        </div>
-
-      {/* Bottom Row: Today's Summary */}
+      {/* Today's Summary — top strip */}
       <motion.div
-        className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card"
+        className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card mb-6"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.35 }}
+        transition={{ duration: 0.35 }}
       >
-        <div className="px-5 py-4 border-b border-border">
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">Today&apos;s Summary</h3>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Daily operations snapshot</p>
+          <p className="text-[11px] text-muted-foreground">Daily operations snapshot</p>
         </div>
-        <div className="p-5 grid grid-cols-2 gap-4">
+        <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
           {todaySummary.map((s) => (
             <div key={s.label} className="bg-secondary/40 rounded-xl p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{s.value}</p>
@@ -138,6 +83,59 @@ export default function Dashboard() {
           ))}
         </div>
       </motion.div>
+
+      {/* Primary Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-5">
+        {metrics.map((m, i) => (
+          <MetricCard key={m.title} {...m} index={i} />
+        ))}
+      </div>
+
+      {/* TMS KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {tmsKpis.map((k, i) => (
+          <MetricCard key={k.title} {...k} index={i + 6} />
+        ))}
+      </div>
+
+      {/* Active Routes table */}
+      <DataTableShell>
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Active Routes</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">{recentActivity.length} routes being tracked</p>
+          </div>
+          <button className="btn-gradient text-xs px-3 py-1.5 rounded-lg">View All</button>
+        </div>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <SortableTh sortKey="id" sort={sort}>Route ID</SortableTh>
+              <SortableTh sortKey="driver" sort={sort}>Driver</SortableTh>
+              <SortableTh sortKey="vehicle" sort={sort}>Vehicle</SortableTh>
+              <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
+              <SortableTh sortKey="eta" sort={sort}>ETA</SortableTh>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedActivity.map((r, i) => (
+              <motion.tr
+                key={r.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.04, duration: 0.3 }}
+                className="group cursor-pointer"
+              >
+                <td className="font-mono text-primary font-medium">{r.id}</td>
+                <td className="text-foreground">{r.driver}</td>
+                <td className="font-mono text-muted-foreground">{r.vehicle}</td>
+                <td><StatusBadge status={r.status} variant={r.statusVariant} /></td>
+                <td className="font-mono text-muted-foreground">{r.eta}</td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </DataTableShell>
     </div>
   );
 }
