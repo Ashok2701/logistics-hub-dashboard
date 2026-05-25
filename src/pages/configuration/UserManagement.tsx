@@ -460,7 +460,7 @@ function FormSections({
 }: FormSectionsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<TabKey, HTMLElement | null>>({
-    home: null, address: null, modules: null, sites: null,
+    home: null, address: null, sites: null,
   });
   const isProgrammaticScroll = useRef(false);
 
