@@ -91,7 +91,10 @@ export default function RoleManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Role | null>(null);
 
-  useEffect(() => subscribeRoles(() => setRows(getRoles())), []);
+  useEffect(() => {
+    const unsub = subscribeRoles(() => setRows(getRoles()));
+    return () => { unsub; };
+  }, []);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
