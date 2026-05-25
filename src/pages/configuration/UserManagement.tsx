@@ -157,6 +157,7 @@ export default function UserManagement() {
       sites: [...u.sites], defaultSite: u.defaultSite, status: u.status === "active",
       addressLine1: u.addressLine1, addressLine2: u.addressLine2, country: u.country,
       postalCode: u.postalCode, city: u.city, region: u.region, telephone: u.telephone,
+      roleId: getUserRoleId(u.username) ?? "",
     });
     setErrors({});
     setTab("home");
