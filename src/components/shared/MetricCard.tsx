@@ -12,44 +12,111 @@ interface MetricCardProps {
   index?: number;
 }
 
+const GRADIENTS: Record<NonNullable<MetricCardProps["status"]>, { card: string; glow: string; blob: string; bars: string }> = {
+  active: {
+    card: "from-indigo-600 via-indigo-700 to-violet-800",
+    glow: "from-indigo-500 to-purple-600",
+    blob: "bg-indigo-400/20",
+    bars: "text-indigo-100",
+  },
+  delayed: {
+    card: "from-amber-500 via-orange-600 to-rose-600",
+    glow: "from-amber-400 to-rose-500",
+    blob: "bg-amber-300/20",
+    bars: "text-amber-50",
+  },
+  delivered: {
+    card: "from-emerald-500 via-teal-600 to-cyan-700",
+    glow: "from-emerald-400 to-cyan-500",
+    blob: "bg-emerald-300/20",
+    bars: "text-emerald-50",
+  },
+  idle: {
+    card: "from-slate-600 via-slate-700 to-slate-900",
+    glow: "from-slate-400 to-slate-600",
+    blob: "bg-slate-300/10",
+    bars: "text-slate-100",
+  },
+};
+
+const BAR_HEIGHTS = ["h-1/2", "h-3/4", "h-1/2", "h-full", "h-2/3"];
+
 export function MetricCard({ title, value, icon: Icon, trend, status = "active", index = 0 }: MetricCardProps) {
-  const iconStyle = {
-    active: "bg-gradient-to-br from-[hsl(var(--gradient-start))] to-[hsl(var(--gradient-end))] text-white shadow-lg",
-    delayed: "bg-gradient-to-br from-warning to-[hsl(38,92%,40%)] text-white shadow-lg shadow-warning/20",
-    delivered: "bg-gradient-to-br from-success to-[hsl(142,71%,35%)] text-white shadow-lg shadow-success/20",
-    idle: "bg-muted text-muted-foreground",
-  }[status];
+  const g = GRADIENTS[status];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
-      className="bg-card rounded-2xl p-5 shadow-card hover:shadow-elevated transition-all duration-300 border border-border/50 relative overflow-hidden cursor-default gradient-border-top"
+      className="relative group"
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
-          <p className="text-[28px] font-bold text-foreground mt-2 tracking-tight leading-none">{value}</p>
-        </div>
-        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-110", iconStyle)}>
-          <Icon className="w-5 h-5" />
+      {/* Glow Layer */}
+      <div
+        className={cn(
+          "absolute -inset-0.5 bg-gradient-to-r rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition duration-500",
+          g.glow
+        )}
+      />
+
+      {/* Card Body */}
+      <div
+        className={cn(
+          "relative bg-gradient-to-br p-5 rounded-2xl border border-white/10 shadow-xl overflow-hidden h-full",
+          g.card
+        )}
+      >
+        {/* Abstract background blobs */}
+        <div className="absolute top-0 right-0 -mr-10 -mt-10 w-32 h-32 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className={cn("absolute bottom-0 left-0 -ml-6 -mb-6 w-24 h-24 rounded-full blur-2xl pointer-events-none", g.blob)} />
+
+        <div className="relative flex flex-col gap-4">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-1 min-w-0">
+              <p className="text-white/70 text-[10px] font-semibold tracking-wider uppercase truncate">{title}</p>
+              <h3 className="text-white text-[26px] font-bold tracking-tight leading-none">{value}</h3>
+            </div>
+            <div className="p-2.5 bg-white/15 backdrop-blur-md rounded-xl border border-white/20 shadow-inner flex-shrink-0">
+              <Icon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-3 border-t border-white/10">
+            {trend ? (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div
+                  className={cn(
+                    "flex items-center px-1.5 py-0.5 rounded-md flex-shrink-0",
+                    trend.positive ? "bg-emerald-400/25" : "bg-rose-400/25"
+                  )}
+                >
+                  <span className={cn("text-[10px] font-bold", trend.positive ? "text-emerald-200" : "text-rose-100")}>
+                    {trend.positive ? "↑" : "↓"} {trend.value}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <span className="text-white/50 text-[10px]">—</span>
+            )}
+
+            {/* Micro bar graph */}
+            <div className="flex items-end gap-1 h-6 flex-shrink-0">
+              {BAR_HEIGHTS.map((h, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "w-1 rounded-full",
+                    h,
+                    i === 3 ? "bg-white/70" : i % 2 === 0 ? "bg-white/30" : "bg-white/50"
+                  )}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-      {trend && (
-        <>
-          <div className="h-px bg-border/40 my-3" />
-          <div className="flex items-center gap-1">
-            <span className={cn(
-              "text-[11px] font-medium px-1.5 py-0.5 rounded-md",
-              trend.positive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-            )}>
-              {trend.positive ? "↑" : "↓"} {trend.value}
-            </span>
-          </div>
-        </>
-      )}
     </motion.div>
   );
 }
@@ -62,7 +129,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
-    <motion.div 
+    <motion.div
       className="flex items-center justify-between mb-8"
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -98,7 +165,7 @@ interface DataTableShellProps {
 
 export function DataTableShell({ children }: DataTableShellProps) {
   return (
-    <motion.div 
+    <motion.div
       className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-card hover:shadow-premium transition-shadow duration-300"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -125,12 +192,14 @@ export function StatusBadge({ status, variant = "muted" }: StatusBadgeProps) {
 
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full", styles[variant])}>
-      <span className={cn("w-1.5 h-1.5 rounded-full", {
-        "bg-primary": variant === "active" || variant === "primary",
-        "bg-warning": variant === "warning",
-        "bg-success": variant === "success",
-        "bg-muted-foreground": variant === "muted",
-      })} />
+      <span
+        className={cn("w-1.5 h-1.5 rounded-full", {
+          "bg-primary": variant === "active" || variant === "primary",
+          "bg-warning": variant === "warning",
+          "bg-success": variant === "success",
+          "bg-muted-foreground": variant === "muted",
+        })}
+      />
       {status}
     </span>
   );
