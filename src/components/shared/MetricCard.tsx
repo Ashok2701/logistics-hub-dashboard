@@ -12,37 +12,23 @@ interface MetricCardProps {
   index?: number;
 }
 
-const GRADIENTS: Record<NonNullable<MetricCardProps["status"]>, { card: string; glow: string; blob: string; bars: string }> = {
-  active: {
-    card: "from-indigo-600 via-indigo-700 to-violet-800",
-    glow: "from-indigo-500 to-purple-600",
-    blob: "bg-indigo-400/20",
-    bars: "text-indigo-100",
-  },
-  delayed: {
-    card: "from-amber-500 via-orange-600 to-rose-600",
-    glow: "from-amber-400 to-rose-500",
-    blob: "bg-amber-300/20",
-    bars: "text-amber-50",
-  },
-  delivered: {
-    card: "from-emerald-500 via-teal-600 to-cyan-700",
-    glow: "from-emerald-400 to-cyan-500",
-    blob: "bg-emerald-300/20",
-    bars: "text-emerald-50",
-  },
-  idle: {
-    card: "from-slate-600 via-slate-700 to-slate-900",
-    glow: "from-slate-400 to-slate-600",
-    blob: "bg-slate-300/10",
-    bars: "text-slate-100",
-  },
-};
+const PALETTES = [
+  { card: "from-indigo-600 via-indigo-700 to-violet-800", glow: "from-indigo-500 to-purple-600", blob: "bg-indigo-400/20" },
+  { card: "from-sky-500 via-blue-600 to-indigo-700", glow: "from-sky-400 to-blue-600", blob: "bg-sky-300/20" },
+  { card: "from-amber-500 via-orange-600 to-rose-600", glow: "from-amber-400 to-rose-500", blob: "bg-amber-300/20" },
+  { card: "from-emerald-500 via-teal-600 to-cyan-700", glow: "from-emerald-400 to-cyan-500", blob: "bg-emerald-300/20" },
+  { card: "from-fuchsia-500 via-pink-600 to-rose-700", glow: "from-fuchsia-400 to-pink-600", blob: "bg-fuchsia-300/20" },
+  { card: "from-cyan-500 via-teal-600 to-emerald-700", glow: "from-cyan-400 to-teal-500", blob: "bg-cyan-300/20" },
+  { card: "from-violet-500 via-purple-600 to-fuchsia-700", glow: "from-violet-400 to-fuchsia-500", blob: "bg-violet-300/20" },
+  { card: "from-rose-500 via-red-600 to-orange-700", glow: "from-rose-400 to-red-600", blob: "bg-rose-300/20" },
+  { card: "from-lime-500 via-green-600 to-emerald-700", glow: "from-lime-400 to-green-500", blob: "bg-lime-300/20" },
+  { card: "from-slate-600 via-slate-700 to-slate-900", glow: "from-slate-400 to-slate-600", blob: "bg-slate-300/10" },
+];
 
 const BAR_HEIGHTS = ["h-1/2", "h-3/4", "h-1/2", "h-full", "h-2/3"];
 
-export function MetricCard({ title, value, icon: Icon, trend, status = "active", index = 0 }: MetricCardProps) {
-  const g = GRADIENTS[status];
+export function MetricCard({ title, value, icon: Icon, trend, index = 0 }: MetricCardProps) {
+  const g = PALETTES[index % PALETTES.length];
 
   return (
     <motion.div
