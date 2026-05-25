@@ -78,9 +78,9 @@ function write<T>(key: string, value: T) {
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());
 
-export function subscribeRoles(cb: () => void) {
+export function subscribeRoles(cb: () => void): () => void {
   listeners.add(cb);
-  return () => listeners.delete(cb);
+  return () => { listeners.delete(cb); };
 }
 
 export function getRoles(): Role[] {
