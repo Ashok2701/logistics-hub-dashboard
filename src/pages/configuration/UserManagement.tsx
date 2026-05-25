@@ -572,6 +572,17 @@ function FormSections({
                 <Field label="Mobile">
                   <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
                 </Field>
+                <Field label="Role" required error={errors.roleId}>
+                  <Select value={form.roleId || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v === "__none__" ? "" : v }))}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="Select role" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Select —</SelectItem>
+                      {getRoles().filter((r) => r.status === "active").map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
             </Section>
             <Section title="Preferences">
