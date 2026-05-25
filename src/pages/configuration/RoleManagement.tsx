@@ -93,7 +93,7 @@ export default function RoleManagement() {
 
   useEffect(() => {
     const unsub = subscribeRoles(() => setRows(getRoles()));
-    return () => { unsub; };
+    return () => { unsub(); };
   }, []);
 
   const filtered = useMemo(() => {
