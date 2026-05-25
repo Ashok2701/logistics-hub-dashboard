@@ -15,6 +15,7 @@ import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/component
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const metrics = [
   // Vehicles group
@@ -44,11 +45,18 @@ const tmsKpis = [
 ];
 
 const todaySummary = [
-  { label: "Orders Shipped", value: 128 },
-  { label: "Orders Delivered", value: 94 },
-  { label: "Orders In Transit", value: 34 },
-  { label: "Exceptions", value: 3 },
+  { label: "Orders Shipped", value: 128, color: "sky", icon: Package },
+  { label: "Orders Delivered", value: 94, color: "emerald", icon: PackageCheck },
+  { label: "Orders In Transit", value: 34, color: "amber", icon: Route },
+  { label: "Exceptions", value: 3, color: "rose", icon: Truck },
 ];
+
+const colorStyles: Record<string, { border: string; bg: string; text: string; dot: string }> = {
+  sky:    { border: "border-sky-400", bg: "bg-sky-50", text: "text-sky-700", dot: "bg-sky-400" },
+  emerald:{ border: "border-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
+  amber:  { border: "border-amber-400", bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400" },
+  rose:   { border: "border-rose-400", bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-400" },
+};
 
 export default function Dashboard() {
   const sort = useSortable(recentActivity);
@@ -75,12 +83,32 @@ export default function Dashboard() {
           <p className="text-[11px] text-muted-foreground">Daily operations snapshot</p>
         </div>
         <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {todaySummary.map((s) => (
-            <div key={s.label} className="bg-secondary/40 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{s.value}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">{s.label}</p>
-            </div>
-          ))}
+          {todaySummary.map((s, i) => {
+            const style = colorStyles[s.color];
+            const Icon = s.icon;
+            return (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.06, duration: 0.3 }}
+                className={cn(
+                  "relative rounded-xl p-4 text-left border-l-4",
+                  style.bg,
+                  style.border
+                )}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={cn("w-2 h-2 rounded-full", style.dot)} />
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className={cn("text-2xl font-bold", style.text)}>{s.value}</p>
+                  <Icon className={cn("w-4 h-4 opacity-40", style.text)} />
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </motion.div>
 
