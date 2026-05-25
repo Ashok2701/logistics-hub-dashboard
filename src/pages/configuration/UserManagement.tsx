@@ -19,7 +19,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import {
   Search, UserPlus, Route, CalendarClock, Radar,
   Map, BarChart3, Truck, Users, ArrowLeft, Loader2,
-  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check, ChevronsUpDown,
+  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check, ChevronsUpDown, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
