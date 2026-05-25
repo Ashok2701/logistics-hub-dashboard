@@ -103,6 +103,13 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [siteOptions, setSiteOptions] = useState<ApiSite[]>(FALLBACK_SITES);
+  const [roles, setRoles] = useState<Role[]>(() => getRoles());
+
+  useEffect(() => {
+    setRoles(getRoles());
+    const unsub = subscribeRoles(() => setRoles(getRoles()));
+    return () => { unsub(); };
+  }, []);
 
   const loadUsers = async () => {
     setLoading(true);
