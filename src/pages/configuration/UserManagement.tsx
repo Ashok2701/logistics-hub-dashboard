@@ -19,12 +19,13 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import {
   Search, UserPlus, Route, CalendarClock, Radar,
   Map, BarChart3, Truck, Users, ArrowLeft, Loader2,
-  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check, ChevronsUpDown,
+  Home, MapPin, LayoutGrid, Building2, Plus, Trash2, Check, ChevronsUpDown, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { userApi, mapApiUser, buildApiPayload } from "@/lib/userApi";
 import { transportApi, type ApiSite } from "@/lib/transportApi";
+import { getRoles, getRoleById, getUserRoleId, setUserRoleId, subscribeRoles, type Role } from "@/lib/rolesStore";
 
 // ─── Types ────────────────────────────────────────────────────────
 interface User {
@@ -76,17 +77,17 @@ const emptyForm = {
   modules: [] as string[], sites: [] as string[], defaultSite: "", status: true,
   addressLine1: "", addressLine2: "", country: "", postalCode: "",
   city: "", region: "", telephone: "",
+  roleId: "" as string,
 };
 
 type FormState = typeof emptyForm;
 type FormErrors = Partial<Record<keyof FormState, string>>;
 type ViewMode = "list" | "form";
-type TabKey = "home" | "address" | "modules" | "sites";
+type TabKey = "home" | "address" | "sites";
 
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "home", label: "Home", icon: Home },
   { key: "address", label: "Address Detail", icon: MapPin },
-  { key: "modules", label: "Modules", icon: LayoutGrid },
   { key: "sites", label: "User Assigned Sites", icon: Building2 },
 ];
 
@@ -102,6 +103,13 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [siteOptions, setSiteOptions] = useState<ApiSite[]>(FALLBACK_SITES);
+  const [roles, setRoles] = useState<Role[]>(() => getRoles());
+
+  useEffect(() => {
+    setRoles(getRoles());
+    const unsub = subscribeRoles(() => setRoles(getRoles()));
+    return () => { unsub(); };
+  }, []);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -156,6 +164,7 @@ export default function UserManagement() {
       sites: [...u.sites], defaultSite: u.defaultSite, status: u.status === "active",
       addressLine1: u.addressLine1, addressLine2: u.addressLine2, country: u.country,
       postalCode: u.postalCode, city: u.city, region: u.region, telephone: u.telephone,
+      roleId: getUserRoleId(u.username) ?? "",
     });
     setErrors({});
     setTab("home");
@@ -182,12 +191,13 @@ export default function UserManagement() {
     if (!editingId && form.password.length < 4) e.password = "Min 4 characters";
     if (form.password && form.password !== form.confirmPassword)
       e.confirmPassword = "Passwords do not match";
+    if (!form.roleId) e.roleId = "Required";
     if (!form.postalCode.trim()) e.postalCode = "Required";
     if (!form.telephone.trim()) e.telephone = "Required";
     if (form.sites.length === 0) e.sites = "Select at least one site";
     setErrors(e);
     // jump to first tab containing an error
-    if (e.username || e.password || e.confirmPassword) setTab("home");
+    if (e.username || e.password || e.confirmPassword || e.roleId) setTab("home");
     else if (e.postalCode || e.telephone) setTab("address");
     else if (e.sites) setTab("sites");
     return Object.keys(e).length === 0;
@@ -197,7 +207,10 @@ export default function UserManagement() {
     if (!validate()) return;
     setSaving(true);
     try {
-      const payload = buildApiPayload({ ...form });
+      // Derive modules from selected role (mock — role drives access).
+      const role = getRoleById(form.roleId);
+      const formWithModules = { ...form, modules: role?.modules ?? [] };
+      const payload = buildApiPayload(formWithModules);
       if (editingId) {
         const target = users.find((u) => u.id === editingId);
         await userApi.update(target?.username || form.username.trim(), payload);
@@ -206,6 +219,8 @@ export default function UserManagement() {
         await userApi.create(payload);
         toast({ title: "User created" });
       }
+      // Persist role assignment locally (frontend-only mock).
+      setUserRoleId(form.username.trim(), form.roleId);
       setView("list");
       await loadUsers();
     } catch (e: any) {
@@ -258,9 +273,8 @@ export default function UserManagement() {
   // ── Form View ─────────────────────────────────────────────────────
   if (view === "form") {
     const tabErrorCount: Record<TabKey, number> = {
-      home: ["username", "password", "confirmPassword"].filter((k) => errors[k as keyof FormErrors]).length,
+      home: ["username", "password", "confirmPassword", "roleId"].filter((k) => errors[k as keyof FormErrors]).length,
       address: ["postalCode", "telephone"].filter((k) => errors[k as keyof FormErrors]).length,
-      modules: 0,
       sites: errors.sites ? 1 : 0,
     };
 
@@ -352,7 +366,7 @@ export default function UserManagement() {
               <SortableTableHead sortKey="email" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Email</SortableTableHead>
               <SortableTableHead sortKey="mobile" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Mobile</SortableTableHead>
               <SortableTableHead sortKey="status" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</SortableTableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden xl:table-cell">Modules</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden xl:table-cell">Role</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Sites</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
@@ -371,16 +385,16 @@ export default function UserManagement() {
                   <StatusBadge status={u.status === "active" ? "Active" : "Inactive"} variant={u.status === "active" ? "success" : "muted"} />
                 </TableCell>
                 <TableCell className="hidden xl:table-cell">
-                  <div className="flex items-center gap-1 flex-wrap">
-                    {u.modules.slice(0, 3).map((m) => (
-                      <span key={m} className="w-7 h-7 rounded-lg bg-primary/8 text-primary flex items-center justify-center" title={MODULES.find((mod) => mod.key === m)?.label}>
-                        {moduleIcon(m)}
+                  {(() => {
+                    const role = roles.find((r) => r.id === getUserRoleId(u.username));
+                    return role ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/8 text-primary text-xs font-medium">
+                        <Shield className="w-3 h-3" /> {role.name}
                       </span>
-                    ))}
-                    {u.modules.length > 3 && (
-                      <span className="text-[11px] text-muted-foreground font-medium">+{u.modules.length - 3}</span>
-                    )}
-                  </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">No role</span>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="hidden lg:table-cell">
                   <span className="text-sm text-muted-foreground tabular-nums">{u.sites.length} site{u.sites.length !== 1 ? "s" : ""}</span>
@@ -459,7 +473,7 @@ function FormSections({
 }: FormSectionsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<TabKey, HTMLElement | null>>({
-    home: null, address: null, modules: null, sites: null,
+    home: null, address: null, sites: null,
   });
   const isProgrammaticScroll = useRef(false);
 
@@ -558,6 +572,17 @@ function FormSections({
                 <Field label="Mobile">
                   <Input value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="+1 555-0100" className="h-9" />
                 </Field>
+                <Field label="Role" required error={errors.roleId}>
+                  <Select value={form.roleId || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v === "__none__" ? "" : v }))}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="Select role" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Select —</SelectItem>
+                      {getRoles().filter((r) => r.status === "active").map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
             </Section>
             <Section title="Preferences">
@@ -621,40 +646,6 @@ function FormSections({
             </div>
           </section>
 
-          {/* MODULES */}
-          <section ref={registerRef("modules")} data-tab-key="modules" className="p-6 space-y-6 scroll-mt-4">
-            <SectionHeader title="Modules" subtitle="Select which modules this user can access" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-              {MODULES.map((m) => {
-                const selected = form.modules.includes(m.key);
-                return (
-                  <button
-                    key={m.key}
-                    type="button"
-                    onClick={() => toggleModule(m.key)}
-                    className={cn(
-                      "group relative flex items-center gap-3 px-3.5 py-3 rounded-lg border text-left transition-all duration-150",
-                      selected ? "border-primary/40 bg-primary/[0.06] shadow-sm" : "border-border hover:border-border/80 hover:bg-secondary/40"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
-                      selected ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
-                    )}>
-                      <m.icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm font-medium flex-1 truncate">{m.label}</span>
-                    <div className={cn(
-                      "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
-                      selected ? "bg-primary border-primary text-primary-foreground" : "border-border"
-                    )}>
-                      {selected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
 
           {/* SITES */}
           <section ref={registerRef("sites")} data-tab-key="sites" className="p-6 space-y-6 scroll-mt-4">

@@ -23,7 +23,8 @@ const menuItems: MenuItem[] = [
     label: "Configuration", icon: Settings,
     children: [
       { label: "Sync Center", icon: RefreshCw, path: "/config/sync-center" },
-      { label: "Users", icon: Shield, path: "/config/roles" },
+      { label: "Roles", icon: Shield, path: "/config/role-management" },
+      { label: "Users", icon: Users, path: "/config/roles" },
       { label: "Site Management", icon: Building2, path: "/config/sites" },
       { label: "Customer", icon: UserCircle, path: "/config/customers" },
       { label: "Supplier", icon: UserCircle, path: "/config/suppliers" },
