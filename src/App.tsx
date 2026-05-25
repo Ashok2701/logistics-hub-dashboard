@@ -30,6 +30,7 @@ import CustomerManagement from "@/pages/configuration/CustomerManagement";
 import SupplierManagement from "@/pages/configuration/SupplierManagement";
 import ProductManagement from "@/pages/configuration/ProductManagement";
 import DocumentConfiguration from "@/pages/configuration/DocumentConfiguration";
+import RoleManagement from "@/pages/configuration/RoleManagement";
 import PlaceholderPage from "@/pages/PlaceholderPage";
 import NotFound from "@/pages/NotFound";
 
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path="reports/kpi-transportation" element={<KPITransportation />} />
         <Route path="config/sync-center" element={<SyncCenter />} />
         <Route path="config/roles" element={<UserManagement />} />
+        <Route path="config/role-management" element={<RoleManagement />} />
         <Route path="config/sites" element={<SiteManagement />} />
         <Route path="config/customers" element={<CustomerManagement />} />
         <Route path="config/suppliers" element={<SupplierManagement />} />
