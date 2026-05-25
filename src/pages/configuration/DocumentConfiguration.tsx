@@ -28,19 +28,18 @@ interface DocRow {
   docType: string;
   labelEng: string;
   labelFra: string;
-  serviceTime: string; // HH:MM
   color: string;
 }
 
 const seed: DocRow[] = [
-  { id: 1, document: "Purchase Receipt", docType: "REC", labelEng: "RECPT", labelFra: "RECPT", serviceTime: "01:00", color: "#3B82F6" },
-  { id: 2, document: "Sales Delivery", docType: "SDN", labelEng: "DLV", labelFra: "DLV", serviceTime: "00:00", color: "#10B981" },
-  { id: 3, document: "Sales Return", docType: "RTC", labelEng: "RTC", labelFra: "RTC", serviceTime: "00:00", color: "#F59E0B" },
-  { id: 4, document: "Pick Ticket", docType: "BDP", labelEng: "PCKT", labelFra: "PCKT", serviceTime: "00:30", color: "#8B5CF6" },
+  { id: 1, document: "Purchase Receipt", docType: "REC", labelEng: "RECPT", labelFra: "RECPT", color: "#3B82F6" },
+  { id: 2, document: "Sales Delivery", docType: "SDN", labelEng: "DLV", labelFra: "DLV", color: "#10B981" },
+  { id: 3, document: "Sales Return", docType: "RTC", labelEng: "RTC", labelFra: "RTC", color: "#F59E0B" },
+  { id: 4, document: "Pick Ticket", docType: "BDP", labelEng: "PCKT", labelFra: "PCKT", color: "#8B5CF6" },
 ];
 
 const emptyRow = (id: number): DocRow => ({
-  id, document: "", docType: "", labelEng: "", labelFra: "", serviceTime: "00:00", color: "#3B82F6",
+  id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
 });
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -144,7 +143,6 @@ export default function DocumentConfiguration() {
     if (!draft) return;
     if (!draft.document) { toast.error("Please select a document"); return; }
     if (!draft.docType) { toast.error("Doc Type is required"); return; }
-    if (!/^\d{1,2}:\d{2}$/.test(draft.serviceTime)) { toast.error("Service time must be HH:MM"); return; }
     setRows((prev) => prev.map((r) => (r.id === draft.id ? draft : r)));
     toast.success("Saved");
     setEditingId(null);
@@ -170,7 +168,7 @@ export default function DocumentConfiguration() {
     <div>
       <PageHeader
         title="Document Configuration"
-        subtitle="Configure document templates, labels & service times"
+        subtitle="Configure document templates, labels & colors"
         actions={
           <>
             <button
@@ -221,9 +219,8 @@ export default function DocumentConfiguration() {
               <SortableTh sortKey="id" sort={sort} className="w-16">SR No</SortableTh>
               <SortableTh sortKey="document" sort={sort}>Document</SortableTh>
               <SortableTh sortKey="docType" sort={sort}>Doc Type</SortableTh>
-              <SortableTh sortKey="labelEng" sort={sort}>Label (ENG)</SortableTh>
-              <SortableTh sortKey="labelFra" sort={sort}>Label (FRA)</SortableTh>
-              <SortableTh sortKey="serviceTime" sort={sort}>Service Time</SortableTh>
+              <SortableTh sortKey="labelEng" sort={sort}>Display Name (English)</SortableTh>
+              <SortableTh sortKey="labelFra" sort={sort}>Display Name (French)</SortableTh>
               <th>Color</th>
               <th className="w-28 text-right">Actions</th>
             </tr>
@@ -231,7 +228,7 @@ export default function DocumentConfiguration() {
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-12">
+                <td colSpan={7} className="text-center py-12">
                   <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No documents found</p>
                 </td>
@@ -294,18 +291,6 @@ export default function DocumentConfiguration() {
                         />
                       ) : (
                         <span className="text-foreground">{r.labelFra}</span>
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <input
-                          type="time"
-                          value={draft!.serviceTime}
-                          onChange={(e) => update("serviceTime", e.target.value)}
-                          className="h-9 px-2 rounded-lg border border-border bg-card text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 font-mono"
-                        />
-                      ) : (
-                        <span className="font-mono text-foreground">{r.serviceTime}</span>
                       )}
                     </td>
                     <td>
