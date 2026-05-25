@@ -622,40 +622,6 @@ function FormSections({
             </div>
           </section>
 
-          {/* MODULES */}
-          <section ref={registerRef("modules")} data-tab-key="modules" className="p-6 space-y-6 scroll-mt-4">
-            <SectionHeader title="Modules" subtitle="Select which modules this user can access" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-              {MODULES.map((m) => {
-                const selected = form.modules.includes(m.key);
-                return (
-                  <button
-                    key={m.key}
-                    type="button"
-                    onClick={() => toggleModule(m.key)}
-                    className={cn(
-                      "group relative flex items-center gap-3 px-3.5 py-3 rounded-lg border text-left transition-all duration-150",
-                      selected ? "border-primary/40 bg-primary/[0.06] shadow-sm" : "border-border hover:border-border/80 hover:bg-secondary/40"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
-                      selected ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
-                    )}>
-                      <m.icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm font-medium flex-1 truncate">{m.label}</span>
-                    <div className={cn(
-                      "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
-                      selected ? "bg-primary border-primary text-primary-foreground" : "border-border"
-                    )}>
-                      {selected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
 
           {/* SITES */}
           <section ref={registerRef("sites")} data-tab-key="sites" className="p-6 space-y-6 scroll-mt-4">
