@@ -216,7 +216,6 @@ export default function DocumentConfiguration() {
         <table className="data-table">
           <thead>
             <tr>
-              <SortableTh sortKey="id" sort={sort} className="w-16">SR No</SortableTh>
               <SortableTh sortKey="document" sort={sort}>Document</SortableTh>
               <SortableTh sortKey="docType" sort={sort}>Doc Type</SortableTh>
               <SortableTh sortKey="labelEng" sort={sort}>Display Name (English)</SortableTh>
@@ -228,7 +227,7 @@ export default function DocumentConfiguration() {
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12">
+                <td colSpan={6} className="text-center py-12">
                   <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No documents found</p>
                 </td>
@@ -244,7 +243,6 @@ export default function DocumentConfiguration() {
                     transition={{ delay: i * 0.03 }}
                     className="group"
                   >
-                    <td className="font-mono text-xs text-muted-foreground">{r.id}</td>
                     <td>
                       {isEditing ? (
                         <select
