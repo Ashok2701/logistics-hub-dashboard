@@ -15,6 +15,7 @@ import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/component
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const metrics = [
   // Vehicles group
