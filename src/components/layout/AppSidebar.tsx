@@ -6,7 +6,8 @@ import {
   LayoutDashboard, Truck, Car, Users,
   Link as LinkIcon, Navigation, Radar, BarChart3, Settings,
   RefreshCw, Shield, Building2, UserCircle, Package, FileText, Calendar,
-  ChevronDown, ChevronLeft, ChevronRight, Route, type LucideIcon,
+  ChevronDown, ChevronLeft, ChevronRight, Route, UserCog, KeyRound, LayoutGrid,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,16 @@ const menuItems: MenuItem[] = [
       { label: "Supplier", icon: UserCircle, path: "/config/suppliers" },
       { label: "Product", icon: Package, path: "/config/products" },
       { label: "Document Config", icon: FileText, path: "/config/documents" },
+    ],
+  },
+  {
+    label: "User Management", icon: Users,
+    children: [
+      { label: "Users", icon: Users, path: "/user-management/users" },
+      { label: "Roles", icon: Shield, path: "/user-management/roles" },
+      { label: "Modules", icon: LayoutGrid, path: "/user-management/modules" },
+      { label: "User Types", icon: UserCog, path: "/user-management/user-types" },
+      { label: "Role-Modules", icon: KeyRound, path: "/user-management/role-modules" },
     ],
   },
   {
