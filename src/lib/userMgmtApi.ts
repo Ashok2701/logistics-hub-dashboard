@@ -1,9 +1,9 @@
 // User Management API client
-// Backend base: https://tmssolutions.tema-systems.com:8040/api/v1
+// Backend base: https://tmssolutions.tema-systems.com:8040/api
 // Override via VITE_USER_MGMT_API_BASE if needed.
 
 const API_BASE =
-  (import.meta as any).env?.VITE_USER_MGMT_API_BASE ?? "https://tmssolutions.tema-systems.com:8040/api/v1";
+  (import.meta as any).env?.VITE_USER_MGMT_API_BASE ?? "https://tmssolutions.tema-systems.com:8040/api";
 
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("vanguard-token");
