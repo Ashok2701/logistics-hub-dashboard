@@ -1,169 +1,163 @@
-import {
-  Truck,
-  Route,
-  Package,
-  PackageCheck,
-  Users,
-  Car,
-  Clock,
-  TrendingUp,
-  Fuel,
-  Wrench,
-  CheckCircle,
-} from "lucide-react";
-import { MetricCard, PageHeader, StatusBadge, DataTableShell } from "@/components/shared/MetricCard";
-import { SortableTh } from "@/components/shared/SortableTh";
-import { useSortable } from "@/hooks/useSortable";
+import { Truck, Compass, IdCard, CheckCircle2, User } from "lucide-react";
+import { PageHeader } from "@/components/shared/MetricCard";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-const metrics = [
-  // Vehicles group
-  { title: "Total Vehicles", value: 142, icon: Truck, trend: { value: "+3 this week", positive: true }, status: "active" as const },
-  { title: "Vehicles Available", value: 89, icon: Car, trend: { value: "53 deployed", positive: true }, status: "idle" as const },
-  // Drivers group
-  { title: "Drivers Available", value: 52, icon: Users, trend: { value: "6 on break", positive: true }, status: "active" as const },
-  // Routes / Orders group
-  { title: "Active Routes", value: 38, icon: Route, trend: { value: "12 in transit", positive: true }, status: "active" as const },
-  { title: "Orders Pending", value: 67, icon: Package, trend: { value: "+8 today", positive: false }, status: "delayed" as const },
-  { title: "Orders Delivered", value: "1,284", icon: PackageCheck, trend: { value: "+24 today", positive: true }, status: "delivered" as const },
+type Trend = { value: string; tone: "positive" | "warning" | "neutral" };
+
+const kpis: { label: string; value: string; icon: any; trend: Trend }[] = [
+  { label: "Active Trips", value: "18", icon: Truck, trend: { value: "▲ 3 vs yesterday", tone: "positive" } },
+  { label: "Vehicles on Road", value: "22", icon: Compass, trend: { value: "▲ 81% utilised", tone: "positive" } },
+  { label: "Drivers on Duty", value: "24", icon: IdCard, trend: { value: "2 approaching hour limit", tone: "warning" } },
+  { label: "Deliveries Today", value: "41", icon: CheckCircle2, trend: { value: "▲ 94.1% on time", tone: "positive" } },
 ];
 
-const recentActivity = [
-  { id: "RT-1042", driver: "John Carter", vehicle: "VH-2281", status: "In Transit", statusVariant: "active" as const, eta: "14:30" },
-  { id: "RT-1041", driver: "Sarah Miles", vehicle: "VH-1193", status: "Delayed", statusVariant: "warning" as const, eta: "16:15" },
-  { id: "RT-1040", driver: "Mike Chen", vehicle: "VH-3340", status: "Delivered", statusVariant: "success" as const, eta: "Completed" },
-  { id: "RT-1039", driver: "Lisa Brown", vehicle: "VH-0892", status: "In Transit", statusVariant: "active" as const, eta: "15:45" },
-  { id: "RT-1038", driver: "Tom Wilson", vehicle: "VH-1567", status: "Idle", statusVariant: "muted" as const, eta: "—" },
+const fleetStatus = [
+  { label: "On Road", value: 22, max: 30, color: "emerald" },
+  { label: "Idle / Depot", value: 5, max: 30, color: "sky" },
+  { label: "Maintenance", value: 3, max: 30, color: "rose" },
 ];
 
-const tmsKpis = [
-  { title: "On-Time Delivery", value: "94.2%", icon: CheckCircle, trend: { value: "+1.5% vs last week", positive: true }, status: "active" as const },
-  { title: "Avg Transit Time", value: "3.2 hrs", icon: Clock, trend: { value: "-12 min improvement", positive: true }, status: "active" as const },
-  { title: "Fuel Efficiency", value: "8.4 km/l", icon: Fuel, trend: { value: "+0.3 vs target", positive: true }, status: "active" as const },
-  { title: "Maintenance Due", value: "7", icon: Wrench, trend: { value: "3 urgent", positive: false }, status: "delayed" as const },
+const fleetTotals = [
+  { label: "Total", value: 30 },
+  { label: "Trailers", value: 18 },
+  { label: "Drivers", value: 32 },
 ];
 
-const todaySummary = [
-  { label: "Orders Shipped", value: 128, color: "sky", icon: Package },
-  { label: "Orders Delivered", value: 94, color: "emerald", icon: PackageCheck },
-  { label: "Orders In Transit", value: 34, color: "amber", icon: Route },
-  { label: "Exceptions", value: 3, color: "rose", icon: Truck },
+const driverHours = [
+  { label: "Under 8h — safe", value: 18, max: 24, color: "emerald" },
+  { label: "8–10h — caution", value: 4, max: 24, color: "amber" },
+  { label: "Over 10h — alert", value: 2, max: 24, color: "rose" },
 ];
 
-const colorStyles: Record<string, { border: string; bg: string; text: string; dot: string }> = {
-  sky:    { border: "border-sky-400", bg: "bg-sky-50", text: "text-sky-700", dot: "bg-sky-400" },
-  emerald:{ border: "border-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
-  amber:  { border: "border-amber-400", bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400" },
-  rose:   { border: "border-rose-400", bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-400" },
+const barColors: Record<string, { bar: string; text: string }> = {
+  emerald: { bar: "bg-emerald-500", text: "text-emerald-600" },
+  sky: { bar: "bg-sky-500", text: "text-sky-600" },
+  amber: { bar: "bg-amber-500", text: "text-amber-600" },
+  rose: { bar: "bg-rose-500", text: "text-rose-600" },
+};
+
+const trendTone: Record<Trend["tone"], string> = {
+  positive: "text-emerald-600",
+  warning: "text-amber-600",
+  neutral: "text-muted-foreground",
 };
 
 export default function Dashboard() {
-  const sort = useSortable(recentActivity);
-  const sortedActivity = sort.sorted;
   return (
     <div>
-      <PageHeader
-        title="Dashboard"
-        subtitle="Fleet overview and real-time operations"
-      />
+      <PageHeader title="Operations Overview" subtitle="Live fleet snapshot · own road fleet only" />
 
-      {/* Today's Summary — top strip */}
-      <motion.div
-        className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card mb-6"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold text-foreground">Today&apos;s Summary</h3>
-          </div>
-          <p className="text-[11px] text-muted-foreground">Daily operations snapshot</p>
-        </div>
-        <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {todaySummary.map((s, i) => {
-            const style = colorStyles[s.color];
-            const Icon = s.icon;
-            return (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.06, duration: 0.3 }}
-                className={cn(
-                  "relative rounded-xl p-4 text-left border-l-4",
-                  style.bg,
-                  style.border
-                )}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={cn("w-2 h-2 rounded-full", style.dot)} />
-                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <p className={cn("text-2xl font-bold", style.text)}>{s.value}</p>
-                  <Icon className={cn("w-4 h-4 opacity-40", style.text)} />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* Primary Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-5">
-        {metrics.map((m, i) => (
-          <MetricCard key={m.title} {...m} index={i} />
-        ))}
-      </div>
-
-      {/* TMS KPI Cards */}
+      {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {tmsKpis.map((k, i) => (
-          <MetricCard key={k.title} {...k} index={i + 6} />
-        ))}
+        {kpis.map((k, i) => {
+          const Icon = k.icon;
+          return (
+            <motion.div
+              key={k.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.3 }}
+              className="bg-card rounded-xl border border-border shadow-card p-5"
+            >
+              <Icon className="w-6 h-6 text-muted-foreground/60 mb-4" />
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                {k.label}
+              </p>
+              <p className="text-4xl font-bold text-foreground mb-2">{k.value}</p>
+              <p className={cn("text-xs font-medium", trendTone[k.trend.tone])}>{k.trend.value}</p>
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* Active Routes table */}
-      <DataTableShell>
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Active Routes</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{recentActivity.length} routes being tracked</p>
+      {/* Fleet Status + Driver Hours Today */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Fleet Status */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="bg-card rounded-xl border border-border shadow-card overflow-hidden"
+        >
+          <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+            <Truck className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Fleet Status</h3>
           </div>
-          <button className="btn-gradient text-xs px-3 py-1.5 rounded-lg">View All</button>
-        </div>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <SortableTh sortKey="id" sort={sort}>Route ID</SortableTh>
-              <SortableTh sortKey="driver" sort={sort}>Driver</SortableTh>
-              <SortableTh sortKey="vehicle" sort={sort}>Vehicle</SortableTh>
-              <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
-              <SortableTh sortKey="eta" sort={sort}>ETA</SortableTh>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedActivity.map((r, i) => (
-              <motion.tr
-                key={r.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.04, duration: 0.3 }}
-                className="group cursor-pointer"
-              >
-                <td className="font-mono text-primary font-medium">{r.id}</td>
-                <td className="text-foreground">{r.driver}</td>
-                <td className="font-mono text-muted-foreground">{r.vehicle}</td>
-                <td><StatusBadge status={r.status} variant={r.statusVariant} /></td>
-                <td className="font-mono text-muted-foreground">{r.eta}</td>
-              </motion.tr>
+          <div className="p-5 space-y-5">
+            {fleetStatus.map((s) => {
+              const c = barColors[s.color];
+              const pct = (s.value / s.max) * 100;
+              return (
+                <div key={s.label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-foreground">{s.label}</span>
+                    <span className={cn("text-sm font-semibold", c.text)}>{s.value}</span>
+                  </div>
+                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <motion.div
+                      className={cn("h-full rounded-full", c.bar)}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 0.6 }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="px-5 pb-5 grid grid-cols-3 gap-3">
+            {fleetTotals.map((t) => (
+              <div key={t.label} className="bg-secondary/60 rounded-lg p-3">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                  {t.label}
+                </p>
+                <p className="text-xl font-bold text-foreground">{t.value}</p>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </DataTableShell>
+          </div>
+        </motion.div>
+
+        {/* Driver Hours Today */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.35 }}
+          className="bg-card rounded-xl border border-border shadow-card overflow-hidden flex flex-col"
+        >
+          <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+            <User className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Driver Hours Today</h3>
+          </div>
+          <div className="p-5 space-y-5 flex-1">
+            {driverHours.map((s) => {
+              const c = barColors[s.color];
+              const pct = (s.value / s.max) * 100;
+              return (
+                <div key={s.label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-foreground">{s.label}</span>
+                    <span className={cn("text-sm font-semibold", c.text)}>{s.value}</span>
+                  </div>
+                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <motion.div
+                      className={cn("h-full rounded-full", c.bar)}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 0.6 }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="px-5 pb-5">
+            <p className="text-xs text-muted-foreground">
+              Max limit: 10h/day · <span className="text-amber-600 font-medium">2 drivers on warning</span>
+            </p>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
