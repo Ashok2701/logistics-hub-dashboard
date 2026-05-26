@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  LayoutDashboard, Truck, Car, Users, Container,
+  LayoutDashboard, Truck, Car, Users,
   Link as LinkIcon, Navigation, Radar, BarChart3, Settings,
   RefreshCw, Shield, Building2, UserCircle, Package, FileText, Calendar,
   ChevronDown, ChevronLeft, ChevronRight, Route, type LucideIcon,
@@ -38,9 +38,7 @@ const menuItems: MenuItem[] = [
       { label: "Vehicle Categories", icon: Car, path: "/fleet/categories" },
       { label: "Vehicles", icon: Truck, path: "/fleet/vehicles" },
       { label: "Drivers", icon: Users, path: "/fleet/drivers" },
-      { label: "Trailers", icon: Container, path: "/fleet/trailers" },
       { label: "Vehicle-Driver", icon: LinkIcon, path: "/fleet/vehicle-driver" },
-      { label: "Vehicle-Trailer", icon: LinkIcon, path: "/fleet/vehicle-trailer" },
     ],
   },
   {
