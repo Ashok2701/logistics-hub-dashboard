@@ -38,7 +38,7 @@ export default function Login() {
 
 
       {/* RIGHT — Form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 lg:p-16 xl:p-24 bg-white">
+      <div className="relative z-10 w-full lg:w-1/2 lg:ml-auto flex flex-col items-center justify-center p-6 sm:p-12 lg:p-16 xl:p-24 bg-white/90 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
