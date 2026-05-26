@@ -45,12 +45,12 @@ const menuItems: MenuItem[] = [
     label: "Operations", icon: Navigation,
     children: [
       { label: "Route Planner", icon: Route, path: "/operations/route-planner" },
-      { label: "Live Tracking", icon: Radar, path: "/operations/live-tracking" },
     ],
   },
   {
     label: "Reports", icon: BarChart3,
     children: [
+      { label: "Live Tracking", icon: Radar, path: "/operations/live-tracking" },
       { label: "Driver Reports", icon: Users, path: "/reports/drivers" },
       { label: "Vehicle Reports", icon: Truck, path: "/reports/vehicles" },
       { label: "POD Tracking", icon: FileText, path: "/reports/pod-tracking" },
