@@ -38,9 +38,7 @@ const menuItems: MenuItem[] = [
       { label: "Vehicle Categories", icon: Car, path: "/fleet/categories" },
       { label: "Vehicles", icon: Truck, path: "/fleet/vehicles" },
       { label: "Drivers", icon: Users, path: "/fleet/drivers" },
-      { label: "Trailers", icon: Container, path: "/fleet/trailers" },
       { label: "Vehicle-Driver", icon: LinkIcon, path: "/fleet/vehicle-driver" },
-      { label: "Vehicle-Trailer", icon: LinkIcon, path: "/fleet/vehicle-trailer" },
     ],
   },
   {
