@@ -33,9 +33,10 @@ export default function Login() {
     <div className="min-h-screen w-full flex font-sans bg-slate-900">
       {/* LEFT — 70% image */}
       <div
-        className="hidden lg:block lg:w-[70%] bg-no-repeat bg-center bg-cover"
+        className="hidden lg:block lg:w-[70%] bg-no-repeat bg-center bg-contain bg-white"
         style={{ backgroundImage: `url(${terminalHero})` }}
       />
+
 
       {/* RIGHT — 30% form */}
       <div className="relative z-10 w-full lg:w-[30%] flex flex-col items-center justify-center p-6 sm:p-10 lg:p-10 xl:p-12 bg-white">
