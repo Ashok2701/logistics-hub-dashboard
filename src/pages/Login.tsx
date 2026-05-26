@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Lock, User, Route, AlertCircle, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import terminalHero from "@/assets/login-fleet-hero.jpg";
+import terminalHero from "@/assets/login-tema-hero.jpg";
 
 export default function Login() {
   const [username, setUsername] = useState("");
