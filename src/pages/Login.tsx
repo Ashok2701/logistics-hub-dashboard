@@ -30,75 +30,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-slate-50 font-sans">
-      {/* LEFT — Hero */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden">
-        <img
-          src={terminalHero}
-          alt="Fleet of delivery trucks at a distribution center at sunset"
-          className="absolute inset-0 w-full h-full object-cover opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-tr from-blue-950/95 via-blue-950/55 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-transparent to-slate-950/60" />
+    <div
+      className="min-h-screen w-full flex bg-slate-900 font-sans bg-no-repeat bg-center bg-cover"
+      style={{ backgroundImage: `url(${terminalHero})` }}
+    >
+      <div className="absolute inset-0 bg-slate-950/30" />
 
-        <div className="relative z-10 p-12 xl:p-16 flex flex-col justify-between w-full">
-          {/* Brand */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center gap-3"
-          >
-            <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/40">
-              <Route className="w-6 h-6 text-white" strokeWidth={2.4} />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-white">Route Planner</span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="max-w-md"
-          >
-            <span className="inline-block text-[11px] font-semibold tracking-[0.25em] uppercase text-blue-300/90 mb-4 px-3 py-1 rounded-full border border-blue-300/25 bg-blue-500/10 backdrop-blur-sm">
-              TMS for any ERP
-            </span>
-            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-[1.1] tracking-tight">
-              Precision logistics for the modern enterprise.
-            </h1>
-            <p className="text-blue-100/80 text-base xl:text-lg leading-relaxed mt-5">
-              Optimize your fleet, plan smarter routes, and streamline dispatch — fully integrated with your ERP.
-            </p>
-
-            {/* Stat strip */}
-            <div className="mt-10 grid grid-cols-3 gap-6 max-w-md">
-              {[
-                { v: "248", l: "Active Fleet" },
-                { v: "98.4%", l: "On-Time" },
-                { v: "1.4k", l: "Routes / day" },
-              ].map((s) => (
-                <div key={s.l}>
-                  <div className="text-2xl font-bold text-white tracking-tight">{s.v}</div>
-                  <div className="text-[11px] uppercase tracking-wider text-blue-200/70 mt-0.5">{s.l}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <div className="flex items-center justify-between text-xs text-blue-200/50">
-            <span>© 2026 Route Planner Systems</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              All systems operational
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* RIGHT — Form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 lg:p-16 xl:p-24 bg-white">
+      <div className="relative z-10 w-full lg:w-1/2 lg:ml-auto flex flex-col items-center justify-center p-6 sm:p-12 lg:p-16 xl:p-24 bg-white/90 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
