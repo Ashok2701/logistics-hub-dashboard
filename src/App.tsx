@@ -31,6 +31,11 @@ import SupplierManagement from "@/pages/configuration/SupplierManagement";
 import ProductManagement from "@/pages/configuration/ProductManagement";
 import DocumentConfiguration from "@/pages/configuration/DocumentConfiguration";
 import RoleManagement from "@/pages/configuration/RoleManagement";
+import UserTypesPage from "@/pages/usermgmt/UserTypesPage";
+import RolesPage from "@/pages/usermgmt/RolesPage";
+import ModulesPage from "@/pages/usermgmt/ModulesPage";
+import RoleModulesPage from "@/pages/usermgmt/RoleModulesPage";
+import UsersPage from "@/pages/usermgmt/UsersPage";
 import PlaceholderPage from "@/pages/PlaceholderPage";
 import NotFound from "@/pages/NotFound";
 
@@ -72,6 +77,11 @@ function AppRoutes() {
         <Route path="config/suppliers" element={<SupplierManagement />} />
         <Route path="config/products" element={<ProductManagement />} />
         <Route path="config/documents" element={<DocumentConfiguration />} />
+        <Route path="user-management/users" element={<UsersPage />} />
+        <Route path="user-management/roles" element={<RolesPage />} />
+        <Route path="user-management/modules" element={<ModulesPage />} />
+        <Route path="user-management/user-types" element={<UserTypesPage />} />
+        <Route path="user-management/role-modules" element={<RoleModulesPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
