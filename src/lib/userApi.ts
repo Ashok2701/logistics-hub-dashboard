@@ -1,7 +1,7 @@
 // User module API client
-// Backend: http://tmssolutions.tema-systems.com:8082/api/v1/user
+// Backend: https://tmssolutions.tema-systems.com:8040/api/users
 
-const API_BASE = "https://tmssolutions.tema-systems.com:8040/api/v1";
+const API_BASE = "https://tmssolutions.tema-systems.com:8040/api";
 
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("vanguard-token");
