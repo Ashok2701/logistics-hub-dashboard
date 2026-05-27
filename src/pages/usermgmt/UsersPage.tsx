@@ -104,7 +104,9 @@ export default function UsersPage() {
     () => userTypes.find((t) => t.userTypeId === form.userTypeId),
     [userTypes, form.userTypeId]
   );
-  const requiresSites = !!selectedUserType?.requiresSiteMapping;
+  const isRoutePlanner = (name?: string) =>
+    !!name && name.trim().toLowerCase() === "route planner";
+  const requiresSites = isRoutePlanner(selectedUserType?.userTypeName);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
