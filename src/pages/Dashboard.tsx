@@ -230,7 +230,7 @@ export default function Dashboard() {
 
       {/* KPI cards — refined */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {kpis.map((k, i) => {
+      {kpis.map((k, i) => {
           const Icon = k.icon;
           return (
             <motion.div
@@ -239,20 +239,22 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.3 }}
               whileHover={{ y: -2 }}
-              className="relative bg-card rounded-2xl border border-border shadow-card p-5 overflow-hidden group transition-shadow hover:shadow-elevated"
+              className={cn(
+                "relative rounded-2xl border p-4 overflow-hidden group transition-shadow hover:shadow-elevated",
+                k.cardBg,
+                k.cardBorder,
+                k.cardShadow
+              )}
             >
-              <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60 group-hover:opacity-100 transition-opacity", k.accent)} />
-              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-gradient-to-br from-white/40 to-transparent blur-2xl pointer-events-none" />
-
-              <div className="relative flex items-start justify-between mb-5">
-                <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center", k.iconBg)}>
-                  <Icon className={cn("w-5 h-5", k.iconColor)} />
+              <div className="relative flex items-start justify-between mb-3">
+                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", k.iconBg)}>
+                  <Icon className={cn("w-4 h-4", k.iconColor)} />
                 </div>
               </div>
-              <p className="relative text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+              <p className="relative text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                 {k.label}
               </p>
-              <p className="relative text-4xl font-bold text-foreground mb-2 tracking-tight">{k.value}</p>
+              <p className="relative text-3xl font-bold text-foreground mb-1.5 tracking-tight">{k.value}</p>
               <p className={cn("relative text-xs font-medium", trendTone[k.trend.tone])}>{k.trend.value}</p>
             </motion.div>
           );
