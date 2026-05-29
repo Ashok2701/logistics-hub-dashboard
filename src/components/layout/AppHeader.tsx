@@ -33,9 +33,6 @@ export function AppHeader() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const enabledPermissions = user?.permissions
-    ? Object.entries(user.permissions).filter(([, v]) => v).map(([k]) => k)
-    : [];
 
   return (
     <header className="h-[56px] bg-gradient-header backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 flex-shrink-0 sticky top-0 z-20 shadow-[0_1px_3px_rgb(0_0_0/0.1)] border-b border-white/10">
