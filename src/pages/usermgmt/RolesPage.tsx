@@ -49,7 +49,7 @@ export default function RolesPage() {
     if (!draft.roleName.trim()) { toast.error("Role name required"); return; }
     try {
       if (isNew) {
-        await rolesApi.create({ roleCode: draft.roleCode.trim(), roleName: draft.roleName.trim() });
+        await rolesApi.create({ roleCode: draft.roleCode.trim(), roleName: draft.roleName.trim(), active: draft.active });
         toast.success("Role created");
       } else {
         await rolesApi.update(draft.roleId, { roleCode: draft.roleCode.trim(), roleName: draft.roleName.trim(), active: draft.active });
