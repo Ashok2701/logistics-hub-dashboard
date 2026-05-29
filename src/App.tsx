@@ -56,6 +56,7 @@ function AppRoutes() {
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
+        <Route path="profile" element={<Profile />} />
         <Route path="fleet/categories" element={<VehicleCategories />} />
         <Route path="fleet/vehicles" element={<Vehicles />} />
         <Route path="fleet/drivers" element={<Drivers />} />
