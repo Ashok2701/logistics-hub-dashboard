@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import Profile from "@/pages/Profile";
 import VehicleCategories from "@/pages/fleet/VehicleCategories";
 import Vehicles from "@/pages/fleet/Vehicles";
 import Drivers from "@/pages/fleet/Drivers";
