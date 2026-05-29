@@ -225,12 +225,13 @@ export default function Dashboard() {
           </span>
           <span className="text-border">|</span>
           <span>{dateLabel}</span>
-              className={cn(
-                "px-3 h-8 rounded-md text-xs font-medium transition-colors",
-                preset === p
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
+        </div>
+      </motion.div>
+
+      {/* KPI cards — refined */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {kpis.map((k, i) => {
+          const Icon = k.icon;
           return (
             <motion.div
               key={k.label}
