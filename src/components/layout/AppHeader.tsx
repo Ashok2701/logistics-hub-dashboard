@@ -134,8 +134,8 @@ export function AppHeader() {
                 </div>
                 <button
                   onClick={() => {
-                    setShowProfile(true);
                     setShowUserMenu(false);
+                    navigate("/profile");
                   }}
                   className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-foreground hover:bg-muted transition-all duration-150"
                 >
