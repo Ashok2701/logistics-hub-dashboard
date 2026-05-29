@@ -1,15 +1,21 @@
-import { Truck, Compass, IdCard, CheckCircle2, User } from "lucide-react";
-import { PageHeader } from "@/components/shared/MetricCard";
+import { useMemo, useState } from "react";
+import { Truck, Compass, IdCard, CheckCircle2, User, MapPin, Calendar as CalendarIcon, ChevronDown, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
 
 type Trend = { value: string; tone: "positive" | "warning" | "neutral" };
 
-const kpis: { label: string; value: string; icon: any; trend: Trend }[] = [
-  { label: "Active Trips", value: "18", icon: Truck, trend: { value: "▲ 3 vs yesterday", tone: "positive" } },
-  { label: "Vehicles on Road", value: "22", icon: Compass, trend: { value: "▲ 81% utilised", tone: "positive" } },
-  { label: "Drivers on Duty", value: "24", icon: IdCard, trend: { value: "2 approaching hour limit", tone: "warning" } },
-  { label: "Deliveries Today", value: "41", icon: CheckCircle2, trend: { value: "▲ 94.1% on time", tone: "positive" } },
+const kpis: { label: string; value: string; icon: any; trend: Trend; accent: string; iconBg: string; iconColor: string }[] = [
+  { label: "Active Trips", value: "18", icon: Truck, trend: { value: "▲ 3 vs yesterday", tone: "positive" }, accent: "from-emerald-500/10 to-emerald-500/0", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+  { label: "Vehicles on Road", value: "22", icon: Compass, trend: { value: "▲ 81% utilised", tone: "positive" }, accent: "from-sky-500/10 to-sky-500/0", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
+  { label: "Drivers on Duty", value: "24", icon: IdCard, trend: { value: "2 approaching hour limit", tone: "warning" }, accent: "from-amber-500/10 to-amber-500/0", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+  { label: "Deliveries Today", value: "41", icon: CheckCircle2, trend: { value: "▲ 94.1% on time", tone: "positive" }, accent: "from-violet-500/10 to-violet-500/0", iconBg: "bg-violet-100", iconColor: "text-violet-600" },
 ];
 
 const fleetStatus = [
@@ -43,12 +49,186 @@ const trendTone: Record<Trend["tone"], string> = {
   neutral: "text-muted-foreground",
 };
 
+// Mock sites (replace with API later)
+const MOCK_SITES = [
+  { code: "HQ-WH01", name: "HQ Warehouse" },
+  { code: "ND-DC02", name: "North Distribution Center" },
+  { code: "SH-HB03", name: "South Hub" },
+  { code: "EL-TM04", name: "East Logistics Park" },
+  { code: "WC-RG05", name: "West Coast Regional" },
+];
+const ALL_CODES = MOCK_SITES.map((s) => s.code);
+
+type Preset = "today" | "week" | "month" | "custom";
+
+function startOfWeek(d: Date) {
+  const x = new Date(d);
+  const day = x.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  x.setDate(x.getDate() + diff);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function rangeForPreset(preset: Preset, custom?: { from?: Date; to?: Date }): { from: Date; to: Date } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (preset === "today") return { from: today, to: today };
+  if (preset === "week") return { from: startOfWeek(today), to: today };
+  if (preset === "month") return { from: startOfMonth(today), to: today };
+  return { from: custom?.from ?? today, to: custom?.to ?? today };
+}
+
 export default function Dashboard() {
+  const [selectedSites, setSelectedSites] = useState<string[]>([...ALL_CODES]);
+  const [preset, setPreset] = useState<Preset>("today");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+
+  const { from, to } = useMemo(() => rangeForPreset(preset, customRange), [preset, customRange]);
+
+  // Backend payload (mock — just log so it's visible)
+  const payload = useMemo(
+    () => ({
+      sites: (selectedSites.length === MOCK_SITES.length ? ALL_CODES : selectedSites).join(","),
+      startDate: format(from, "yyyy-MM-dd"),
+      endDate: format(to, "yyyy-MM-dd"),
+    }),
+    [selectedSites, from, to]
+  );
+
+  const toggleSite = (code: string) => {
+    setSelectedSites((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+  };
+  const toggleAll = () => {
+    setSelectedSites((prev) => (prev.length === MOCK_SITES.length ? [] : [...ALL_CODES]));
+  };
+
+  const sitesLabel =
+    selectedSites.length === 0
+      ? "No sites"
+      : selectedSites.length === MOCK_SITES.length
+      ? "All sites"
+      : `${selectedSites.length} site${selectedSites.length > 1 ? "s" : ""}`;
+
+  const presetLabels: Record<Preset, string> = {
+    today: "Today",
+    week: "This Week",
+    month: "This Month",
+    custom: "Custom Range",
+  };
+  const dateLabel =
+    preset === "custom" && customRange.from && customRange.to
+      ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d, yyyy")}`
+      : presetLabels[preset];
+
   return (
     <div>
-      <PageHeader title="Operations Overview" subtitle="Live fleet snapshot · own road fleet only" />
+      {/* Filters bar (replaces Operations Overview header) */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="bg-card rounded-xl border border-border shadow-card p-3 mb-6 flex flex-wrap items-center gap-3"
+      >
+        {/* Sites multi-select */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="h-10 gap-2 min-w-[200px] justify-between">
+              <span className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{sitesLabel}</span>
+              </span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <div className="p-2 border-b border-border">
+              <button
+                onClick={toggleAll}
+                className="w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-accent text-sm font-medium"
+              >
+                <span>Select all</span>
+                {selectedSites.length === MOCK_SITES.length && <Check className="w-4 h-4 text-primary" />}
+              </button>
+            </div>
+            <div className="max-h-64 overflow-y-auto p-1">
+              {MOCK_SITES.map((s) => {
+                const checked = selectedSites.includes(s.code);
+                return (
+                  <label
+                    key={s.code}
+                    className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent cursor-pointer"
+                  >
+                    <Checkbox checked={checked} onCheckedChange={() => toggleSite(s.code)} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate">{s.code}</span>
+                      <span className="text-[11px] text-muted-foreground truncate">{s.name}</span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
 
-      {/* KPI cards */}
+        {/* Date preset */}
+        <div className="flex items-center gap-1 bg-secondary/60 rounded-lg p-1">
+          {(["today", "week", "month", "custom"] as Preset[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPreset(p)}
+              className={cn(
+                "px-3 h-8 rounded-md text-xs font-medium transition-colors",
+                preset === p
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {presetLabels[p]}
+            </button>
+          ))}
+        </div>
+
+        {/* Custom range picker */}
+        {preset === "custom" && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 gap-2">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">
+                  {customRange.from && customRange.to
+                    ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d")}`
+                    : "Pick range"}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={{ from: customRange.from, to: customRange.to }}
+                onSelect={(r: any) => setCustomRange({ from: r?.from, to: r?.to })}
+                numberOfMonths={2}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
+
+        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          <CalendarIcon className="w-3.5 h-3.5" />
+          <span className="font-mono">
+            {format(from, "yyyy-MM-dd")} → {format(to, "yyyy-MM-dd")}
+          </span>
+          <span className="text-border">|</span>
+          <span>{dateLabel}</span>
+        </div>
+      </motion.div>
+
+      {/* KPI cards — refined */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {kpis.map((k, i) => {
           const Icon = k.icon;
@@ -58,14 +238,22 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.3 }}
-              className="bg-card rounded-xl border border-border shadow-card p-5"
+              whileHover={{ y: -2 }}
+              className="relative bg-card rounded-2xl border border-border shadow-card p-5 overflow-hidden group transition-shadow hover:shadow-elevated"
             >
-              <Icon className="w-6 h-6 text-muted-foreground/60 mb-4" />
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60 group-hover:opacity-100 transition-opacity", k.accent)} />
+              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-gradient-to-br from-white/40 to-transparent blur-2xl pointer-events-none" />
+
+              <div className="relative flex items-start justify-between mb-5">
+                <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center", k.iconBg)}>
+                  <Icon className={cn("w-5 h-5", k.iconColor)} />
+                </div>
+              </div>
+              <p className="relative text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
                 {k.label}
               </p>
-              <p className="text-4xl font-bold text-foreground mb-2">{k.value}</p>
-              <p className={cn("text-xs font-medium", trendTone[k.trend.tone])}>{k.trend.value}</p>
+              <p className="relative text-4xl font-bold text-foreground mb-2 tracking-tight">{k.value}</p>
+              <p className={cn("relative text-xs font-medium", trendTone[k.trend.tone])}>{k.trend.value}</p>
             </motion.div>
           );
         })}
@@ -73,7 +261,6 @@ export default function Dashboard() {
 
       {/* Fleet Status + Driver Hours Today */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Fleet Status */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,7 +305,6 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Driver Hours Today */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -158,6 +344,9 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </div>
+
+      {/* Hidden debug: payload that would be sent to backend */}
+      <div className="hidden">{JSON.stringify(payload)}</div>
     </div>
   );
 }
