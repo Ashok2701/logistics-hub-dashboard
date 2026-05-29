@@ -183,7 +183,7 @@ export default function Dashboard() {
               className={cn(
                 "px-3 h-8 rounded-md text-xs font-medium transition-colors",
                 preset === p
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
