@@ -183,7 +183,7 @@ export default function Dashboard() {
               className={cn(
                 "px-3 h-8 rounded-md text-xs font-medium transition-colors",
                 preset === p
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -230,7 +230,7 @@ export default function Dashboard() {
 
       {/* KPI cards — refined */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      {kpis.map((k, i) => {
+        {kpis.map((k, i) => {
           const Icon = k.icon;
           return (
             <motion.div
