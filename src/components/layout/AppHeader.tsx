@@ -11,7 +11,7 @@ export function AppHeader() {
   const navigate = useNavigate();
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+  
   const pickerRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
 
