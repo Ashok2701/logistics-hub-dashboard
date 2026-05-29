@@ -48,11 +48,19 @@ export default function RolesPage() {
     if (!draft.roleCode.trim()) { toast.error("Role code required"); return; }
     if (!draft.roleName.trim()) { toast.error("Role name required"); return; }
     try {
+      const activeVal = !!draft.active;
+      const payload: any = {
+        roleCode: draft.roleCode.trim(),
+        roleName: draft.roleName.trim(),
+        active: activeVal,
+        isActive: activeVal,
+        status: activeVal ? "active" : "inactive",
+      };
       if (isNew) {
-        await rolesApi.create({ roleCode: draft.roleCode.trim(), roleName: draft.roleName.trim(), active: draft.active });
+        await rolesApi.create(payload);
         toast.success("Role created");
       } else {
-        await rolesApi.update(draft.roleId, { roleCode: draft.roleCode.trim(), roleName: draft.roleName.trim(), active: draft.active });
+        await rolesApi.update(draft.roleId, payload);
         toast.success("Role updated");
       }
       setEditingId(null); setDraft(null); setIsNew(false); await load();
