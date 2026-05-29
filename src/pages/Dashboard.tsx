@@ -11,11 +11,11 @@ import { format } from "date-fns";
 
 type Trend = { value: string; tone: "positive" | "warning" | "neutral" };
 
-const kpis: { label: string; value: string; icon: any; trend: Trend; accent: string; iconBg: string; iconColor: string }[] = [
-  { label: "Active Trips", value: "18", icon: Truck, trend: { value: "▲ 3 vs yesterday", tone: "positive" }, accent: "from-emerald-500/10 to-emerald-500/0", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
-  { label: "Vehicles on Road", value: "22", icon: Compass, trend: { value: "▲ 81% utilised", tone: "positive" }, accent: "from-sky-500/10 to-sky-500/0", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
-  { label: "Drivers on Duty", value: "24", icon: IdCard, trend: { value: "2 approaching hour limit", tone: "warning" }, accent: "from-amber-500/10 to-amber-500/0", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  { label: "Deliveries Today", value: "41", icon: CheckCircle2, trend: { value: "▲ 94.1% on time", tone: "positive" }, accent: "from-violet-500/10 to-violet-500/0", iconBg: "bg-violet-100", iconColor: "text-violet-600" },
+const kpis: { label: string; value: string; icon: any; trend: Trend; cardBg: string; cardBorder: string; cardShadow: string; iconBg: string; iconColor: string }[] = [
+  { label: "Active Trips", value: "18", icon: Truck, trend: { value: "▲ 3 vs yesterday", tone: "positive" }, cardBg: "bg-emerald-50 dark:bg-emerald-950/30", cardBorder: "border-emerald-200 dark:border-emerald-800", cardShadow: "shadow-emerald-200/40 dark:shadow-emerald-900/20", iconBg: "bg-emerald-100 dark:bg-emerald-900/50", iconColor: "text-emerald-600 dark:text-emerald-400" },
+  { label: "Vehicles on Road", value: "22", icon: Compass, trend: { value: "▲ 81% utilised", tone: "positive" }, cardBg: "bg-sky-50 dark:bg-sky-950/30", cardBorder: "border-sky-200 dark:border-sky-800", cardShadow: "shadow-sky-200/40 dark:shadow-sky-900/20", iconBg: "bg-sky-100 dark:bg-sky-900/50", iconColor: "text-sky-600 dark:text-sky-400" },
+  { label: "Drivers on Duty", value: "24", icon: IdCard, trend: { value: "2 approaching hour limit", tone: "warning" }, cardBg: "bg-amber-50 dark:bg-amber-950/30", cardBorder: "border-amber-200 dark:border-amber-800", cardShadow: "shadow-amber-200/40 dark:shadow-amber-900/20", iconBg: "bg-amber-100 dark:bg-amber-900/50", iconColor: "text-amber-600 dark:text-amber-400" },
+  { label: "Deliveries Today", value: "41", icon: CheckCircle2, trend: { value: "▲ 94.1% on time", tone: "positive" }, cardBg: "bg-violet-50 dark:bg-violet-950/30", cardBorder: "border-violet-200 dark:border-violet-800", cardShadow: "shadow-violet-200/40 dark:shadow-violet-900/20", iconBg: "bg-violet-100 dark:bg-violet-900/50", iconColor: "text-violet-600 dark:text-violet-400" },
 ];
 
 const fleetStatus = [
