@@ -229,7 +229,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* KPI cards — refined */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       {kpis.map((k, i) => {
           const Icon = k.icon;
           return (
@@ -240,22 +240,22 @@ export default function Dashboard() {
               transition={{ delay: i * 0.05, duration: 0.3 }}
               whileHover={{ y: -2 }}
               className={cn(
-                "relative rounded-2xl border p-4 overflow-hidden group transition-shadow hover:shadow-elevated",
+                "relative rounded-xl border p-3 overflow-hidden group transition-shadow hover:shadow-elevated",
                 k.cardBg,
                 k.cardBorder,
                 k.cardShadow
               )}
             >
-              <div className="relative flex items-start justify-between mb-3">
-                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", k.iconBg)}>
+              <div className="relative flex items-start justify-between mb-2">
+                <div className={cn("w-8 h-8 rounded-md flex items-center justify-center", k.iconBg)}>
                   <Icon className={cn("w-4 h-4", k.iconColor)} />
                 </div>
               </div>
-              <p className="relative text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              <p className="relative text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
                 {k.label}
               </p>
-              <p className="relative text-3xl font-bold text-foreground mb-1.5 tracking-tight">{k.value}</p>
-              <p className={cn("relative text-xs font-medium", trendTone[k.trend.tone])}>{k.trend.value}</p>
+              <p className="relative text-2xl font-bold text-foreground mb-1 tracking-tight">{k.value}</p>
+              <p className={cn("relative text-[11px] font-medium", trendTone[k.trend.tone])}>{k.trend.value}</p>
             </motion.div>
           );
         })}
