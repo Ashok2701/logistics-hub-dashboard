@@ -1,16 +1,9 @@
-import { Bell, LogOut, User, Palette, Check, ChevronDown, UserCircle, X, Shield, Mail } from "lucide-react";
+import { Bell, LogOut, User, Palette, Check, ChevronDown, UserCircle } from "lucide-react";
 import { useTheme, COLOR_THEMES } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 export function AppHeader() {
   const { colorTheme, setColorTheme } = useTheme();
