@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import Profile from "@/pages/Profile";
 import VehicleCategories from "@/pages/fleet/VehicleCategories";
 import Vehicles from "@/pages/fleet/Vehicles";
 import Drivers from "@/pages/fleet/Drivers";
@@ -55,6 +56,7 @@ function AppRoutes() {
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
+        <Route path="profile" element={<Profile />} />
         <Route path="fleet/categories" element={<VehicleCategories />} />
         <Route path="fleet/vehicles" element={<Vehicles />} />
         <Route path="fleet/drivers" element={<Drivers />} />
