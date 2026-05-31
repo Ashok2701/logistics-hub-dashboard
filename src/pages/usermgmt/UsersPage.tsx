@@ -155,7 +155,7 @@ export default function UsersPage() {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         mobileNo: form.mobileNo.trim(),
-        roleId: form.roleId,
+        roleId: requiresSites ? form.roleId : "",
         userTypeId: form.userTypeId,
         sites: requiresSites ? form.sites : [],
       };
