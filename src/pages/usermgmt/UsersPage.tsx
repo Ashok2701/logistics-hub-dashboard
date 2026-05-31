@@ -155,7 +155,9 @@ export default function UsersPage() {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         mobileNo: form.mobileNo.trim(),
-        roleId: requiresSites ? form.roleId : "",
+        roleId: requiresSites
+          ? form.roleId
+          : (roles.find((r) => r.roleName?.trim().toLowerCase() !== "route planner")?.roleId ?? ""),
         userTypeId: form.userTypeId,
         sites: requiresSites ? form.sites : [],
       };
