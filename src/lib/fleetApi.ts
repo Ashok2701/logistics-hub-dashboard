@@ -55,3 +55,32 @@ export const vehicleCategoryApi = {
   remove: (code: string) =>
     request<void>(`/vehicle-category/${code}`, { method: "DELETE" }),
 };
+
+export interface Vehicle {
+  vehicleCode: string;
+  vehicleName: string;
+  vehicleNumber: string;
+  categoryCode: string;
+  brand: string;
+  model: string;
+  vehicleYear: number;
+  color: string;
+  capacityWeight: number;
+  capacityVolume: number;
+  volumeUnit: string;
+  weightUnit: string;
+  driverId: string;
+  active: boolean;
+  vehicleStatus: number;
+}
+
+export const vehicleApi = {
+  list: () => request<Vehicle[]>("/vehicles"),
+  get: (code: string) => request<Vehicle>(`/vehicles/${code}`),
+  create: (b: Partial<Vehicle>) =>
+    request<Vehicle>("/vehicles", { method: "POST", body: JSON.stringify(b) }),
+  update: (code: string, b: Partial<Vehicle>) =>
+    request<Vehicle>(`/vehicles/${code}`, { method: "PUT", body: JSON.stringify(b) }),
+  remove: (code: string) =>
+    request<void>(`/vehicles/${code}`, { method: "DELETE" }),
+};
