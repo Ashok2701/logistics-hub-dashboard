@@ -115,3 +115,26 @@ export const driverApi = {
   remove: (id: string) =>
     request<void>(`/drivers/${id}`, { method: "DELETE" }),
 };
+
+export interface VehicleDriverAssignment {
+  assignmentId: string;
+  vehicleCode: string;
+  vehicleName: string;
+  driverId: string;
+  driverName: string;
+  startDate: string;
+  endDate: string;
+  active: boolean;
+  remarks: string;
+}
+
+export const vehicleDriverAssignmentApi = {
+  list: () => request<VehicleDriverAssignment[]>("/vehicle-driver-assignment"),
+  get: (id: string) => request<VehicleDriverAssignment>(`/vehicle-driver-assignment/${id}`),
+  create: (b: Partial<VehicleDriverAssignment>) =>
+    request<VehicleDriverAssignment>("/vehicle-driver-assignment", { method: "POST", body: JSON.stringify(b) }),
+  update: (id: string, b: Partial<VehicleDriverAssignment>) =>
+    request<VehicleDriverAssignment>(`/vehicle-driver-assignment/${id}`, { method: "PUT", body: JSON.stringify(b) }),
+  remove: (id: string) =>
+    request<void>(`/vehicle-driver-assignment/${id}`, { method: "DELETE" }),
+};
