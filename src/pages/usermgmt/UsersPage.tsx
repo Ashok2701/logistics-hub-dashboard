@@ -145,8 +145,8 @@ export default function UsersPage() {
     if (!form.username.trim()) { toast.error("Username required"); return; }
     if (!editingId && !form.password.trim()) { toast.error("Password required"); return; }
     if (!form.fullName.trim()) { toast.error("Full name required"); return; }
-    if (!form.roleId) { toast.error("Role required"); return; }
     if (!form.userTypeId) { toast.error("User type required"); return; }
+    if (requiresSites && !form.roleId) { toast.error("Role required"); return; }
     if (requiresSites && form.sites.length === 0) { toast.error("Select at least one site"); return; }
     setSaving(true);
     try {
