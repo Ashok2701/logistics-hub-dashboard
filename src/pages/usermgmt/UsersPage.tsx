@@ -145,8 +145,8 @@ export default function UsersPage() {
     if (!form.username.trim()) { toast.error("Username required"); return; }
     if (!editingId && !form.password.trim()) { toast.error("Password required"); return; }
     if (!form.fullName.trim()) { toast.error("Full name required"); return; }
-    if (!form.roleId) { toast.error("Role required"); return; }
     if (!form.userTypeId) { toast.error("User type required"); return; }
+    if (requiresSites && !form.roleId) { toast.error("Role required"); return; }
     if (requiresSites && form.sites.length === 0) { toast.error("Select at least one site"); return; }
     setSaving(true);
     try {
@@ -155,7 +155,7 @@ export default function UsersPage() {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         mobileNo: form.mobileNo.trim(),
-        roleId: form.roleId,
+        roleId: requiresSites ? form.roleId : "",
         userTypeId: form.userTypeId,
         sites: requiresSites ? form.sites : [],
       };
@@ -215,18 +215,20 @@ export default function UsersPage() {
               <input value={form.mobileNo} onChange={(e) => upd("mobileNo", e.target.value)}
                 className="form-input" placeholder="9999999999" />
             </Field>
-            <Field label="Role *">
-              <select value={form.roleId} onChange={(e) => upd("roleId", e.target.value)} className="form-input">
-                <option value="">— Select role —</option>
-                {roles.map((r) => <option key={r.roleId} value={r.roleId}>{r.roleName}</option>)}
-              </select>
-            </Field>
             <Field label="User Type *">
-              <select value={form.userTypeId} onChange={(e) => { upd("userTypeId", e.target.value); upd("sites", []); }} className="form-input">
+              <select value={form.userTypeId} onChange={(e) => { upd("userTypeId", e.target.value); upd("sites", []); upd("roleId", ""); }} className="form-input">
                 <option value="">— Select user type —</option>
                 {userTypes.map((t) => <option key={t.userTypeId} value={t.userTypeId}>{t.userTypeName}</option>)}
               </select>
             </Field>
+            {requiresSites && (
+              <Field label="Role *">
+                <select value={form.roleId} onChange={(e) => upd("roleId", e.target.value)} className="form-input">
+                  <option value="">— Select role —</option>
+                  {roles.map((r) => <option key={r.roleId} value={r.roleId}>{r.roleName}</option>)}
+                </select>
+              </Field>
+            )}
             {requiresSites && (
               <Field label="Assigned Sites *" className="md:col-span-2">
                 <MultiSiteSelect value={form.sites} onChange={(v) => upd("sites", v)} options={sites} />
