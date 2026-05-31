@@ -150,14 +150,18 @@ export default function UsersPage() {
     if (requiresSites && form.sites.length === 0) { toast.error("Select at least one site"); return; }
     setSaving(true);
     try {
+      let resolvedRoleId = form.roleId;
+      if (!requiresSites) {
+        const nonRP = roles.find((r) => r.roleName?.trim().toLowerCase() !== "route planner");
+        resolvedRoleId = nonRP?.roleId ?? roles[0]?.roleId ?? "";
+      }
+      if (!resolvedRoleId) { toast.error("No role available to assign. Please create a role first."); setSaving(false); return; }
       const base: Record<string, any> = {
         username: form.username.trim(),
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         mobileNo: form.mobileNo.trim(),
-        roleId: requiresSites
-          ? form.roleId
-          : (roles.find((r) => r.roleName?.trim().toLowerCase() !== "route planner")?.roleId ?? ""),
+        roleId: resolvedRoleId,
         userTypeId: form.userTypeId,
         sites: requiresSites ? form.sites : [],
       };
