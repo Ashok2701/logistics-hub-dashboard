@@ -138,3 +138,35 @@ export const vehicleDriverAssignmentApi = {
   remove: (id: string) =>
     request<void>(`/vehicle-driver-assignment/${id}`, { method: "DELETE" }),
 };
+
+export interface SyncStatus {
+  objectCode: string;
+  objectName: string;
+  x3Count: number;
+  postgresCount: number;
+  differenceCount: number;
+  status: "SUCCESS" | "PARTIAL" | "FAILED" | "RUNNING" | string;
+  lastSyncTime: string;
+}
+
+export interface SyncLog {
+  syncId: string;
+  objectCode: string;
+  startedAt: string;
+  completedAt: string;
+  x3Count: number;
+  postgresBeforeCount: number;
+  postgresAfterCount: number;
+  insertedCount: number;
+  updatedCount: number;
+  failedCount: number;
+  status: string;
+  errorMessage: string | null;
+}
+
+export const syncApi = {
+  status: () => request<SyncStatus[]>("/sync/status"),
+  sync: (objectCode: string) => request<any>(`/sync/${objectCode}`, { method: "POST" }),
+  syncAll: () => request<any>("/sync/all", { method: "POST" }),
+  logs: (objectCode: string) => request<SyncLog[]>(`/sync/logs/${objectCode}`),
+};
