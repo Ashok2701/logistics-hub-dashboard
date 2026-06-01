@@ -34,11 +34,11 @@ const menuItems: MenuItem[] = [
   {
     label: "User Management", icon: Users,
     children: [
-      { label: "Users", icon: Users, path: "/user-management/users" },
       { label: "Roles", icon: Shield, path: "/user-management/roles" },
       { label: "Modules", icon: LayoutGrid, path: "/user-management/modules" },
-      { label: "User Types", icon: UserCog, path: "/user-management/user-types" },
       { label: "Role-Modules", icon: KeyRound, path: "/user-management/role-modules" },
+      { label: "User Types", icon: UserCog, path: "/user-management/user-types" },
+      { label: "Users", icon: Users, path: "/user-management/users" },
     ],
   },
   {
