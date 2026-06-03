@@ -194,6 +194,8 @@ export default function SiteManagement() {
               </div>
             </Section>
 
+            <Separator />
+
             {/* ── Section 2: Address (left) + Latitude/Longitude + Map (right) ── */}
             <Section title="Address">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
