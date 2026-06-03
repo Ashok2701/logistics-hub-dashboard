@@ -185,7 +185,17 @@ export const syncApi = {
 export interface Site {
   siteCode: string;
   siteName: string;
+  shortName?: string | null;
+  addressCode?: string | null;
+  addressDescription?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  addressLine3?: string | null;
   city: string | null;
+  stateCode?: string | null;
+  postalCode?: string | null;
+  countryCode?: string | null;
+  countryName?: string | null;
   latitude: number | null;
   longitude: number | null;
   tmsFlag: boolean;
@@ -195,6 +205,7 @@ export interface Site {
   maxVehicleCapacity?: number | null;
   remarks?: string | null;
   updatedBy?: string | null;
+  syncedAt?: string | null;
 }
 
 export interface SiteUpdatePayload {
