@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
-import { Plus, Search, FileText, RefreshCw, Check, X, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, RefreshCw, Check, X, Edit, Trash2, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { documentConfigApi, type DocumentConfig } from "@/lib/documentConfigApi";
 
 const DOC_OPTIONS = [
   "Sales Order",
