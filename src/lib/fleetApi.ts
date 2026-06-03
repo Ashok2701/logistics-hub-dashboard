@@ -1,14 +1,16 @@
 // Fleet module API client
 const API_BASE =
   (import.meta as any).env?.VITE_FLEET_API_BASE ?? "https://tmssolutions.tema-systems.com:8040/api";
+const SYNC_API_BASE =
+  (import.meta as any).env?.VITE_SYNC_API_BASE ?? "http://localhost:8082/api";
 
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("vanguard-token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-async function request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+async function requestBase<T = any>(base: string, path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${base}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -30,6 +32,15 @@ async function request<T = any>(path: string, options: RequestInit = {}): Promis
   if (!text) return undefined as T;
   try { return JSON.parse(text) as T; } catch { return text as unknown as T; }
 }
+
+async function request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+  return requestBase<T>(API_BASE, path, options);
+}
+
+async function syncRequest<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+  return requestBase<T>(SYNC_API_BASE, path, options);
+}
+
 
 export interface VehicleCategory {
   categoryCode: string;
@@ -165,8 +176,8 @@ export interface SyncLog {
 }
 
 export const syncApi = {
-  status: () => request<SyncStatus[]>("/sync/status"),
-  sync: (objectCode: string) => request<any>(`/sync/${objectCode}`, { method: "POST" }),
-  syncAll: () => request<any>("/sync/all", { method: "POST" }),
-  logs: (objectCode: string) => request<SyncLog[]>(`/sync/logs/${objectCode}`),
+  status: () => syncRequest<SyncStatus[]>("/sync/status"),
+  sync: (objectCode: string) => syncRequest<any>(`/sync/${objectCode}`, { method: "POST" }),
+  syncAll: () => syncRequest<any>("/sync/all", { method: "POST" }),
+  logs: (objectCode: string) => syncRequest<SyncLog[]>(`/sync/logs/${objectCode}`),
 };
