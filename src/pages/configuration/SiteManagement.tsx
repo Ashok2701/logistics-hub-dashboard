@@ -93,12 +93,17 @@ export default function SiteManagement() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return sites.filter((s) =>
-      (s.siteName ?? "").toLowerCase().includes(q) ||
-      (s.siteCode ?? "").toLowerCase().includes(q) ||
-      (s.city ?? "").toLowerCase().includes(q),
-    );
-  }, [sites, search]);
+    return sites.filter((s) => {
+      const matchesSearch =
+        (s.siteName ?? "").toLowerCase().includes(q) ||
+        (s.siteCode ?? "").toLowerCase().includes(q) ||
+        (s.city ?? "").toLowerCase().includes(q);
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" ? !!s.tmsFlag : !s.tmsFlag);
+      return matchesSearch && matchesStatus;
+    });
+  }, [sites, search, statusFilter]);
   const sort = useSortable(filtered);
   const sorted = sort.sorted;
 
