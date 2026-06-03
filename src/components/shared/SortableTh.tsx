@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, type CSSProperties } from "react";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TableHead } from "@/components/ui/table";
@@ -13,6 +13,7 @@ interface BaseProps {
   sortKey: string;
   sort: SortApi;
   className?: string;
+  style?: CSSProperties;
   align?: "left" | "right" | "center";
   children: ReactNode;
 }
@@ -24,10 +25,10 @@ function SortIndicator({ active, dir }: { active: boolean; dir: "asc" | "desc" }
     : <ChevronDown className="w-3.5 h-3.5 text-primary" />;
 }
 
-export function SortableTh({ sortKey, sort, className, align = "left", children }: BaseProps) {
+export function SortableTh({ sortKey, sort, className, style, align = "left", children }: BaseProps) {
   const active = sort.sortKey === sortKey;
   return (
-    <th className={cn("select-none", className)}>
+    <th className={cn("select-none", className)} style={style}>
       <button
         type="button"
         onClick={() => sort.toggleSort(sortKey)}
@@ -46,10 +47,10 @@ export function SortableTh({ sortKey, sort, className, align = "left", children 
 }
 
 // For shadcn <Table> usage with TableHead
-export function SortableTableHead({ sortKey, sort, className, align = "left", children }: BaseProps) {
+export function SortableTableHead({ sortKey, sort, className, style, align = "left", children }: BaseProps) {
   const active = sort.sortKey === sortKey;
   return (
-    <TableHead className={cn("select-none", className)}>
+    <TableHead className={cn("select-none", className)} style={style}>
       <button
         type="button"
         onClick={() => sort.toggleSort(sortKey)}
