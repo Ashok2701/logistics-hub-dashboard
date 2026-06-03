@@ -65,6 +65,7 @@ const catColors: Record<Supplier["category"], string> = {
 export default function SupplierManagement() {
   const [items, setItems] = useState<Supplier[]>(seedSuppliers);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<ViewMode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -72,7 +73,9 @@ export default function SupplierManagement() {
 
   const filtered = items.filter((s) => {
     const q = search.toLowerCase();
-    return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.contactPerson.toLowerCase().includes(q);
+    const matchesSearch = s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.contactPerson.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === "all" || s.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
   const sort = useSortable(filtered);
   const sorted = sort.sorted;
