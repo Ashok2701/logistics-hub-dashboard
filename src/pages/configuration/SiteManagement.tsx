@@ -183,69 +183,69 @@ export default function SiteManagement() {
   if (view === "form" && editing) {
     return (
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button onClick={goBack} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150">
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">Edit Site</h1>
-              <p className="text-xs text-muted-foreground">{editing.siteCode} — {editing.siteName}</p>
+        {/* Sticky header + tab nav (always visible while scrolling) */}
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur border-b border-border">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150">
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">Edit Site</h1>
+                <p className="text-xs text-muted-foreground">{editing.siteCode} — {editing.siteName}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150 disabled:opacity-50">Cancel</button>
+              <button onClick={handleLocate} disabled={locating || saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50">
+                {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Locate className="w-4 h-4" />} Locate
+              </button>
+              <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}Save
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150 disabled:opacity-50">Cancel</button>
-            <button onClick={handleLocate} disabled={locating || saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50">
-              {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Locate className="w-4 h-4" />} Locate
-            </button>
-            <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}Save
-            </button>
+          <div className="flex items-center gap-1 h-11">
+            {[
+              { id: "general", label: "General" },
+              { id: "address", label: "Address" },
+              { id: "comments", label: "Comments" },
+            ].map((t) => {
+              const active = activeSection === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    const el = document.getElementById(`section-${t.id}`);
+                    if (el) {
+                      setActiveSection(t.id);
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }}
+                  className={cn(
+                    "relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-200",
+                    active
+                      ? "bg-primary/10 text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+                  )}
+                >
+                  {t.label}
+                  {active && (
+                    <motion.span
+                      layoutId="active-section-underline"
+                      className="absolute left-2 right-2 -bottom-[5px] h-0.5 bg-primary rounded-full"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
-          {/* Sticky section nav */}
-          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur border-b border-border">
-            <div className="flex items-center gap-1 px-4 h-12">
-              {[
-                { id: "general", label: "General" },
-                { id: "address", label: "Address" },
-                { id: "comments", label: "Comments" },
-              ].map((t) => {
-                const active = activeSection === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      const el = document.getElementById(`section-${t.id}`);
-                      if (el) {
-                        setActiveSection(t.id);
-                        el.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }
-                    }}
-                    className={cn(
-                      "relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-200",
-                      active
-                        ? "bg-primary/10 text-primary shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
-                    )}
-                  >
-                    {t.label}
-                    {active && (
-                      <motion.span
-                        layoutId="active-section-underline"
-                        className="absolute left-2 right-2 -bottom-[1px] h-0.5 bg-primary rounded-full"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
+        <div className="bg-card rounded-xl border border-border shadow-card mt-6">
           <div className="p-6 space-y-8 scroll-smooth">
-            <section id="section-general" className="scroll-mt-20">
+            <section id="section-general" className="scroll-mt-40">
+
               <Section title="Site Information">
                 <div className="grid grid-cols-12 gap-3 items-end">
                   <div className="col-span-12 sm:col-span-2">
