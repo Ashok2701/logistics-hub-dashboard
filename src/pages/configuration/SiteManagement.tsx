@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, ArrowLeft, MapPin, Pencil, RefreshCw, Loader2 } from "lucide-react";
+import { Search, ArrowLeft, MapPin, Pencil, RefreshCw, Loader2, Locate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { siteApi, type Site } from "@/lib/fleetApi";
@@ -34,6 +34,7 @@ export default function SiteManagement() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Site | null>(null);
@@ -108,6 +109,40 @@ export default function SiteManagement() {
     return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
   }, [form.latitude, form.longitude, hasCoords]);
 
+  // ── Geocode via OpenStreetMap Nominatim ──────────────────────────
+  const handleLocate = async () => {
+    if (!editing) return;
+    const parts = [
+      editing.addressLine1, editing.addressLine2, editing.addressLine3,
+      editing.city, editing.stateCode, editing.postalCode,
+      editing.countryName || editing.countryCode,
+    ].filter((p) => p && String(p).trim() !== "");
+    if (parts.length === 0) {
+      toast({ title: "No address available", description: "Cannot locate without address details.", variant: "destructive" });
+      return;
+    }
+    setLocating(true);
+    try {
+      const query = encodeURIComponent(parts.join(", "));
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error(`Geocoding failed (${res.status})`);
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        toast({ title: "Location not found", description: "No coordinates found for this address.", variant: "destructive" });
+        return;
+      }
+      const { lat, lon } = data[0];
+      setForm((f) => ({ ...f, latitude: String(lat), longitude: String(lon) }));
+      toast({ title: "Coordinates updated", description: `${lat}, ${lon}` });
+    } catch (err: any) {
+      toast({ title: "Failed to locate", description: err?.message ?? String(err), variant: "destructive" });
+    } finally {
+      setLocating(false);
+    }
+  };
+
   // ── Form View ─────────────────────────────────────────────────────
   if (view === "form" && editing) {
     return (
@@ -124,88 +159,90 @@ export default function SiteManagement() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150 disabled:opacity-50">Cancel</button>
+            <button onClick={handleLocate} disabled={locating || saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50">
+              {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Locate className="w-4 h-4" />} Locate
+            </button>
             <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}Save Changes
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}Save
             </button>
           </div>
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-card">
-          <div className="p-6 space-y-6">
-            <Section title="Site Information">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Field label="Site Code">
-                  <Input value={editing.siteCode} readOnly className="h-9 bg-secondary/40 font-mono" />
-                </Field>
-                <Field label="Short Name">
-                  <Input value={editing.shortName ?? ""} readOnly className="h-9 bg-secondary/40" />
-                </Field>
-                <div className="sm:col-span-2">
-                  <Field label="Description">
-                    <Input value={editing.siteName ?? ""} readOnly className="h-9 bg-secondary/40" />
-                  </Field>
-                </div>
-                <Field label="TMS Active">
-                  <div className="flex items-center gap-3 h-9">
-                    <Switch checked={form.tmsFlag} onCheckedChange={(v) => setForm((f) => ({ ...f, tmsFlag: v }))} />
-                    <span className="text-sm">{form.tmsFlag ? "Active" : "Inactive"}</span>
+          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* ── Left column: Site info + Address (read-only) ── */}
+            <div className="space-y-6">
+              <Section title="Site Information">
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-12 sm:col-span-3">
+                    <Field label="Site Code"><ReadOnlyInput value={editing.siteCode} mono /></Field>
                   </div>
-                </Field>
-              </div>
-            </Section>
+                  <div className="col-span-12 sm:col-span-4">
+                    <Field label="Short Name"><ReadOnlyInput value={editing.shortName ?? ""} /></Field>
+                  </div>
+                  <div className="col-span-12 sm:col-span-5">
+                    <Field label="Description"><ReadOnlyInput value={editing.siteName ?? ""} /></Field>
+                  </div>
+                  <div className="col-span-12">
+                    <Field label="TMS Flag">
+                      <div className="flex items-center gap-3 h-9">
+                        <Switch checked={form.tmsFlag} onCheckedChange={(v) => setForm((f) => ({ ...f, tmsFlag: v }))} />
+                        <span className="text-sm text-primary font-medium">{form.tmsFlag ? "Active" : "Inactive"}</span>
+                      </div>
+                    </Field>
+                  </div>
+                </div>
+              </Section>
 
-            <Section title="Address">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Field label="Address Code">
-                  <Input value={editing.addressCode ?? ""} readOnly className="h-9 bg-secondary/40 font-mono" />
-                </Field>
-                <div className="sm:col-span-2 lg:col-span-3">
-                  <Field label="Address Description">
-                    <Input value={editing.addressDescription ?? ""} readOnly className="h-9 bg-secondary/40" />
-                  </Field>
+              <Section title="Address">
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-12 sm:col-span-4">
+                    <Field label="Address Code"><ReadOnlyInput value={editing.addressCode ?? ""} mono /></Field>
+                  </div>
+                  <div className="col-span-12 sm:col-span-8">
+                    <Field label="Address Description"><ReadOnlyInput value={editing.addressDescription ?? ""} /></Field>
+                  </div>
+                  <div className="col-span-12">
+                    <Field label="Address Line 1"><ReadOnlyInput value={editing.addressLine1 ?? ""} /></Field>
+                  </div>
+                  <div className="col-span-12">
+                    <Field label="Address Line 2"><ReadOnlyInput value={editing.addressLine2 ?? ""} /></Field>
+                  </div>
+                  <div className="col-span-12">
+                    <Field label="Address Line 3"><ReadOnlyInput value={editing.addressLine3 ?? ""} /></Field>
+                  </div>
+                  <div className="col-span-6 sm:col-span-3">
+                    <Field label="City"><ReadOnlyInput value={editing.city ?? ""} /></Field>
+                  </div>
+                  <div className="col-span-6 sm:col-span-3">
+                    <Field label="State"><ReadOnlyInput value={editing.stateCode ?? ""} mono /></Field>
+                  </div>
+                  <div className="col-span-6 sm:col-span-3">
+                    <Field label="Postal Code"><ReadOnlyInput value={editing.postalCode ?? ""} mono /></Field>
+                  </div>
+                  <div className="col-span-6 sm:col-span-3">
+                    <Field label="Country">
+                      <ReadOnlyInput
+                        value={
+                          editing.countryName
+                            ? `${editing.countryName}${editing.countryCode ? ` (${editing.countryCode})` : ""}`
+                            : editing.countryCode ?? ""
+                        }
+                      />
+                    </Field>
+                  </div>
                 </div>
-                <div className="sm:col-span-2 lg:col-span-4">
-                  <Field label="Address Line 1">
-                    <Input value={editing.addressLine1 ?? ""} readOnly className="h-9 bg-secondary/40" />
-                  </Field>
-                </div>
-                <div className="sm:col-span-2 lg:col-span-4">
-                  <Field label="Address Line 2">
-                    <Input value={editing.addressLine2 ?? ""} readOnly className="h-9 bg-secondary/40" />
-                  </Field>
-                </div>
-                <div className="sm:col-span-2 lg:col-span-4">
-                  <Field label="Address Line 3">
-                    <Input value={editing.addressLine3 ?? ""} readOnly className="h-9 bg-secondary/40" />
-                  </Field>
-                </div>
-                <Field label="City">
-                  <Input value={editing.city ?? ""} readOnly className="h-9 bg-secondary/40" />
-                </Field>
-                <Field label="State Code">
-                  <Input value={editing.stateCode ?? ""} readOnly className="h-9 bg-secondary/40 font-mono" />
-                </Field>
-                <Field label="Postal Code">
-                  <Input value={editing.postalCode ?? ""} readOnly className="h-9 bg-secondary/40 font-mono" />
-                </Field>
-                <Field label="Country">
-                  <Input
-                    value={
-                      editing.countryName
-                        ? `${editing.countryName}${editing.countryCode ? ` (${editing.countryCode})` : ""}`
-                        : editing.countryCode ?? ""
-                    }
-                    readOnly
-                    className="h-9 bg-secondary/40"
-                  />
-                </Field>
-              </div>
-            </Section>
+              </Section>
 
+              <Section title="Remarks">
+                <Textarea value={form.remarks} onChange={(e) => setForm((f) => ({ ...f, remarks: e.target.value }))} placeholder="Notes about this site…" rows={3} />
+              </Section>
+            </div>
 
-            <Section title="Location">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="space-y-4">
+            {/* ── Right column: Coordinates + Map ── */}
+            <div className="space-y-4">
+              <Section title="Site Location">
+                <div className="grid grid-cols-2 gap-3">
                   <Field label="Latitude">
                     <Input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))} placeholder="e.g. 34.0522" className="h-9" />
                   </Field>
@@ -213,27 +250,28 @@ export default function SiteManagement() {
                     <Input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))} placeholder="e.g. -118.2437" className="h-9" />
                   </Field>
                 </div>
-                <div className="lg:col-span-2 rounded-lg border border-border overflow-hidden bg-secondary/30 min-h-[220px] flex items-center justify-center">
-                  {mapUrl ? (
-                    <iframe title="Site location" src={mapUrl} className="w-full h-[220px] border-0" loading="lazy" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <MapPin className="w-8 h-8 opacity-30" />
-                      <span className="text-xs">Enter latitude & longitude to preview location</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Section>
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  Click <span className="text-primary font-medium">Locate</span> to auto-fill coordinates from the address above.
+                </p>
+              </Section>
 
-            <Section title="Remarks">
-              <Textarea value={form.remarks} onChange={(e) => setForm((f) => ({ ...f, remarks: e.target.value }))} placeholder="Notes about this site…" rows={3} />
-            </Section>
+              <div className="rounded-lg border border-border overflow-hidden bg-secondary/30 h-[420px] flex items-center justify-center">
+                {mapUrl ? (
+                  <iframe title="Site location" src={mapUrl} className="w-full h-full border-0" loading="lazy" />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <MapPin className="w-10 h-10 opacity-30" />
+                    <span className="text-xs">Enter coordinates or click Locate to preview the site</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
     );
   }
+
 
   // ── List View ─────────────────────────────────────────────────────
   return (
@@ -312,5 +350,11 @@ function Field({ label, required, error, children }: { label: string; required?:
       {children}
       {error && <p className="text-[11px] text-destructive">{error}</p>}
     </div>
+  );
+}
+
+function ReadOnlyInput({ value, mono }: { value: string; mono?: boolean }) {
+  return (
+    <Input value={value} readOnly className={cn("h-9 bg-secondary/40 text-foreground", mono && "font-mono")} />
   );
 }
