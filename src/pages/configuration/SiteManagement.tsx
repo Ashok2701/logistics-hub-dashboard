@@ -42,6 +42,26 @@ export default function SiteManagement() {
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Site | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [activeSection, setActiveSection] = useState<string>("general");
+
+  useEffect(() => {
+    if (view !== "form") return;
+    const ids = ["general", "address", "comments"];
+    const els = ids.map((id) => document.getElementById(`section-${id}`)).filter(Boolean) as HTMLElement[];
+    if (els.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) {
+          const id = visible[0].target.id.replace("section-", "");
+          setActiveSection(id);
+        }
+      },
+      { rootMargin: "-80px 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [view]);
 
   const loadSites = async () => {
     setLoading(true);
