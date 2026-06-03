@@ -68,7 +68,7 @@ export default function SiteManagement() {
       },
       {
         root: scrollRoot,
-        rootMargin: "-80px 0px -55% 0px",
+        rootMargin: "-130px 0px -55% 0px",
         threshold: [0, 0.25, 0.5, 1],
       },
     );
