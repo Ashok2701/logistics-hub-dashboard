@@ -372,8 +372,8 @@ export default function SiteManagement() {
           <Input placeholder="Search sites…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm focus-visible:ring-primary/30" />
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2">
-            <Label className="text-sm font-medium text-muted-foreground whitespace-nowrap">TMS Status</Label>
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">TMS Status</Label>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
               <SelectTrigger className="h-9 w-36 rounded-lg bg-secondary/50 border-border/50 text-sm">
                 <SelectValue placeholder="TMS Status" />
