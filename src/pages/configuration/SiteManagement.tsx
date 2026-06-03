@@ -169,32 +169,34 @@ export default function SiteManagement() {
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-card">
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* ── Left column: Site info + Address (read-only) ── */}
-            <div className="space-y-6">
-              <Section title="Site Information">
-                <div className="grid grid-cols-12 gap-3">
-                  <div className="col-span-12 sm:col-span-3">
-                    <Field label="Site Code"><ReadOnlyInput value={editing.siteCode} mono /></Field>
-                  </div>
-                  <div className="col-span-12 sm:col-span-4">
-                    <Field label="Short Name"><ReadOnlyInput value={editing.shortName ?? ""} /></Field>
-                  </div>
-                  <div className="col-span-12 sm:col-span-5">
-                    <Field label="Description"><ReadOnlyInput value={editing.siteName ?? ""} /></Field>
-                  </div>
-                  <div className="col-span-12">
-                    <Field label="TMS Flag">
-                      <div className="flex items-center gap-3 h-9">
-                        <Switch checked={form.tmsFlag} onCheckedChange={(v) => setForm((f) => ({ ...f, tmsFlag: v }))} />
-                        <span className="text-sm text-primary font-medium">{form.tmsFlag ? "Active" : "Inactive"}</span>
-                      </div>
-                    </Field>
-                  </div>
+          <div className="p-6 space-y-8">
+            {/* ── Section 1: Site Information (single row) ── */}
+            <Section title="Site Information">
+              <div className="grid grid-cols-12 gap-3 items-end">
+                <div className="col-span-12 sm:col-span-2">
+                  <Field label="Site Code"><ReadOnlyInput value={editing.siteCode} mono /></Field>
                 </div>
-              </Section>
+                <div className="col-span-12 sm:col-span-2">
+                  <Field label="Short Name"><ReadOnlyInput value={editing.shortName ?? ""} /></Field>
+                </div>
+                <div className="col-span-12 sm:col-span-5">
+                  <Field label="Description"><ReadOnlyInput value={editing.siteName ?? ""} /></Field>
+                </div>
+                <div className="col-span-12 sm:col-span-3">
+                  <Field label="TMS Flag">
+                    <div className="flex items-center gap-3 h-9">
+                      <Switch checked={form.tmsFlag} onCheckedChange={(v) => setForm((f) => ({ ...f, tmsFlag: v }))} />
+                      <span className="text-sm text-primary font-medium">{form.tmsFlag ? "Active" : "Inactive"}</span>
+                    </div>
+                  </Field>
+                </div>
+              </div>
+            </Section>
 
-              <Section title="Address">
+            {/* ── Section 2: Address (left) + Latitude/Longitude + Map (right) ── */}
+            <Section title="Address">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Address details */}
                 <div className="grid grid-cols-12 gap-3">
                   <div className="col-span-12 sm:col-span-4">
                     <Field label="Address Code"><ReadOnlyInput value={editing.addressCode ?? ""} mono /></Field>
@@ -232,40 +234,35 @@ export default function SiteManagement() {
                     </Field>
                   </div>
                 </div>
-              </Section>
 
-              <Section title="Remarks">
-                <Textarea value={form.remarks} onChange={(e) => setForm((f) => ({ ...f, remarks: e.target.value }))} placeholder="Notes about this site…" rows={3} />
-              </Section>
-            </div>
-
-            {/* ── Right column: Coordinates + Map ── */}
-            <div className="space-y-4">
-              <Section title="Site Location">
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Latitude">
-                    <Input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))} placeholder="e.g. 34.0522" className="h-9" />
-                  </Field>
-                  <Field label="Longitude">
-                    <Input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))} placeholder="e.g. -118.2437" className="h-9" />
-                  </Field>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-2">
-                  Click <span className="text-primary font-medium">Locate</span> to auto-fill coordinates from the address above.
-                </p>
-              </Section>
-
-              <div className="rounded-lg border border-border overflow-hidden bg-secondary/30 h-[420px] flex items-center justify-center">
-                {mapUrl ? (
-                  <iframe title="Site location" src={mapUrl} className="w-full h-full border-0" loading="lazy" />
-                ) : (
-                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                    <MapPin className="w-10 h-10 opacity-30" />
-                    <span className="text-xs">Enter coordinates or click Locate to preview the site</span>
+                {/* Latitude + Longitude + Map */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Latitude">
+                      <Input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))} placeholder="e.g. 34.0522" className="h-9" />
+                    </Field>
+                    <Field label="Longitude">
+                      <Input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))} placeholder="e.g. -118.2437" className="h-9" />
+                    </Field>
                   </div>
-                )}
+                  <div className="rounded-lg border border-border overflow-hidden bg-secondary/30 h-[340px] flex items-center justify-center">
+                    {mapUrl ? (
+                      <iframe title="Site location" src={mapUrl} className="w-full h-full border-0" loading="lazy" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <MapPin className="w-10 h-10 opacity-30" />
+                        <span className="text-xs">Click <span className="text-primary font-medium">Locate</span> to plot the site on the map</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            </Section>
+
+            {/* ── Section 3: Comments / Remarks ── */}
+            <Section title="Comments">
+              <Textarea value={form.remarks} onChange={(e) => setForm((f) => ({ ...f, remarks: e.target.value }))} placeholder="Notes / remarks about this site…" rows={4} />
+            </Section>
           </div>
         </div>
       </motion.div>
