@@ -41,29 +41,6 @@ async function syncRequest<T = any>(path: string, options: RequestInit = {}): Pr
   return requestBase<T>(SYNC_API_BASE, path, options);
 }
 
-async function _unused_request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...authHeaders(),
-      ...(options.headers || {}),
-    },
-  });
-  if (!res.ok) {
-    let msg = `Request failed (${res.status})`;
-    try {
-      const err = await res.json();
-      msg = err.message || err.error || msg;
-    } catch {}
-    throw new Error(msg);
-  }
-  if (res.status === 204) return undefined as T;
-  const text = await res.text();
-  if (!text) return undefined as T;
-  try { return JSON.parse(text) as T; } catch { return text as unknown as T; }
-}
 
 export interface VehicleCategory {
   categoryCode: string;
