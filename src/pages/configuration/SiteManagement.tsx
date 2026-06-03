@@ -271,7 +271,7 @@ export default function SiteManagement() {
 
             <Separator />
 
-            <section id="section-address" className="scroll-mt-20">
+            <section id="section-address" className="scroll-mt-40">
               <Section title="Address">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Address details */}
@@ -340,7 +340,7 @@ export default function SiteManagement() {
 
             <Separator />
 
-            <section id="section-comments" className="scroll-mt-20">
+            <section id="section-comments" className="scroll-mt-40">
               <Section title="Comments">
                 <Textarea value={form.remarks} onChange={(e) => setForm((f) => ({ ...f, remarks: e.target.value }))} placeholder="Notes / remarks about this site…" rows={6} />
               </Section>
