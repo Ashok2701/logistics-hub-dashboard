@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
-import { Plus, Search, FileText, RefreshCw, Check, X, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, RefreshCw, Check, X, Edit, Trash2, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { documentConfigApi, type DocumentConfig } from "@/lib/documentConfigApi";
 
 const DOC_OPTIONS = [
   "Sales Order",
@@ -22,25 +23,13 @@ const PRESET_COLORS = [
   "#64748B", "#1F2937",
 ];
 
-interface DocRow {
-  id: number;
-  document: string;
-  docType: string;
-  labelEng: string;
-  labelFra: string;
-  color: string;
-}
-
-const seed: DocRow[] = [
-  { id: 1, document: "Purchase Receipt", docType: "REC", labelEng: "RECPT", labelFra: "RECPT", color: "#3B82F6" },
-  { id: 2, document: "Sales Delivery", docType: "SDN", labelEng: "DLV", labelFra: "DLV", color: "#10B981" },
-  { id: 3, document: "Sales Return", docType: "RTC", labelEng: "RTC", labelFra: "RTC", color: "#F59E0B" },
-  { id: 4, document: "Pick Ticket", docType: "BDP", labelEng: "PCKT", labelFra: "PCKT", color: "#8B5CF6" },
-];
+type DocRow = DocumentConfig;
 
 const emptyRow = (id: number): DocRow => ({
   id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
 });
+
+const TEMP_ID_THRESHOLD = -1; // negative ids are unsaved drafts
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -91,11 +80,27 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
 }
 
 export default function DocumentConfiguration() {
-  const [rows, setRows] = useState<DocRow[]>(seed);
+  const [rows, setRows] = useState<DocRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [filterDoc, setFilterDoc] = useState<string>("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draft, setDraft] = useState<DocRow | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await documentConfigApi.list();
+      setRows(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load document configurations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
@@ -103,10 +108,10 @@ export default function DocumentConfiguration() {
       if (filterDoc && r.document !== filterDoc) return false;
       if (!s) return true;
       return (
-        r.document.toLowerCase().includes(s) ||
-        r.docType.toLowerCase().includes(s) ||
-        r.labelEng.toLowerCase().includes(s) ||
-        r.labelFra.toLowerCase().includes(s)
+        (r.document || "").toLowerCase().includes(s) ||
+        (r.docType || "").toLowerCase().includes(s) ||
+        (r.labelEng || "").toLowerCase().includes(s) ||
+        (r.labelFra || "").toLowerCase().includes(s)
       );
     });
   }, [rows, search, filterDoc]);
@@ -115,10 +120,10 @@ export default function DocumentConfiguration() {
   const sorted = sort.sorted;
 
   const startAdd = () => {
-    const id = Math.max(0, ...rows.map((r) => r.id)) + 1;
-    const newRow = emptyRow(id);
+    const tempId = -Date.now();
+    const newRow = emptyRow(tempId);
     setRows((prev) => [newRow, ...prev]);
-    setEditingId(id);
+    setEditingId(tempId);
     setDraft(newRow);
   };
 
@@ -128,37 +133,53 @@ export default function DocumentConfiguration() {
   };
 
   const cancelEdit = () => {
-    if (draft && !rows.find((r) => r.id === draft.id && r.document)) {
-      // remove fresh empty row
-      const original = rows.find((r) => r.id === draft.id);
-      if (original && !original.document && !original.docType) {
-        setRows((prev) => prev.filter((r) => r.id !== draft.id));
-      }
+    if (draft && draft.id < 0) {
+      setRows((prev) => prev.filter((r) => r.id !== draft.id));
     }
     setEditingId(null);
     setDraft(null);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!draft) return;
     if (!draft.document) { toast.error("Please select a document"); return; }
     if (!draft.docType) { toast.error("Doc Type is required"); return; }
-    setRows((prev) => prev.map((r) => (r.id === draft.id ? draft : r)));
-    toast.success("Saved");
-    setEditingId(null);
-    setDraft(null);
+    setSaving(true);
+    try {
+      const isNew = draft.id < 0;
+      const { id, ...payload } = draft;
+      const saved = isNew
+        ? await documentConfigApi.create(payload)
+        : await documentConfigApi.update(draft.id, payload);
+      setRows((prev) =>
+        isNew
+          ? prev.map((r) => (r.id === draft.id ? saved : r))
+          : prev.map((r) => (r.id === draft.id ? saved : r))
+      );
+      toast.success("Saved");
+      setEditingId(null);
+      setDraft(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to save");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const deleteRow = (id: number) => {
-    setRows((prev) => prev.filter((r) => r.id !== id));
-    toast.success("Deleted");
+  const deleteRow = async (id: number) => {
+    try {
+      await documentConfigApi.remove(id);
+      setRows((prev) => prev.filter((r) => r.id !== id));
+      toast.success("Deleted");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete");
+    }
   };
 
   const refresh = () => {
-    setRows(seed);
     setSearch("");
     setFilterDoc("");
-    toast.success("Refreshed");
+    load();
   };
 
   const update = <K extends keyof DocRow>(key: K, value: DocRow[K]) =>
