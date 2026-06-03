@@ -146,15 +146,71 @@ export default function SiteManagement() {
         <div className="bg-card rounded-xl border border-border shadow-card">
           <div className="p-6 space-y-6">
             <Section title="Site Information">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Field label="Site Code">
                   <Input value={editing.siteCode} readOnly className="h-9 bg-secondary/40 font-mono" />
                 </Field>
-                <Field label="Site Name">
-                  <Input value={editing.siteName ?? ""} readOnly className="h-9 bg-secondary/40" />
+                <Field label="Short Name">
+                  <Input value={editing.shortName ?? ""} readOnly className="h-9 bg-secondary/40" />
                 </Field>
+                <div className="sm:col-span-2">
+                  <Field label="Description">
+                    <Input value={editing.siteName ?? ""} readOnly className="h-9 bg-secondary/40" />
+                  </Field>
+                </div>
+                <Field label="TMS Active">
+                  <div className="flex items-center gap-3 h-9">
+                    <Switch checked={form.tmsFlag} onCheckedChange={(v) => setForm((f) => ({ ...f, tmsFlag: v }))} />
+                    <span className="text-sm">{form.tmsFlag ? "Active" : "Inactive"}</span>
+                  </div>
+                </Field>
+              </div>
+            </Section>
+
+            <Section title="Address">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Field label="Address Code">
+                  <Input value={editing.addressCode ?? ""} readOnly className="h-9 bg-secondary/40 font-mono" />
+                </Field>
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <Field label="Address Description">
+                    <Input value={editing.addressDescription ?? ""} readOnly className="h-9 bg-secondary/40" />
+                  </Field>
+                </div>
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <Field label="Address Line 1">
+                    <Input value={editing.addressLine1 ?? ""} readOnly className="h-9 bg-secondary/40" />
+                  </Field>
+                </div>
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <Field label="Address Line 2">
+                    <Input value={editing.addressLine2 ?? ""} readOnly className="h-9 bg-secondary/40" />
+                  </Field>
+                </div>
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <Field label="Address Line 3">
+                    <Input value={editing.addressLine3 ?? ""} readOnly className="h-9 bg-secondary/40" />
+                  </Field>
+                </div>
                 <Field label="City">
                   <Input value={editing.city ?? ""} readOnly className="h-9 bg-secondary/40" />
+                </Field>
+                <Field label="State Code">
+                  <Input value={editing.stateCode ?? ""} readOnly className="h-9 bg-secondary/40 font-mono" />
+                </Field>
+                <Field label="Postal Code">
+                  <Input value={editing.postalCode ?? ""} readOnly className="h-9 bg-secondary/40 font-mono" />
+                </Field>
+                <Field label="Country">
+                  <Input
+                    value={
+                      editing.countryName
+                        ? `${editing.countryName}${editing.countryCode ? ` (${editing.countryCode})` : ""}`
+                        : editing.countryCode ?? ""
+                    }
+                    readOnly
+                    className="h-9 bg-secondary/40"
+                  />
                 </Field>
               </div>
             </Section>
@@ -172,12 +228,6 @@ export default function SiteManagement() {
                 </Field>
                 <Field label="Max Vehicle Capacity">
                   <Input type="number" min={0} value={form.maxVehicleCapacity} onChange={(e) => setForm((f) => ({ ...f, maxVehicleCapacity: e.target.value }))} className="h-9" />
-                </Field>
-                <Field label="TMS Active">
-                  <div className="flex items-center gap-3 h-9">
-                    <Switch checked={form.tmsFlag} onCheckedChange={(v) => setForm((f) => ({ ...f, tmsFlag: v }))} />
-                    <span className="text-sm">{form.tmsFlag ? "Active" : "Inactive"}</span>
-                  </div>
                 </Field>
               </div>
             </Section>
