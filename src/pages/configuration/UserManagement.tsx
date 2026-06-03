@@ -95,6 +95,7 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<ViewMode>("list");
   const [tab, setTab] = useState<TabKey>("home");
   const [editingId, setEditingId] = useState<string | null>(null);
