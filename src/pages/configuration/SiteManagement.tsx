@@ -39,6 +39,7 @@ export default function SiteManagement() {
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Site | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
