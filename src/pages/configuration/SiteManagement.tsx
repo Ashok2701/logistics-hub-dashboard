@@ -352,3 +352,9 @@ function Field({ label, required, error, children }: { label: string; required?:
     </div>
   );
 }
+
+function ReadOnlyInput({ value, mono }: { value: string; mono?: boolean }) {
+  return (
+    <Input value={value} readOnly className={cn("h-9 bg-secondary/40 text-foreground", mono && "font-mono")} />
+  );
+}
