@@ -23,21 +23,11 @@ const PRESET_COLORS = [
   "#64748B", "#1F2937",
 ];
 
-interface DocRow {
-  id: number;
-  document: string;
-  docType: string;
-  labelEng: string;
-  labelFra: string;
-  color: string;
-}
+type DocRow = DocumentConfig;
 
-const seed: DocRow[] = [
-  { id: 1, document: "Purchase Receipt", docType: "REC", labelEng: "RECPT", labelFra: "RECPT", color: "#3B82F6" },
-  { id: 2, document: "Sales Delivery", docType: "SDN", labelEng: "DLV", labelFra: "DLV", color: "#10B981" },
-  { id: 3, document: "Sales Return", docType: "RTC", labelEng: "RTC", labelFra: "RTC", color: "#F59E0B" },
-  { id: 4, document: "Pick Ticket", docType: "BDP", labelEng: "PCKT", labelFra: "PCKT", color: "#8B5CF6" },
-];
+const emptyRow = (id: number): DocRow => ({
+  id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
+});
 
 const emptyRow = (id: number): DocRow => ({
   id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
