@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { SortableTableHead } from "@/components/shared/SortableTh";
@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Search, ArrowLeft, MapPin, Pencil, RefreshCw, Loader2, Locate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -41,6 +42,26 @@ export default function SiteManagement() {
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Site | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [activeSection, setActiveSection] = useState<string>("general");
+
+  useEffect(() => {
+    if (view !== "form") return;
+    const ids = ["general", "address", "comments"];
+    const els = ids.map((id) => document.getElementById(`section-${id}`)).filter(Boolean) as HTMLElement[];
+    if (els.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) {
+          const id = visible[0].target.id.replace("section-", "");
+          setActiveSection(id);
+        }
+      },
+      { rootMargin: "-80px 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [view]);
 
   const loadSites = async () => {
     setLoading(true);
@@ -170,15 +191,48 @@ export default function SiteManagement() {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl border border-border shadow-card">
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="w-full justify-start rounded-none rounded-t-xl border-b border-border bg-secondary/30 h-11 p-0">
-              <TabsTrigger value="general" className="rounded-none data-[state=active]:bg-card data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary h-11 px-6 text-sm font-medium">General</TabsTrigger>
-              <TabsTrigger value="address" className="rounded-none data-[state=active]:bg-card data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary h-11 px-6 text-sm font-medium">Address</TabsTrigger>
-              <TabsTrigger value="comments" className="rounded-none data-[state=active]:bg-card data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary h-11 px-6 text-sm font-medium">Comments</TabsTrigger>
-            </TabsList>
+        <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
+          {/* Sticky section nav */}
+          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur border-b border-border">
+            <div className="flex items-center gap-1 px-4 h-12">
+              {[
+                { id: "general", label: "General" },
+                { id: "address", label: "Address" },
+                { id: "comments", label: "Comments" },
+              ].map((t) => {
+                const active = activeSection === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      const el = document.getElementById(`section-${t.id}`);
+                      if (el) {
+                        setActiveSection(t.id);
+                        el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                    className={cn(
+                      "relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-200",
+                      active
+                        ? "bg-primary/10 text-primary shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+                    )}
+                  >
+                    {t.label}
+                    {active && (
+                      <motion.span
+                        layoutId="active-section-underline"
+                        className="absolute left-2 right-2 -bottom-[1px] h-0.5 bg-primary rounded-full"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-            <TabsContent value="general" className="p-6 mt-0">
+          <div className="p-6 space-y-8 scroll-smooth">
+            <section id="section-general" className="scroll-mt-20">
               <Section title="Site Information">
                 <div className="grid grid-cols-12 gap-3 items-end">
                   <div className="col-span-12 sm:col-span-2">
@@ -200,9 +254,11 @@ export default function SiteManagement() {
                   </div>
                 </div>
               </Section>
-            </TabsContent>
+            </section>
 
-            <TabsContent value="address" className="p-6 mt-0">
+            <Separator />
+
+            <section id="section-address" className="scroll-mt-20">
               <Section title="Address">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Address details */}
@@ -267,15 +323,18 @@ export default function SiteManagement() {
                   </div>
                 </div>
               </Section>
-            </TabsContent>
+            </section>
 
-            <TabsContent value="comments" className="p-6 mt-0">
+            <Separator />
+
+            <section id="section-comments" className="scroll-mt-20">
               <Section title="Comments">
                 <Textarea value={form.remarks} onChange={(e) => setForm((f) => ({ ...f, remarks: e.target.value }))} placeholder="Notes / remarks about this site…" rows={6} />
               </Section>
-            </TabsContent>
-          </Tabs>
+            </section>
+          </div>
         </div>
+
 
       </motion.div>
     );
