@@ -29,9 +29,7 @@ const emptyRow = (id: number): DocRow => ({
   id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
 });
 
-const emptyRow = (id: number): DocRow => ({
-  id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
-});
+const TEMP_ID_THRESHOLD = -1; // negative ids are unsaved drafts
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
