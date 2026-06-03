@@ -1,6 +1,8 @@
 // Fleet module API client
 const API_BASE =
   (import.meta as any).env?.VITE_FLEET_API_BASE ?? "https://tmssolutions.tema-systems.com:8040/api";
+const SYNC_API_BASE =
+  (import.meta as any).env?.VITE_SYNC_API_BASE ?? "http://localhost:8082/api";
 
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("vanguard-token");
