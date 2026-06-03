@@ -176,8 +176,8 @@ export interface SyncLog {
 }
 
 export const syncApi = {
-  status: () => request<SyncStatus[]>("/sync/status"),
-  sync: (objectCode: string) => request<any>(`/sync/${objectCode}`, { method: "POST" }),
-  syncAll: () => request<any>("/sync/all", { method: "POST" }),
-  logs: (objectCode: string) => request<SyncLog[]>(`/sync/logs/${objectCode}`),
+  status: () => syncRequest<SyncStatus[]>("/sync/status"),
+  sync: (objectCode: string) => syncRequest<any>(`/sync/${objectCode}`, { method: "POST" }),
+  syncAll: () => syncRequest<any>("/sync/all", { method: "POST" }),
+  logs: (objectCode: string) => syncRequest<SyncLog[]>(`/sync/logs/${objectCode}`),
 };
