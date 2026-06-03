@@ -24,7 +24,7 @@ const menuItems: MenuItem[] = [
     label: "Configuration", icon: Settings,
     children: [
       { label: "Sync Center", icon: RefreshCw, path: "/config/sync-center" },
-      { label: "Site Management", icon: Building2, path: "/config/sites" },
+      { label: "Site", icon: Building2, path: "/config/sites" },
       { label: "Customer", icon: UserCircle, path: "/config/customers" },
       { label: "Supplier", icon: UserCircle, path: "/config/suppliers" },
       { label: "Product", icon: Package, path: "/config/products" },
