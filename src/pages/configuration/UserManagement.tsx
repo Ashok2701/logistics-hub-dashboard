@@ -95,6 +95,7 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<ViewMode>("list");
   const [tab, setTab] = useState<TabKey>("home");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -142,7 +143,9 @@ export default function UserManagement() {
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
-    return u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchesSearch = u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === "all" || u.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
   const sort = useSortable(filtered);
   const sorted = sort.sorted;
@@ -337,7 +340,7 @@ export default function UserManagement() {
     <div>
       <PageHeader title="Users" subtitle="Manage system users and access control" />
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 mb-5">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
           <Input
@@ -347,9 +350,24 @@ export default function UserManagement() {
             className="pl-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm focus-visible:ring-primary/30"
           />
         </div>
-        <button onClick={openAdd} className="btn-gradient h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-2 flex-shrink-0">
-          <UserPlus className="w-4 h-4" /> Add User
-        </button>
+        <div className="flex items-end gap-3 w-full sm:w-auto">
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Status</Label>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
+              <SelectTrigger className="h-9 w-36 rounded-lg bg-secondary/50 border-border/50 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <button onClick={openAdd} className="btn-gradient h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-2 flex-shrink-0">
+            <UserPlus className="w-4 h-4" /> Add User
+          </button>
+        </div>
       </div>
 
       <motion.div
