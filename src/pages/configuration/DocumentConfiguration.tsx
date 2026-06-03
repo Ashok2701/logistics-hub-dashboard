@@ -80,11 +80,27 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
 }
 
 export default function DocumentConfiguration() {
-  const [rows, setRows] = useState<DocRow[]>(seed);
+  const [rows, setRows] = useState<DocRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [filterDoc, setFilterDoc] = useState<string>("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draft, setDraft] = useState<DocRow | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await documentConfigApi.list();
+      setRows(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load document configurations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
@@ -92,10 +108,10 @@ export default function DocumentConfiguration() {
       if (filterDoc && r.document !== filterDoc) return false;
       if (!s) return true;
       return (
-        r.document.toLowerCase().includes(s) ||
-        r.docType.toLowerCase().includes(s) ||
-        r.labelEng.toLowerCase().includes(s) ||
-        r.labelFra.toLowerCase().includes(s)
+        (r.document || "").toLowerCase().includes(s) ||
+        (r.docType || "").toLowerCase().includes(s) ||
+        (r.labelEng || "").toLowerCase().includes(s) ||
+        (r.labelFra || "").toLowerCase().includes(s)
       );
     });
   }, [rows, search, filterDoc]);
@@ -104,10 +120,10 @@ export default function DocumentConfiguration() {
   const sorted = sort.sorted;
 
   const startAdd = () => {
-    const id = Math.max(0, ...rows.map((r) => r.id)) + 1;
-    const newRow = emptyRow(id);
+    const tempId = -Date.now();
+    const newRow = emptyRow(tempId);
     setRows((prev) => [newRow, ...prev]);
-    setEditingId(id);
+    setEditingId(tempId);
     setDraft(newRow);
   };
 
@@ -117,37 +133,53 @@ export default function DocumentConfiguration() {
   };
 
   const cancelEdit = () => {
-    if (draft && !rows.find((r) => r.id === draft.id && r.document)) {
-      // remove fresh empty row
-      const original = rows.find((r) => r.id === draft.id);
-      if (original && !original.document && !original.docType) {
-        setRows((prev) => prev.filter((r) => r.id !== draft.id));
-      }
+    if (draft && draft.id < 0) {
+      setRows((prev) => prev.filter((r) => r.id !== draft.id));
     }
     setEditingId(null);
     setDraft(null);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!draft) return;
     if (!draft.document) { toast.error("Please select a document"); return; }
     if (!draft.docType) { toast.error("Doc Type is required"); return; }
-    setRows((prev) => prev.map((r) => (r.id === draft.id ? draft : r)));
-    toast.success("Saved");
-    setEditingId(null);
-    setDraft(null);
+    setSaving(true);
+    try {
+      const isNew = draft.id < 0;
+      const { id, ...payload } = draft;
+      const saved = isNew
+        ? await documentConfigApi.create(payload)
+        : await documentConfigApi.update(draft.id, payload);
+      setRows((prev) =>
+        isNew
+          ? prev.map((r) => (r.id === draft.id ? saved : r))
+          : prev.map((r) => (r.id === draft.id ? saved : r))
+      );
+      toast.success("Saved");
+      setEditingId(null);
+      setDraft(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to save");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const deleteRow = (id: number) => {
-    setRows((prev) => prev.filter((r) => r.id !== id));
-    toast.success("Deleted");
+  const deleteRow = async (id: number) => {
+    try {
+      await documentConfigApi.remove(id);
+      setRows((prev) => prev.filter((r) => r.id !== id));
+      toast.success("Deleted");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete");
+    }
   };
 
   const refresh = () => {
-    setRows(seed);
     setSearch("");
     setFilterDoc("");
-    toast.success("Refreshed");
+    load();
   };
 
   const update = <K extends keyof DocRow>(key: K, value: DocRow[K]) =>
