@@ -143,7 +143,9 @@ export default function UserManagement() {
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
-    return u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchesSearch = u.username.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === "all" || u.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
   const sort = useSortable(filtered);
   const sorted = sort.sorted;
