@@ -181,3 +181,36 @@ export const syncApi = {
   syncAll: () => syncRequest<any>("/sync/all", { method: "POST" }),
   logs: (objectCode: string) => syncRequest<SyncLog[]>(`/sync/logs/${objectCode}`),
 };
+
+export interface Site {
+  siteCode: string;
+  siteName: string;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  tmsFlag: boolean;
+  workingStartTime?: string | null;
+  workingEndTime?: string | null;
+  loadingDockCount?: number | null;
+  maxVehicleCapacity?: number | null;
+  remarks?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface SiteUpdatePayload {
+  latitude?: number | null;
+  longitude?: number | null;
+  workingStartTime?: string | null;
+  workingEndTime?: string | null;
+  loadingDockCount?: number | null;
+  maxVehicleCapacity?: number | null;
+  tmsFlag?: boolean;
+  remarks?: string | null;
+  updatedBy?: string | null;
+}
+
+export const siteApi = {
+  list: () => syncRequest<Site[]>("/sites"),
+  update: (code: string, b: SiteUpdatePayload) =>
+    syncRequest<Site>(`/sites/${code}`, { method: "PUT", body: JSON.stringify(b) }),
+};
