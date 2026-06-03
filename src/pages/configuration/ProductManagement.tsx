@@ -65,6 +65,7 @@ const catColors: Record<Product["category"], string> = {
 export default function ProductManagement() {
   const [items, setItems] = useState<Product[]>(seedProducts);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<ViewMode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -72,7 +73,9 @@ export default function ProductManagement() {
 
   const filtered = items.filter((p) => {
     const q = search.toLowerCase();
-    return p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.category.includes(q);
+    const matchesSearch = p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.category.includes(q);
+    const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
   const sort = useSortable(filtered);
   const sorted = sort.sorted;
