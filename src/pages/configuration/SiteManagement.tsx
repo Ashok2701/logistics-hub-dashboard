@@ -34,6 +34,7 @@ export default function SiteManagement() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Site | null>(null);
