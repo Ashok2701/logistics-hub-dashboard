@@ -187,12 +187,27 @@ export default function SupplierManagement() {
   return (
     <div>
       <PageHeader title="Suppliers" subtitle="Manage supplier master data" />
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 mb-5">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
           <Input placeholder="Search suppliers…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm focus-visible:ring-primary/30" />
         </div>
-        <button onClick={openAdd} className="btn-gradient h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-2 flex-shrink-0"><Plus className="w-4 h-4" /> Add Supplier</button>
+        <div className="flex items-end gap-3 w-full sm:w-auto">
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Status</Label>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
+              <SelectTrigger className="h-9 w-36 rounded-lg bg-secondary/50 border-border/50 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <button onClick={openAdd} className="btn-gradient h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-2 flex-shrink-0"><Plus className="w-4 h-4" /> Add Supplier</button>
+        </div>
       </div>
       <motion.div className="bg-card rounded-xl border border-border shadow-card overflow-hidden" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
         <Table>
