@@ -86,7 +86,7 @@ export default function SiteManagement() {
         longitude: form.longitude === "" ? null : parseFloat(form.longitude),
         tmsFlag: form.tmsFlag,
         remarks: form.remarks || null,
-        updatedBy: localStorage.getItem("vanguard-user") || "admin",
+        updatedBy: (() => { try { return JSON.parse(localStorage.getItem("vanguard-user") || "{}").username || "admin"; } catch { return "admin"; } })(),
       };
       const updated = await siteApi.update(editing.siteCode, payload);
       setSites((prev) => prev.map((s) => s.siteCode === editing.siteCode ? { ...s, ...updated, ...payload } as Site : s));
