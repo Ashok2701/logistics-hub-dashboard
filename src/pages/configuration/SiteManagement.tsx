@@ -47,21 +47,34 @@ export default function SiteManagement() {
   useEffect(() => {
     if (view !== "form") return;
     const ids = ["general", "address", "comments"];
-    const els = ids.map((id) => document.getElementById(`section-${id}`)).filter(Boolean) as HTMLElement[];
+    const els = ids
+      .map((id) => document.getElementById(`section-${id}`))
+      .filter(Boolean) as HTMLElement[];
     if (els.length === 0) return;
+
+    // The app's scroll container is <main className="overflow-y-auto"> in AppLayout
+    const scrollRoot =
+      (els[0].closest("main") as HTMLElement | null) ?? null;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
         if (visible[0]) {
           const id = visible[0].target.id.replace("section-", "");
           setActiveSection(id);
         }
       },
-      { rootMargin: "-80px 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },
+      {
+        root: scrollRoot,
+        rootMargin: "-80px 0px -55% 0px",
+        threshold: [0, 0.25, 0.5, 1],
+      },
     );
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [view]);
+  }, [view, editing]);
 
   const loadSites = async () => {
     setLoading(true);
