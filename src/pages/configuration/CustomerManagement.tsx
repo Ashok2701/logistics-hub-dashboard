@@ -63,6 +63,7 @@ const typeColors: Record<Customer["type"], string> = {
 export default function CustomerManagement() {
   const [items, setItems] = useState<Customer[]>(seedCustomers);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<ViewMode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -70,7 +71,9 @@ export default function CustomerManagement() {
 
   const filtered = items.filter((c) => {
     const q = search.toLowerCase();
-    return c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.contactPerson.toLowerCase().includes(q);
+    const matchesSearch = c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.contactPerson.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
   const sort = useSortable(filtered);
   const sorted = sort.sorted;
