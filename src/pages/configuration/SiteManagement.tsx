@@ -19,17 +19,12 @@ import { siteApi, type Site } from "@/lib/fleetApi";
 type FormState = {
   latitude: string;
   longitude: string;
-  workingStartTime: string;
-  workingEndTime: string;
-  loadingDockCount: string;
-  maxVehicleCapacity: string;
   tmsFlag: boolean;
   remarks: string;
 };
 
 const emptyForm: FormState = {
-  latitude: "", longitude: "", workingStartTime: "", workingEndTime: "",
-  loadingDockCount: "", maxVehicleCapacity: "", tmsFlag: false, remarks: "",
+  latitude: "", longitude: "", tmsFlag: false, remarks: "",
 };
 
 type ViewMode = "list" | "form";
@@ -74,10 +69,6 @@ export default function SiteManagement() {
     setForm({
       latitude: s.latitude != null ? String(s.latitude) : "",
       longitude: s.longitude != null ? String(s.longitude) : "",
-      workingStartTime: s.workingStartTime ?? "",
-      workingEndTime: s.workingEndTime ?? "",
-      loadingDockCount: s.loadingDockCount != null ? String(s.loadingDockCount) : "",
-      maxVehicleCapacity: s.maxVehicleCapacity != null ? String(s.maxVehicleCapacity) : "",
       tmsFlag: !!s.tmsFlag,
       remarks: s.remarks ?? "",
     });
@@ -92,10 +83,6 @@ export default function SiteManagement() {
       const payload = {
         latitude: form.latitude === "" ? null : parseFloat(form.latitude),
         longitude: form.longitude === "" ? null : parseFloat(form.longitude),
-        workingStartTime: form.workingStartTime || null,
-        workingEndTime: form.workingEndTime || null,
-        loadingDockCount: form.loadingDockCount === "" ? null : parseInt(form.loadingDockCount, 10),
-        maxVehicleCapacity: form.maxVehicleCapacity === "" ? null : parseInt(form.maxVehicleCapacity, 10),
         tmsFlag: form.tmsFlag,
         remarks: form.remarks || null,
         updatedBy: localStorage.getItem("vanguard-user") || "admin",
@@ -215,22 +202,6 @@ export default function SiteManagement() {
               </div>
             </Section>
 
-            <Section title="Operations">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Field label="Working Start Time">
-                  <Input type="time" value={form.workingStartTime} onChange={(e) => setForm((f) => ({ ...f, workingStartTime: e.target.value }))} className="h-9" />
-                </Field>
-                <Field label="Working End Time">
-                  <Input type="time" value={form.workingEndTime} onChange={(e) => setForm((f) => ({ ...f, workingEndTime: e.target.value }))} className="h-9" />
-                </Field>
-                <Field label="Loading Dock Count">
-                  <Input type="number" min={0} value={form.loadingDockCount} onChange={(e) => setForm((f) => ({ ...f, loadingDockCount: e.target.value }))} className="h-9" />
-                </Field>
-                <Field label="Max Vehicle Capacity">
-                  <Input type="number" min={0} value={form.maxVehicleCapacity} onChange={(e) => setForm((f) => ({ ...f, maxVehicleCapacity: e.target.value }))} className="h-9" />
-                </Field>
-              </div>
-            </Section>
 
             <Section title="Location">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -283,12 +254,12 @@ export default function SiteManagement() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-              <SortableTableHead sortKey="siteCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Code</SortableTableHead>
-              <SortableTableHead sortKey="siteName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</SortableTableHead>
-              <SortableTableHead sortKey="city" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">City</SortableTableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Coordinates</TableHead>
-              <SortableTableHead sortKey="tmsFlag" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">TMS</SortableTableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
+              <SortableTableHead sortKey="siteCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70" style={{ width: "16.67%" }}>Code</SortableTableHead>
+              <SortableTableHead sortKey="siteName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70" style={{ width: "41.67%" }}>Name</SortableTableHead>
+              <SortableTableHead sortKey="city" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell" style={{ width: "16.67%" }}>City</SortableTableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell" style={{ width: "16.67%" }}>Coordinates</TableHead>
+              <SortableTableHead sortKey="tmsFlag" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70" style={{ width: "8.33%" }}>TMS</SortableTableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right" style={{ width: "8.33%" }}>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
