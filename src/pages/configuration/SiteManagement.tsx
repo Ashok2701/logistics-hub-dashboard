@@ -367,14 +367,27 @@ export default function SiteManagement() {
       <PageHeader title="Site" subtitle="Manage operational sites and locations" />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-          <Input placeholder="Search sites…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm focus-visible:ring-primary/30" />
+        <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+            <Input placeholder="Search sites…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm focus-visible:ring-primary/30" />
+          </div>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
+            <SelectTrigger className="h-9 w-full sm:w-40 rounded-lg bg-secondary/50 border-border/50 text-sm">
+              <SelectValue placeholder="TMS Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <button onClick={loadSites} disabled={loading} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary inline-flex items-center gap-2 disabled:opacity-50">
           <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} /> Refresh
         </button>
       </div>
+
 
       <motion.div className="bg-card rounded-xl border border-border shadow-card overflow-hidden" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
         <Table>
