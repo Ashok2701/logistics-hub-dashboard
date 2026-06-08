@@ -281,8 +281,8 @@ export default function CustomerManagement() {
   const addD = () => {
     const used = new Set(addr.drivers.map((d) => d.driverId));
     const next = drivers.find((d) => !used.has(d.driverId));
-    if (!next) { toast({ title: "All drivers added", variant: "destructive" }); return; }
-    setAddr((t) => ({ ...t, drivers: [...t.drivers, { driverId: next.driverId }] }));
+    if (drivers.length > 0 && !next) { toast({ title: "All drivers added", variant: "destructive" }); return; }
+    setAddr((t) => ({ ...t, drivers: [...t.drivers, { driverId: next?.driverId ?? "" }] }));
   };
   const updD = (i: number, v: string) => {
     if (addr.drivers.some((r, idx) => idx !== i && r.driverId === v)) {
