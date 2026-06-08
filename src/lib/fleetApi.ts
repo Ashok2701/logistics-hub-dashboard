@@ -280,8 +280,6 @@ export interface Customer {
 }
 
 export interface CustomerTmsPayload {
-  latitude?: number | null;
-  longitude?: number | null;
   serviceTime?: string | null;
   waitingTime?: string | null;
   updatedBy?: string | null;
