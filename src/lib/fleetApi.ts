@@ -226,7 +226,41 @@ export const siteApi = {
     syncRequest<Site>(`/sites/${code}`, { method: "PUT", body: JSON.stringify(b) }),
 };
 
-// ───────── Customers ─────────
+// ───────── Customers (v1) ─────────
+export interface AddressTimeWindow { id?: string; fromTime: string; toTime: string; displayOrder?: number; }
+export interface AddressVehicleRow { id?: string; vehicleCategoryCode: string; }
+export interface AddressDriverRow { id?: string; driverId: string; }
+
+export interface CustomerAddress {
+  addressCode: string;
+  customerCode?: string;
+  addressDescription?: string | null;
+  description?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  addressLine3?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  stateCode?: string | null;
+  countryCode?: string | null;
+  countryName?: string | null;
+  phone?: string | null;
+  mobile?: string | null;
+  email?: string | null;
+  webSite?: string | null;
+  defaultAddress?: boolean;
+  isDefault?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+  anyTimeWindow?: boolean;
+  anyVehicleCategory?: boolean;
+  anyDriver?: boolean;
+  timeWindows?: AddressTimeWindow[];
+  vehicles?: AddressVehicleRow[];
+  drivers?: AddressDriverRow[];
+  syncedAt?: string | null;
+}
+
 export interface Customer {
   customerCode: string;
   customerName: string;
@@ -241,6 +275,8 @@ export interface Customer {
   waitingTime?: string | null;
   updatedBy?: string | null;
   updatedAt?: string | null;
+  addressCount?: number | null;
+  addresses?: CustomerAddress[];
 }
 
 export interface CustomerTmsPayload {
@@ -251,38 +287,32 @@ export interface CustomerTmsPayload {
   updatedBy?: string | null;
 }
 
-export const customerApi = {
-  list: () => syncRequest<Customer[]>("/customers"),
-  get: (code: string) => syncRequest<Customer>(`/customers/${code}`),
-  updateTms: (code: string, b: CustomerTmsPayload) =>
-    syncRequest<Customer>(`/customers/${code}/tms`, { method: "PUT", body: JSON.stringify(b) }),
-};
-
-// ───────── Customer Addresses ─────────
-export interface CustomerAddress {
-  addressCode: string;
-  customerCode: string;
-  addressDescription?: string | null;
-  addressLine1?: string | null;
-  addressLine2?: string | null;
-  addressLine3?: string | null;
-  city?: string | null;
-  postalCode?: string | null;
-  stateCode?: string | null;
-  countryCode?: string | null;
-  countryName?: string | null;
-  phone?: string | null;
-  mobile?: string | null;
-  email?: string | null;
-  webSite?: string | null;
-  defaultAddress?: boolean;
-  syncedAt?: string | null;
+export interface CustomerAddressTmsPayload {
+  anyTimeWindow: boolean;
+  anyVehicleCategory: boolean;
+  anyDriver: boolean;
+  timeWindows: AddressTimeWindow[];
+  vehicles: AddressVehicleRow[];
+  drivers: AddressDriverRow[];
+  updatedBy?: string | null;
 }
 
-export interface AddressTimeWindow { id?: string; fromTime: string; toTime: string; displayOrder: number; }
-export interface AddressVehicleRow { id?: string; vehicleCategoryCode: string; }
-export interface AddressDriverRow { id?: string; driverId: string; }
+export const customerApi = {
+  list: () => syncRequest<Customer[]>("/v1/customers"),
+  get: (code: string) => syncRequest<Customer>(`/v1/customers/${code}`),
+  update: (code: string, b: CustomerTmsPayload) =>
+    syncRequest<Customer>(`/v1/customers/${code}`, { method: "PUT", body: JSON.stringify(b) }),
+  updateTms: (code: string, b: CustomerTmsPayload) =>
+    syncRequest<Customer>(`/v1/customers/${code}`, { method: "PUT", body: JSON.stringify(b) }),
+  getAddress: (customerCode: string, addressCode: string) =>
+    syncRequest<CustomerAddress>(`/v1/customers/${customerCode}/addresses/${addressCode}`),
+  updateAddress: (customerCode: string, addressCode: string, b: CustomerAddressTmsPayload) =>
+    syncRequest<CustomerAddress>(`/v1/customers/${customerCode}/addresses/${addressCode}`, {
+      method: "PUT", body: JSON.stringify(b),
+    }),
+};
 
+// Legacy compatibility for old CustomerAddressManagement page
 export interface CustomerAddressTms {
   anyTimeWindow: boolean;
   anyVehicleCategory: boolean;
@@ -291,11 +321,6 @@ export interface CustomerAddressTms {
   vehicles: AddressVehicleRow[];
   drivers: AddressDriverRow[];
 }
-
-export interface CustomerAddressTmsPayload extends CustomerAddressTms {
-  updatedBy?: string | null;
-}
-
 export const customerAddressApi = {
   list: () => syncRequest<CustomerAddress[]>("/customer-addresses"),
   get: (code: string) => syncRequest<CustomerAddress>(`/customer-addresses/${code}`),
