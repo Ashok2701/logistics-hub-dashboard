@@ -19,8 +19,8 @@ import {
   type VehicleCategory, type Driver,
 } from "@/lib/fleetApi";
 
-type InfoForm = { latitude: string; longitude: string; serviceTime: string; waitingTime: string; };
-const emptyInfo: InfoForm = { latitude: "", longitude: "", serviceTime: "", waitingTime: "" };
+type InfoForm = { serviceTime: string; waitingTime: string; };
+const emptyInfo: InfoForm = { serviceTime: "", waitingTime: "" };
 
 type AddrForm = {
   anyTimeWindow: boolean;
@@ -97,8 +97,6 @@ export default function CustomerManagement() {
   const openEdit = async (c: Customer) => {
     setDetail(c);
     setInfo({
-      latitude: c.latitude != null ? String(c.latitude) : "",
-      longitude: c.longitude != null ? String(c.longitude) : "",
       serviceTime: c.serviceTime ?? "",
       waitingTime: c.waitingTime ?? "",
     });
@@ -111,8 +109,6 @@ export default function CustomerManagement() {
       const full = await customerApi.get(c.customerCode);
       setDetail(full);
       setInfo({
-        latitude: full.latitude != null ? String(full.latitude) : "",
-        longitude: full.longitude != null ? String(full.longitude) : "",
         serviceTime: full.serviceTime ?? "",
         waitingTime: full.waitingTime ?? "",
       });
@@ -128,8 +124,6 @@ export default function CustomerManagement() {
     setSavingInfo(true);
     try {
       const payload = {
-        latitude: info.latitude === "" ? null : parseFloat(info.latitude),
-        longitude: info.longitude === "" ? null : parseFloat(info.longitude),
         serviceTime: info.serviceTime || null,
         waitingTime: info.waitingTime || null,
         updatedBy: currentUser(),
@@ -285,9 +279,7 @@ export default function CustomerManagement() {
               <Separator />
 
               <Section title="TMS Configuration">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Field label="Latitude"><Input value={info.latitude} onChange={(e) => setInfo((f) => ({ ...f, latitude: e.target.value }))} placeholder="e.g. 51.5074" className="h-9" /></Field>
-                  <Field label="Longitude"><Input value={info.longitude} onChange={(e) => setInfo((f) => ({ ...f, longitude: e.target.value }))} placeholder="e.g. -0.1278" className="h-9" /></Field>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="Service Time (HH:MM)"><Input value={info.serviceTime} onChange={(e) => setInfo((f) => ({ ...f, serviceTime: e.target.value }))} placeholder="00:15" className="h-9" /></Field>
                   <Field label="Waiting Time (HH:MM)"><Input value={info.waitingTime} onChange={(e) => setInfo((f) => ({ ...f, waitingTime: e.target.value }))} placeholder="00:10" className="h-9" /></Field>
                 </div>
