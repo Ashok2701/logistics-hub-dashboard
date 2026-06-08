@@ -147,7 +147,7 @@ export default function DocumentConfiguration() {
     if (!draft.docType) { toast.error("Doc Type is required"); return; }
     setSaving(true);
     try {
-      const isNew = draft.id < 0;
+      const isNew = isTempId(draft.id);
       const { id, ...payload } = draft;
       const saved = isNew
         ? await documentConfigApi.create(payload)
