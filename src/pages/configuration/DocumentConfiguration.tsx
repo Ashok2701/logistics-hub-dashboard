@@ -25,11 +25,12 @@ const PRESET_COLORS = [
 
 type DocRow = DocumentConfig;
 
-const emptyRow = (id: number): DocRow => ({
-  id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
-});
+const TEMP_PREFIX = "__new__";
+const isTempId = (id: string) => id.startsWith(TEMP_PREFIX);
 
-const TEMP_ID_THRESHOLD = -1; // negative ids are unsaved drafts
+const emptyRow = (id: string): DocRow => ({
+  id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6", active: true,
+});
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
