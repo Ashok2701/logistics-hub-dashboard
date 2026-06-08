@@ -167,7 +167,7 @@ export default function DocumentConfiguration() {
     }
   };
 
-  const deleteRow = async (id: number) => {
+  const deleteRow = async (id: string) => {
     try {
       await documentConfigApi.remove(id);
       setRows((prev) => prev.filter((r) => r.id !== id));
