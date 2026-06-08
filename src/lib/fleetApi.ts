@@ -225,3 +225,114 @@ export const siteApi = {
   update: (code: string, b: SiteUpdatePayload) =>
     syncRequest<Site>(`/sites/${code}`, { method: "PUT", body: JSON.stringify(b) }),
 };
+
+// ───────── Customers ─────────
+export interface Customer {
+  customerCode: string;
+  customerName: string;
+  shortName?: string | null;
+  countryCode?: string | null;
+  currencyCode?: string | null;
+  active: boolean;
+  syncedAt?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  serviceTime?: string | null;
+  waitingTime?: string | null;
+  updatedBy?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface CustomerTmsPayload {
+  latitude?: number | null;
+  longitude?: number | null;
+  serviceTime?: string | null;
+  waitingTime?: string | null;
+  updatedBy?: string | null;
+}
+
+export const customerApi = {
+  list: () => syncRequest<Customer[]>("/customers"),
+  get: (code: string) => syncRequest<Customer>(`/customers/${code}`),
+  updateTms: (code: string, b: CustomerTmsPayload) =>
+    syncRequest<Customer>(`/customers/${code}/tms`, { method: "PUT", body: JSON.stringify(b) }),
+};
+
+// ───────── Customer Addresses ─────────
+export interface CustomerAddress {
+  addressCode: string;
+  customerCode: string;
+  addressDescription?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  addressLine3?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  stateCode?: string | null;
+  countryCode?: string | null;
+  countryName?: string | null;
+  phone?: string | null;
+  mobile?: string | null;
+  email?: string | null;
+  webSite?: string | null;
+  defaultAddress?: boolean;
+  syncedAt?: string | null;
+}
+
+export interface AddressTimeWindow { id?: string; fromTime: string; toTime: string; displayOrder: number; }
+export interface AddressVehicleRow { id?: string; vehicleCategoryCode: string; }
+export interface AddressDriverRow { id?: string; driverId: string; }
+
+export interface CustomerAddressTms {
+  anyTimeWindow: boolean;
+  anyVehicleCategory: boolean;
+  anyDriver: boolean;
+  timeWindows: AddressTimeWindow[];
+  vehicles: AddressVehicleRow[];
+  drivers: AddressDriverRow[];
+}
+
+export interface CustomerAddressTmsPayload extends CustomerAddressTms {
+  updatedBy?: string | null;
+}
+
+export const customerAddressApi = {
+  list: () => syncRequest<CustomerAddress[]>("/customer-addresses"),
+  get: (code: string) => syncRequest<CustomerAddress>(`/customer-addresses/${code}`),
+  getTms: (code: string) => syncRequest<CustomerAddressTms>(`/customer-addresses/${code}/tms`),
+  updateTms: (code: string, b: CustomerAddressTmsPayload) =>
+    syncRequest<CustomerAddressTms>(`/customer-addresses/${code}/tms`, { method: "PUT", body: JSON.stringify(b) }),
+};
+
+// ───────── Products ─────────
+export interface Product {
+  productCode: string;
+  productName: string;
+  shortDescription?: string | null;
+  productCategory?: string | null;
+  unitOfMeasure?: string | null;
+  salesUnit?: string | null;
+  netWeight?: number | null;
+  grossWeight?: number | null;
+  volume?: number | null;
+  weightUnit?: string | null;
+  volumeUnit?: string | null;
+  active: boolean;
+  syncedAt?: string | null;
+  serviceTime?: string | null;
+  updatedBy?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface ProductTmsPayload {
+  serviceTime?: string | null;
+  updatedBy?: string | null;
+}
+
+export const productApi = {
+  list: () => syncRequest<Product[]>("/products"),
+  get: (code: string) => syncRequest<Product>(`/products/${code}`),
+  updateTms: (code: string, b: ProductTmsPayload) =>
+    syncRequest<Product>(`/products/${code}/tms`, { method: "PUT", body: JSON.stringify(b) }),
+};
+
