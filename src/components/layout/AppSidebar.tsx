@@ -27,7 +27,6 @@ const menuItems: MenuItem[] = [
       { label: "Site", icon: Building2, path: "/config/sites" },
       { label: "Customer", icon: UserCircle, path: "/config/customers" },
       { label: "Customer Address", icon: Building2, path: "/config/customer-addresses" },
-      { label: "Supplier", icon: UserCircle, path: "/config/suppliers" },
       { label: "Product", icon: Package, path: "/config/products" },
       { label: "Document Config", icon: FileText, path: "/config/documents" },
     ],
