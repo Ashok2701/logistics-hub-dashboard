@@ -266,8 +266,8 @@ export default function CustomerManagement() {
   const addV = () => {
     const used = new Set(addr.vehicles.map((v) => v.vehicleCategoryCode));
     const next = categories.find((c) => !used.has(c.categoryCode));
-    if (!next) { toast({ title: "All vehicle categories added", variant: "destructive" }); return; }
-    setAddr((t) => ({ ...t, vehicles: [...t.vehicles, { vehicleCategoryCode: next.categoryCode }] }));
+    if (categories.length > 0 && !next) { toast({ title: "All vehicle categories added", variant: "destructive" }); return; }
+    setAddr((t) => ({ ...t, vehicles: [...t.vehicles, { vehicleCategoryCode: next?.categoryCode ?? "" }] }));
   };
   const updV = (i: number, v: string) => {
     if (addr.vehicles.some((r, idx) => idx !== i && r.vehicleCategoryCode === v)) {
