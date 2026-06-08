@@ -6,6 +6,7 @@ import { useSortable } from "@/hooks/useSortable";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ArrowLeft, Pencil, RefreshCw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,24 @@ export default function ProductManagement() {
   const [view, setView] = useState<"list" | "form">("list");
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [activeSection, setActiveSection] = useState<string>("general");
+
+  useEffect(() => {
+    if (view !== "form") return;
+    const ids = ["general", "tms"];
+    const els = ids.map((id) => document.getElementById(`section-${id}`)).filter(Boolean) as HTMLElement[];
+    if (els.length === 0) return;
+    const scrollRoot = (els[0].closest("main") as HTMLElement | null) ?? null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActiveSection(visible[0].target.id.replace("section-", ""));
+      },
+      { root: scrollRoot, rootMargin: "-130px 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [view, editing]);
 
   const load = async () => {
     setLoading(true);
@@ -54,6 +73,7 @@ export default function ProductManagement() {
   const openEdit = (p: Product) => {
     setEditing(p);
     setForm({ serviceTime: p.serviceTime ?? "" });
+    setActiveSection("general");
     setView("form");
   };
   const goBack = () => { setView("list"); setEditing(null); };
@@ -74,43 +94,84 @@ export default function ProductManagement() {
 
   if (view === "form" && editing) {
     return (
-      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button onClick={goBack} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50"><ArrowLeft className="w-4 h-4" /></button>
-            <div>
-              <h1 className="text-lg font-semibold">Edit Product</h1>
-              <p className="text-xs text-muted-foreground">{editing.productCode} — {editing.productName}</p>
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
+        {/* Sticky header + tab nav */}
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur border-b border-border">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150">
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">Edit Product</h1>
+                <p className="text-xs text-muted-foreground">{editing.productCode} — {editing.productName}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150 disabled:opacity-50">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}Save
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary disabled:opacity-50">Cancel</button>
-            <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{saving && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
+          <div className="flex items-center gap-1 h-11">
+            {[
+              { id: "general", label: "General" },
+              { id: "tms", label: "TMS Configuration" },
+            ].map((t) => {
+              const active = activeSection === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    const el = document.getElementById(`section-${t.id}`);
+                    if (el) { setActiveSection(t.id); el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+                  }}
+                  className={cn(
+                    "relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-200",
+                    active ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+                  )}
+                >
+                  {t.label}
+                  {active && (
+                    <motion.span layoutId="product-active-section-underline" className="absolute left-2 right-2 -bottom-[5px] h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="bg-card rounded-xl border border-border shadow-card p-6 space-y-6">
-          <Section title="Product Information (from X3)">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Field label="Product Code"><ReadOnly value={editing.productCode} mono /></Field>
-              <Field label="Product Name"><ReadOnly value={editing.productName ?? ""} /></Field>
-              <Field label="Category"><ReadOnly value={editing.productCategory ?? ""} mono /></Field>
-              <Field label="Short Description"><ReadOnly value={editing.shortDescription ?? ""} /></Field>
-              <Field label="Unit of Measure"><ReadOnly value={editing.unitOfMeasure ?? ""} mono /></Field>
-              <Field label="Sales Unit"><ReadOnly value={editing.salesUnit ?? ""} mono /></Field>
-              <Field label="Net Weight"><ReadOnly value={editing.netWeight != null ? `${editing.netWeight} ${editing.weightUnit ?? ""}` : ""} /></Field>
-              <Field label="Gross Weight"><ReadOnly value={editing.grossWeight != null ? `${editing.grossWeight} ${editing.weightUnit ?? ""}` : ""} /></Field>
-              <Field label="Volume"><ReadOnly value={editing.volume != null ? `${editing.volume} ${editing.volumeUnit ?? ""}` : ""} /></Field>
-            </div>
-          </Section>
+        <div className="bg-card rounded-xl border border-border shadow-card mt-6">
+          <div className="p-6 space-y-8 scroll-smooth">
+            <section id="section-general" className="scroll-mt-40">
+              <Section title="Product Information (from X3)">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Field label="Product Code"><ReadOnly value={editing.productCode} mono /></Field>
+                  <Field label="Product Name"><ReadOnly value={editing.productName ?? ""} /></Field>
+                  <Field label="Category"><ReadOnly value={editing.productCategory ?? ""} mono /></Field>
+                  <Field label="Short Description"><ReadOnly value={editing.shortDescription ?? ""} /></Field>
+                  <Field label="Unit of Measure"><ReadOnly value={editing.unitOfMeasure ?? ""} mono /></Field>
+                  <Field label="Sales Unit"><ReadOnly value={editing.salesUnit ?? ""} mono /></Field>
+                  <Field label="Net Weight"><ReadOnly value={editing.netWeight != null ? `${editing.netWeight} ${editing.weightUnit ?? ""}` : ""} /></Field>
+                  <Field label="Gross Weight"><ReadOnly value={editing.grossWeight != null ? `${editing.grossWeight} ${editing.weightUnit ?? ""}` : ""} /></Field>
+                  <Field label="Volume"><ReadOnly value={editing.volume != null ? `${editing.volume} ${editing.volumeUnit ?? ""}` : ""} /></Field>
+                </div>
+              </Section>
+            </section>
 
-          <Section title="TMS Configuration">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Field label="Service Time (HH:MM)">
-                <Input value={form.serviceTime} onChange={(e) => setForm((f) => ({ ...f, serviceTime: e.target.value }))} placeholder="00:05" className="h-9" />
-              </Field>
-            </div>
-          </Section>
+            <Separator />
+
+            <section id="section-tms" className="scroll-mt-40">
+              <Section title="TMS Configuration">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Field label="Service Time (HH:MM)">
+                    <Input value={form.serviceTime} onChange={(e) => setForm((f) => ({ ...f, serviceTime: e.target.value }))} placeholder="00:05" className="h-9" />
+                  </Field>
+                </div>
+              </Section>
+            </section>
+          </div>
         </div>
       </motion.div>
     );
@@ -163,7 +224,7 @@ export default function ProductManagement() {
             ) : sort.sorted.map((p, i) => {
               const tms = isTmsActive(p);
               return (
-                <TableRow key={p.productCode} className={cn("transition-colors", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.03]")}>
+                <TableRow key={p.productCode} onClick={() => openEdit(p)} className={cn("transition-colors cursor-pointer", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.05]")}>
                   <TableCell className="font-medium text-sm font-mono">{p.productCode}</TableCell>
                   <TableCell className="text-sm">{p.productName}</TableCell>
                   <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{p.productCategory ?? "—"}</TableCell>
@@ -171,7 +232,7 @@ export default function ProductManagement() {
                   <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{p.serviceTime ?? "—"}</TableCell>
                   <TableCell><StatusBadge status={tms ? "Active" : "Inactive"} variant={tms ? "primary" : "muted"} /></TableCell>
                   <TableCell className="text-right">
-                    <button onClick={() => openEdit(p)} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); openEdit(p); }} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"><Pencil className="w-4 h-4" /></button>
                   </TableCell>
                 </TableRow>
               );
