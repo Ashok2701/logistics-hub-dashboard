@@ -86,7 +86,7 @@ export default function DocumentConfiguration() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [filterDoc, setFilterDoc] = useState<string>("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<DocRow | null>(null);
 
   const load = async () => {
