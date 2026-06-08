@@ -449,7 +449,10 @@ export default function CustomerManagement() {
                                 <Field label="Driver">
                                   <Select value={r.driverId} onValueChange={(v) => updD(i, v)}>
                                     <SelectTrigger className="h-9"><SelectValue placeholder="Select driver" /></SelectTrigger>
-                                    <SelectContent>{drivers.map((d) => <SelectItem key={d.driverId} value={d.driverId}>{d.driverId} — {d.driverName}</SelectItem>)}</SelectContent>
+                                    <SelectContent>{drivers.map((d) => {
+                                      const used = addr.drivers.some((x, idx) => idx !== i && x.driverId === d.driverId);
+                                      return <SelectItem key={d.driverId} value={d.driverId} disabled={used}>{d.driverId} — {d.driverName}{used ? " (added)" : ""}</SelectItem>;
+                                    })}</SelectContent>
                                   </Select>
                                 </Field>
                               </div>
