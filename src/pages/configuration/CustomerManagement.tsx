@@ -425,7 +425,10 @@ export default function CustomerManagement() {
                                 <Field label="Vehicle Category">
                                   <Select value={r.vehicleCategoryCode} onValueChange={(v) => updV(i, v)}>
                                     <SelectTrigger className="h-9"><SelectValue placeholder="Select category" /></SelectTrigger>
-                                    <SelectContent>{categories.map((c) => <SelectItem key={c.categoryCode} value={c.categoryCode}>{c.categoryCode} — {c.description}</SelectItem>)}</SelectContent>
+                                    <SelectContent>{categories.map((c) => {
+                                      const used = addr.vehicles.some((v, idx) => idx !== i && v.vehicleCategoryCode === c.categoryCode);
+                                      return <SelectItem key={c.categoryCode} value={c.categoryCode} disabled={used}>{c.categoryCode} — {c.description}{used ? " (added)" : ""}</SelectItem>;
+                                    })}</SelectContent>
                                   </Select>
                                 </Field>
                               </div>
