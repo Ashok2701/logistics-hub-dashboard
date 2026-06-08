@@ -25,11 +25,12 @@ const PRESET_COLORS = [
 
 type DocRow = DocumentConfig;
 
-const emptyRow = (id: number): DocRow => ({
-  id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6",
-});
+const TEMP_PREFIX = "__new__";
+const isTempId = (id: string) => id.startsWith(TEMP_PREFIX);
 
-const TEMP_ID_THRESHOLD = -1; // negative ids are unsaved drafts
+const emptyRow = (id: string): DocRow => ({
+  id, document: "", docType: "", labelEng: "", labelFra: "", color: "#3B82F6", active: true,
+});
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -85,7 +86,7 @@ export default function DocumentConfiguration() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [filterDoc, setFilterDoc] = useState<string>("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<DocRow | null>(null);
 
   const load = async () => {
@@ -120,7 +121,7 @@ export default function DocumentConfiguration() {
   const sorted = sort.sorted;
 
   const startAdd = () => {
-    const tempId = -Date.now();
+    const tempId = `${TEMP_PREFIX}${Date.now()}`;
     const newRow = emptyRow(tempId);
     setRows((prev) => [newRow, ...prev]);
     setEditingId(tempId);
@@ -133,7 +134,7 @@ export default function DocumentConfiguration() {
   };
 
   const cancelEdit = () => {
-    if (draft && draft.id < 0) {
+    if (draft && isTempId(draft.id)) {
       setRows((prev) => prev.filter((r) => r.id !== draft.id));
     }
     setEditingId(null);
@@ -146,7 +147,7 @@ export default function DocumentConfiguration() {
     if (!draft.docType) { toast.error("Doc Type is required"); return; }
     setSaving(true);
     try {
-      const isNew = draft.id < 0;
+      const isNew = isTempId(draft.id);
       const { id, ...payload } = draft;
       const saved = isNew
         ? await documentConfigApi.create(payload)
@@ -166,7 +167,7 @@ export default function DocumentConfiguration() {
     }
   };
 
-  const deleteRow = async (id: number) => {
+  const deleteRow = async (id: string) => {
     try {
       await documentConfigApi.remove(id);
       setRows((prev) => prev.filter((r) => r.id !== id));
