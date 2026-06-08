@@ -28,6 +28,7 @@ import SyncCenter from "@/pages/configuration/SyncCenter";
 import UserManagement from "@/pages/configuration/UserManagement";
 import SiteManagement from "@/pages/configuration/SiteManagement";
 import CustomerManagement from "@/pages/configuration/CustomerManagement";
+import CustomerAddressManagement from "@/pages/configuration/CustomerAddressManagement";
 import SupplierManagement from "@/pages/configuration/SupplierManagement";
 import ProductManagement from "@/pages/configuration/ProductManagement";
 import DocumentConfiguration from "@/pages/configuration/DocumentConfiguration";
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="config/role-management" element={<RoleManagement />} />
         <Route path="config/sites" element={<SiteManagement />} />
         <Route path="config/customers" element={<CustomerManagement />} />
+        <Route path="config/customer-addresses" element={<CustomerAddressManagement />} />
         <Route path="config/suppliers" element={<SupplierManagement />} />
         <Route path="config/products" element={<ProductManagement />} />
         <Route path="config/documents" element={<DocumentConfiguration />} />
