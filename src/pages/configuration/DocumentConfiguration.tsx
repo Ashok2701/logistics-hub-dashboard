@@ -121,7 +121,7 @@ export default function DocumentConfiguration() {
   const sorted = sort.sorted;
 
   const startAdd = () => {
-    const tempId = -Date.now();
+    const tempId = `${TEMP_PREFIX}${Date.now()}`;
     const newRow = emptyRow(tempId);
     setRows((prev) => [newRow, ...prev]);
     setEditingId(tempId);
@@ -134,7 +134,7 @@ export default function DocumentConfiguration() {
   };
 
   const cancelEdit = () => {
-    if (draft && draft.id < 0) {
+    if (draft && isTempId(draft.id)) {
       setRows((prev) => prev.filter((r) => r.id !== draft.id));
     }
     setEditingId(null);
