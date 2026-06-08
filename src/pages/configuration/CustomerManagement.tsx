@@ -266,8 +266,8 @@ export default function CustomerManagement() {
   const addV = () => {
     const used = new Set(addr.vehicles.map((v) => v.vehicleCategoryCode));
     const next = categories.find((c) => !used.has(c.categoryCode));
-    if (!next) { toast({ title: "All vehicle categories added", variant: "destructive" }); return; }
-    setAddr((t) => ({ ...t, vehicles: [...t.vehicles, { vehicleCategoryCode: next.categoryCode }] }));
+    if (categories.length > 0 && !next) { toast({ title: "All vehicle categories added", variant: "destructive" }); return; }
+    setAddr((t) => ({ ...t, vehicles: [...t.vehicles, { vehicleCategoryCode: next?.categoryCode ?? "" }] }));
   };
   const updV = (i: number, v: string) => {
     if (addr.vehicles.some((r, idx) => idx !== i && r.vehicleCategoryCode === v)) {
@@ -281,8 +281,8 @@ export default function CustomerManagement() {
   const addD = () => {
     const used = new Set(addr.drivers.map((d) => d.driverId));
     const next = drivers.find((d) => !used.has(d.driverId));
-    if (!next) { toast({ title: "All drivers added", variant: "destructive" }); return; }
-    setAddr((t) => ({ ...t, drivers: [...t.drivers, { driverId: next.driverId }] }));
+    if (drivers.length > 0 && !next) { toast({ title: "All drivers added", variant: "destructive" }); return; }
+    setAddr((t) => ({ ...t, drivers: [...t.drivers, { driverId: next?.driverId ?? "" }] }));
   };
   const updD = (i: number, v: string) => {
     if (addr.drivers.some((r, idx) => idx !== i && r.driverId === v)) {
