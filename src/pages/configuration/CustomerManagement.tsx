@@ -171,6 +171,30 @@ export default function CustomerManagement() {
 
   const handleSaveAddr = async () => {
     if (!detail || !selectedAddrCode) return;
+    // Validate time windows (unless flagged as Any)
+    if (!addr.anyTimeWindow) {
+      const mins = addr.timeWindows.map((r) => [toMin(r.fromTime), toMin(r.toTime)] as const);
+      for (let i = 0; i < mins.length; i++) {
+        const [a1, a2] = mins[i];
+        if (isNaN(a1) || isNaN(a2)) { toast({ title: "Invalid time window", description: `Row ${i + 1}: use HH:MM`, variant: "destructive" }); return; }
+        if (a2 <= a1) { toast({ title: "Invalid time window", description: `Row ${i + 1}: To must be after From`, variant: "destructive" }); return; }
+        for (let j = i + 1; j < mins.length; j++) {
+          const [b1, b2] = mins[j];
+          if (!isNaN(b1) && !isNaN(b2) && a1 < b2 && b1 < a2) {
+            toast({ title: "Overlapping time windows", description: `Rows ${i + 1} and ${j + 1} overlap`, variant: "destructive" });
+            return;
+          }
+        }
+      }
+    }
+    if (!addr.anyVehicleCategory) {
+      const codes = addr.vehicles.map((v) => v.vehicleCategoryCode);
+      if (new Set(codes).size !== codes.length) { toast({ title: "Duplicate vehicle category", variant: "destructive" }); return; }
+    }
+    if (!addr.anyDriver) {
+      const ids = addr.drivers.map((d) => d.driverId);
+      if (new Set(ids).size !== ids.length) { toast({ title: "Duplicate driver", variant: "destructive" }); return; }
+    }
     setSavingAddr(true);
     try {
       const payload = {
@@ -196,16 +220,77 @@ export default function CustomerManagement() {
   };
 
   // Grid mutators for address tab
-  const addTW = () => setAddr((t) => ({ ...t, timeWindows: [...t.timeWindows, { fromTime: "09:00", toTime: "12:00", displayOrder: t.timeWindows.length }] }));
-  const updTW = (i: number, k: "fromTime" | "toTime", v: string) => setAddr((t) => ({ ...t, timeWindows: t.timeWindows.map((r, idx) => idx === i ? { ...r, [k]: v } : r) }));
+  const toMin = (s: string) => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec((s ?? "").trim());
+    if (!m) return NaN;
+    const h = +m[1], mm = +m[2];
+    if (h > 23 || mm > 59) return NaN;
+    return h * 60 + mm;
+  };
+  const overlapsExisting = (from: string, to: string, ignoreIdx = -1) => {
+    const a1 = toMin(from), a2 = toMin(to);
+    if (isNaN(a1) || isNaN(a2) || a2 <= a1) return false;
+    return addr.timeWindows.some((r, idx) => {
+      if (idx === ignoreIdx) return false;
+      const b1 = toMin(r.fromTime), b2 = toMin(r.toTime);
+      if (isNaN(b1) || isNaN(b2)) return false;
+      return a1 < b2 && b1 < a2;
+    });
+  };
+  const addTW = () => {
+    // find a non-overlapping default slot
+    const tries = [["09:00","12:00"],["13:00","17:00"],["08:00","09:00"],["17:00","18:00"]];
+    const slot = tries.find(([f,t]) => !overlapsExisting(f, t)) ?? ["",""];
+    setAddr((t) => ({ ...t, timeWindows: [...t.timeWindows, { fromTime: slot[0], toTime: slot[1], displayOrder: t.timeWindows.length }] }));
+  };
+  const updTW = (i: number, k: "fromTime" | "toTime", v: string) => {
+    setAddr((t) => {
+      const next = t.timeWindows.map((r, idx) => idx === i ? { ...r, [k]: v } : r);
+      const cur = next[i];
+      const a1 = toMin(cur.fromTime), a2 = toMin(cur.toTime);
+      if (!isNaN(a1) && !isNaN(a2) && a2 > a1) {
+        const clash = next.some((r, idx) => {
+          if (idx === i) return false;
+          const b1 = toMin(r.fromTime), b2 = toMin(r.toTime);
+          return !isNaN(b1) && !isNaN(b2) && a1 < b2 && b1 < a2;
+        });
+        if (clash) {
+          toast({ title: "Overlapping time window", description: `${cur.fromTime}–${cur.toTime} overlaps an existing window`, variant: "destructive" });
+        }
+      }
+      return { ...t, timeWindows: next };
+    });
+  };
   const delTW = (i: number) => setAddr((t) => ({ ...t, timeWindows: t.timeWindows.filter((_, idx) => idx !== i) }));
 
-  const addV = () => setAddr((t) => ({ ...t, vehicles: [...t.vehicles, { vehicleCategoryCode: categories[0]?.categoryCode ?? "" }] }));
-  const updV = (i: number, v: string) => setAddr((t) => ({ ...t, vehicles: t.vehicles.map((r, idx) => idx === i ? { ...r, vehicleCategoryCode: v } : r) }));
+  const addV = () => {
+    const used = new Set(addr.vehicles.map((v) => v.vehicleCategoryCode));
+    const next = categories.find((c) => !used.has(c.categoryCode));
+    if (!next) { toast({ title: "All vehicle categories added", variant: "destructive" }); return; }
+    setAddr((t) => ({ ...t, vehicles: [...t.vehicles, { vehicleCategoryCode: next.categoryCode }] }));
+  };
+  const updV = (i: number, v: string) => {
+    if (addr.vehicles.some((r, idx) => idx !== i && r.vehicleCategoryCode === v)) {
+      toast({ title: "Duplicate vehicle category", description: `${v} is already added`, variant: "destructive" });
+      return;
+    }
+    setAddr((t) => ({ ...t, vehicles: t.vehicles.map((r, idx) => idx === i ? { ...r, vehicleCategoryCode: v } : r) }));
+  };
   const delV = (i: number) => setAddr((t) => ({ ...t, vehicles: t.vehicles.filter((_, idx) => idx !== i) }));
 
-  const addD = () => setAddr((t) => ({ ...t, drivers: [...t.drivers, { driverId: drivers[0]?.driverId ?? "" }] }));
-  const updD = (i: number, v: string) => setAddr((t) => ({ ...t, drivers: t.drivers.map((r, idx) => idx === i ? { ...r, driverId: v } : r) }));
+  const addD = () => {
+    const used = new Set(addr.drivers.map((d) => d.driverId));
+    const next = drivers.find((d) => !used.has(d.driverId));
+    if (!next) { toast({ title: "All drivers added", variant: "destructive" }); return; }
+    setAddr((t) => ({ ...t, drivers: [...t.drivers, { driverId: next.driverId }] }));
+  };
+  const updD = (i: number, v: string) => {
+    if (addr.drivers.some((r, idx) => idx !== i && r.driverId === v)) {
+      toast({ title: "Duplicate driver", description: `${v} is already added`, variant: "destructive" });
+      return;
+    }
+    setAddr((t) => ({ ...t, drivers: t.drivers.map((r, idx) => idx === i ? { ...r, driverId: v } : r) }));
+  };
   const delD = (i: number) => setAddr((t) => ({ ...t, drivers: t.drivers.filter((_, idx) => idx !== i) }));
 
   // ───── Detail view ─────
@@ -364,7 +449,10 @@ export default function CustomerManagement() {
                                 <Field label="Vehicle Category">
                                   <Select value={r.vehicleCategoryCode} onValueChange={(v) => updV(i, v)}>
                                     <SelectTrigger className="h-9"><SelectValue placeholder="Select category" /></SelectTrigger>
-                                    <SelectContent>{categories.map((c) => <SelectItem key={c.categoryCode} value={c.categoryCode}>{c.categoryCode} — {c.description}</SelectItem>)}</SelectContent>
+                                    <SelectContent>{categories.map((c) => {
+                                      const used = addr.vehicles.some((v, idx) => idx !== i && v.vehicleCategoryCode === c.categoryCode);
+                                      return <SelectItem key={c.categoryCode} value={c.categoryCode} disabled={used}>{c.categoryCode} — {c.description}{used ? " (added)" : ""}</SelectItem>;
+                                    })}</SelectContent>
                                   </Select>
                                 </Field>
                               </div>
@@ -385,7 +473,10 @@ export default function CustomerManagement() {
                                 <Field label="Driver">
                                   <Select value={r.driverId} onValueChange={(v) => updD(i, v)}>
                                     <SelectTrigger className="h-9"><SelectValue placeholder="Select driver" /></SelectTrigger>
-                                    <SelectContent>{drivers.map((d) => <SelectItem key={d.driverId} value={d.driverId}>{d.driverId} — {d.driverName}</SelectItem>)}</SelectContent>
+                                    <SelectContent>{drivers.map((d) => {
+                                      const used = addr.drivers.some((x, idx) => idx !== i && x.driverId === d.driverId);
+                                      return <SelectItem key={d.driverId} value={d.driverId} disabled={used}>{d.driverId} — {d.driverName}{used ? " (added)" : ""}</SelectItem>;
+                                    })}</SelectContent>
                                   </Select>
                                 </Field>
                               </div>
