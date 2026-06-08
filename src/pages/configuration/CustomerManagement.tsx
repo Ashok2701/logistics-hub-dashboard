@@ -6,17 +6,42 @@ import { useSortable } from "@/hooks/useSortable";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowLeft, Pencil, RefreshCw, Loader2 } from "lucide-react";
+import { Search, ArrowLeft, Pencil, RefreshCw, Loader2, Plus, Trash2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { customerApi, type Customer } from "@/lib/fleetApi";
+import {
+  customerApi, vehicleCategoryApi, driverApi,
+  type Customer, type CustomerAddress, type AddressTimeWindow,
+  type VehicleCategory, type Driver,
+} from "@/lib/fleetApi";
 
-type FormState = { latitude: string; longitude: string; serviceTime: string; waitingTime: string; };
-const emptyForm: FormState = { latitude: "", longitude: "", serviceTime: "", waitingTime: "" };
+type InfoForm = { latitude: string; longitude: string; serviceTime: string; waitingTime: string; };
+const emptyInfo: InfoForm = { latitude: "", longitude: "", serviceTime: "", waitingTime: "" };
+
+type AddrForm = {
+  anyTimeWindow: boolean;
+  anyVehicleCategory: boolean;
+  anyDriver: boolean;
+  timeWindows: AddressTimeWindow[];
+  vehicles: { vehicleCategoryCode: string }[];
+  drivers: { driverId: string }[];
+};
+const emptyAddr: AddrForm = {
+  anyTimeWindow: false, anyVehicleCategory: false, anyDriver: false,
+  timeWindows: [], vehicles: [], drivers: [],
+};
 
 const isTmsActive = (c: Customer) =>
   c.latitude != null || c.longitude != null || !!c.serviceTime || !!c.waitingTime;
+
+const addrLabel = (a: CustomerAddress) =>
+  a.addressDescription ?? a.description ?? a.city ?? a.addressCode;
+
+const isDefault = (a: CustomerAddress) => !!(a.defaultAddress ?? a.isDefault);
 
 function currentUser(): string {
   try { return JSON.parse(localStorage.getItem("vanguard-user") || "{}").username || "admin"; }
@@ -26,12 +51,23 @@ function currentUser(): string {
 export default function CustomerManagement() {
   const [items, setItems] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+
   const [view, setView] = useState<"list" | "form">("list");
-  const [editing, setEditing] = useState<Customer | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [detail, setDetail] = useState<Customer | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [savingInfo, setSavingInfo] = useState(false);
+  const [info, setInfo] = useState<InfoForm>(emptyInfo);
+  const [tab, setTab] = useState<"info" | "addresses">("info");
+
+  // Addresses sub-state
+  const [selectedAddrCode, setSelectedAddrCode] = useState<string | null>(null);
+  const [addr, setAddr] = useState<AddrForm>(emptyAddr);
+  const [loadingAddr, setLoadingAddr] = useState(false);
+  const [savingAddr, setSavingAddr] = useState(false);
+  const [categories, setCategories] = useState<VehicleCategory[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -40,6 +76,11 @@ export default function CustomerManagement() {
     finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // preload lookup lists for address tab
+    vehicleCategoryApi.list().then(setCategories).catch(() => setCategories([]));
+    driverApi.list().then(setDrivers).catch(() => setDrivers([]));
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -53,39 +94,131 @@ export default function CustomerManagement() {
   }, [items, search, statusFilter]);
   const sort = useSortable(filtered);
 
-  const openEdit = (c: Customer) => {
-    setEditing(c);
-    setForm({
+  const openEdit = async (c: Customer) => {
+    setDetail(c);
+    setInfo({
       latitude: c.latitude != null ? String(c.latitude) : "",
       longitude: c.longitude != null ? String(c.longitude) : "",
       serviceTime: c.serviceTime ?? "",
       waitingTime: c.waitingTime ?? "",
     });
+    setTab("info");
+    setSelectedAddrCode(null);
+    setAddr(emptyAddr);
     setView("form");
+    setLoadingDetail(true);
+    try {
+      const full = await customerApi.get(c.customerCode);
+      setDetail(full);
+      setInfo({
+        latitude: full.latitude != null ? String(full.latitude) : "",
+        longitude: full.longitude != null ? String(full.longitude) : "",
+        serviceTime: full.serviceTime ?? "",
+        waitingTime: full.waitingTime ?? "",
+      });
+    } catch (err: any) {
+      toast({ title: "Failed to load customer", description: err?.message ?? String(err), variant: "destructive" });
+    } finally { setLoadingDetail(false); }
   };
-  const goBack = () => { setView("list"); setEditing(null); };
 
-  const handleSave = async () => {
-    if (!editing) return;
-    setSaving(true);
+  const goBack = () => { setView("list"); setDetail(null); };
+
+  const handleSaveInfo = async () => {
+    if (!detail) return;
+    setSavingInfo(true);
     try {
       const payload = {
-        latitude: form.latitude === "" ? null : parseFloat(form.latitude),
-        longitude: form.longitude === "" ? null : parseFloat(form.longitude),
-        serviceTime: form.serviceTime || null,
-        waitingTime: form.waitingTime || null,
+        latitude: info.latitude === "" ? null : parseFloat(info.latitude),
+        longitude: info.longitude === "" ? null : parseFloat(info.longitude),
+        serviceTime: info.serviceTime || null,
+        waitingTime: info.waitingTime || null,
         updatedBy: currentUser(),
       };
-      const updated = await customerApi.updateTms(editing.customerCode, payload);
-      setItems((p) => p.map((c) => c.customerCode === editing.customerCode ? { ...c, ...updated, ...payload } as Customer : c));
+      const updated = await customerApi.update(detail.customerCode, payload);
+      setDetail((d) => d ? { ...d, ...updated, ...payload } as Customer : d);
+      setItems((p) => p.map((c) => c.customerCode === detail.customerCode ? { ...c, ...payload } as Customer : c));
       toast({ title: "Customer updated" });
-      goBack();
     } catch (err: any) {
       toast({ title: "Failed to update customer", description: err?.message ?? String(err), variant: "destructive" });
-    } finally { setSaving(false); }
+    } finally { setSavingInfo(false); }
   };
 
-  if (view === "form" && editing) {
+  const pickAddress = async (a: CustomerAddress) => {
+    if (!detail) return;
+    setSelectedAddrCode(a.addressCode);
+    setAddr({
+      anyTimeWindow: !!a.anyTimeWindow,
+      anyVehicleCategory: !!a.anyVehicleCategory,
+      anyDriver: !!a.anyDriver,
+      timeWindows: a.timeWindows ?? [],
+      vehicles: (a.vehicles ?? []).map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
+      drivers: (a.drivers ?? []).map((d) => ({ driverId: d.driverId })),
+    });
+    setLoadingAddr(true);
+    try {
+      const data = await customerApi.getAddress(detail.customerCode, a.addressCode);
+      setAddr({
+        anyTimeWindow: !!data.anyTimeWindow,
+        anyVehicleCategory: !!data.anyVehicleCategory,
+        anyDriver: !!data.anyDriver,
+        timeWindows: data.timeWindows ?? [],
+        vehicles: (data.vehicles ?? []).map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
+        drivers: (data.drivers ?? []).map((d) => ({ driverId: d.driverId })),
+      });
+      // update merged address in detail
+      setDetail((d) => d ? {
+        ...d,
+        addresses: (d.addresses ?? []).map((x) => x.addressCode === a.addressCode ? { ...x, ...data } : x),
+      } : d);
+    } catch (err: any) {
+      toast({ title: "Failed to load address", description: err?.message ?? String(err), variant: "destructive" });
+    } finally { setLoadingAddr(false); }
+  };
+
+  const handleSaveAddr = async () => {
+    if (!detail || !selectedAddrCode) return;
+    setSavingAddr(true);
+    try {
+      const payload = {
+        anyTimeWindow: addr.anyTimeWindow,
+        anyVehicleCategory: addr.anyVehicleCategory,
+        anyDriver: addr.anyDriver,
+        timeWindows: addr.timeWindows.map((t, i) => ({
+          fromTime: t.fromTime, toTime: t.toTime, displayOrder: t.displayOrder ?? i,
+        })),
+        vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
+        drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
+        updatedBy: currentUser(),
+      };
+      const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
+      setDetail((d) => d ? {
+        ...d,
+        addresses: (d.addresses ?? []).map((x) => x.addressCode === selectedAddrCode ? { ...x, ...updated, ...payload } : x),
+      } : d);
+      toast({ title: "Address updated" });
+    } catch (err: any) {
+      toast({ title: "Failed to save address", description: err?.message ?? String(err), variant: "destructive" });
+    } finally { setSavingAddr(false); }
+  };
+
+  // Grid mutators for address tab
+  const addTW = () => setAddr((t) => ({ ...t, timeWindows: [...t.timeWindows, { fromTime: "09:00", toTime: "12:00", displayOrder: t.timeWindows.length }] }));
+  const updTW = (i: number, k: "fromTime" | "toTime", v: string) => setAddr((t) => ({ ...t, timeWindows: t.timeWindows.map((r, idx) => idx === i ? { ...r, [k]: v } : r) }));
+  const delTW = (i: number) => setAddr((t) => ({ ...t, timeWindows: t.timeWindows.filter((_, idx) => idx !== i) }));
+
+  const addV = () => setAddr((t) => ({ ...t, vehicles: [...t.vehicles, { vehicleCategoryCode: categories[0]?.categoryCode ?? "" }] }));
+  const updV = (i: number, v: string) => setAddr((t) => ({ ...t, vehicles: t.vehicles.map((r, idx) => idx === i ? { ...r, vehicleCategoryCode: v } : r) }));
+  const delV = (i: number) => setAddr((t) => ({ ...t, vehicles: t.vehicles.filter((_, idx) => idx !== i) }));
+
+  const addD = () => setAddr((t) => ({ ...t, drivers: [...t.drivers, { driverId: drivers[0]?.driverId ?? "" }] }));
+  const updD = (i: number, v: string) => setAddr((t) => ({ ...t, drivers: t.drivers.map((r, idx) => idx === i ? { ...r, driverId: v } : r) }));
+  const delD = (i: number) => setAddr((t) => ({ ...t, drivers: t.drivers.filter((_, idx) => idx !== i) }));
+
+  // ───── Detail view ─────
+  if (view === "form" && detail) {
+    const addresses = detail.addresses ?? [];
+    const selectedAddress = addresses.find((a) => a.addressCode === selectedAddrCode) ?? null;
+
     return (
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
         <div className="flex items-center justify-between mb-6">
@@ -93,40 +226,174 @@ export default function CustomerManagement() {
             <button onClick={goBack} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50"><ArrowLeft className="w-4 h-4" /></button>
             <div>
               <h1 className="text-lg font-semibold">Edit Customer</h1>
-              <p className="text-xs text-muted-foreground">{editing.customerCode} — {editing.customerName}</p>
+              <p className="text-xs text-muted-foreground">{detail.customerCode} — {detail.customerName}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary disabled:opacity-50">Cancel</button>
-            <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{saving && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
+            <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary">Close</button>
+            {tab === "info" ? (
+              <button onClick={handleSaveInfo} disabled={savingInfo || loadingDetail} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingInfo && <Loader2 className="w-4 h-4 animate-spin" />}Save Info</button>
+            ) : (
+              <button onClick={handleSaveAddr} disabled={savingAddr || !selectedAddrCode || loadingAddr} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingAddr && <Loader2 className="w-4 h-4 animate-spin" />}Save Address</button>
+            )}
           </div>
         </div>
 
-        <div className="bg-card rounded-xl border border-border shadow-card p-6 space-y-6">
-          <Section title="Customer Information (from X3)">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Field label="Customer Code"><ReadOnly value={editing.customerCode} mono /></Field>
-              <Field label="Short Name"><ReadOnly value={editing.shortName ?? ""} /></Field>
-              <Field label="Customer Name"><ReadOnly value={editing.customerName ?? ""} /></Field>
-              <Field label="Country"><ReadOnly value={editing.countryCode ?? ""} mono /></Field>
-              <Field label="Currency"><ReadOnly value={editing.currencyCode ?? ""} mono /></Field>
-              <Field label="Active"><ReadOnly value={editing.active ? "Yes" : "No"} /></Field>
-            </div>
-          </Section>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="space-y-5">
+          <TabsList>
+            <TabsTrigger value="info">Info</TabsTrigger>
+            <TabsTrigger value="addresses">Addresses {addresses.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">({addresses.length})</span>}</TabsTrigger>
+          </TabsList>
 
-          <Section title="TMS Configuration">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Field label="Latitude"><Input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))} placeholder="e.g. 51.5074" className="h-9" /></Field>
-              <Field label="Longitude"><Input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))} placeholder="e.g. -0.1278" className="h-9" /></Field>
-              <Field label="Service Time (HH:MM)"><Input value={form.serviceTime} onChange={(e) => setForm((f) => ({ ...f, serviceTime: e.target.value }))} placeholder="00:15" className="h-9" /></Field>
-              <Field label="Waiting Time (HH:MM)"><Input value={form.waitingTime} onChange={(e) => setForm((f) => ({ ...f, waitingTime: e.target.value }))} placeholder="00:10" className="h-9" /></Field>
+          <TabsContent value="info">
+            <div className="bg-card rounded-xl border border-border shadow-card p-6 space-y-6">
+              <Section title="Customer Information (from X3)">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Field label="Customer Code"><ReadOnly value={detail.customerCode} mono /></Field>
+                  <Field label="Short Name"><ReadOnly value={detail.shortName ?? ""} /></Field>
+                  <Field label="Customer Name"><ReadOnly value={detail.customerName ?? ""} /></Field>
+                  <Field label="Country Code"><ReadOnly value={detail.countryCode ?? ""} mono /></Field>
+                  <Field label="Currency Code"><ReadOnly value={detail.currencyCode ?? ""} mono /></Field>
+                  <Field label="Active"><ReadOnly value={detail.active ? "Yes" : "No"} /></Field>
+                  <Field label="Last Synced"><ReadOnly value={detail.syncedAt ?? ""} /></Field>
+                </div>
+              </Section>
+
+              <Separator />
+
+              <Section title="TMS Configuration">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Field label="Latitude"><Input value={info.latitude} onChange={(e) => setInfo((f) => ({ ...f, latitude: e.target.value }))} placeholder="e.g. 51.5074" className="h-9" /></Field>
+                  <Field label="Longitude"><Input value={info.longitude} onChange={(e) => setInfo((f) => ({ ...f, longitude: e.target.value }))} placeholder="e.g. -0.1278" className="h-9" /></Field>
+                  <Field label="Service Time (HH:MM)"><Input value={info.serviceTime} onChange={(e) => setInfo((f) => ({ ...f, serviceTime: e.target.value }))} placeholder="00:15" className="h-9" /></Field>
+                  <Field label="Waiting Time (HH:MM)"><Input value={info.waitingTime} onChange={(e) => setInfo((f) => ({ ...f, waitingTime: e.target.value }))} placeholder="00:10" className="h-9" /></Field>
+                </div>
+              </Section>
             </div>
-          </Section>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="addresses">
+            <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[480px]">
+                {/* Left list */}
+                <div className="lg:col-span-4 border-r border-border bg-secondary/20">
+                  <div className="px-4 py-3 border-b border-border">
+                    <h3 className="text-sm font-semibold">Addresses ({addresses.length})</h3>
+                  </div>
+                  <div className="max-h-[600px] overflow-y-auto divide-y divide-border">
+                    {loadingDetail ? (
+                      <div className="px-4 py-6 text-center text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin inline mr-2" />Loading…</div>
+                    ) : addresses.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-muted-foreground text-sm">No addresses</div>
+                    ) : addresses.map((a) => (
+                      <button
+                        key={a.addressCode}
+                        onClick={() => pickAddress(a)}
+                        className={cn(
+                          "w-full text-left px-4 py-3 hover:bg-primary/[0.05] transition-colors",
+                          selectedAddrCode === a.addressCode && "bg-primary/[0.08]"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-medium font-mono">{a.addressCode}</div>
+                          {isDefault(a) && <StatusBadge status="Default" variant="primary" />}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate mt-1">{addrLabel(a)}</div>
+                        {a.city && <div className="text-xs text-muted-foreground/70 mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{a.city}</div>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right detail */}
+                <div className="lg:col-span-8 p-6">
+                  {!selectedAddress ? (
+                    <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Select an address from the list to configure</div>
+                  ) : loadingAddr ? (
+                    <div className="py-12 text-center text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading address…</div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-sm font-semibold">{selectedAddress.addressCode} — {addrLabel(selectedAddress)}</h3>
+                        {selectedAddress.city && <p className="text-xs text-muted-foreground mt-0.5">{selectedAddress.city}</p>}
+                      </div>
+
+                      <Section title="Flags">
+                        <div className="flex flex-wrap items-center gap-6">
+                          <FlagSwitch label="Any Time Window" checked={addr.anyTimeWindow} onChange={(v) => setAddr((t) => ({ ...t, anyTimeWindow: v }))} />
+                          <FlagSwitch label="Any Vehicle Category" checked={addr.anyVehicleCategory} onChange={(v) => setAddr((t) => ({ ...t, anyVehicleCategory: v }))} />
+                          <FlagSwitch label="Any Driver" checked={addr.anyDriver} onChange={(v) => setAddr((t) => ({ ...t, anyDriver: v }))} />
+                        </div>
+                      </Section>
+
+                      <Separator />
+
+                      <Section title="Time Windows">
+                        <div className={cn("space-y-2", addr.anyTimeWindow && "opacity-50 pointer-events-none")}>
+                          {addr.timeWindows.map((r, i) => (
+                            <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                              <div className="col-span-5 sm:col-span-4"><Field label="From (HH:MM)"><Input value={r.fromTime} onChange={(e) => updTW(i, "fromTime", e.target.value)} className="h-9" placeholder="09:00" /></Field></div>
+                              <div className="col-span-5 sm:col-span-4"><Field label="To (HH:MM)"><Input value={r.toTime} onChange={(e) => updTW(i, "toTime", e.target.value)} className="h-9" placeholder="12:00" /></Field></div>
+                              <div className="col-span-2"><button onClick={() => delTW(i)} className="h-9 w-9 inline-flex items-center justify-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></button></div>
+                            </div>
+                          ))}
+                          <button onClick={addTW} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary inline-flex items-center gap-2"><Plus className="w-4 h-4" /> Add Time Window</button>
+                        </div>
+                      </Section>
+
+                      <Separator />
+
+                      <Section title="Vehicle Categories">
+                        <div className={cn("space-y-2", addr.anyVehicleCategory && "opacity-50 pointer-events-none")}>
+                          {addr.vehicles.map((r, i) => (
+                            <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                              <div className="col-span-10 sm:col-span-8">
+                                <Field label="Vehicle Category">
+                                  <Select value={r.vehicleCategoryCode} onValueChange={(v) => updV(i, v)}>
+                                    <SelectTrigger className="h-9"><SelectValue placeholder="Select category" /></SelectTrigger>
+                                    <SelectContent>{categories.map((c) => <SelectItem key={c.categoryCode} value={c.categoryCode}>{c.categoryCode} — {c.description}</SelectItem>)}</SelectContent>
+                                  </Select>
+                                </Field>
+                              </div>
+                              <div className="col-span-2"><button onClick={() => delV(i)} className="h-9 w-9 inline-flex items-center justify-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></button></div>
+                            </div>
+                          ))}
+                          <button onClick={addV} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary inline-flex items-center gap-2"><Plus className="w-4 h-4" /> Add Vehicle Category</button>
+                        </div>
+                      </Section>
+
+                      <Separator />
+
+                      <Section title="Drivers">
+                        <div className={cn("space-y-2", addr.anyDriver && "opacity-50 pointer-events-none")}>
+                          {addr.drivers.map((r, i) => (
+                            <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                              <div className="col-span-10 sm:col-span-8">
+                                <Field label="Driver">
+                                  <Select value={r.driverId} onValueChange={(v) => updD(i, v)}>
+                                    <SelectTrigger className="h-9"><SelectValue placeholder="Select driver" /></SelectTrigger>
+                                    <SelectContent>{drivers.map((d) => <SelectItem key={d.driverId} value={d.driverId}>{d.driverId} — {d.driverName}</SelectItem>)}</SelectContent>
+                                  </Select>
+                                </Field>
+                              </div>
+                              <div className="col-span-2"><button onClick={() => delD(i)} className="h-9 w-9 inline-flex items-center justify-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></button></div>
+                            </div>
+                          ))}
+                          <button onClick={addD} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary inline-flex items-center gap-2"><Plus className="w-4 h-4" /> Add Driver</button>
+                        </div>
+                      </Section>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </motion.div>
     );
   }
 
+  // ───── List view ─────
   return (
     <div>
       <PageHeader title="Customers" subtitle="Manage customer TMS configuration" />
@@ -159,32 +426,41 @@ export default function CustomerManagement() {
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
               <SortableTableHead sortKey="customerCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Code</SortableTableHead>
               <SortableTableHead sortKey="customerName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</SortableTableHead>
+              <SortableTableHead sortKey="shortName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Short</SortableTableHead>
               <SortableTableHead sortKey="countryCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Country</SortableTableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Coordinates</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">TMS</TableHead>
+              <SortableTableHead sortKey="currencyCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Currency</SortableTableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Active</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Service</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Waiting</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell text-right">Addresses</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading customers…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading customers…</TableCell></TableRow>
             ) : sort.sorted.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground text-sm">No customers found</TableCell></TableRow>
-            ) : sort.sorted.map((c, i) => {
-              const tms = isTmsActive(c);
-              return (
-                <TableRow key={c.customerCode} className={cn("transition-colors", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.03]")}>
-                  <TableCell className="font-medium text-sm font-mono">{c.customerCode}</TableCell>
-                  <TableCell className="text-sm">{c.customerName}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{c.countryCode ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{c.latitude != null && c.longitude != null ? `${c.latitude}, ${c.longitude}` : "—"}</TableCell>
-                  <TableCell><StatusBadge status={tms ? "Active" : "Inactive"} variant={tms ? "primary" : "muted"} /></TableCell>
-                  <TableCell className="text-right">
-                    <button onClick={() => openEdit(c)} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"><Pencil className="w-4 h-4" /></button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+              <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground text-sm">No customers found</TableCell></TableRow>
+            ) : sort.sorted.map((c, i) => (
+              <TableRow
+                key={c.customerCode}
+                onClick={() => openEdit(c)}
+                className={cn("transition-colors cursor-pointer", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.05]")}
+              >
+                <TableCell className="font-medium text-sm font-mono">{c.customerCode}</TableCell>
+                <TableCell className="text-sm">{c.customerName}</TableCell>
+                <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{c.shortName ?? "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{c.countryCode ?? "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground font-mono hidden lg:table-cell">{c.currencyCode ?? "—"}</TableCell>
+                <TableCell><StatusBadge status={c.active ? "Active" : "Inactive"} variant={c.active ? "primary" : "muted"} /></TableCell>
+                <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{c.serviceTime ?? "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{c.waitingTime ?? "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground hidden md:table-cell text-right">{c.addressCount ?? c.addresses?.length ?? 0}</TableCell>
+                <TableCell className="text-right">
+                  <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"><Pencil className="w-4 h-4" /></button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </motion.div>
@@ -200,4 +476,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 function ReadOnly({ value, mono }: { value: string; mono?: boolean }) {
   return <Input value={value} readOnly className={cn("h-9 bg-secondary/40", mono && "font-mono")} />;
+}
+function FlagSwitch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center gap-2 cursor-pointer">
+      <Switch checked={checked} onCheckedChange={onChange} />
+      <span className="text-sm">{label}</span>
+    </label>
+  );
 }
