@@ -220,32 +220,55 @@ export default function CustomerManagement() {
     const selectedAddress = addresses.find((a) => a.addressCode === selectedAddrCode) ?? null;
 
     return (
-      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button onClick={goBack} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50"><ArrowLeft className="w-4 h-4" /></button>
-            <div>
-              <h1 className="text-lg font-semibold">Edit Customer</h1>
-              <p className="text-xs text-muted-foreground">{detail.customerCode} — {detail.customerName}</p>
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
+        {/* Sticky header + tab nav (matches Site pattern) */}
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur border-b border-border">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150">
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">Edit Customer</h1>
+                <p className="text-xs text-muted-foreground">{detail.customerCode} — {detail.customerName}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">Cancel</button>
+              {tab === "info" ? (
+                <button onClick={handleSaveInfo} disabled={savingInfo || loadingDetail} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingInfo && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
+              ) : (
+                <button onClick={handleSaveAddr} disabled={savingAddr || !selectedAddrCode || loadingAddr} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingAddr && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary">Close</button>
-            {tab === "info" ? (
-              <button onClick={handleSaveInfo} disabled={savingInfo || loadingDetail} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingInfo && <Loader2 className="w-4 h-4 animate-spin" />}Save Info</button>
-            ) : (
-              <button onClick={handleSaveAddr} disabled={savingAddr || !selectedAddrCode || loadingAddr} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingAddr && <Loader2 className="w-4 h-4 animate-spin" />}Save Address</button>
-            )}
+          <div className="flex items-center gap-1 h-11">
+            {[
+              { id: "info" as const, label: "Info" },
+              { id: "addresses" as const, label: `Addresses${addresses.length > 0 ? ` (${addresses.length})` : ""}` },
+            ].map((t) => {
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-200",
+                    active ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+                  )}
+                >
+                  {t.label}
+                  {active && (
+                    <motion.span layoutId="customer-active-section-underline" className="absolute left-2 right-2 -bottom-[5px] h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="space-y-5">
-          <TabsList>
-            <TabsTrigger value="info">Info</TabsTrigger>
-            <TabsTrigger value="addresses">Addresses {addresses.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">({addresses.length})</span>}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="info">
+        <div className="mt-6">
+          {tab === "info" ? (
             <div className="bg-card rounded-xl border border-border shadow-card p-6 space-y-6">
               <Section title="Customer Information (from X3)">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -270,9 +293,7 @@ export default function CustomerManagement() {
                 </div>
               </Section>
             </div>
-          </TabsContent>
-
-          <TabsContent value="addresses">
+          ) : (
             <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
               <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[480px]">
                 {/* Left list */}
@@ -387,8 +408,8 @@ export default function CustomerManagement() {
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </motion.div>
     );
   }
