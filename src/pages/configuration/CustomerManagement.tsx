@@ -171,6 +171,30 @@ export default function CustomerManagement() {
 
   const handleSaveAddr = async () => {
     if (!detail || !selectedAddrCode) return;
+    // Validate time windows (unless flagged as Any)
+    if (!addr.anyTimeWindow) {
+      const mins = addr.timeWindows.map((r) => [toMin(r.fromTime), toMin(r.toTime)] as const);
+      for (let i = 0; i < mins.length; i++) {
+        const [a1, a2] = mins[i];
+        if (isNaN(a1) || isNaN(a2)) { toast({ title: "Invalid time window", description: `Row ${i + 1}: use HH:MM`, variant: "destructive" }); return; }
+        if (a2 <= a1) { toast({ title: "Invalid time window", description: `Row ${i + 1}: To must be after From`, variant: "destructive" }); return; }
+        for (let j = i + 1; j < mins.length; j++) {
+          const [b1, b2] = mins[j];
+          if (!isNaN(b1) && !isNaN(b2) && a1 < b2 && b1 < a2) {
+            toast({ title: "Overlapping time windows", description: `Rows ${i + 1} and ${j + 1} overlap`, variant: "destructive" });
+            return;
+          }
+        }
+      }
+    }
+    if (!addr.anyVehicleCategory) {
+      const codes = addr.vehicles.map((v) => v.vehicleCategoryCode);
+      if (new Set(codes).size !== codes.length) { toast({ title: "Duplicate vehicle category", variant: "destructive" }); return; }
+    }
+    if (!addr.anyDriver) {
+      const ids = addr.drivers.map((d) => d.driverId);
+      if (new Set(ids).size !== ids.length) { toast({ title: "Duplicate driver", variant: "destructive" }); return; }
+    }
     setSavingAddr(true);
     try {
       const payload = {
