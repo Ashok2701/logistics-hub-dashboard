@@ -1,608 +1,750 @@
 import { useMemo, useState, type DragEvent } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Truck, Container, Users, Calendar as CalIcon, ChevronLeft, ChevronRight,
-  RefreshCw, Lock, Unlock, CheckCheck, Trash2, Route as RouteIcon,
-  PackageCheck, PackageX, ArrowDownToLine, ArrowUpFromLine,
-  Search, Map as MapIcon, List, X,
+  Truck, Users, Calendar as CalIcon, Building2, Search, MapPin, Route as RouteIcon,
+  PackageCheck, ArrowDownToLine, ArrowUpFromLine, CheckCheck, X, Plus, Play,
+  Map as MapIcon, List, GripVertical, Loader2, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 
-// ---------- Sample data ----------
-type Vehicle = { code: string; no: string; departure: string; arrival: string; driver: string; sideOp: string; trailer: string; category: string; start: string; tone: "warm" | "cool" };
-const sampleVehicles: Vehicle[] = [
-  { code: "115", no: "AY601W", departure: "KCC01", arrival: "KCC01", driver: "", sideOp: "No", trailer: "FRP19", category: "BOBTAIL", start: "07:00", tone: "warm" },
-  { code: "118", no: "AZ472B", departure: "KCC01", arrival: "KCC01", driver: "", sideOp: "No", trailer: "FRP2", category: "BOBTAIL", start: "07:00", tone: "warm" },
-  { code: "91",  no: "AN846Y", departure: "KCC01", arrival: "KCC01", driver: "", sideOp: "No", trailer: "4000", category: "BOBTAIL", start: "07:00", tone: "warm" },
-  { code: "113", no: "AX267P", departure: "KCC01", arrival: "KCC01", driver: "", sideOp: "No", trailer: "", category: "BOBTAIL", start: "00:01", tone: "cool" },
-  { code: "109", no: "AW107G", departure: "KCC01", arrival: "KCC01", driver: "Dan Taylor", sideOp: "No", trailer: "", category: "BOXTRUCK", start: "00:01", tone: "cool" },
+// ---------- Mock data ----------
+const SITES = [
+  { code: "KCC01", name: "Kansas City Central" },
+  { code: "KCC02", name: "Kansas City North" },
+  { code: "WH-A",  name: "Warehouse Atlanta" },
+  { code: "WH-D",  name: "Warehouse Dallas" },
 ];
 
-type Trailer = { code: string; no: string; type: string; capacity: string };
-const sampleTrailers: Trailer[] = [
-  { code: "FRP19", no: "T-FRP19", type: "Reefer", capacity: "26 pal" },
-  { code: "FRP2",  no: "T-FRP2",  type: "Reefer", capacity: "26 pal" },
-  { code: "4000",  no: "T-4000",  type: "Dry",    capacity: "30 pal" },
+type Vehicle = { code: string; plate: string; category: string; capacity: string; site: string };
+const VEHICLES: Vehicle[] = [
+  { code: "V-115", plate: "AY601W", category: "BOBTAIL",  capacity: "26 pal", site: "KCC01" },
+  { code: "V-118", plate: "AZ472B", category: "BOBTAIL",  capacity: "26 pal", site: "KCC01" },
+  { code: "V-091", plate: "AN846Y", category: "BOXTRUCK", capacity: "30 pal", site: "KCC01" },
+  { code: "V-109", plate: "AW107G", category: "REEFER",   capacity: "22 pal", site: "KCC02" },
+  { code: "V-213", plate: "BX902K", category: "VAN",      capacity: "12 pal", site: "WH-A"  },
 ];
 
-type Driver = { id: string; name: string; license: string; status: string };
-const sampleDrivers: Driver[] = [
-  { id: "DR-01", name: "Dan Taylor",  license: "CDL-A", status: "Available" },
-  { id: "DR-02", name: "John Carter", license: "CDL-A", status: "Available" },
-  { id: "DR-03", name: "Sarah Miles", license: "CDL-B", status: "On Trip" },
+type Driver = { id: string; name: string; license: string; status: "Available" | "On Trip" };
+const DRIVERS: Driver[] = [
+  { id: "DR-01", name: "Dan Taylor",   license: "CDL-A", status: "Available" },
+  { id: "DR-02", name: "John Carter",  license: "CDL-A", status: "Available" },
+  { id: "DR-03", name: "Sarah Miles",  license: "CDL-B", status: "Available" },
+  { id: "DR-04", name: "Mike Rivera",  license: "CDL-A", status: "On Trip" },
+  { id: "DR-05", name: "Lisa Brown",   license: "CDL-B", status: "Available" },
 ];
 
-type Doc = { txn: string; prep: string; paired: string; type: "DELIVERY" | "PICKUP"; address: string; routeCode: string; priority: "High" | "Med" | "Low"; client: string; city: string; site: string; vehicle: string; deliverable: boolean };
-const sampleDocs: Doc[] = [
-  { txn: "ORD-2810", prep: "PRP-001", paired: "-", type: "DELIVERY", address: "12 Wilmington Ave",  routeCode: "RC-N1", priority: "High", client: "Acme Co",     city: "Wilmington",  site: "KCC01", vehicle: "", deliverable: true },
-  { txn: "ORD-2811", prep: "PRP-002", paired: "-", type: "DELIVERY", address: "88 Newark Plaza",    routeCode: "RC-N1", priority: "Med",  client: "Bright Ltd",  city: "Newark",      site: "KCC01", vehicle: "", deliverable: true },
-  { txn: "ORD-2812", prep: "PRP-003", paired: "-", type: "DELIVERY", address: "5 Glasgow Rd",       routeCode: "RC-N2", priority: "Low",  client: "Northern",    city: "Glasgow",     site: "KCC01", vehicle: "", deliverable: false },
-  { txn: "ORD-2813", prep: "PRP-004", paired: "-", type: "PICKUP",   address: "Port Terminal B",    routeCode: "RC-S1", priority: "High", client: "Harbor Co",   city: "Wilmington",  site: "KCC01", vehicle: "", deliverable: true },
-  { txn: "ORD-2814", prep: "PRP-005", paired: "-", type: "PICKUP",   address: "9 Glassboro Way",    routeCode: "RC-S2", priority: "Med",  client: "South Inc",   city: "Glassboro",   site: "KCC01", vehicle: "", deliverable: true },
+type Stop = {
+  id: string;
+  type: "DROP" | "PICKUP";
+  txn: string;
+  client: string;
+  address: string;
+  city: string;
+  site: string;
+  priority: "High" | "Med" | "Low";
+  qty: number;
+  lat: number; // 0-100 (svg viewBox space)
+  lng: number;
+};
+const STOPS: Stop[] = [
+  { id: "S1", type: "DROP",   txn: "ORD-2810", client: "Acme Co",     address: "12 Wilmington Ave",  city: "Wilmington",  site: "KCC01", priority: "High", qty: 6, lat: 30,  lng: 70 },
+  { id: "S2", type: "DROP",   txn: "ORD-2811", client: "Bright Ltd",  address: "88 Newark Plaza",    city: "Newark",      site: "KCC01", priority: "Med",  qty: 4, lat: 45,  lng: 140 },
+  { id: "S3", type: "DROP",   txn: "ORD-2812", client: "Northern",    address: "5 Glasgow Rd",       city: "Glasgow",     site: "KCC02", priority: "Low",  qty: 9, lat: 70,  lng: 90  },
+  { id: "S4", type: "DROP",   txn: "ORD-2815", client: "Vista Corp",  address: "201 Market St",      city: "Camden",      site: "KCC01", priority: "Med",  qty: 5, lat: 95,  lng: 200 },
+  { id: "S5", type: "PICKUP", txn: "ORD-2813", client: "Harbor Co",   address: "Port Terminal B",    city: "Wilmington",  site: "KCC01", priority: "High", qty: 8, lat: 55,  lng: 250 },
+  { id: "S6", type: "PICKUP", txn: "ORD-2814", client: "South Inc",   address: "9 Glassboro Way",    city: "Glassboro",   site: "KCC01", priority: "Med",  qty: 3, lat: 80,  lng: 310 },
+  { id: "S7", type: "PICKUP", txn: "ORD-2816", client: "Riverline",   address: "44 Dock Rd",         city: "Trenton",     site: "KCC02", priority: "Low",  qty: 7, lat: 35,  lng: 330 },
 ];
 
-type Tour = { vehicle: string; driver: string; trailer: string; departure: string; arrival: string; seq: number; travelTime: string; distance: string; weight: string; vol: string; qty: string; pickups: number; deliveries: number; stops: number; forced: boolean; comments: string; tripSeq: string };
+// ---------- Helpers ----------
+const priorityClass = (p: Stop["priority"]) =>
+  p === "High" ? "bg-rose-100 text-rose-700"
+  : p === "Med" ? "bg-amber-100 text-amber-700"
+  : "bg-slate-100 text-slate-600";
 
-// ---------- Quick action button ----------
-function QuickAction({ icon: Icon, color, label, onClick }: { icon: typeof Truck; color: string; label: string; onClick?: () => void }) {
+type ConfirmedTrip = {
+  id: string;
+  vehicle: Vehicle;
+  driver: Driver;
+  stops: Stop[];
+  distanceKm: number;
+  durationMin: number;
+  createdAt: string;
+};
+
+// ---------- Section: site multi-select ----------
+function SiteMultiSelect({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const toggle = (code: string) =>
+    onChange(value.includes(code) ? value.filter((x) => x !== code) : [...value, code]);
   return (
-    <button
-      onClick={onClick}
-      title={label}
-      className={cn(
-        "w-9 h-9 rounded-full flex items-center justify-center text-white shadow-sm hover:opacity-90 hover:scale-105 transition-all",
-        color
-      )}
-    >
-      <Icon className="w-4 h-4" />
-    </button>
-  );
-}
-
-// ---------- KPI card ----------
-function KpiCard({ title, value, icon: Icon, gradient, index }: { title: string; value: number | string; icon: typeof Truck; gradient: string; index: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
-      className={cn(
-        "relative rounded-xl px-4 py-3 text-white shadow-md overflow-hidden",
-        gradient
-      )}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-white/85 truncate">{title}</p>
-          <p className="text-2xl font-bold mt-1 leading-none">{value}</p>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="h-9 justify-between min-w-[200px]">
+          <span className="flex items-center gap-2">
+            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-sm">
+              {value.length === 0 ? "Select sites…" : `${value.length} site${value.length > 1 ? "s" : ""} selected`}
+            </span>
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-2" align="start">
+        <div className="space-y-1">
+          {SITES.map((s) => (
+            <label key={s.code} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted cursor-pointer text-sm">
+              <Checkbox checked={value.includes(s.code)} onCheckedChange={() => toggle(s.code)} />
+              <span className="font-mono text-xs text-primary">{s.code}</span>
+              <span className="text-muted-foreground text-xs truncate">{s.name}</span>
+            </label>
+          ))}
         </div>
-        <Icon className="w-5 h-5 text-white/85 flex-shrink-0" />
-      </div>
-    </motion.div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
-// ---------- Main page ----------
+// ---------- KPI tile ----------
+function Kpi({ label, value, icon: Icon, gradient }: { label: string; value: number | string; icon: typeof Truck; gradient: string }) {
+  return (
+    <div className={cn("rounded-xl px-4 py-3 text-white shadow-md", gradient)}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/85">{label}</p>
+          <p className="text-2xl font-bold leading-none mt-1">{value}</p>
+        </div>
+        <Icon className="w-5 h-5 text-white/85" />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 export default function RoutePlanner() {
-  const [site, setSite] = useState("KCC01");
-  const [date, setDate] = useState("2026-05-11");
-  const [routeCode, setRouteCode] = useState("all");
+  // Filters
+  const [selectedSites, setSelectedSites] = useState<string[]>(["KCC01"]);
+  const [date, setDate] = useState("2026-06-10");
 
-  // selection
-  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
-  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  // Loaded state
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  // Active tour (assigned)
-  const [tours, setTours] = useState<Tour[]>([]);
-  const [assignedDocs, setAssignedDocs] = useState<Record<string, string>>({}); // docTxn -> vehicleCode
+  // Search
+  const [vehSearch, setVehSearch] = useState("");
+  const [drvSearch, setDrvSearch] = useState("");
+  const [stopSearch, setStopSearch] = useState("");
 
-  // doc filters
-  const [docTab, setDocTab] = useState<"deliveries" | "pickups">("deliveries");
-  const [showDeliverable, setShowDeliverable] = useState(false);
-  const [showNotDeliverable, setShowNotDeliverable] = useState(false);
-  const [toPlanOnly, setToPlanOnly] = useState(false);
-  const [docSearch, setDocSearch] = useState("");
-  const [vehicleSearch, setVehicleSearch] = useState("");
-  const [bottomView, setBottomView] = useState<"map" | "list">("map");
+  // Active trip builder (only one at a time)
+  const [draftVehicle, setDraftVehicle] = useState<Vehicle | null>(null);
+  const [draftDriver, setDraftDriver]   = useState<Driver | null>(null);
+  const [draftStopIds, setDraftStopIds] = useState<string[]>([]);
 
-  // ---------- Derived ----------
-  const filteredDocs = useMemo(() => {
-    return sampleDocs.filter((d) => {
-      if (docTab === "deliveries" && d.type !== "DELIVERY") return false;
-      if (docTab === "pickups" && d.type !== "PICKUP") return false;
-      if (showDeliverable && !d.deliverable) return false;
-      if (showNotDeliverable && d.deliverable) return false;
-      if (toPlanOnly && assignedDocs[d.txn]) return false;
-      if (docSearch && !`${d.txn} ${d.address} ${d.client}`.toLowerCase().includes(docSearch.toLowerCase())) return false;
-      if (routeCode !== "all" && d.routeCode !== routeCode) return false;
-      return true;
-    });
-  }, [docTab, showDeliverable, showNotDeliverable, toPlanOnly, docSearch, routeCode, assignedDocs]);
+  // Confirmed trips
+  const [trips, setTrips] = useState<ConfirmedTrip[]>([]);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
-  const filteredVehicles = useMemo(() => {
-    return sampleVehicles.filter((v) =>
-      !vehicleSearch || `${v.code} ${v.no} ${v.driver} ${v.trailer}`.toLowerCase().includes(vehicleSearch.toLowerCase())
-    );
-  }, [vehicleSearch]);
+  const [mapView, setMapView] = useState<"map" | "list">("map");
 
-  const kpis = useMemo(() => {
-    const assignedCount = Object.keys(assignedDocs).length;
-    const nonAssignedCount = sampleDocs.length - assignedCount;
-    const deliveries = sampleDocs.filter(d => d.type === "DELIVERY").length;
-    const pickups = sampleDocs.filter(d => d.type === "PICKUP").length;
-    return {
-      vehicles: new Set(Object.values(assignedDocs)).size,
-      trips: tours.length,
-      assigned: assignedCount,
-      nonAssigned: nonAssignedCount,
-      deliveryQty: deliveries,
-      pickupQty: pickups,
-    };
-  }, [assignedDocs, tours]);
-
-  // ---------- Assignment ----------
-  function assignDocsToVehicle(docTxns: string[], vehicleCode: string) {
-    if (!docTxns.length) return;
-    setAssignedDocs((prev) => {
-      const next = { ...prev };
-      docTxns.forEach((t) => (next[t] = vehicleCode));
-      return next;
-    });
-    // create / update tour
-    setTours((prev) => {
-      const veh = sampleVehicles.find((v) => v.code === vehicleCode);
-      if (!veh) return prev;
-      const existing = prev.find((t) => t.vehicle === vehicleCode);
-      const newDocs = docTxns.map((t) => sampleDocs.find((d) => d.txn === t)!).filter(Boolean);
-      const pickups = newDocs.filter((d) => d.type === "PICKUP").length;
-      const deliveries = newDocs.filter((d) => d.type === "DELIVERY").length;
-      if (existing) {
-        return prev.map((t) =>
-          t.vehicle === vehicleCode
-            ? { ...t, pickups: t.pickups + pickups, deliveries: t.deliveries + deliveries, stops: t.stops + newDocs.length, qty: String(t.stops + newDocs.length) }
-            : t
-        );
-      }
-      const tour: Tour = {
-        vehicle: veh.no, driver: veh.driver || "—", trailer: veh.trailer || "—",
-        departure: veh.departure, arrival: veh.arrival, seq: prev.length + 1,
-        travelTime: "01:45", distance: "82 km", weight: "1.2 t", vol: "12 m³",
-        qty: String(newDocs.length), pickups, deliveries, stops: newDocs.length,
-        forced: false, comments: "", tripSeq: `T-${prev.length + 1}`,
-      };
-      return [...prev, tour];
-    });
-    setSelectedDocs([]);
-    toast({ title: "Documents assigned", description: `${docTxns.length} document(s) → vehicle ${vehicleCode}` });
+  // ---------- Load ----------
+  function handleLoad() {
+    if (!selectedSites.length) {
+      toast({ title: "Select at least one site", description: "Pick one or more sites to load data." });
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setLoaded(true);
+      toast({ title: "Data loaded", description: `${selectedSites.length} site(s) · ${date}` });
+    }, 600);
   }
 
-  function clearAssignments() {
-    setTours([]);
-    setAssignedDocs({});
-    setSelectedDocs([]);
-    toast({ title: "Cleared", description: "All assignments removed" });
-  }
+  // ---------- Filtered datasets ----------
+  const vehicles = useMemo(
+    () => VEHICLES.filter((v) =>
+      selectedSites.includes(v.site) &&
+      (!vehSearch || `${v.code} ${v.plate} ${v.category}`.toLowerCase().includes(vehSearch.toLowerCase()))
+    ),
+    [selectedSites, vehSearch]
+  );
 
-  function handleDocDrop(e: DragEvent, vehicleCode: string) {
+  const drivers = useMemo(
+    () => DRIVERS.filter((d) =>
+      !drvSearch || `${d.id} ${d.name} ${d.license}`.toLowerCase().includes(drvSearch.toLowerCase())
+    ),
+    [drvSearch]
+  );
+
+  const usedStopIds = useMemo(() => new Set(trips.flatMap((t) => t.stops.map((s) => s.id))), [trips]);
+
+  const stops = useMemo(
+    () => STOPS.filter((s) =>
+      selectedSites.includes(s.site) &&
+      !usedStopIds.has(s.id) &&
+      (!stopSearch || `${s.txn} ${s.client} ${s.address} ${s.city}`.toLowerCase().includes(stopSearch.toLowerCase()))
+    ),
+    [selectedSites, stopSearch, usedStopIds]
+  );
+
+  const drops   = stops.filter((s) => s.type === "DROP");
+  const pickups = stops.filter((s) => s.type === "PICKUP");
+
+  const draftStops = useMemo(() => STOPS.filter((s) => draftStopIds.includes(s.id)), [draftStopIds]);
+
+  // ---------- KPIs ----------
+  const kpis = {
+    vehicles: vehicles.length,
+    drivers: drivers.filter((d) => d.status === "Available").length,
+    drops: drops.length,
+    pickups: pickups.length,
+    trips: trips.length,
+    assignedStops: trips.reduce((n, t) => n + t.stops.length, 0),
+  };
+
+  // ---------- Builder actions ----------
+  function toggleStop(s: Stop) {
+    setDraftStopIds((prev) => prev.includes(s.id) ? prev.filter((x) => x !== s.id) : [...prev, s.id]);
+  }
+  function pickVehicle(v: Vehicle) {
+    setDraftVehicle((prev) => prev?.code === v.code ? null : v);
+  }
+  function onDriverDragStart(e: DragEvent, d: Driver) {
+    e.dataTransfer.setData("text/driver-id", d.id);
+    e.dataTransfer.effectAllowed = "move";
+  }
+  function onDriverDrop(e: DragEvent) {
     e.preventDefault();
-    const txn = e.dataTransfer.getData("text/doc-txn");
-    if (txn) assignDocsToVehicle([txn], vehicleCode);
-  }
-
-  function handleClickAssign() {
-    if (!selectedVehicle) {
-      toast({ title: "Select a vehicle first", description: "Click a vehicle row, then click documents to assign." });
+    const id = e.dataTransfer.getData("text/driver-id");
+    const d = DRIVERS.find((x) => x.id === id);
+    if (!d) return;
+    if (d.status !== "Available") {
+      toast({ title: "Driver unavailable", description: `${d.name} is currently on a trip.` });
       return;
     }
-    if (!selectedDocs.length) {
-      toast({ title: "No documents selected", description: "Tick documents from the right panel." });
-      return;
+    setDraftDriver(d);
+  }
+  function onStopDragStart(e: DragEvent, s: Stop) {
+    e.dataTransfer.setData("text/stop-id", s.id);
+    e.dataTransfer.effectAllowed = "copy";
+  }
+  function onActiveDrop(e: DragEvent) {
+    e.preventDefault();
+    const did = e.dataTransfer.getData("text/driver-id");
+    const sid = e.dataTransfer.getData("text/stop-id");
+    if (did) {
+      const d = DRIVERS.find((x) => x.id === did);
+      if (d) setDraftDriver(d);
     }
-    assignDocsToVehicle(selectedDocs, selectedVehicle);
+    if (sid && !draftStopIds.includes(sid)) {
+      setDraftStopIds((prev) => [...prev, sid]);
+    }
+  }
+  function clearDraft() {
+    setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
+  }
+  function confirmTrip() {
+    if (!draftVehicle) return toast({ title: "Pick a vehicle", description: "Select a vehicle for the trip." });
+    if (!draftDriver)  return toast({ title: "Assign a driver", description: "Drag a driver into the active trip." });
+    if (!draftStopIds.length) return toast({ title: "Add stops", description: "Select drops and/or pickups." });
+
+    const trip: ConfirmedTrip = {
+      id: `TR-${String(trips.length + 1).padStart(3, "0")}`,
+      vehicle: draftVehicle,
+      driver: draftDriver,
+      stops: draftStops,
+      distanceKm: Math.round(40 + draftStops.length * 12 + Math.random() * 30),
+      durationMin: Math.round(60 + draftStops.length * 18),
+      createdAt: new Date().toLocaleString(),
+    };
+    setTrips((prev) => [...prev, trip]);
+    setSelectedTripId(trip.id);
+    clearDraft();
+    toast({ title: "Trip confirmed", description: `${trip.id} · ${trip.stops.length} stops` });
   }
 
+  const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
+
+  // ============================================================
   return (
     <div className="p-4 lg:p-5 space-y-4 bg-background min-h-full">
-      {/* ---------- Filter / Toolbar ---------- */}
+      {/* Toolbar */}
       <motion.div
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
         className="bg-card rounded-xl border border-border/60 shadow-sm p-3 flex flex-wrap items-end gap-3"
       >
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site</label>
-          <Select value={site} onValueChange={setSite}>
-            <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="KCC01">KCC01</SelectItem>
-              <SelectItem value="KCC02">KCC02</SelectItem>
-              <SelectItem value="WH-A">WH-A</SelectItem>
-            </SelectContent>
-          </Select>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Sites</label>
+          <SiteMultiSelect value={selectedSites} onChange={setSelectedSites} />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date</label>
           <div className="relative">
             <CalIcon className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              type="date" value={date} onChange={(e) => setDate(e.target.value)}
               className="h-9 pl-7 pr-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
           </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Route Codes</label>
-          <Select value={routeCode} onValueChange={setRouteCode}>
-            <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All routes</SelectItem>
-              <SelectItem value="RC-N1">RC-N1</SelectItem>
-              <SelectItem value="RC-N2">RC-N2</SelectItem>
-              <SelectItem value="RC-S1">RC-S1</SelectItem>
-              <SelectItem value="RC-S2">RC-S2</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-2 pl-2 ml-auto">
-          <QuickAction icon={CheckCheck} color="bg-blue-500" label="Auto-assign" onClick={handleClickAssign} />
-          <QuickAction icon={RouteIcon} color="bg-slate-600" label="Optimize route" />
-          <QuickAction icon={Lock} color="bg-emerald-500" label="Lock tour" />
-          <QuickAction icon={Unlock} color="bg-violet-500" label="Unlock tour" />
-          <QuickAction icon={CheckCheck} color="bg-amber-500" label="Validate" />
-          <QuickAction icon={Trash2} color="bg-rose-500" label="Clear" onClick={clearAssignments} />
-          <Button size="sm" className="h-9">
-            <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Refresh
-          </Button>
-        </div>
+        <Button onClick={handleLoad} disabled={loading} className="h-9">
+          {loading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Play className="w-4 h-4 mr-1.5" />}
+          {loaded ? "Reload Data" : "Load Data"}
+        </Button>
+        {loaded && (
+          <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+            <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+            Data loaded for <span className="font-mono text-foreground">{selectedSites.join(", ")}</span> on <span className="font-mono text-foreground">{date}</span>
+          </div>
+        )}
       </motion.div>
 
-      {/* ---------- KPIs ---------- */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KpiCard title="Vehicles"   value={kpis.vehicles}    icon={Truck}            gradient="bg-gradient-to-br from-slate-500 to-slate-700"   index={0} />
-        <KpiCard title="Trips"      value={kpis.trips}       icon={RouteIcon}        gradient="bg-gradient-to-br from-indigo-500 to-indigo-700" index={1} />
-        <KpiCard title="Assigned Documents"     value={kpis.assigned}    icon={PackageCheck}     gradient="bg-gradient-to-br from-emerald-500 to-emerald-700" index={2} />
-        <KpiCard title="Non-Assigned Documents" value={kpis.nonAssigned} icon={PackageX}         gradient="bg-gradient-to-br from-amber-500 to-amber-600"     index={3} />
-        <KpiCard title="Total Delivery Qty"     value={kpis.deliveryQty} icon={ArrowDownToLine}  gradient="bg-gradient-to-br from-rose-500 to-rose-600"       index={4} />
-        <KpiCard title="Total Pickup Qty"       value={kpis.pickupQty}   icon={ArrowUpFromLine}  gradient="bg-gradient-to-br from-sky-500 to-sky-600"         index={5} />
-      </div>
-
-      {/* ---------- Two columns: resources + documents ---------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* LEFT: Vehicles / Trailers / Drivers */}
-        <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden">
-          <Tabs defaultValue="vehicles">
-            <div className="border-b border-border/60 px-3 pt-2">
-              <TabsList className="bg-transparent h-9 p-0 gap-1">
-                <TabsTrigger value="vehicles" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs"><Truck className="w-3.5 h-3.5 mr-1.5" />Vehicles</TabsTrigger>
-                <TabsTrigger value="trailers" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs"><Container className="w-3.5 h-3.5 mr-1.5" />Trailers</TabsTrigger>
-                <TabsTrigger value="drivers"  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs"><Users className="w-3.5 h-3.5 mr-1.5" />Drivers</TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className="p-3">
-              <div className="relative mb-2">
-                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={vehicleSearch} onChange={(e) => setVehicleSearch(e.target.value)} placeholder="Search..." className="h-8 pl-8 text-sm" />
-              </div>
-
-              <TabsContent value="vehicles" className="m-0">
-                <div className="overflow-auto max-h-[280px] rounded-md border border-border/60">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted/60 sticky top-0">
-                      <tr className="text-left text-muted-foreground">
-                        {["Vehicle", "No", "Departure", "Arrival", "Driver", "Side Op", "Trailer", "Category", "Start"].map((h) => (
-                          <th key={h} className="px-2.5 py-2 font-semibold whitespace-nowrap">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredVehicles.map((v) => {
-                        const selected = selectedVehicle === v.code;
-                        const isAssigned = Object.values(assignedDocs).includes(v.code);
-                        return (
-                          <tr
-                            key={v.code}
-                            onClick={() => setSelectedVehicle(selected ? null : v.code)}
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => handleDocDrop(e, v.code)}
-                            className={cn(
-                              "cursor-pointer transition-colors border-t border-border/40",
-                              v.tone === "warm" ? "bg-amber-50 hover:bg-amber-100" : "bg-cyan-50 hover:bg-cyan-100",
-                              selected && "ring-2 ring-inset ring-primary",
-                              isAssigned && "outline outline-1 outline-emerald-400/60"
-                            )}
-                          >
-                            <td className="px-2.5 py-1.5 font-mono font-medium text-foreground">{v.code}</td>
-                            <td className="px-2.5 py-1.5 font-mono">{v.no}</td>
-                            <td className="px-2.5 py-1.5">{v.departure}</td>
-                            <td className="px-2.5 py-1.5">{v.arrival}</td>
-                            <td className="px-2.5 py-1.5">{v.driver || <span className="text-muted-foreground">—</span>}</td>
-                            <td className="px-2.5 py-1.5">{v.sideOp}</td>
-                            <td className="px-2.5 py-1.5">{v.trailer || <span className="text-muted-foreground">—</span>}</td>
-                            <td className="px-2.5 py-1.5">{v.category}</td>
-                            <td className="px-2.5 py-1.5 font-mono">{v.start}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-2">
-                  {selectedVehicle ? <>Selected vehicle <span className="font-mono font-semibold text-primary">{selectedVehicle}</span>. Tick documents and click the blue button or drag them onto a vehicle.</> : "Click a vehicle to select. Drop documents on it to assign."}
-                </p>
-              </TabsContent>
-
-              <TabsContent value="trailers" className="m-0">
-                <div className="overflow-auto max-h-[280px] rounded-md border border-border/60">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted/60"><tr className="text-left text-muted-foreground">{["Code","No","Type","Capacity"].map(h => <th key={h} className="px-2.5 py-2 font-semibold">{h}</th>)}</tr></thead>
-                    <tbody>
-                      {sampleTrailers.map(t => (
-                        <tr key={t.code} className="border-t border-border/40 hover:bg-muted/40"><td className="px-2.5 py-1.5 font-mono font-medium">{t.code}</td><td className="px-2.5 py-1.5 font-mono">{t.no}</td><td className="px-2.5 py-1.5">{t.type}</td><td className="px-2.5 py-1.5">{t.capacity}</td></tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="drivers" className="m-0">
-                <div className="overflow-auto max-h-[280px] rounded-md border border-border/60">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted/60"><tr className="text-left text-muted-foreground">{["ID","Name","License","Status"].map(h => <th key={h} className="px-2.5 py-2 font-semibold">{h}</th>)}</tr></thead>
-                    <tbody>
-                      {sampleDrivers.map(d => (
-                        <tr key={d.id} className="border-t border-border/40 hover:bg-muted/40"><td className="px-2.5 py-1.5 font-mono font-medium">{d.id}</td><td className="px-2.5 py-1.5">{d.name}</td><td className="px-2.5 py-1.5">{d.license}</td><td className="px-2.5 py-1.5"><span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium", d.status === "Available" ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}>{d.status}</span></td></tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
+      {!loaded ? (
+        <div className="bg-card rounded-xl border border-dashed border-border p-16 text-center text-muted-foreground">
+          <RouteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+          <p className="font-medium text-foreground">Select sites and date, then click <span className="text-primary">Load Data</span></p>
+          <p className="text-sm mt-1">Vehicles, drivers, drops and pickups will appear here.</p>
         </div>
-
-        {/* RIGHT: Deliveries / Pickups */}
-        <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden">
-          <Tabs value={docTab} onValueChange={(v) => setDocTab(v as typeof docTab)}>
-            <div className="border-b border-border/60 px-3 pt-2 flex items-end justify-between gap-3 flex-wrap">
-              <TabsList className="bg-transparent h-9 p-0 gap-1">
-                <TabsTrigger value="deliveries" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs">Deliveries</TabsTrigger>
-                <TabsTrigger value="pickups"    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs">Pickups</TabsTrigger>
-              </TabsList>
-              <div className="flex items-center gap-3 pb-2 text-xs flex-wrap">
-                <label className="flex items-center gap-1.5"><Checkbox className="h-3.5 w-3.5" /> +/- 5 days</label>
-                <Button size="sm" variant="outline" className="h-7 text-xs"><RefreshCw className="w-3 h-3 mr-1" /> Refresh</Button>
-                <label className="flex items-center gap-1.5"><Checkbox checked={showDeliverable} onCheckedChange={(v) => setShowDeliverable(!!v)} className="h-3.5 w-3.5" /> Deliverable</label>
-                <label className="flex items-center gap-1.5"><Checkbox checked={showNotDeliverable} onCheckedChange={(v) => setShowNotDeliverable(!!v)} className="h-3.5 w-3.5" /> Not Deliverable</label>
-                <label className="flex items-center gap-1.5"><Checkbox checked={toPlanOnly} onCheckedChange={(v) => setToPlanOnly(!!v)} className="h-3.5 w-3.5" /> To Plan</label>
-                <div className="flex items-center gap-1 border border-border rounded-md">
-                  <button className="h-7 w-7 flex items-center justify-center hover:bg-muted"><ChevronLeft className="w-3.5 h-3.5" /></button>
-                  <span className="text-xs font-mono px-1.5">{date}</span>
-                  <button className="h-7 w-7 flex items-center justify-center hover:bg-muted"><ChevronRight className="w-3.5 h-3.5" /></button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="relative flex-1">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={docSearch} onChange={(e) => setDocSearch(e.target.value)} placeholder="Search documents..." className="h-8 pl-8 text-sm" />
-                </div>
-                {selectedDocs.length > 0 && (
-                  <Button size="sm" className="h-8" onClick={handleClickAssign}>
-                    Assign {selectedDocs.length} → {selectedVehicle ?? "vehicle"}
-                  </Button>
-                )}
-              </div>
-
-              <TabsContent value={docTab} className="m-0">
-                <div className="overflow-auto max-h-[280px] rounded-md border border-border/60">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted/60 sticky top-0">
-                      <tr className="text-left text-muted-foreground">
-                        <th className="px-2 py-2 w-8"></th>
-                        {["Transaction No","Preparation","Paired","Type","Delivery Address","Route Code","Priority","Client","City","Site"].map(h => (
-                          <th key={h} className="px-2.5 py-2 font-semibold whitespace-nowrap">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredDocs.length === 0 && (
-                        <tr><td colSpan={11} className="px-3 py-10 text-center text-muted-foreground text-xs">No documents match the current filters.</td></tr>
-                      )}
-                      {filteredDocs.map((d) => {
-                        const checked = selectedDocs.includes(d.txn);
-                        const assignedTo = assignedDocs[d.txn];
-                        return (
-                          <tr
-                            key={d.txn}
-                            draggable
-                            onDragStart={(e) => e.dataTransfer.setData("text/doc-txn", d.txn)}
-                            className={cn(
-                              "border-t border-border/40 hover:bg-muted/40 cursor-grab active:cursor-grabbing",
-                              checked && "bg-primary/5",
-                              assignedTo && "opacity-60"
-                            )}
-                          >
-                            <td className="px-2 py-1.5">
-                              <Checkbox
-                                checked={checked}
-                                onCheckedChange={(v) => setSelectedDocs((prev) => v ? [...prev, d.txn] : prev.filter(x => x !== d.txn))}
-                                className="h-3.5 w-3.5"
-                              />
-                            </td>
-                            <td className="px-2.5 py-1.5 font-mono font-medium text-primary">{d.txn}</td>
-                            <td className="px-2.5 py-1.5 font-mono">{d.prep}</td>
-                            <td className="px-2.5 py-1.5">{d.paired}</td>
-                            <td className="px-2.5 py-1.5"><span className={cn("text-[10px] px-1.5 py-0.5 rounded font-semibold", d.type === "DELIVERY" ? "bg-rose-100 text-rose-700" : "bg-sky-100 text-sky-700")}>{d.type}</span></td>
-                            <td className="px-2.5 py-1.5">{d.address}</td>
-                            <td className="px-2.5 py-1.5 font-mono">{d.routeCode}</td>
-                            <td className="px-2.5 py-1.5"><span className={cn("text-[10px] px-1.5 py-0.5 rounded font-semibold", d.priority === "High" ? "bg-rose-100 text-rose-700" : d.priority === "Med" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600")}>{d.priority}</span></td>
-                            <td className="px-2.5 py-1.5">{d.client}</td>
-                            <td className="px-2.5 py-1.5">{d.city}</td>
-                            <td className="px-2.5 py-1.5">{d.site}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
-      </div>
-
-      {/* ---------- Active tour ---------- */}
-      <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
-          <div className="flex items-center gap-2">
-            <RouteIcon className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold">Active Tour</h3>
-            <span className="text-[11px] text-muted-foreground">({tours.length} trip{tours.length !== 1 ? "s" : ""})</span>
+      ) : (
+        <>
+          {/* KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <Kpi label="Vehicles"        value={kpis.vehicles}      icon={Truck}            gradient="bg-gradient-to-br from-slate-500 to-slate-700" />
+            <Kpi label="Drivers Avail."  value={kpis.drivers}       icon={Users}            gradient="bg-gradient-to-br from-indigo-500 to-indigo-700" />
+            <Kpi label="Drops"           value={kpis.drops}         icon={ArrowDownToLine}  gradient="bg-gradient-to-br from-rose-500 to-rose-600" />
+            <Kpi label="Pickups"         value={kpis.pickups}       icon={ArrowUpFromLine}  gradient="bg-gradient-to-br from-sky-500 to-sky-600" />
+            <Kpi label="Confirmed Trips" value={kpis.trips}         icon={RouteIcon}        gradient="bg-gradient-to-br from-emerald-500 to-emerald-700" />
+            <Kpi label="Stops Assigned"  value={kpis.assignedStops} icon={PackageCheck}     gradient="bg-gradient-to-br from-amber-500 to-amber-600" />
           </div>
-        </div>
-        <div className="overflow-auto">
-          <table className="w-full text-xs">
-            <thead className="bg-muted/40">
-              <tr className="text-left text-muted-foreground">
-                {["Vehicle","Driver","Trailer","Departure","Arrival","Seq #","Travel Time","Distance","Total Weight","Total Vol","Total Qty","Pickups","Deliveries","Stops","Forced Seq","Comments","Trip Sequence",""].map((h, i) => (
-                  <th key={i} className="px-2.5 py-2 font-semibold whitespace-nowrap">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tours.length === 0 && (
-                <tr><td colSpan={18} className="px-3 py-10 text-center text-muted-foreground text-xs">No active tour. Assign documents to a vehicle to build a trip.</td></tr>
-              )}
-              {tours.map((t, i) => (
-                <tr key={i} className="border-t border-border/40 hover:bg-muted/30">
-                  <td className="px-2.5 py-2 font-mono font-medium">{t.vehicle}</td>
-                  <td className="px-2.5 py-2">{t.driver}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.trailer}</td>
-                  <td className="px-2.5 py-2">{t.departure}</td>
-                  <td className="px-2.5 py-2">{t.arrival}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.seq}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.travelTime}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.distance}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.weight}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.vol}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.qty}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.pickups}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.deliveries}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.stops}</td>
-                  <td className="px-2.5 py-2">{t.forced ? "Yes" : "No"}</td>
-                  <td className="px-2.5 py-2 text-muted-foreground">{t.comments || "—"}</td>
-                  <td className="px-2.5 py-2 font-mono">{t.tripSeq}</td>
-                  <td className="px-2.5 py-2">
-                    <button
-                      onClick={() => {
-                        const veh = sampleVehicles.find(v => v.no === t.vehicle);
-                        if (!veh) return;
-                        setAssignedDocs((prev) => Object.fromEntries(Object.entries(prev).filter(([, vc]) => vc !== veh.code)));
-                        setTours((prev) => prev.filter(x => x.vehicle !== t.vehicle));
-                      }}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
+
+          {/* Resources: 4 panels */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+            {/* Vehicles */}
+            <ResourcePanel title="Vehicles" icon={Truck} count={vehicles.length} search={vehSearch} onSearch={setVehSearch} accent="from-slate-500 to-slate-700">
+              {vehicles.map((v) => {
+                const sel = draftVehicle?.code === v.code;
+                return (
+                  <div
+                    key={v.code}
+                    onClick={() => pickVehicle(v)}
+                    className={cn(
+                      "rounded-lg border p-2.5 cursor-pointer transition-all bg-card hover:border-primary/40 hover:shadow-sm",
+                      sel ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border/60"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-semibold text-sm">{v.code}</span>
+                      {sel && <Badge className="h-5 text-[10px]">Selected</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+                      <span className="font-mono">{v.plate}</span> · {v.category}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{v.capacity} · {v.site}</div>
+                  </div>
+                );
+              })}
+              {vehicles.length === 0 && <EmptyHint text="No vehicles" />}
+            </ResourcePanel>
+
+            {/* Drivers */}
+            <ResourcePanel title="Drivers" icon={Users} count={drivers.length} search={drvSearch} onSearch={setDrvSearch} accent="from-indigo-500 to-indigo-700" hint="Drag → Active Trip">
+              {drivers.map((d) => {
+                const dis = d.status !== "Available";
+                return (
+                  <div
+                    key={d.id}
+                    draggable={!dis}
+                    onDragStart={(e) => onDriverDragStart(e, d)}
+                    className={cn(
+                      "rounded-lg border border-border/60 bg-card p-2.5 flex items-center gap-2",
+                      dis ? "opacity-50" : "cursor-grab active:cursor-grabbing hover:border-indigo-400 hover:shadow-sm"
+                    )}
+                  >
+                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{d.name}</div>
+                      <div className="text-[11px] text-muted-foreground font-mono">{d.id} · {d.license}</div>
+                    </div>
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded-full font-semibold",
+                      d.status === "Available" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                    )}>{d.status}</span>
+                  </div>
+                );
+              })}
+              {drivers.length === 0 && <EmptyHint text="No drivers" />}
+            </ResourcePanel>
+
+            {/* Drops */}
+            <ResourcePanel title="Drops" icon={ArrowDownToLine} count={drops.length} search={stopSearch} onSearch={setStopSearch} accent="from-rose-500 to-rose-600">
+              {drops.map((s) => (
+                <StopCard key={s.id} stop={s} selected={draftStopIds.includes(s.id)} onClick={() => toggleStop(s)} onDragStart={(e) => onStopDragStart(e, s)} />
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              {drops.length === 0 && <EmptyHint text="No drops" />}
+            </ResourcePanel>
 
-      {/* ---------- Bottom: assigned docs list + map ---------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
-            <h3 className="text-sm font-semibold">Assigned Documents</h3>
+            {/* Pickups */}
+            <ResourcePanel title="Pickups" icon={ArrowUpFromLine} count={pickups.length} search={stopSearch} onSearch={setStopSearch} accent="from-sky-500 to-sky-600">
+              {pickups.map((s) => (
+                <StopCard key={s.id} stop={s} selected={draftStopIds.includes(s.id)} onClick={() => toggleStop(s)} onDragStart={(e) => onStopDragStart(e, s)} />
+              ))}
+              {pickups.length === 0 && <EmptyHint text="No pickups" />}
+            </ResourcePanel>
           </div>
-          <div className="overflow-auto max-h-[300px]">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/40 sticky top-0">
-                <tr className="text-left text-muted-foreground">
-                  {["Details","Route Code","Seq #","Vehicle","Status","Lock","Validate","TMS Validation","Driver","Departure Site","Arrival Site","Document Status"].map(h => (
-                    <th key={h} className="px-2.5 py-2 font-semibold whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(assignedDocs).length === 0 && (
-                  <tr><td colSpan={12} className="px-3 py-10 text-center text-muted-foreground text-xs">No assigned documents yet.</td></tr>
-                )}
-                {Object.entries(assignedDocs).map(([txn, veh], i) => {
-                  const d = sampleDocs.find(x => x.txn === txn)!;
-                  const v = sampleVehicles.find(x => x.code === veh)!;
-                  return (
-                    <tr key={txn} className="border-t border-border/40 hover:bg-muted/30">
-                      <td className="px-2.5 py-2 font-mono text-primary">{d.txn}</td>
-                      <td className="px-2.5 py-2 font-mono">{d.routeCode}</td>
-                      <td className="px-2.5 py-2 font-mono">{i + 1}</td>
-                      <td className="px-2.5 py-2 font-mono">{v.no}</td>
-                      <td className="px-2.5 py-2"><span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-semibold">Assigned</span></td>
-                      <td className="px-2.5 py-2"><Unlock className="w-3.5 h-3.5 text-muted-foreground" /></td>
-                      <td className="px-2.5 py-2"><CheckCheck className="w-3.5 h-3.5 text-success" /></td>
-                      <td className="px-2.5 py-2 text-muted-foreground">Pending</td>
-                      <td className="px-2.5 py-2">{v.driver || "—"}</td>
-                      <td className="px-2.5 py-2">{d.site}</td>
-                      <td className="px-2.5 py-2">{d.city}</td>
-                      <td className="px-2.5 py-2"><span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 font-semibold">Open</span></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        {/* Map */}
-        <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
-            <div className="flex items-center gap-2">
-              <MapIcon className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold">Route Map</h3>
-            </div>
-            <div className="flex items-center gap-1 border border-border rounded-md p-0.5">
-              <button onClick={() => setBottomView("map")} className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1", bottomView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}><MapIcon className="w-3 h-3" /> Map</button>
-              <button onClick={() => setBottomView("list")} className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1", bottomView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}><List className="w-3 h-3" /> Satellite</button>
-            </div>
-          </div>
-          <div className="relative h-[300px] bg-gradient-to-br from-emerald-50 via-sky-50 to-indigo-50">
-            {/* Decorative map */}
-            <svg className="absolute inset-0 w-full h-full opacity-50" viewBox="0 0 400 300" fill="none">
-              <path d="M0,150 Q100,80 200,150 T400,140" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="3 3" />
-              <path d="M0,200 Q120,260 240,200 T400,210" stroke="hsl(var(--success))" strokeWidth="1.5" strokeDasharray="3 3" />
-              <circle cx="80" cy="120" r="3" fill="hsl(var(--primary))" />
-              <circle cx="200" cy="150" r="3" fill="hsl(var(--primary))" />
-              <circle cx="320" cy="140" r="3" fill="hsl(var(--primary))" />
-              <circle cx="120" cy="220" r="3" fill="hsl(var(--success))" />
-              <circle cx="260" cy="210" r="3" fill="hsl(var(--success))" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center text-center px-4">
-              <div className="bg-white/80 backdrop-blur rounded-lg px-4 py-3 shadow-sm border border-border/60">
-                <MapIcon className="w-6 h-6 text-primary mx-auto mb-1" />
-                <p className="text-xs font-medium text-foreground">Interactive map preview</p>
-                <p className="text-[11px] text-muted-foreground">Connect a maps provider to render live routes</p>
+          {/* Active Trip builder */}
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={onActiveDrop}
+            className="bg-card rounded-xl border-2 border-dashed border-primary/30 shadow-sm overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="flex items-center gap-2">
+                <Play className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold">Active Trip <span className="text-muted-foreground font-normal">(in progress)</span></h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="ghost" className="h-8" onClick={clearDraft} disabled={!draftVehicle && !draftDriver && !draftStopIds.length}>
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Clear
+                </Button>
+                <Button size="sm" className="h-8" onClick={confirmTrip}>
+                  <CheckCheck className="w-3.5 h-3.5 mr-1" /> Confirm Trip
+                </Button>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 p-3">
+              {/* Vehicle slot */}
+              <Slot title="Vehicle" icon={Truck} filled={!!draftVehicle} hint="Click a vehicle on the left">
+                {draftVehicle && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-mono font-semibold text-sm">{draftVehicle.code} · {draftVehicle.plate}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{draftVehicle.category} · {draftVehicle.capacity}</div>
+                    </div>
+                    <button onClick={() => setDraftVehicle(null)} className="text-muted-foreground hover:text-destructive"><X className="w-3.5 h-3.5" /></button>
+                  </div>
+                )}
+              </Slot>
+
+              {/* Driver slot (drop target) */}
+              <div
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-indigo-400"); }}
+                onDragLeave={(e) => e.currentTarget.classList.remove("ring-2", "ring-indigo-400")}
+                onDrop={(e) => { e.currentTarget.classList.remove("ring-2", "ring-indigo-400"); onDriverDrop(e); }}
+              >
+                <Slot title="Driver" icon={Users} filled={!!draftDriver} hint="Drag a driver here">
+                  {draftDriver && (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm">{draftDriver.name}</div>
+                        <div className="text-xs text-muted-foreground font-mono mt-0.5">{draftDriver.id} · {draftDriver.license}</div>
+                      </div>
+                      <button onClick={() => setDraftDriver(null)} className="text-muted-foreground hover:text-destructive"><X className="w-3.5 h-3.5" /></button>
+                    </div>
+                  )}
+                </Slot>
+              </div>
+
+              {/* Stops count summary */}
+              <Slot title="Stops" icon={MapPin} filled={draftStopIds.length > 0} hint="Click drops / pickups to add">
+                {draftStopIds.length > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="text-rose-600 font-semibold flex items-center gap-1"><ArrowDownToLine className="w-3.5 h-3.5" /> {draftStops.filter(s => s.type === "DROP").length} drops</span>
+                      <span className="text-sky-600 font-semibold flex items-center gap-1"><ArrowUpFromLine className="w-3.5 h-3.5" /> {draftStops.filter(s => s.type === "PICKUP").length} pickups</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{draftStops.reduce((n, s) => n + s.qty, 0)} qty</span>
+                  </div>
+                )}
+              </Slot>
+            </div>
+
+            {/* Stops sequence */}
+            {draftStopIds.length > 0 && (
+              <div className="border-t border-border/60 px-3 py-3 bg-muted/20">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Sequence</div>
+                <div className="flex flex-wrap gap-2">
+                  <AnimatePresence>
+                    {draftStops.map((s, i) => (
+                      <motion.div
+                        key={s.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                        className={cn(
+                          "flex items-center gap-2 rounded-full pl-2 pr-1 py-1 border text-xs",
+                          s.type === "DROP" ? "bg-rose-50 border-rose-200" : "bg-sky-50 border-sky-200"
+                        )}
+                      >
+                        <span className="w-5 h-5 rounded-full bg-white border border-border flex items-center justify-center font-mono text-[10px] font-bold">{i + 1}</span>
+                        <span className="font-mono text-[11px]">{s.txn}</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="truncate max-w-[120px]">{s.client}</span>
+                        <button onClick={() => toggleStop(s)} className="w-5 h-5 rounded-full hover:bg-white/80 flex items-center justify-center">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Trips list + Map */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+            {/* Trips list */}
+            <div className="lg:col-span-2 bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <RouteIcon className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">Confirmed Trips</h3>
+                  <span className="text-[11px] text-muted-foreground">({trips.length})</span>
+                </div>
+              </div>
+              <div className="max-h-[380px] overflow-auto">
+                {trips.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    <RouteIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
+                    No confirmed trips yet
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/40">
+                    {trips.map((t) => {
+                      const sel = t.id === selectedTripId;
+                      return (
+                        <button
+                          key={t.id}
+                          onClick={() => setSelectedTripId(t.id)}
+                          className={cn(
+                            "w-full text-left px-3 py-2.5 hover:bg-muted/40 transition-colors",
+                            sel && "bg-primary/5 border-l-2 border-primary"
+                          )}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-mono font-semibold text-sm text-primary">{t.id}</span>
+                            <span className="text-[10px] text-muted-foreground">{t.createdAt}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <Badge variant="outline" className="font-mono">{t.vehicle.plate}</Badge>
+                            <span className="text-muted-foreground">·</span>
+                            <span className="font-medium">{t.driver.name}</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {t.stops.length} stops</span>
+                            <span>{t.distanceKm} km</span>
+                            <span>{Math.floor(t.durationMin / 60)}h {t.durationMin % 60}m</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Map + tabular */}
+            <div className="lg:col-span-3 bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <MapIcon className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">
+                    {selectedTrip ? <>Trip <span className="font-mono text-primary">{selectedTrip.id}</span></> : "Select a trip"}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-1 border border-border rounded-md p-0.5">
+                  <button onClick={() => setMapView("map")} className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1", mapView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}><MapIcon className="w-3 h-3" /> Map</button>
+                  <button onClick={() => setMapView("list")} className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1", mapView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}><List className="w-3 h-3" /> List</button>
+                </div>
+              </div>
+
+              {mapView === "map" ? (
+                <TripMap trip={selectedTrip} />
+              ) : (
+                <TripList trip={selectedTrip} />
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---------- Resource panel ----------
+function ResourcePanel({
+  title, icon: Icon, count, search, onSearch, accent, hint, children,
+}: {
+  title: string; icon: typeof Truck; count: number; search: string; onSearch: (v: string) => void;
+  accent: string; hint?: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
+      <div className={cn("px-3 py-2 flex items-center justify-between text-white bg-gradient-to-r", accent)}>
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4" />
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <span className="text-[11px] bg-white/20 rounded-full px-2 py-0.5">{count}</span>
+        </div>
+        {hint && <span className="text-[10px] text-white/80">{hint}</span>}
+      </div>
+      <div className="p-2">
+        <div className="relative mb-2">
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="Search…" className="h-8 pl-8 text-xs" />
+        </div>
+        <div className="space-y-2 max-h-[280px] overflow-auto pr-1">
+          {children}
         </div>
       </div>
+    </div>
+  );
+}
+
+function EmptyHint({ text }: { text: string }) {
+  return <div className="text-center text-xs text-muted-foreground py-6">{text}</div>;
+}
+
+function StopCard({ stop, selected, onClick, onDragStart }: {
+  stop: Stop; selected: boolean; onClick: () => void; onDragStart: (e: DragEvent) => void;
+}) {
+  return (
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onClick={onClick}
+      className={cn(
+        "rounded-lg border p-2.5 cursor-pointer transition-all bg-card",
+        selected ? "border-primary ring-2 ring-primary/20 bg-primary/5"
+                 : "border-border/60 hover:border-primary/40 hover:shadow-sm"
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <span className="font-mono font-semibold text-xs text-primary">{stop.txn}</span>
+        <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold", priorityClass(stop.priority))}>{stop.priority}</span>
+      </div>
+      <div className="text-xs font-medium mt-1 truncate">{stop.client}</div>
+      <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+        <MapPin className="w-3 h-3 flex-shrink-0" /> {stop.address}, {stop.city}
+      </div>
+      <div className="flex items-center justify-between mt-1.5">
+        <span className="text-[10px] text-muted-foreground">Qty {stop.qty}</span>
+        {selected && <span className="text-[10px] text-primary font-semibold flex items-center gap-0.5"><CheckCheck className="w-3 h-3" /> added</span>}
+      </div>
+    </div>
+  );
+}
+
+function Slot({ title, icon: Icon, filled, hint, children }: {
+  title: string; icon: typeof Truck; filled: boolean; hint: string; children?: React.ReactNode;
+}) {
+  return (
+    <div className={cn(
+      "rounded-lg border p-3 transition-colors min-h-[78px]",
+      filled ? "border-border bg-muted/30" : "border-dashed border-border/70 bg-muted/10"
+    )}>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+        <Icon className="w-3 h-3" /> {title}
+      </div>
+      {filled ? children : <div className="text-xs text-muted-foreground flex items-center gap-1"><Plus className="w-3 h-3" /> {hint}</div>}
+    </div>
+  );
+}
+
+// ---------- Map ----------
+function TripMap({ trip }: { trip: ConfirmedTrip | null }) {
+  return (
+    <div className="relative flex-1 min-h-[380px] bg-gradient-to-br from-emerald-50 via-sky-50 to-indigo-50">
+      {/* Decorative grid */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300" preserveAspectRatio="none">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="hsl(var(--border))" strokeWidth="0.4" opacity="0.4" />
+          </pattern>
+        </defs>
+        <rect width="400" height="300" fill="url(#grid)" />
+        {trip && trip.stops.length > 0 && (
+          <>
+            <polyline
+              points={trip.stops.map((s) => `${s.lng},${s.lat}`).join(" ")}
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="2"
+              strokeDasharray="4 3"
+            />
+            {trip.stops.map((s, i) => (
+              <g key={s.id}>
+                <circle cx={s.lng} cy={s.lat} r="9" fill={s.type === "DROP" ? "#e11d48" : "#0284c7"} stroke="white" strokeWidth="2" />
+                <text x={s.lng} y={s.lat + 3} textAnchor="middle" fill="white" fontSize="9" fontWeight="700">{i + 1}</text>
+              </g>
+            ))}
+          </>
+        )}
+      </svg>
+      {!trip && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-white/85 backdrop-blur rounded-lg px-4 py-3 shadow-sm border border-border/60 text-center">
+            <MapIcon className="w-6 h-6 text-primary mx-auto mb-1" />
+            <p className="text-sm font-medium">Select a trip to see its route</p>
+          </div>
+        </div>
+      )}
+      {trip && (
+        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur rounded-lg shadow-sm border border-border/60 px-3 py-2 text-xs">
+          <div className="font-semibold">{trip.vehicle.plate} · {trip.driver.name}</div>
+          <div className="text-muted-foreground mt-0.5">{trip.distanceKm} km · {Math.floor(trip.durationMin / 60)}h {trip.durationMin % 60}m · {trip.stops.length} stops</div>
+        </div>
+      )}
+      <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur rounded-md border border-border/60 px-2 py-1.5 text-[11px] flex items-center gap-3">
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-rose-600" /> Drop</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-sky-600" /> Pickup</span>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Table ----------
+function TripList({ trip }: { trip: ConfirmedTrip | null }) {
+  if (!trip) {
+    return <div className="p-10 text-center text-muted-foreground text-sm flex-1">Select a trip to see its stops</div>;
+  }
+  return (
+    <div className="overflow-auto flex-1">
+      <table className="w-full text-xs">
+        <thead className="bg-muted/40 sticky top-0">
+          <tr className="text-left text-muted-foreground">
+            {["Seq", "Type", "Txn", "Client", "Address", "City", "Priority", "Qty"].map((h) => (
+              <th key={h} className="px-2.5 py-2 font-semibold whitespace-nowrap">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {trip.stops.map((s, i) => (
+            <tr key={s.id} className="border-t border-border/40 hover:bg-muted/30">
+              <td className="px-2.5 py-2 font-mono font-semibold">{i + 1}</td>
+              <td className="px-2.5 py-2">
+                <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-semibold",
+                  s.type === "DROP" ? "bg-rose-100 text-rose-700" : "bg-sky-100 text-sky-700")}>{s.type}</span>
+              </td>
+              <td className="px-2.5 py-2 font-mono text-primary">{s.txn}</td>
+              <td className="px-2.5 py-2">{s.client}</td>
+              <td className="px-2.5 py-2 text-muted-foreground">{s.address}</td>
+              <td className="px-2.5 py-2">{s.city}</td>
+              <td className="px-2.5 py-2"><span className={cn("text-[10px] px-1.5 py-0.5 rounded font-semibold", priorityClass(s.priority))}>{s.priority}</span></td>
+              <td className="px-2.5 py-2 font-mono">{s.qty}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
