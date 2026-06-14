@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, type DragEvent } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect, type DragEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Truck, Users, Calendar as CalIcon, Building2, Search,
@@ -292,6 +292,123 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
           </tr>
         </tfoot>
       </table>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// RESIZABLE SPLIT PANEL
+// ═══════════════════════════════════════════════════════
+function ResizableSplit({
+  left, right, defaultLeftPct = 35, minPct = 20, maxPct = 80, leftLabel,
+}: {
+  left: React.ReactNode; right: React.ReactNode;
+  defaultLeftPct?: number; minPct?: number; maxPct?: number; leftLabel?: string;
+}) {
+  const [leftPct, setLeftPct] = useState(defaultLeftPct);
+  const [dragging, setDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef       = useRef<number | null>(null);
+
+  const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setDragging(true);
+
+    const getX = (ev: MouseEvent | TouchEvent) =>
+      "touches" in ev ? ev.touches[0].clientX : ev.clientX;
+
+    const onMove = (ev: MouseEvent | TouchEvent) => {
+      if (!containerRef.current) return;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        const rect = containerRef.current!.getBoundingClientRect();
+        const raw  = ((getX(ev) - rect.left) / rect.width) * 100;
+        setLeftPct(Math.min(maxPct, Math.max(minPct, raw)));
+      });
+    };
+    const onUp = () => {
+      setDragging(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup",   onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend",  onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup",   onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend",  onUp);
+  }, [minPct, maxPct]);
+
+  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
+
+  const presets = [
+    { label: "30 / 70", value: 30 },
+    { label: "50 / 50", value: 50 },
+    { label: "70 / 30", value: 70 },
+  ];
+
+  return (
+    <div>
+      {/* Preset quick-buttons */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Split:</span>
+        {presets.map((p) => (
+          <button key={p.value} onClick={() => setLeftPct(p.value)}
+            className={cn(
+              "text-[10px] px-2 py-0.5 rounded border transition-colors font-mono",
+              Math.round(leftPct) === p.value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border/60 text-muted-foreground hover:border-primary/60 hover:text-foreground"
+            )}
+          >{p.label}</button>
+        ))}
+        <span className="text-[10px] text-muted-foreground ml-2 font-mono">
+          {Math.round(leftPct)}% / {Math.round(100 - leftPct)}%
+        </span>
+        <span className="text-[10px] text-muted-foreground ml-auto hidden sm:block">drag the divider to resize</span>
+      </div>
+
+      {/* Split panels */}
+      <div ref={containerRef} className="flex gap-0 relative" style={{ minHeight: 420 }}>
+        {/* Left panel */}
+        <div style={{ width: `calc(${leftPct}% - 5px)` }} className="flex-shrink-0 min-w-0">
+          {left}
+        </div>
+
+        {/* Draggable divider */}
+        <div
+          onMouseDown={startDrag} onTouchStart={startDrag}
+          className={cn(
+            "flex-shrink-0 flex flex-col items-center justify-center gap-1 cursor-col-resize select-none z-10 transition-colors group",
+            "w-[10px] mx-0 rounded-sm",
+            dragging ? "bg-primary/20" : "hover:bg-primary/10"
+          )}
+          title="Drag to resize"
+        >
+          {/* Visual handle pill */}
+          <div className={cn(
+            "w-1 rounded-full transition-all",
+            dragging ? "h-16 bg-primary" : "h-10 bg-border group-hover:bg-primary/60"
+          )} />
+          {/* 3-dot grip */}
+          {[0,1,2].map((i) => (
+            <div key={i} className={cn(
+              "w-1 h-1 rounded-full transition-colors",
+              dragging ? "bg-primary" : "bg-border/60 group-hover:bg-primary/40"
+            )} />
+          ))}
+        </div>
+
+        {/* Right panel */}
+        <div style={{ width: `calc(${100 - leftPct}% - 5px)` }} className="flex-shrink-0 min-w-0">
+          {right}
+        </div>
+
+        {/* Full-width drag capture overlay when dragging */}
+        {dragging && (
+          <div className="absolute inset-0 z-20 cursor-col-resize" />
+        )}
+      </div>
     </div>
   );
 }
@@ -960,130 +1077,132 @@ export default function Planner() {
             )}
           </div>
 
-          {/* ── BOTTOM: Trips list + Map ──────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-3">
-
-            {/* TRIPS LIST */}
-            <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
-              {/* Header */}
-              <div className="px-3 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2 flex-wrap">
-                <div className="relative">
-                  <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={tripSearch} onChange={(e) => setTripSearch(e.target.value)}
-                    placeholder="Search trips…" className="h-7 pl-7 text-xs w-40" />
+          {/* ── BOTTOM: Resizable Trips | Map split ──────────── */}
+          <ResizableSplit
+            defaultLeftPct={35}
+            minPct={20}
+            maxPct={80}
+            leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}`}
+            left={
+              <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full">
+                {/* Header */}
+                <div className="px-3 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2 flex-wrap flex-shrink-0">
+                  <div className="relative">
+                    <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={tripSearch} onChange={(e) => setTripSearch(e.target.value)}
+                      placeholder="Search trips…" className="h-7 pl-7 text-xs w-36" />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-7 w-[100px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="Open">Open</SelectItem>
+                      <SelectItem value="Optimized">Optimized</SelectItem>
+                      <SelectItem value="Locked">Locked</SelectItem>
+                      <SelectItem value="Confirmed">Confirmed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-[11px] text-muted-foreground ml-auto">({filteredTrips.length})</span>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-7 w-[110px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Open">Open</SelectItem>
-                    <SelectItem value="Optimized">Optimized</SelectItem>
-                    <SelectItem value="Locked">Locked</SelectItem>
-                    <SelectItem value="Confirmed">Confirmed</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-[11px] text-muted-foreground ml-auto">({filteredTrips.length} trips)</span>
-              </div>
-
-              {/* Table */}
-              <div className="overflow-auto flex-1">
-                <table className="w-full text-xs min-w-[560px]">
-                  <thead className="bg-muted/30 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
-                      {["Details","Route Code","Seq","Vehicle","Status","Lock","Driver","Depart","Arrival"].map((h) => (
-                        <th key={h} className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTrips.length === 0 && (
-                      <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-muted-foreground">
-                        {trips.length === 0 ? "No trips planned yet — confirm a trip above" : "No trips match filters"}
-                      </td></tr>
-                    )}
-                    {filteredTrips.map((t) => {
-                      const sel = t.id === selectedTripId;
-                      return (
-                        <tr key={t.id}
-                          onClick={() => selectTrip(t)}
-                          className={cn(
-                            "border-b border-border/30 cursor-pointer transition-colors group",
-                            sel ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/40",
-                            t.locked ? "bg-amber-50/40" : ""
-                          )}
-                        >
-                          <td className="px-2 py-1.5">
-                            <Checkbox checked={sel} onCheckedChange={() => selectTrip(t)} onClick={(e) => e.stopPropagation()} />
-                          </td>
-                          <td className="px-2 py-1.5">
-                            <button className="text-sky-600 hover:text-sky-700" onClick={(e) => e.stopPropagation()}>
-                              <Info className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                          <td className="px-2 py-1.5 font-mono text-[11px] text-primary font-semibold whitespace-nowrap">{t.id.slice(-12)}</td>
-                          <td className="px-2 py-1.5 text-[11px] font-mono text-center">{t.seq}</td>
-                          <td className="px-2 py-1.5 font-mono font-bold text-[11px]">{t.vehicle.code}</td>
-                          <td className="px-2 py-1.5">
-                            <span className={cn("text-[9px] px-2 py-0.5 rounded font-bold", statusColor(t.status))}>
-                              {t.status.toUpperCase()}
-                            </span>
-                          </td>
-                          <td className="px-2 py-1.5">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
-                              className="flex items-center justify-center w-6 h-6 rounded hover:bg-muted"
-                            >
-                              {t.locked
-                                ? <Lock className="w-3.5 h-3.5 text-orange-500" />
-                                : <Unlock className="w-3.5 h-3.5 text-muted-foreground/50" />}
-                            </button>
-                          </td>
-                          <td className="px-2 py-1.5 text-[11px]">{t.driver.name}</td>
-                          <td className="px-2 py-1.5 text-[11px] font-mono text-muted-foreground">{t.departSite}</td>
-                          <td className="px-2 py-1.5 text-[11px] font-mono text-muted-foreground">{t.arrivalSite}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* MAP + LIST VIEW */}
-            <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-4 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2">
-                <MapIcon className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">
-                  {selectedTrip
-                    ? <><span className="font-mono text-primary">{selectedTrip.id.slice(-12)}</span><span className="text-muted-foreground font-normal"> · {selectedTrip.stops.length} stops</span></>
-                    : "Route Preview"}
-                </h3>
-                {selectedTrip && (
-                  <button onClick={() => deleteTrip(selectedTrip.id)}
-                    className="ml-auto text-muted-foreground/50 hover:text-destructive p-1 rounded">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                <div className={cn("flex items-center gap-0.5 border border-border rounded-md p-0.5 ml-auto", selectedTrip && "ml-2")}>
-                  <button onClick={() => setTripView("map")}
-                    className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1 transition-colors",
-                      tripView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
-                    <MapIcon className="w-3 h-3" /> Map
-                  </button>
-                  <button onClick={() => setTripView("list")}
-                    className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1 transition-colors",
-                      tripView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
-                    <List className="w-3 h-3" /> List View
-                  </button>
+                {/* Table */}
+                <div className="overflow-auto flex-1">
+                  <table className="w-full text-xs min-w-[480px]">
+                    <thead className="bg-muted/30 sticky top-0 z-10">
+                      <tr>
+                        <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
+                        {["Details","Route Code","Seq","Vehicle","Status","Lock","Driver","Depart","Arrival"].map((h) => (
+                          <th key={h} className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTrips.length === 0 && (
+                        <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-muted-foreground">
+                          {trips.length === 0 ? "No trips yet — confirm a trip above" : "No trips match filters"}
+                        </td></tr>
+                      )}
+                      {filteredTrips.map((t) => {
+                        const sel = t.id === selectedTripId;
+                        return (
+                          <tr key={t.id}
+                            onClick={() => selectTrip(t)}
+                            className={cn(
+                              "border-b border-border/30 cursor-pointer transition-colors group",
+                              sel ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/40",
+                              t.locked ? "bg-amber-50/40" : ""
+                            )}
+                          >
+                            <td className="px-2 py-1.5">
+                              <Checkbox checked={sel} onCheckedChange={() => selectTrip(t)} onClick={(e) => e.stopPropagation()} />
+                            </td>
+                            <td className="px-2 py-1.5">
+                              <button className="text-sky-600 hover:text-sky-700" onClick={(e) => e.stopPropagation()}>
+                                <Info className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                            <td className="px-2 py-1.5 font-mono text-[11px] text-primary font-semibold whitespace-nowrap">{t.id.slice(-12)}</td>
+                            <td className="px-2 py-1.5 text-[11px] font-mono text-center">{t.seq}</td>
+                            <td className="px-2 py-1.5 font-mono font-bold text-[11px]">{t.vehicle.code}</td>
+                            <td className="px-2 py-1.5">
+                              <span className={cn("text-[9px] px-2 py-0.5 rounded font-bold", statusColor(t.status))}>
+                                {t.status.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="px-2 py-1.5">
+                              <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
+                                className="flex items-center justify-center w-6 h-6 rounded hover:bg-muted">
+                                {t.locked
+                                  ? <Lock className="w-3.5 h-3.5 text-orange-500" />
+                                  : <Unlock className="w-3.5 h-3.5 text-muted-foreground/50" />}
+                              </button>
+                            </td>
+                            <td className="px-2 py-1.5 text-[11px]">{t.driver.name}</td>
+                            <td className="px-2 py-1.5 text-[11px] font-mono text-muted-foreground">{t.departSite}</td>
+                            <td className="px-2 py-1.5 text-[11px] font-mono text-muted-foreground">{t.arrivalSite}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-
-              {tripView === "map" ? <RouteMapView trip={selectedTrip} /> : <TripStopListView trip={selectedTrip} />}
-            </div>
-          </div>
+            }
+            right={
+              <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full">
+                <div className="px-4 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2 flex-shrink-0">
+                  <MapIcon className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">
+                    {selectedTrip
+                      ? <><span className="font-mono text-primary">{selectedTrip.id.slice(-12)}</span><span className="text-muted-foreground font-normal"> · {selectedTrip.stops.length} stops</span></>
+                      : "Route Preview"}
+                  </h3>
+                  {selectedTrip && (
+                    <button onClick={() => deleteTrip(selectedTrip.id)}
+                      className="text-muted-foreground/50 hover:text-destructive p-1 rounded ml-1">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <div className={cn("flex items-center gap-0.5 border border-border rounded-md p-0.5 ml-auto")}>
+                    <button onClick={() => setTripView("map")}
+                      className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1 transition-colors",
+                        tripView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
+                      <MapIcon className="w-3 h-3" /> Map
+                    </button>
+                    <button onClick={() => setTripView("list")}
+                      className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1 transition-colors",
+                        tripView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
+                      <List className="w-3 h-3" /> List View
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  {tripView === "map" ? <RouteMapView trip={selectedTrip} /> : <TripStopListView trip={selectedTrip} />}
+                </div>
+              </div>
+            }
+          />
         </>
       )}
     </div>
