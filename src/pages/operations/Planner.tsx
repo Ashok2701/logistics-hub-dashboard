@@ -297,7 +297,10 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
 }
 
 // ═══════════════════════════════════════════════════════
-// ACTIVE TOUR PANEL — rich inline row + timeline + stops
+// ACTIVE TOUR PANEL — redesigned: 3-zone layout
+// Zone 1 (top): Assignment bar — vehicle + driver + key stats
+// Zone 2 (mid): Sequence timeline
+// Zone 3 (bottom): Stops table (collapsible)
 // ═══════════════════════════════════════════════════════
 type ActiveTourPanelProps = {
   vehicle: Vehicle | null; driver: Driver | null; stops: Stop[];
@@ -313,15 +316,52 @@ type ActiveTourPanelProps = {
   onConfirm: () => void;
 };
 
-// Generate fake departure times for the timeline
-function stopTimes(stops: Stop[]): string[] {
-  let mins = 7 * 60 + 30; // start 07:30
-  return stops.map(() => {
+function genTimes(count: number): string[] {
+  let mins = 7 * 60 + 30;
+  return Array.from({ length: count }, () => {
     const h = String(Math.floor(mins / 60)).padStart(2, "0");
     const m = String(mins % 60).padStart(2, "0");
-    mins += 18 + Math.floor(Math.random() * 12);
+    mins += 18 + Math.round(Math.random() * 10);
     return `${h}:${m}`;
   });
+}
+
+function StatPill({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
+  return (
+    <div className="flex flex-col items-center px-3 py-1.5 rounded-lg bg-muted/40 border border-border/40 min-w-[72px]">
+      <span className={cn("text-sm font-bold leading-tight", accent ?? "text-foreground")}>{value}</span>
+      <span className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5 whitespace-nowrap">{label}</span>
+    </div>
+  );
+}
+
+function AssignSlot({
+  icon: Icon, label, filled, placeholder, children, onDragOver, onDrop,
+}: {
+  icon: React.ElementType; label: string; filled: boolean;
+  placeholder: string; children?: React.ReactNode;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+}) {
+  return (
+    <div
+      onDragOver={onDragOver} onDrop={onDrop}
+      className={cn(
+        "flex-1 min-w-[160px] rounded-xl border-2 transition-all",
+        filled
+          ? "border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20"
+          : "border-dashed border-border/50 bg-muted/20 hover:border-primary/40 hover:bg-primary/3"
+      )}
+    >
+      <div className="flex items-center gap-1.5 px-3 pt-2 pb-0.5">
+        <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", filled ? "text-emerald-600" : "text-muted-foreground/50")} />
+        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{label}</span>
+      </div>
+      <div className="px-3 pb-2.5 min-h-[36px] flex items-center">
+        {filled ? children : <span className="text-[11px] text-muted-foreground/50 italic">{placeholder}</span>}
+      </div>
+    </div>
+  );
 }
 
 function ActiveTourPanel({
@@ -329,379 +369,331 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
 }: ActiveTourPanelProps) {
-  const [expanded, setExpanded] = useState(true);
-  const times = useMemo(() => stopTimes(stops), [stops.length]);
+  const [stopsOpen, setStopsOpen] = useState(true);
+  const times = useMemo(() => genTimes(stops.length), [stops.length]);
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
   const totalVol    = stops.reduce((n, s) => n + s.vol, 0);
   const totalQty    = stops.reduce((n, s) => n + s.qty, 0);
-  const pickupCount = stops.filter((s) => s.type === "PICKUP").length;
   const dropCount   = stops.filter((s) => s.type === "DROP").length;
-
-  // Estimated travel time: 18 min per stop
-  const travelMins = stops.length * 18;
-  const travelStr  = stops.length
-    ? `${Math.floor(travelMins / 60).toString().padStart(2,"0")}:${String(travelMins % 60).padStart(2,"0")}`
+  const pickCount   = stops.filter((s) => s.type === "PICKUP").length;
+  const travelMins  = stops.length * 18;
+  const travelStr   = stops.length
+    ? `${String(Math.floor(travelMins / 60)).padStart(2,"0")}:${String(travelMins % 60).padStart(2,"0")}`
     : "—";
-  const distStr = stops.length ? `${Math.round(stops.length * 12 + 30)} Miles` : "—";
+  const distMiles   = stops.length ? stops.length * 12 + 30 : 0;
 
-  const COLS = [
-    { label: "Vehicle",       w: "120px" },
-    { label: "Driver",        w: "130px" },
-    { label: "Trailer",       w: "70px"  },
-    { label: "Departure Site",w: "90px"  },
-    { label: "Arrival Site",  w: "90px"  },
-    { label: "Seq #",         w: "50px"  },
-    { label: "Travel Time",   w: "80px"  },
-    { label: "Distance",      w: "80px"  },
-    { label: "Total Weight",  w: "90px"  },
-    { label: "Total Vol",     w: "80px"  },
-    { label: "Total Qty",     w: "80px"  },
-    { label: "Pickups",       w: "65px"  },
-    { label: "Deliveries",    w: "75px"  },
-    { label: "Stops",         w: "55px"  },
-    { label: "Forced Seq",    w: "75px"  },
-    { label: "Comments",      w: "75px"  },
-    { label: "Trip Sequence", w: "320px" },
-  ];
+  // capacity bar
+  const capPct = vehicle ? Math.min(100, Math.round((totalWeight / vehicle.capacity) * 100)) : 0;
+  const capColor = capPct > 90 ? "bg-rose-500" : capPct > 70 ? "bg-amber-500" : "bg-emerald-500";
 
-  const totalMinW = COLS.reduce((n, c) => n + parseInt(c.w), 0) + 48;
+  const hasAssignment = !!(vehicle || driver || stops.length);
 
   return (
     <div
       onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
       className={cn(
-        "bg-card rounded-xl border-2 shadow-sm overflow-hidden transition-colors",
-        dropZoneActive ? "border-primary/70 bg-primary/3" : "border-dashed border-border/60"
+        "rounded-xl border-2 shadow-sm transition-all overflow-hidden",
+        dropZoneActive
+          ? "border-primary bg-primary/3 shadow-primary/10"
+          : "border-dashed border-border/60 bg-card"
       )}
     >
-      {/* ── Panel header ── */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border/60 bg-gradient-to-r from-primary/6 to-transparent flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Play className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">Active Tour</h3>
-          {dropZoneActive && <span className="text-xs text-primary animate-pulse font-medium">Drop here…</span>}
-          {stops.length > 0 && (
-            <span className="text-[10px] text-muted-foreground ml-1">
-              {stops.length} stop{stops.length !== 1 ? "s" : ""} · {totalWeight} kg · {totalQty} qty
-            </span>
-          )}
+      {/* ══════════════════════════════════════════
+          HEADER BAR
+      ══════════════════════════════════════════ */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-gradient-to-r from-slate-800 to-slate-700">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center flex-shrink-0">
+            <Play className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white leading-tight">Active Tour</h3>
+            {dropZoneActive
+              ? <p className="text-[10px] text-primary animate-pulse font-medium">Drop vehicle, driver or stops here…</p>
+              : <p className="text-[10px] text-white/40">Drag resources here or click to assign</p>
+            }
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1"
-            onClick={onClear} disabled={!vehicle && !driver && !stops.length}>
+          <Button size="sm" variant="ghost"
+            className="h-7 text-xs gap-1 text-white/60 hover:text-white hover:bg-white/10"
+            onClick={onClear} disabled={!hasAssignment}>
             <Trash2 className="w-3 h-3" /> Clear
           </Button>
-          <Button size="sm" className="h-7 text-xs gap-1 bg-blue-600 hover:bg-blue-700 text-white" onClick={onConfirm}>
-            <CheckCheck className="w-3 h-3" /> Confirm Trip
+          <Button size="sm"
+            className="h-7 text-xs gap-1.5 bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-900/30"
+            onClick={onConfirm}>
+            <CheckCheck className="w-3.5 h-3.5" /> Confirm Trip
           </Button>
         </div>
       </div>
 
-      {/* ── Scrollable table ── */}
-      <div className="overflow-x-auto">
-        <div style={{ minWidth: totalMinW }}>
+      {/* ══════════════════════════════════════════
+          ZONE 1 — ASSIGNMENT + STATS
+      ══════════════════════════════════════════ */}
+      <div className="p-3 border-b border-border/40 bg-card">
+        <div className="flex flex-wrap gap-2.5 items-stretch">
 
-          {/* Column headers */}
-          <div className="flex border-b border-border/50 bg-muted/25">
-            {/* Expand toggle column */}
-            <div className="w-10 flex-shrink-0 border-r border-border/30" />
-            {COLS.map((c) => (
-              <div key={c.label}
-                style={{ width: c.w, minWidth: c.w }}
-                className="flex-shrink-0 px-2.5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-r border-border/20 last:border-r-0 whitespace-nowrap"
-              >{c.label}</div>
-            ))}
+          {/* Vehicle slot */}
+          <AssignSlot icon={Truck} label="Vehicle" filled={!!vehicle} placeholder="Click a vehicle row above">
+            {vehicle && (
+              <div className="flex items-start justify-between w-full gap-2">
+                <div>
+                  <p className="font-mono font-bold text-base text-blue-700 leading-tight">{vehicle.code}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{vehicle.vehicleNo}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{vehicle.category} · Cap: {vehicle.capacity.toLocaleString()} kg</p>
+                </div>
+                <button onClick={onClearVehicle} className="text-muted-foreground/40 hover:text-destructive mt-0.5 flex-shrink-0">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </AssignSlot>
+
+          {/* Driver slot */}
+          <AssignSlot icon={Users} label="Driver" filled={!!driver} placeholder="Drag a driver here"
+            onDragOver={(e) => e.preventDefault()} onDrop={onDriverDrop}>
+            {driver && (
+              <div className="flex items-start justify-between w-full gap-2">
+                <div>
+                  <p className="font-semibold text-sm leading-tight">{driver.name}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{driver.id} · {driver.license}</p>
+                  <p className={cn("text-[10px] font-semibold mt-0.5", hoursColor(driver.hoursToday))}>{driver.hoursToday}h today</p>
+                </div>
+                <button onClick={onClearDriver} className="text-muted-foreground/40 hover:text-destructive mt-0.5 flex-shrink-0">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </AssignSlot>
+
+          {/* Divider */}
+          <div className="w-px bg-border/40 self-stretch hidden lg:block" />
+
+          {/* Stats pills */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <StatPill label="Stops"     value={stops.length}           accent={stops.length > 0 ? "text-primary" : undefined} />
+            <StatPill label="Drops"     value={dropCount}              accent={dropCount  > 0 ? "text-rose-600"  : undefined} />
+            <StatPill label="Pickups"   value={pickCount}              accent={pickCount  > 0 ? "text-sky-600"   : undefined} />
+            <StatPill label="Weight"    value={totalWeight ? `${totalWeight} kg` : "—"} />
+            <StatPill label="Volume"    value={totalVol    ? `${totalVol} m³`    : "—"} />
+            <StatPill label="Qty"       value={totalQty    ? `${totalQty} UN`    : "—"} />
+            <StatPill label="Travel"    value={travelStr} />
+            <StatPill label="Distance"  value={distMiles ? `${distMiles} mi` : "—"} />
           </div>
 
-          {/* Data row */}
-          <div className={cn(
-            "flex border-b border-border/30 min-h-[46px] transition-colors",
-            expanded ? "bg-blue-50/40 dark:bg-blue-950/10" : "bg-card hover:bg-muted/20"
-          )}>
-            {/* Expand / collapse toggle */}
-            <div className="w-10 flex-shrink-0 flex items-center justify-center border-r border-border/30">
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className={cn(
-                  "w-6 h-6 rounded flex items-center justify-center transition-colors text-white text-xs font-bold",
-                  expanded ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-400 hover:bg-slate-500"
-                )}
-              >
-                {expanded ? "▼" : "▶"}
-              </button>
+          {/* Capacity bar (only when vehicle assigned) */}
+          {vehicle && stops.length > 0 && (
+            <div className="flex flex-col justify-center gap-1 min-w-[120px]">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-muted-foreground">Capacity</span>
+                <span className={cn("font-bold", capPct > 90 ? "text-rose-600" : capPct > 70 ? "text-amber-600" : "text-emerald-600")}>
+                  {capPct}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all duration-500", capColor)}
+                  style={{ width: `${capPct}%` }}
+                />
+              </div>
+              <p className="text-[9px] text-muted-foreground">{totalWeight.toLocaleString()} / {vehicle.capacity.toLocaleString()} kg</p>
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Vehicle */}
-            <div style={{ width: "120px", minWidth: "120px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20"
-              onDragOver={(e) => e.preventDefault()}
-            >
-              {vehicle ? (
-                <div className="flex items-center gap-1.5 w-full">
-                  <span className="font-mono font-bold text-[13px] text-blue-700">{vehicle.code}</span>
-                  <button onClick={onClearVehicle} className="ml-auto text-muted-foreground/50 hover:text-destructive flex-shrink-0">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : (
-                <span className="text-[10px] text-muted-foreground/50 italic">click vehicle</span>
-              )}
+      {/* ══════════════════════════════════════════
+          ZONE 2 — TRIP SEQUENCE TIMELINE
+      ══════════════════════════════════════════ */}
+      <div className="px-5 py-3 border-b border-border/40 bg-muted/10">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+            <RouteIcon className="w-3 h-3" /> Trip Sequence
+          </span>
+          {stops.length > 0 && (
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block"/>Drop</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-sky-500 inline-block"/>Pickup</span>
             </div>
+          )}
+        </div>
 
-            {/* Driver */}
-            <div style={{ width: "130px", minWidth: "130px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={onDriverDrop}
-            >
-              {driver ? (
-                <div className="flex items-center gap-1.5 w-full">
-                  <span className="text-[12px] font-semibold truncate">{driver.name}</span>
-                  <button onClick={onClearDriver} className="ml-auto text-muted-foreground/50 hover:text-destructive flex-shrink-0">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : (
-                <span className="text-[10px] text-muted-foreground/50 italic">drag driver</span>
-              )}
-            </div>
+        {stops.length === 0 ? (
+          <div className="flex items-center gap-3 py-2">
+            <div className="h-0.5 flex-1 bg-border/40 rounded" />
+            <span className="text-[11px] text-muted-foreground/50 italic whitespace-nowrap">Add stops to build the sequence</span>
+            <div className="h-0.5 flex-1 bg-border/40 rounded" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto pb-1">
+            <div className="relative flex items-start" style={{ minWidth: stops.length * 96 }}>
+              {/* Connecting line */}
+              <div className="absolute top-[18px] left-8 right-8 h-0.5 bg-emerald-400/70 rounded" />
 
-            {/* Trailer */}
-            <div style={{ width: "70px", minWidth: "70px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center justify-center border-r border-border/20">
-              <span className="font-mono text-xs text-muted-foreground underline cursor-pointer hover:text-primary">0</span>
-            </div>
-
-            {/* Departure Site */}
-            <div style={{ width: "90px", minWidth: "90px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20">
-              <span className="font-mono text-xs">{vehicle?.departureSite ?? "—"}</span>
-            </div>
-
-            {/* Arrival Site */}
-            <div style={{ width: "90px", minWidth: "90px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20">
-              <span className="font-mono text-xs">{vehicle?.arrivalSite ?? "—"}</span>
-            </div>
-
-            {/* Seq # */}
-            <div style={{ width: "50px", minWidth: "50px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center justify-center border-r border-border/20">
-              <span className="font-mono text-xs text-muted-foreground">1</span>
-            </div>
-
-            {/* Travel Time */}
-            <div style={{ width: "80px", minWidth: "80px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20">
-              <span className="font-mono text-xs">{travelStr}</span>
-            </div>
-
-            {/* Distance */}
-            <div style={{ width: "80px", minWidth: "80px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20">
-              <span className="font-mono text-xs">{distStr}</span>
-            </div>
-
-            {/* Total Weight */}
-            <div style={{ width: "90px", minWidth: "90px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20">
-              <span className="font-mono text-xs font-semibold">{totalWeight ? `${totalWeight}.00 LB` : "0.00 LB"}</span>
-            </div>
-
-            {/* Total Vol */}
-            <div style={{ width: "80px", minWidth: "80px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20">
-              <span className="font-mono text-xs">{totalVol ? `${totalVol} GL` : "0 GL"}</span>
-            </div>
-
-            {/* Total Qty */}
-            <div style={{ width: "80px", minWidth: "80px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center border-r border-border/20">
-              <span className="font-mono text-xs font-semibold">{totalQty ? `${totalQty} UN` : "0 UN"}</span>
-            </div>
-
-            {/* Pickups */}
-            <div style={{ width: "65px", minWidth: "65px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center justify-center border-r border-border/20">
-              <span className="font-mono text-xs">{pickupCount}</span>
-            </div>
-
-            {/* Deliveries */}
-            <div style={{ width: "75px", minWidth: "75px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center justify-center border-r border-border/20">
-              <span className="font-mono text-xs">{dropCount}</span>
-            </div>
-
-            {/* Stops */}
-            <div style={{ width: "55px", minWidth: "55px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center justify-center border-r border-border/20">
-              <span className="font-mono text-xs font-semibold text-primary">{stops.length}</span>
-            </div>
-
-            {/* Forced Seq */}
-            <div style={{ width: "75px", minWidth: "75px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center justify-center border-r border-border/20">
-              <span className="text-xs text-muted-foreground">No</span>
-            </div>
-
-            {/* Comments */}
-            <div style={{ width: "75px", minWidth: "75px" }}
-              className="flex-shrink-0 px-2.5 py-2 flex items-center justify-center border-r border-border/20">
-              <button className="w-7 h-7 rounded bg-blue-700 hover:bg-blue-800 flex items-center justify-center">
-                <List className="w-3.5 h-3.5 text-white" />
-              </button>
-            </div>
-
-            {/* Trip Sequence — timeline */}
-            <div style={{ width: "320px", minWidth: "320px" }}
-              className="flex-shrink-0 px-3 py-1 flex flex-col justify-center">
-              {stops.length === 0 ? (
-                <span className="text-[10px] text-muted-foreground/50 italic">Add stops to see sequence</span>
-              ) : (
-                <div className="relative pt-4 pb-1">
-                  {/* Connecting line */}
-                  <div className="absolute top-[22px] left-4 right-4 h-0.5 bg-emerald-400" />
-
-                  {/* Stop nodes */}
-                  <div className="flex items-start justify-between relative">
-                    {stops.map((s, i) => (
-                      <div key={s.id} className="flex flex-col items-center gap-1 relative" style={{ minWidth: 32 }}>
-                        {/* Seq number above */}
-                        <span className="text-[9px] font-bold text-emerald-700 leading-none mb-0.5">{i + 1}</span>
-                        {/* Circle */}
-                        <div className={cn(
-                          "w-5 h-5 rounded-full border-2 border-white flex items-center justify-center z-10 shadow-sm",
-                          s.type === "DROP"   ? "bg-rose-500" : "bg-sky-500"
-                        )}>
-                          <span className="text-[8px] text-white font-bold">{i + 1}</span>
-                        </div>
-                        {/* Time below */}
-                        <span className="text-[9px] text-muted-foreground leading-none mt-0.5 whitespace-nowrap">{times[i]}</span>
-                      </div>
-                    ))}
+              {stops.map((s, i) => (
+                <div key={s.id} className="flex flex-col items-center flex-1 relative group">
+                  {/* Seq number */}
+                  <span className="text-[9px] font-bold text-slate-500 mb-1 leading-none">{i + 1}</span>
+                  {/* Circle node */}
+                  <div className={cn(
+                    "w-9 h-9 rounded-full border-[3px] border-white flex items-center justify-center z-10 shadow-md cursor-pointer transition-transform group-hover:scale-110",
+                    s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
+                  )}>
+                    <span className="text-[11px] text-white font-bold">{i + 1}</span>
                   </div>
+                  {/* Time */}
+                  <span className="text-[9px] font-mono text-muted-foreground mt-1 leading-none">{times[i]}</span>
+                  {/* Txn */}
+                  <span className="text-[8px] text-muted-foreground/70 mt-0.5 max-w-[72px] truncate text-center leading-none">{s.txn}</span>
+                  {/* Remove on hover */}
+                  <button
+                    onClick={() => onRemoveStop(s.id)}
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-rose-300 text-rose-500 items-center justify-center hidden group-hover:flex shadow-sm hover:bg-rose-50 z-20"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
           </div>
+        )}
+      </div>
 
-          {/* ── Expanded section: stops sub-table ── */}
-          <AnimatePresence>
-            {expanded && stops.length > 0 && (
+      {/* ══════════════════════════════════════════
+          ZONE 3 — STOPS TABLE (collapsible)
+      ══════════════════════════════════════════ */}
+      {stops.length > 0 && (
+        <>
+          {/* Toggle */}
+          <button
+            onClick={() => setStopsOpen(!stopsOpen)}
+            className="w-full flex items-center justify-between px-4 py-1.5 bg-muted/20 hover:bg-muted/40 border-b border-border/40 transition-colors group"
+          >
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+              <List className="w-3 h-3" /> Stop Details
+              <span className="bg-border/60 text-muted-foreground rounded-full px-1.5 text-[9px] font-bold ml-1">{stops.length}</span>
+            </span>
+            <motion.div animate={{ rotate: stopsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/50" />
+            </motion.div>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {stopsOpen && (
               <motion.div
+                key="stops-table"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                className="overflow-hidden border-t border-border/40"
+                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                className="overflow-hidden"
               >
-                {/* Sub-table header */}
-                <div className="flex bg-slate-50 dark:bg-slate-900/40 border-b border-border/30">
-                  <div className="w-10 flex-shrink-0" />
-                  {[
-                    { label: "Type",        w: "60px"  },
-                    { label: "Document",    w: "130px" },
-                    { label: "Client Code", w: "90px"  },
-                    { label: "Client",      w: "160px" },
-                    { label: "Postal Code", w: "120px" },
-                    { label: "Weight",      w: "80px"  },
-                    { label: "Volume",      w: "80px"  },
-                    { label: "Qty",         w: "60px"  },
-                    { label: "",            w: "30px"  },
-                  ].map((c) => (
-                    <div key={c.label} style={{ width: c.w, minWidth: c.w }}
-                      className="flex-shrink-0 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-r border-border/20 last:border-r-0">
-                      {c.label}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Stop rows */}
-                {stops.map((s, i) => (
-                  <div key={s.id}
-                    className={cn(
-                      "flex items-center border-b border-border/20 hover:bg-muted/30 transition-colors",
-                      i % 2 === 0 ? "bg-white dark:bg-slate-900/0" : "bg-slate-50/60 dark:bg-slate-900/20"
-                    )}
-                  >
-                    {/* Indent */}
-                    <div className="w-10 flex-shrink-0 flex items-center justify-center py-1.5">
-                      <span className="w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white"
-                        style={{ background: s.type === "DROP" ? "#e11d48" : "#0284c7" }}>{i + 1}</span>
-                    </div>
-                    {/* Type */}
-                    <div style={{ width: "60px", minWidth: "60px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-bold",
-                        s.type === "DROP" ? "bg-rose-100 text-rose-700" : "bg-sky-100 text-sky-700"
-                      )}>{s.type === "DROP" ? "DLVR" : "PICK"}</span>
-                    </div>
-                    {/* Document */}
-                    <div style={{ width: "130px", minWidth: "130px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className="font-mono text-[11px] text-blue-600 hover:underline cursor-pointer">{s.txn}</span>
-                    </div>
-                    {/* Client Code */}
-                    <div style={{ width: "90px", minWidth: "90px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className="text-[11px] text-muted-foreground font-mono">{s.bpcode}</span>
-                    </div>
-                    {/* Client */}
-                    <div style={{ width: "160px", minWidth: "160px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className="text-[11px] font-medium truncate block">{s.client}</span>
-                    </div>
-                    {/* Postal Code */}
-                    <div style={{ width: "120px", minWidth: "120px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className="text-[11px] text-muted-foreground">{s.postalCity}</span>
-                    </div>
-                    {/* Weight */}
-                    <div style={{ width: "80px", minWidth: "80px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className="font-mono text-[11px]">{s.netweight} LB</span>
-                    </div>
-                    {/* Volume */}
-                    <div style={{ width: "80px", minWidth: "80px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className="font-mono text-[11px]">{s.vol} GL</span>
-                    </div>
-                    {/* Qty */}
-                    <div style={{ width: "60px", minWidth: "60px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                      <span className="font-mono text-[11px] font-semibold">{s.qty} UN</span>
-                    </div>
-                    {/* Remove */}
-                    <div style={{ width: "30px", minWidth: "30px" }} className="flex-shrink-0 flex items-center justify-center py-1.5">
-                      <button onClick={() => onRemoveStop(s.id)}
-                        className="w-4 h-4 rounded-full hover:bg-rose-100 flex items-center justify-center text-muted-foreground/40 hover:text-rose-600 transition-colors">
-                        <X className="w-2.5 h-2.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Sub-totals row */}
-                <div className="flex items-center bg-slate-100/80 dark:bg-slate-800/30 border-t border-border/40">
-                  <div className="w-10 flex-shrink-0" />
-                  <div style={{ width: "60px", minWidth: "60px" }}  className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15" />
-                  <div style={{ width: "130px", minWidth: "130px" }} className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">Totals</span>
-                  </div>
-                  <div style={{ width: "90px",  minWidth: "90px" }}  className="flex-shrink-0 border-r border-border/15" />
-                  <div style={{ width: "160px", minWidth: "160px" }} className="flex-shrink-0 border-r border-border/15" />
-                  <div style={{ width: "120px", minWidth: "120px" }} className="flex-shrink-0 border-r border-border/15" />
-                  <div style={{ width: "80px",  minWidth: "80px" }}  className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                    <span className="font-mono text-[11px] font-bold">{totalWeight} LB</span>
-                  </div>
-                  <div style={{ width: "80px",  minWidth: "80px" }}  className="flex-shrink-0 px-2.5 py-1.5 border-r border-border/15">
-                    <span className="font-mono text-[11px] font-bold">{totalVol} GL</span>
-                  </div>
-                  <div style={{ width: "60px",  minWidth: "60px" }}  className="flex-shrink-0 px-2.5 py-1.5">
-                    <span className="font-mono text-[11px] font-bold">{totalQty} UN</span>
-                  </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs min-w-[640px]">
+                    <thead>
+                      <tr className="bg-muted/30 border-b border-border/40">
+                        <th className="w-8 px-2 py-2 text-center text-[10px] font-semibold text-muted-foreground">#</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Type</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Document</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Client Code</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Client</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Postal City</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-semibold text-muted-foreground">Weight</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-semibold text-muted-foreground">Vol</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-semibold text-muted-foreground">Qty</th>
+                        <th className="w-8" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence>
+                        {stops.map((s, i) => (
+                          <motion.tr key={s.id} layout
+                            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                            className={cn(
+                              "border-b border-border/25 group hover:bg-primary/3 transition-colors",
+                              i % 2 === 1 ? "bg-muted/15" : ""
+                            )}
+                          >
+                            <td className="px-2 py-2 text-center">
+                              <span className={cn(
+                                "w-5 h-5 rounded-full text-[9px] font-bold inline-flex items-center justify-center text-white shadow-sm",
+                                s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
+                              )}>{i + 1}</span>
+                            </td>
+                            <td className="px-3 py-2">
+                              <span className={cn(
+                                "text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wide",
+                                s.type === "DROP"
+                                  ? "bg-rose-100 text-rose-700"
+                                  : "bg-sky-100 text-sky-700"
+                              )}>{s.type === "DROP" ? "DROP" : "PICK"}</span>
+                            </td>
+                            <td className="px-3 py-2 font-mono text-[11px] text-blue-600 hover:underline cursor-pointer whitespace-nowrap">{s.txn}</td>
+                            <td className="px-3 py-2 text-[11px] text-muted-foreground font-mono">{s.bpcode}</td>
+                            <td className="px-3 py-2 text-[11px] font-medium max-w-[140px] truncate">{s.client}</td>
+                            <td className="px-3 py-2 text-[11px] text-muted-foreground">{s.postalCity}</td>
+                            <td className="px-3 py-2 text-right font-mono text-[11px]">{s.netweight} kg</td>
+                            <td className="px-3 py-2 text-right font-mono text-[11px]">{s.vol} m³</td>
+                            <td className="px-3 py-2 text-right font-mono text-[11px] font-semibold">{s.qty}</td>
+                            <td className="px-2 py-2">
+                              <button
+                                onClick={() => onRemoveStop(s.id)}
+                                className="w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-all"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-border bg-muted/25 font-semibold">
+                        <td colSpan={6} className="px-3 py-2 text-right text-[10px] text-muted-foreground uppercase tracking-wider">Totals</td>
+                        <td className="px-3 py-2 text-right font-mono text-[11px] font-bold">{totalWeight} kg</td>
+                        <td className="px-3 py-2 text-right font-mono text-[11px] font-bold">{totalVol} m³</td>
+                        <td className="px-3 py-2 text-right font-mono text-[11px] font-bold">{totalQty}</td>
+                        <td />
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </>
+      )}
+
+      {/* Empty state */}
+      {!hasAssignment && (
+        <div className="flex items-center justify-center gap-6 py-6 text-muted-foreground/40">
+          <div className="flex flex-col items-center gap-1">
+            <Truck className="w-5 h-5" />
+            <span className="text-[10px]">Vehicle</span>
+          </div>
+          <span className="text-border">+</span>
+          <div className="flex flex-col items-center gap-1">
+            <Users className="w-5 h-5" />
+            <span className="text-[10px]">Driver</span>
+          </div>
+          <span className="text-border">+</span>
+          <div className="flex flex-col items-center gap-1">
+            <Package className="w-5 h-5" />
+            <span className="text-[10px]">Stops</span>
+          </div>
+          <span className="text-border text-lg">→</span>
+          <div className="flex flex-col items-center gap-1">
+            <CheckCheck className="w-5 h-5" />
+            <span className="text-[10px]">Confirm</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
+
 
 // ═══════════════════════════════════════════════════════
 // RESIZABLE SPLIT PANEL
