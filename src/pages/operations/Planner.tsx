@@ -330,6 +330,7 @@ export default function Planner() {
   // ── Filters ───────────────────────────────────────────
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [stopTypeTab, setStopTypeTab]   = useState<"drops" | "pickups">("drops");
+  const [fleetTab, setFleetTab]         = useState<"vehicles" | "drivers">("vehicles");
   const [selectedStopIds, setSelectedStopIds] = useState<Set<string>>(new Set()); // multi-select in tables
 
   // ── Load data ──────────────────────────────────────────
@@ -584,157 +585,243 @@ export default function Planner() {
             <KpiCard label="Total Pickup Qty"  value={kpis.totalPickupQty} icon={ArrowUpFromLine}  color="bg-gradient-to-br from-sky-500 to-sky-600" />
           </div>
 
-          {/* ── TOP SECTION: Vehicles | Drivers | Drops/Pickups ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_220px_1fr] gap-3">
+          {/* ── TOP SECTION: 50% Fleet | 50% Documents ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
-            {/* VEHICLES TABLE */}
+            {/* ════════════════════════════════════════
+                LEFT 50% — FLEET (Vehicles + Drivers tabbed)
+                ════════════════════════════════════════ */}
             <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-3 py-2 border-b border-border/60 bg-gradient-to-r from-slate-600 to-slate-700 flex items-center gap-2">
+
+              {/* Fleet header */}
+              <div className="px-3 py-2 border-b border-border/60 bg-gradient-to-r from-slate-700 to-slate-800 flex items-center gap-2">
                 <Truck className="w-4 h-4 text-white" />
-                <h3 className="text-sm font-semibold text-white">Vehicles</h3>
-                <span className="text-[10px] bg-white/20 text-white rounded-full px-2">{vehicles.length}</span>
-              </div>
-              <div className="p-2">
-                <div className="relative mb-2">
-                  <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={vehSearch} onChange={(e) => setVehSearch(e.target.value)} placeholder="Search…" className="h-7 pl-7 text-xs" />
+                <h3 className="text-sm font-semibold text-white tracking-wide">Fleet</h3>
+                <span className="text-[10px] text-white/50 ml-1">vehicles & drivers</span>
+                <div className="ml-auto flex items-center gap-2 text-[10px] text-white/60">
+                  <span>{vehicles.length} vehicles</span>
+                  <span className="text-white/30">·</span>
+                  <span>{drivers.filter(d => d.status === "Available").length} avail drivers</span>
                 </div>
               </div>
-              <div className="overflow-auto flex-1" style={{ maxHeight: 260 }}>
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/40 sticky top-0">
-                    <tr>
-                      {["Vehicle Code","Vehicle No","Category","Start"].map((h) => (
-                        <th key={h} className="px-2 py-1.5 text-left font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40 text-[10px]">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vehicles.map((v) => {
-                      const sel = draftVehicle?.code === v.code;
-                      return (
-                        <tr key={v.code}
-                          draggable onDragStart={(e) => onVehicleDragStart(e, v)}
-                          onClick={() => setDraftVehicle(sel ? null : v)}
-                          className={cn(
-                            "border-b border-border/30 cursor-pointer transition-colors select-none",
-                            sel ? "bg-emerald-50 border-l-2 border-l-emerald-500" : "hover:bg-muted/50"
-                          )}
-                        >
-                          <td className="px-2 py-1.5 font-mono font-bold text-[11px]" style={{ color: sel ? "#16a34a" : "#2563eb" }}>{v.code}</td>
-                          <td className="px-2 py-1.5 font-mono text-[10px] text-muted-foreground">{v.vehicleNo}</td>
-                          <td className="px-2 py-1.5 text-[10px]">{v.category}</td>
-                          <td className="px-2 py-1.5 text-[10px] text-muted-foreground">{v.startTime}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
 
-            {/* DRIVERS TABLE */}
-            <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-3 py-2 border-b border-border/60 bg-gradient-to-r from-indigo-600 to-indigo-700 flex items-center gap-2">
-                <Users className="w-4 h-4 text-white" />
-                <h3 className="text-sm font-semibold text-white">Drivers</h3>
-                <span className="text-[10px] bg-white/20 text-white rounded-full px-2">{drivers.length}</span>
-                <span className="text-[9px] text-white/60 ml-auto">drag → active</span>
+              {/* Fleet tabs: Vehicles | Drivers */}
+              <div className="flex border-b border-border/60">
+                <button
+                  onClick={() => setFleetTab("vehicles")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
+                    fleetTab === "vehicles"
+                      ? "bg-slate-600 text-white"
+                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
+                  )}
+                >
+                  <Truck className="w-3.5 h-3.5" />
+                  Vehicles
+                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
+                    fleetTab === "vehicles" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
+                  )}>{vehicles.length}</span>
+                </button>
+                <button
+                  onClick={() => setFleetTab("drivers")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
+                    fleetTab === "drivers"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
+                  )}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  Drivers
+                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
+                    fleetTab === "drivers" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
+                  )}>{drivers.length}</span>
+                </button>
               </div>
-              <div className="p-2">
-                <div className="relative mb-2">
+
+              {/* Search bar */}
+              <div className="px-3 py-2 border-b border-border/40">
+                <div className="relative">
                   <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={drvSearch} onChange={(e) => setDrvSearch(e.target.value)} placeholder="Search…" className="h-7 pl-7 text-xs" />
+                  <Input
+                    value={fleetTab === "vehicles" ? vehSearch : drvSearch}
+                    onChange={(e) => fleetTab === "vehicles" ? setVehSearch(e.target.value) : setDrvSearch(e.target.value)}
+                    placeholder={`Search ${fleetTab}…`}
+                    className="h-7 pl-7 text-xs"
+                  />
                 </div>
               </div>
-              <div className="overflow-auto flex-1 px-2 pb-2 space-y-1" style={{ maxHeight: 260 }}>
-                {drivers.map((d) => {
-                  const busy = d.status !== "Available";
-                  const sel  = draftDriver?.id === d.id;
-                  return (
-                    <div key={d.id}
-                      draggable={!busy}
-                      onDragStart={(e) => onDriverDragStart(e, d)}
-                      onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
-                      className={cn(
-                        "rounded-lg border p-2 flex items-center gap-2 transition-colors select-none",
-                        sel  ? "border-indigo-400 bg-indigo-50 ring-1 ring-indigo-300"
-                             : busy ? "opacity-50 border-border/40 bg-muted/20"
-                             : "border-border/50 bg-card cursor-grab hover:border-indigo-300 hover:bg-indigo-50/40"
+
+              {/* VEHICLES content */}
+              {fleetTab === "vehicles" && (
+                <div className="overflow-auto flex-1" style={{ maxHeight: 300 }}>
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/40 sticky top-0 z-10">
+                      <tr>
+                        {["Vehicle Code","Vehicle No","Category","Depart Site","Start"].map((h) => (
+                          <th key={h} className="px-2.5 py-2 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vehicles.map((v) => {
+                        const sel = draftVehicle?.code === v.code;
+                        return (
+                          <tr key={v.code}
+                            draggable onDragStart={(e) => onVehicleDragStart(e, v)}
+                            onClick={() => setDraftVehicle(sel ? null : v)}
+                            className={cn(
+                              "border-b border-border/30 cursor-pointer transition-colors select-none group",
+                              sel
+                                ? "bg-emerald-50 dark:bg-emerald-950/30"
+                                : "hover:bg-muted/50"
+                            )}
+                          >
+                            <td className={cn("px-2.5 py-2 font-mono font-bold text-[12px]", sel ? "text-emerald-700" : "text-primary")}>
+                              {v.code}
+                              {sel && <span className="ml-1.5 text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold">Selected</span>}
+                            </td>
+                            <td className="px-2.5 py-2 font-mono text-[10px] text-muted-foreground">{v.vehicleNo}</td>
+                            <td className="px-2.5 py-2 text-[11px]">{v.category}</td>
+                            <td className="px-2.5 py-2 text-[11px] font-mono text-muted-foreground">{v.departureSite}</td>
+                            <td className="px-2.5 py-2 text-[11px] text-muted-foreground">{v.startTime}</td>
+                          </tr>
+                        );
+                      })}
+                      {vehicles.length === 0 && (
+                        <tr><td colSpan={5} className="px-3 py-8 text-center text-xs text-muted-foreground">No vehicles for this site</td></tr>
                       )}
-                    >
-                      <GripVertical className="w-3 h-3 text-muted-foreground/50 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold truncate">{d.name}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono">{d.id} · {d.license}</p>
-                        <p className={cn("text-[10px] font-semibold", hoursColor(d.hoursToday))}>{d.hoursToday}h today</p>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* DRIVERS content */}
+              {fleetTab === "drivers" && (
+                <div className="overflow-auto flex-1 p-2 space-y-1.5" style={{ maxHeight: 300 }}>
+                  {drivers.map((d) => {
+                    const busy = d.status !== "Available";
+                    const sel  = draftDriver?.id === d.id;
+                    return (
+                      <div key={d.id}
+                        draggable={!busy}
+                        onDragStart={(e) => onDriverDragStart(e, d)}
+                        onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 flex items-center gap-3 transition-colors select-none",
+                          sel
+                            ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 ring-1 ring-indigo-300"
+                            : busy
+                              ? "opacity-50 border-border/40 bg-muted/10"
+                              : "border-border/50 bg-card cursor-grab hover:border-indigo-300 hover:bg-indigo-50/40"
+                        )}
+                      >
+                        <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
+                        <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto] items-center gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate">{d.name}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{d.id} · {d.license}</p>
+                          </div>
+                          <p className={cn("text-[11px] font-bold whitespace-nowrap", hoursColor(d.hoursToday))}>{d.hoursToday}h today</p>
+                          <span className={cn("text-[9px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap",
+                            busy ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                          )}>{busy ? "On Trip" : "Avail"}</span>
+                        </div>
                       </div>
-                      <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-bold flex-shrink-0",
-                        busy ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                      )}>{busy ? "On Trip" : "Avail"}</span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                  {drivers.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-8">No drivers found</p>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* DROPS / PICKUPS TABLE */}
+            {/* ════════════════════════════════════════
+                RIGHT 50% — DOCUMENTS (Drops + Pickups tabbed)
+                ════════════════════════════════════════ */}
             <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
-              {/* Tab header */}
+
+              {/* Documents header */}
+              <div className="px-3 py-2 border-b border-border/60 bg-gradient-to-r from-rose-600 to-sky-600 flex items-center gap-2">
+                <Package className="w-4 h-4 text-white" />
+                <h3 className="text-sm font-semibold text-white tracking-wide">Documents</h3>
+                <span className="text-[10px] text-white/60 ml-1">drops & pickups</span>
+                <div className="ml-auto flex items-center gap-2 text-[10px] text-white/80">
+                  <span>{drops.length} drops</span>
+                  <span className="text-white/40">·</span>
+                  <span>{pickups.length} pickups</span>
+                </div>
+              </div>
+
+              {/* Docs tabs: Deliveries | Pickups */}
               <div className="flex border-b border-border/60">
                 <button
                   onClick={() => setStopTypeTab("drops")}
-                  className={cn("flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold transition-colors",
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
                     stopTypeTab === "drops"
-                      ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                      ? "bg-rose-500 text-white"
+                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
                   )}
                 >
-                  <ArrowDownToLine className="w-4 h-4" />
-                  Deliveries <span className={cn("text-[10px] rounded-full px-2", stopTypeTab === "drops" ? "bg-white/20 text-white" : "bg-border/40")}>{drops.length}</span>
+                  <ArrowDownToLine className="w-3.5 h-3.5" />
+                  Deliveries
+                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
+                    stopTypeTab === "drops" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
+                  )}>{drops.length}</span>
                 </button>
                 <button
                   onClick={() => setStopTypeTab("pickups")}
-                  className={cn("flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold transition-colors",
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
                     stopTypeTab === "pickups"
-                      ? "bg-gradient-to-r from-sky-500 to-sky-600 text-white"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                      ? "bg-sky-500 text-white"
+                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
                   )}
                 >
-                  <ArrowUpFromLine className="w-4 h-4" />
-                  Pickups <span className={cn("text-[10px] rounded-full px-2", stopTypeTab === "pickups" ? "bg-white/20 text-white" : "bg-border/40")}>{pickups.length}</span>
+                  <ArrowUpFromLine className="w-3.5 h-3.5" />
+                  Pickups
+                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
+                    stopTypeTab === "pickups" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
+                  )}>{pickups.length}</span>
                 </button>
               </div>
 
-              {/* Toolbar row */}
-              <div className="px-3 py-2 border-b border-border/40 flex items-center gap-2 flex-wrap">
-                <div className="relative flex-1 min-w-[140px]">
+              {/* Search + action bar */}
+              <div className="px-3 py-2 border-b border-border/40 flex items-center gap-2">
+                <div className="relative flex-1">
                   <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={currentSearch} onChange={(e) => setCurrentSearch(e.target.value)} placeholder="Search…" className="h-7 pl-7 text-xs" />
+                  <Input
+                    value={currentSearch}
+                    onChange={(e) => setCurrentSearch(e.target.value)}
+                    placeholder={`Search ${stopTypeTab === "drops" ? "deliveries" : "pickups"}…`}
+                    className="h-7 pl-7 text-xs"
+                  />
                 </div>
-                {selectedStopIds.size > 0 && (
-                  <Button size="sm" className="h-7 text-xs" onClick={addSelectedStopsToDraft}>
+                {selectedStopIds.size > 0 ? (
+                  <Button size="sm" className="h-7 text-xs gap-1 flex-shrink-0" onClick={addSelectedStopsToDraft}>
+                    <CheckCheck className="w-3 h-3" />
                     Add {selectedStopIds.size} to Trip
                   </Button>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground flex-shrink-0 hidden sm:block">drag or select + Add</span>
                 )}
-                <span className="text-[10px] text-muted-foreground ml-auto">
-                  drag row(s) or select + Add
-                </span>
               </div>
 
               {/* Table */}
-              <div className="overflow-auto flex-1" style={{ maxHeight: 260 }}>
-                <table className="w-full text-xs min-w-[680px]">
+              <div className="overflow-auto flex-1" style={{ maxHeight: 300 }}>
+                <table className="w-full text-xs min-w-[600px]">
                   <thead className="bg-muted/40 sticky top-0 z-10">
                     <tr>
-                      <th className="px-2 py-1.5 border-b border-border/40">
+                      <th className="px-2.5 py-2 border-b border-border/40 w-8">
                         <Checkbox
                           checked={allCurrentSelected}
                           onCheckedChange={() => toggleAllStops(currentStops)}
                         />
                       </th>
                       {["Transaction No","Prep List","Priority","Client Code","Client","Route Code","Postal City","Qty","Weight",""].map((h) => (
-                        <th key={h} className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                        <th key={h} className="px-2.5 py-2 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -754,7 +841,11 @@ export default function Planner() {
                       />
                     ))}
                     {currentStops.length === 0 && (
-                      <tr><td colSpan={11} className="px-3 py-8 text-center text-xs text-muted-foreground">No {stopTypeTab} available</td></tr>
+                      <tr>
+                        <td colSpan={11} className="px-3 py-10 text-center text-xs text-muted-foreground">
+                          No {stopTypeTab === "drops" ? "deliveries" : "pickups"} available
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
