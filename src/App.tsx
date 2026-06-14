@@ -16,6 +16,7 @@ import Drivers from "@/pages/fleet/Drivers";
 import Trailers from "@/pages/fleet/Trailers";
 import VehicleDriverAssignment from "@/pages/fleet/VehicleDriverAssignment";
 import VehicleTrailerAssignment from "@/pages/fleet/VehicleTrailerAssignment";
+import Planner from "@/pages/operations/Planner";           // ← NEW
 import RoutePlanner from "@/pages/operations/RoutePlanner";
 import LiveTracking from "@/pages/operations/LiveTracking";
 import DriverReports from "@/pages/reports/DriverReports";
@@ -58,34 +59,40 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
-        <Route path="fleet/categories" element={<VehicleCategories />} />
-        <Route path="fleet/vehicles" element={<Vehicles />} />
-        <Route path="fleet/drivers" element={<Drivers />} />
-        <Route path="fleet/trailers" element={<Trailers />} />
+        {/* Fleet */}
+        <Route path="fleet/categories"     element={<VehicleCategories />} />
+        <Route path="fleet/vehicles"       element={<Vehicles />} />
+        <Route path="fleet/drivers"        element={<Drivers />} />
+        <Route path="fleet/trailers"       element={<Trailers />} />
         <Route path="fleet/vehicle-driver" element={<VehicleDriverAssignment />} />
-        <Route path="fleet/vehicle-trailer" element={<VehicleTrailerAssignment />} />
+        <Route path="fleet/vehicle-trailer"element={<VehicleTrailerAssignment />} />
+        {/* Inside Operations */}
+        <Route path="operations/planner"       element={<Planner />} />   {/* ← NEW */}
         <Route path="operations/route-planner" element={<RoutePlanner />} />
         <Route path="operations/live-tracking" element={<LiveTracking />} />
-        <Route path="reports/drivers" element={<DriverReports />} />
-        <Route path="reports/vehicles" element={<VehicleReports />} />
-        <Route path="reports/pod-tracking" element={<PODTracking />} />
-        <Route path="reports/calendar" element={<CalendarReport />} />
-        <Route path="reports/route-list" element={<RouteList />} />
+        {/* Reports */}
+        <Route path="reports/drivers"          element={<DriverReports />} />
+        <Route path="reports/vehicles"         element={<VehicleReports />} />
+        <Route path="reports/pod-tracking"     element={<PODTracking />} />
+        <Route path="reports/calendar"         element={<CalendarReport />} />
+        <Route path="reports/route-list"       element={<RouteList />} />
         <Route path="reports/kpi-transportation" element={<KPITransportation />} />
-        <Route path="config/sync-center" element={<SyncCenter />} />
-        <Route path="config/roles" element={<UserManagement />} />
-        <Route path="config/role-management" element={<RoleManagement />} />
-        <Route path="config/sites" element={<SiteManagement />} />
-        <Route path="config/customers" element={<CustomerManagement />} />
+        {/* Config */}
+        <Route path="config/sync-center"        element={<SyncCenter />} />
+        <Route path="config/roles"              element={<UserManagement />} />
+        <Route path="config/role-management"    element={<RoleManagement />} />
+        <Route path="config/sites"              element={<SiteManagement />} />
+        <Route path="config/customers"          element={<CustomerManagement />} />
         <Route path="config/customer-addresses" element={<CustomerAddressManagement />} />
-        <Route path="config/suppliers" element={<SupplierManagement />} />
-        <Route path="config/products" element={<ProductManagement />} />
-        <Route path="config/documents" element={<DocumentConfiguration />} />
-        <Route path="user-management/users" element={<UsersPage />} />
-        <Route path="user-management/roles" element={<RolesPage />} />
-        <Route path="user-management/modules" element={<ModulesPage />} />
-        <Route path="user-management/user-types" element={<UserTypesPage />} />
-        <Route path="user-management/role-modules" element={<RoleModulesPage />} />
+        <Route path="config/suppliers"          element={<SupplierManagement />} />
+        <Route path="config/products"           element={<ProductManagement />} />
+        <Route path="config/documents"          element={<DocumentConfiguration />} />
+        {/* User management */}
+        <Route path="user-management/users"       element={<UsersPage />} />
+        <Route path="user-management/roles"       element={<RolesPage />} />
+        <Route path="user-management/modules"     element={<ModulesPage />} />
+        <Route path="user-management/user-types"  element={<UserTypesPage />} />
+        <Route path="user-management/role-modules"element={<RoleModulesPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
