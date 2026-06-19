@@ -882,7 +882,7 @@ export default function Planner() {
 
   // Route codes for toolbar dropdown — derived from loaded stops
   const routeCodes = useMemo(() =>
-    [...new Set(allStops.map(s => s.routeCode).filter(c => !!c))].sort() as string[],
+    (Array.from(new Set(allStops.map(s => s.routeCode).filter(Boolean))) as string[]).sort(),
     [allStops]
   );
 
@@ -1116,7 +1116,6 @@ export default function Planner() {
           }
         </div>
       ) : (
-        /* Scrollable content — toolbar stays fixed, everything scrolls */
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col gap-1.5 px-2 py-1.5" style={{ minHeight: "100%", fontFamily: "Inter, system-ui, sans-serif" }}>
 
