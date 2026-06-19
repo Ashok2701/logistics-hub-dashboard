@@ -143,15 +143,14 @@ const dlvyColor = (s: Stop["dlvyStatus"]) =>
 function SiteSelect({ sites, value, onChange }: { sites: RpSite[]; value: string; onChange: (v: string) => void }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9 w-[240px]">
-        <Building2 className="w-3.5 h-3.5 text-muted-foreground mr-1 flex-shrink-0" />
+      <SelectTrigger className="h-7 w-[200px] text-xs">
         <SelectValue placeholder="Select site…" />
       </SelectTrigger>
       <SelectContent>
         {sites.map((s) => (
           <SelectItem key={s.siteCode} value={s.siteCode}>
-            <span className="font-mono text-xs text-primary mr-2">{s.siteCode}</span>
-            <span className="text-muted-foreground text-xs">{s.siteName}</span>
+            <span className="font-mono text-xs text-primary mr-1.5">{s.siteCode}</span>
+            <span className="text-muted-foreground text-[11px]">{s.siteName}</span>
           </SelectItem>
         ))}
       </SelectContent>
@@ -164,12 +163,12 @@ function SiteSelect({ sites, value, onChange }: { sites: RpSite[]; value: string
 // ═══════════════════════════════════════════════════════
 function KpiCard({ label, value, color, icon: Icon }: { label: string; value: number | string; color: string; icon: typeof Truck }) {
   return (
-    <div className={cn("rounded-lg px-3 py-2.5 text-white flex items-center justify-between shadow-sm", color)}>
+    <div className={cn("rounded-md px-2.5 py-1.5 text-white flex items-center justify-between", color)}>
       <div>
-        <p className="text-[9px] font-semibold uppercase tracking-wider text-white/70 leading-none">{label}</p>
-        <p className="text-2xl font-bold leading-none mt-1">{value}</p>
+        <p className="text-[9px] font-semibold uppercase tracking-wider text-white/65 leading-none">{label}</p>
+        <p className="text-lg font-bold leading-none mt-0.5">{value}</p>
       </div>
-      <Icon className="w-5 h-5 text-white/35" />
+      <Icon className="w-4 h-4 text-white/30" />
     </div>
   );
 }
@@ -189,12 +188,12 @@ function StopRow({
       onDragStart={onDragStart}
       onClick={onToggle}
       className={cn(
-        "border-b border-border/40 cursor-pointer transition-colors select-none group",
-        selected ? "bg-primary/8" : "hover:bg-muted/50",
+        "border-b border-border/20 cursor-pointer transition-colors select-none group",
+        selected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-blue-50/40 dark:hover:bg-blue-950/20",
         dragging && "opacity-50"
       )}
     >
-      <td className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+      <td className="px-1.5 py-0.5" onClick={(e) => e.stopPropagation()}>
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       </td>
       <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{stop.txn}</td>
@@ -209,7 +208,7 @@ function StopRow({
       <td className="px-2 py-1.5 text-xs font-mono">{stop.qty}</td>
       <td className="px-2 py-1.5 text-xs font-mono">{stop.netweight}</td>
       <td className="px-2 py-1.5">
-        <GripVertical className="w-3 h-3 text-muted-foreground/40 group-hover:text-muted-foreground" />
+        <GripVertical className="w-3 h-3 text-muted-foreground/30" />
       </td>
     </tr>
   );
@@ -358,9 +357,9 @@ function genTimes(count: number): string[] {
 
 function StatPill({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
   return (
-    <div className="flex flex-col items-center px-3 py-1.5 rounded-lg bg-muted/40 border border-border/40 min-w-[72px]">
-      <span className={cn("text-sm font-bold leading-tight", accent ?? "text-foreground")}>{value}</span>
-      <span className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5 whitespace-nowrap">{label}</span>
+    <div className="flex flex-col items-center px-2 py-1 rounded bg-muted/40 border border-border/40 min-w-[56px]">
+      <span className={cn("text-xs font-bold leading-tight", accent ?? "text-foreground")}>{value}</span>
+      <span className="text-[8px] uppercase tracking-wider text-muted-foreground whitespace-nowrap">{label}</span>
     </div>
   );
 }
@@ -377,17 +376,17 @@ function AssignSlot({
     <div
       onDragOver={onDragOver} onDrop={onDrop}
       className={cn(
-        "flex-1 min-w-[160px] rounded-xl border-2 transition-all",
+        "flex-1 min-w-[140px] rounded-lg border transition-all",
         filled
           ? "border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20"
           : "border-dashed border-border/50 bg-muted/20 hover:border-primary/40 hover:bg-primary/3"
       )}
     >
-      <div className="flex items-center gap-1.5 px-3 pt-2 pb-0.5">
+      <div className="flex items-center gap-1 px-2 pt-1.5 pb-0">
         <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", filled ? "text-emerald-600" : "text-muted-foreground/50")} />
         <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">{label}</span>
       </div>
-      <div className="px-3 pb-2.5 min-h-[36px] flex items-center">
+      <div className="px-2 pb-1.5 min-h-[28px] flex items-center">
         {filled ? children : <span className="text-xs text-muted-foreground/50 italic">{placeholder}</span>}
       </div>
     </div>
@@ -432,7 +431,7 @@ function ActiveTourPanel({
       {/* ══════════════════════════════════════════
           HEADER BAR
       ══════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f]">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f]">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center flex-shrink-0">
             <Play className="w-3.5 h-3.5 text-primary" />
@@ -462,8 +461,8 @@ function ActiveTourPanel({
       {/* ══════════════════════════════════════════
           ZONE 1 — ASSIGNMENT + STATS
       ══════════════════════════════════════════ */}
-      <div className="p-3 border-b border-border/40 bg-card">
-        <div className="flex flex-wrap gap-2.5 items-stretch">
+      <div className="p-2 border-b border-border/40 bg-card">
+        <div className="flex flex-wrap gap-1.5 items-stretch">
 
           {/* Vehicle slot */}
           <AssignSlot icon={Truck} label="Vehicle" filled={!!vehicle} placeholder="Click a vehicle row above">
@@ -1122,7 +1121,7 @@ export default function Planner() {
     <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
       {/* ── TOOLBAR ─ compact single row ─────────────── */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-card border-b border-border/60 flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-1 bg-card border-b border-border/60 flex-shrink-0">
         {/* Site */}
         {sitesLoading
           ? <div className="h-8 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading sites…</div>
@@ -1132,7 +1131,7 @@ export default function Planner() {
         <div className="relative">
           <CalIcon className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-            className="h-8 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30"
+            className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px]"
           />
         </div>
         {/* Refresh icon-only with tooltip */}
@@ -1140,7 +1139,7 @@ export default function Planner() {
           <button
             disabled={loading || !site}
             onClick={() => setRefreshKey((k) => k + 1)}
-            className="h-8 w-8 rounded-md border border-input bg-background flex items-center justify-center hover:bg-muted disabled:opacity-40 transition-colors"
+            className="h-7 w-7 rounded-md border border-input bg-background flex items-center justify-center hover:bg-muted disabled:opacity-40 transition-colors"
           >
             <RefreshCw className={cn("w-3.5 h-3.5 text-muted-foreground", loading && "animate-spin")} />
           </button>
@@ -1175,10 +1174,10 @@ export default function Planner() {
       ) : (
         /* Scrollable content — toolbar stays fixed, everything scrolls */
         <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col gap-2 px-3 py-2" style={{ minHeight: "100%", fontFamily: "Inter, system-ui, sans-serif" }}>
+          <div className="flex flex-col gap-1.5 px-2 py-1.5" style={{ minHeight: "100%", fontFamily: "Inter, system-ui, sans-serif" }}>
 
           {/* ── KPI STRIP ──────────────────────────────── */}
-          <div className="grid grid-cols-6 gap-2 flex-shrink-0">
+          <div className="grid grid-cols-6 gap-1.5 flex-shrink-0">
             <KpiCard label="Vehicles"          value={kpis.vehicles}         icon={Truck}           color="bg-gradient-to-br from-slate-500 to-slate-700" />
             <KpiCard label="Trips"             value={kpis.trips}            icon={RouteIcon}       color="bg-gradient-to-br from-indigo-500 to-indigo-700" />
             <KpiCard label="Assigned Docs"     value={kpis.assignedDocs}     icon={CheckCheck}      color="bg-gradient-to-br from-emerald-500 to-emerald-700" />
@@ -1188,7 +1187,7 @@ export default function Planner() {
           </div>
 
           {/* ── FLEET | DOCUMENTS ── */}
-          <div className="grid grid-cols-2 gap-2" style={{ height: "38vh", minHeight: 240 }}>
+          <div className="grid grid-cols-2 gap-2" style={{ height: "40vh", minHeight: 250 }}>
 
             {/* ════════════════════════════════════════
                 LEFT 50% — FLEET (Vehicles + Drivers tabbed)
@@ -1202,7 +1201,7 @@ export default function Planner() {
                   { key: "drivers",  label: "Drivers",  icon: Users,  count: drivers.length,  active: "bg-indigo-600 text-white" },
                 ] as const).map(({ key, label, icon: Icon, count, active }) => (
                   <button key={key} onClick={() => setFleetTab(key)}
-                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold transition-all border-b-2",
+                    className={cn("flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold transition-all border-b-2",
                       fleetTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
                     )}
                   >
@@ -1216,14 +1215,14 @@ export default function Planner() {
               </div>
 
               {/* Search bar */}
-              <div className="px-2 py-1.5 border-b border-border/40">
+              <div className="px-2 py-1 border-b border-border/40">
                 <div className="relative">
                   <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={fleetTab === "vehicles" ? vehSearch : drvSearch}
                     onChange={(e) => fleetTab === "vehicles" ? setVehSearch(e.target.value) : setDrvSearch(e.target.value)}
                     placeholder={`Search ${fleetTab}…`}
-                    className="h-6 pl-7 text-[11px]"
+                    className="h-6 pl-6 text-[10px]"
                   />
                 </div>
               </div>
@@ -1247,7 +1246,7 @@ export default function Planner() {
                             draggable onDragStart={(e) => onVehicleDragStart(e, v)}
                             onClick={() => setDraftVehicle(sel ? null : v)}
                             className={cn(
-                              "border-b border-border/30 cursor-pointer transition-colors select-none group",
+                              "border-b border-border/20 cursor-pointer transition-colors select-none group text-[11px]",
                               sel
                                 ? "bg-emerald-50 dark:bg-emerald-950/30"
                                 : "hover:bg-muted/50"
@@ -1265,7 +1264,7 @@ export default function Planner() {
                         );
                       })}
                       {vehicles.length === 0 && (
-                        <tr><td colSpan={5} className="px-3 py-8 text-center text-xs text-muted-foreground">No vehicles for this site</td></tr>
+                        <tr><td colSpan={5} className="px-3 py-4 text-center text-xs text-muted-foreground">No vehicles for this site</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -1284,7 +1283,7 @@ export default function Planner() {
                         onDragStart={(e) => onDriverDragStart(e, d)}
                         onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
                         className={cn(
-                          "rounded-md border px-2 py-1.5 flex items-center gap-2 transition-colors select-none",
+                          "rounded border px-2 py-1 flex items-center gap-2 transition-colors select-none text-[11px]",
                           sel
                             ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 ring-1 ring-indigo-300"
                             : busy
@@ -1295,7 +1294,7 @@ export default function Planner() {
                         <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
                         <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto] items-center gap-3">
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold truncate">{d.name}</p>
+                            <p className="text-[11px] font-semibold truncate">{d.name}</p>
                             <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{d.id} · {d.license}</p>
                           </div>
                           <p className={cn("text-xs font-bold whitespace-nowrap", hoursColor(d.hoursToday))}>{d.hoursToday}h today</p>
@@ -1307,7 +1306,7 @@ export default function Planner() {
                     );
                   })}
                   {drivers.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-8">No drivers found</p>
+                    <p className="text-xs text-muted-foreground text-center py-4">No drivers found</p>
                   )}
                 </div>
               )}
@@ -1325,7 +1324,7 @@ export default function Planner() {
                   { key: "pickups", label: "Pickups",    icon: ArrowUpFromLine, count: pickups.length, active: "bg-sky-600 text-white" },
                 ] as const).map(({ key, label, icon: Icon, count, active }) => (
                   <button key={key} onClick={() => setStopTypeTab(key)}
-                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold transition-all border-b-2",
+                    className={cn("flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold transition-all border-b-2",
                       stopTypeTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
                     )}
                   >
@@ -1339,14 +1338,14 @@ export default function Planner() {
               </div>
 
               {/* Search + action bar */}
-              <div className="px-2 py-1.5 border-b border-border/40 flex items-center gap-2">
+              <div className="px-2 py-1 border-b border-border/40 flex items-center gap-1.5">
                 <div className="relative flex-1">
                   <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={currentSearch}
                     onChange={(e) => setCurrentSearch(e.target.value)}
                     placeholder={`Search ${stopTypeTab === "drops" ? "deliveries" : "pickups"}…`}
-                    className="h-6 pl-7 text-[11px]"
+                    className="h-6 pl-6 text-[10px]"
                   />
                 </div>
                 {selectedStopIds.size > 0 ? (
@@ -1428,7 +1427,7 @@ export default function Planner() {
           />
           </div>
 
-          {/* ── TRIPS & MAP — scroll to see ── */}
+          {/* ── TRIPS & MAP ── */}
           <div style={{ minHeight: "40vh" }}>
           {/* ── BOTTOM: Resizable Trips | Map split ──────────── */}
           <ResizableSplit
