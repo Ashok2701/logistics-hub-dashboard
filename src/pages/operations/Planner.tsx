@@ -20,40 +20,19 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { fetchTmsSites, loadPlannerData, type RpSite, type RpVehicle, type RpDriver, type RpStop } from "@/lib/routePlannerApi";
 
 // ═══════════════════════════════════════════════════════
-// MOCK DATA
+// TYPES — mapped from RpStop / RpVehicle / RpDriver
 // ═══════════════════════════════════════════════════════
-
-const SITES = [
-  { id: "62000", name: "Site 62000 – Chicago Hub" },
-  { id: "62100", name: "Site 62100 – North Distribution" },
-  { id: "62200", name: "Site 62200 – South Depot" },
-];
 
 type Vehicle = {
   code: string; vehicleNo: string; departureSite: string; arrivalSite: string;
   driverName: string; category: string; capacity: number; vol: number;
   maxOrders: number; startTime: string; site: string;
 };
-const VEHICLES: Vehicle[] = [
-  { code: "CH200", vehicleNo: "CO5000509801", departureSite: "62000", arrivalSite: "62000", driverName: "",         category: "CH100", capacity: 2600, vol: 40, maxOrders: 20, startTime: "07:00", site: "62000" },
-  { code: "CH201", vehicleNo: "CO5000509812", departureSite: "62000", arrivalSite: "62000", driverName: "",         category: "CH100", capacity: 2600, vol: 40, maxOrders: 20, startTime: "07:00", site: "62000" },
-  { code: "CH202", vehicleNo: "CO5000509824", departureSite: "62000", arrivalSite: "62000", driverName: "",         category: "CH100", capacity: 3000, vol: 60, maxOrders: 30, startTime: "06:30", site: "62000" },
-  { code: "CH203", vehicleNo: "CO5000509839", departureSite: "62000", arrivalSite: "62000", driverName: "",         category: "CH100", capacity: 2200, vol: 35, maxOrders: 18, startTime: "07:00", site: "62000" },
-  { code: "CH204", vehicleNo: "CO5000509848", departureSite: "62000", arrivalSite: "62000", driverName: "",         category: "CH100", capacity: 5000, vol: 80, maxOrders: 10, startTime: "05:00", site: "62000" },
-  { code: "ND101", vehicleNo: "CO5000600101", departureSite: "62100", arrivalSite: "62100", driverName: "",         category: "VAN",   capacity: 1200, vol: 20, maxOrders: 12, startTime: "07:30", site: "62100" },
-];
 
 type Driver = { id: string; name: string; license: string; status: "Available" | "On Trip"; hoursToday: number; };
-const DRIVERS: Driver[] = [
-  { id: "DR-001", name: "Holder",      license: "CDL-A", status: "Available", hoursToday: 4.5 },
-  { id: "DR-002", name: "Nabil Leroy", license: "CDL-A", status: "Available", hoursToday: 2.0 },
-  { id: "DR-003", name: "Sarah Miles", license: "CDL-B", status: "Available", hoursToday: 6.5 },
-  { id: "DR-004", name: "Mike Rivera", license: "CDL-A", status: "On Trip",   hoursToday: 9.0 },
-  { id: "DR-005", name: "Lisa Brown",  license: "CDL-B", status: "Available", hoursToday: 1.0 },
-  { id: "DR-006", name: "Tom Hayes",   license: "CDL-A", status: "On Trip",   hoursToday: 8.5 },
-];
 
 type Stop = {
   id: string; type: "DROP" | "PICKUP"; txn: string; prepList: string;
@@ -64,18 +43,65 @@ type Stop = {
   dlvyStatus: "open" | "Allocated" | "8";
   lat: number; lng: number;
 };
-const ALL_STOPS: Stop[] = [
-  { id:"S01", type:"DROP",   txn:"PIC620001267", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"Midland Tools",    bpcode:"CH107", address:"12 State St",      city:"Chicago",    postalCity:"60142, Huntley",    site:"62000", priority:"NORMAL", routeCode:"Route code 1", qty:6,  netweight:240, vol:8,  dlvyStatus:"open",      lat:32, lng:75 },
-  { id:"S02", type:"DROP",   txn:"PIC620001246", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"The Home Depot",   bpcode:"CH100", address:"88 Michigan Ave",  city:"Chicago",    postalCity:"60532, Lisle",      site:"62000", priority:"URGENT", routeCode:"Route code 1", qty:4,  netweight:180, vol:6,  dlvyStatus:"open",      lat:48, lng:145 },
-  { id:"S03", type:"DROP",   txn:"PIC620001288", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"Northern Supply",  bpcode:"CH101", address:"5 Wacker Dr",      city:"Chicago",    postalCity:"60611, Loop",       site:"62000", priority:"NORMAL", routeCode:"Route code 2", qty:9,  netweight:360, vol:12, dlvyStatus:"open",      lat:68, lng:92 },
-  { id:"S04", type:"DROP",   txn:"PIC620001301", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"Vista Corp",       bpcode:"CH102", address:"201 W Jackson",    city:"Chicago",    postalCity:"60606, Loop",       site:"62000", priority:"NORMAL", routeCode:"Route code 3", qty:5,  netweight:220, vol:7,  dlvyStatus:"Allocated", lat:92, lng:198 },
-  { id:"S05", type:"DROP",   txn:"PIC620001315", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"Metro Goods",      bpcode:"CH103", address:"77 Bridge Rd",     city:"Evanston",   postalCity:"60202, Evanston",   site:"62000", priority:"URGENT", routeCode:"Route code 1", qty:12, netweight:480, vol:16, dlvyStatus:"open",      lat:58, lng:178 },
-  { id:"S06", type:"DROP",   txn:"PIC620001322", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"Pacific Ltd",      bpcode:"CH104", address:"30 Lake Shore",    city:"Wilmette",   postalCity:"60091, Wilmette",   site:"62000", priority:"LOW",    routeCode:"Route code 2", qty:3,  netweight:120, vol:4,  dlvyStatus:"Allocated", lat:38, lng:255 },
-  { id:"S07", type:"DROP",   txn:"PIC620001338", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"Summit Retail",    bpcode:"CH105", address:"44 Oak Ave",       city:"Oak Park",   postalCity:"60301, Oak Park",   site:"62000", priority:"NORMAL", routeCode:"Route code 4", qty:7,  netweight:280, vol:9,  dlvyStatus:"open",      lat:33, lng:325 },
-  { id:"S08", type:"PICKUP", txn:"PIC620001350", prepList:"PCKT", pairedDoc:"S01",     doctype:"Corporate", client:"Midland Tools",    bpcode:"CH107", address:"Port Terminal B",  city:"Joliet",     postalCity:"60432, Joliet",     site:"62000", priority:"URGENT", routeCode:"Route code 1", qty:8,  netweight:310, vol:11, dlvyStatus:"open",      lat:53, lng:248 },
-  { id:"S09", type:"PICKUP", txn:"PIC620001362", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"South Inc",        bpcode:"CH106", address:"9 Glassboro Way",  city:"Naperville", postalCity:"60540, Naperville", site:"62000", priority:"NORMAL", routeCode:"Route code 2", qty:3,  netweight:130, vol:4,  dlvyStatus:"open",      lat:78, lng:308 },
-  { id:"S10", type:"DROP",   txn:"PIC621000101", prepList:"PCKT", pairedDoc:"",        doctype:"Corporate", client:"Riverline LLC",    bpcode:"ND001", address:"44 Dock Rd",       city:"Skokie",     postalCity:"60077, Skokie",     site:"62100", priority:"LOW",    routeCode:"Route code 1", qty:7,  netweight:280, vol:9,  dlvyStatus:"open",      lat:35, lng:328 },
-];
+
+// ── Mappers: API types → Planner internal types ──────────────
+function mapVehicle(v: RpVehicle): Vehicle {
+  return {
+    code:         v.vehicleCode,
+    vehicleNo:    v.vehicleNumber ?? v.vehicleCode,
+    departureSite: "",
+    arrivalSite:  "",
+    driverName:   v.driverId ?? "",
+    category:     v.categoryCode ?? "",
+    capacity:     Number(v.capacityWeight ?? 0),
+    vol:          Number(v.capacityVolume ?? 0),
+    maxOrders:    20,
+    startTime:    "07:00",
+    site:         "",
+  };
+}
+
+function mapDriver(d: RpDriver): Driver {
+  return {
+    id:         d.driverId,
+    name:       d.driverName,
+    license:    d.licenseNumber ?? "",
+    status:     d.driverStatus === 1 ? "Available" : "On Trip",
+    hoursToday: 0,
+  };
+}
+
+function priorityFromNum(p: number | null): "NORMAL" | "URGENT" | "LOW" {
+  if (p === null || p === undefined) return "NORMAL";
+  if (p >= 80) return "URGENT";
+  if (p <= 10) return "LOW";
+  return "NORMAL";
+}
+
+function mapStop(s: RpStop): Stop {
+  return {
+    id:          s.docNum,
+    type:        s.stopType === "DROP" ? "DROP" : "PICKUP",
+    txn:         s.docNum,
+    prepList:    s.docType ?? "",
+    pairedDoc:   "",
+    doctype:     s.docType ?? "",
+    client:      s.bpName ?? "",
+    bpcode:      s.bpCode ?? "",
+    address:     s.addLine1 ?? "",
+    city:        s.city ?? "",
+    postalCity:  [s.posCode, s.city].filter(Boolean).join(", "),
+    site:        s.site ?? "",
+    priority:    priorityFromNum(s.priority),
+    routeCode:   s.routeCode ?? "",
+    qty:         Number(s.nbPack ?? 0),
+    netweight:   Number(s.netWeight ?? 0),
+    vol:         Number(s.volume ?? 0),
+    dlvyStatus:  s.routeStatus === "Allocated" ? "Allocated" : "open",
+    lat:         Number(s.latitude ?? 0),
+    lng:         Number(s.longitude ?? 0),
+  };
+}
 
 // ═══════════════════════════════════════════════════════
 // TYPES
@@ -112,17 +138,21 @@ const dlvyColor = (s: Stop["dlvyStatus"]) =>
   s === "open" ? "text-emerald-700" : "text-amber-700";
 
 // ═══════════════════════════════════════════════════════
-// SITE SELECT
+// SITE SELECT — driven by real API sites
 // ═══════════════════════════════════════════════════════
-function SiteSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function SiteSelect({ sites, value, onChange }: { sites: RpSite[]; value: string; onChange: (v: string) => void }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9 w-[220px]">
+      <SelectTrigger className="h-9 w-[240px]">
+        <Building2 className="w-3.5 h-3.5 text-muted-foreground mr-1 flex-shrink-0" />
         <SelectValue placeholder="Select site…" />
       </SelectTrigger>
       <SelectContent>
-        {SITES.map((s) => (
-          <SelectItem key={s.id} value={s.id}>{s.id} — {s.name.split("–")[1]?.trim()}</SelectItem>
+        {sites.map((s) => (
+          <SelectItem key={s.siteCode} value={s.siteCode}>
+            <span className="font-mono text-xs text-primary mr-2">{s.siteCode}</span>
+            <span className="text-muted-foreground text-xs">{s.siteName}</span>
+          </SelectItem>
         ))}
       </SelectContent>
     </Select>
@@ -816,11 +846,21 @@ function ResizableSplit({
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════
 export default function Planner() {
+  // ── Sites from API ────────────────────────────────────
+  const [sites, setSites]           = useState<RpSite[]>([]);
+  const [sitesLoading, setSitesLoading] = useState(true);
+
   // ── Toolbar state ─────────────────────────────────────
-  const [site, setSite]         = useState("62000");
+  const [site, setSite]         = useState("");
   const [date, setDate]         = useState(format(new Date(), "yyyy-MM-dd"));
   const [loading, setLoading]   = useState(false);
   const [loaded, setLoaded]     = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // ── API data ──────────────────────────────────────────
+  const [apiVehicles, setApiVehicles] = useState<Vehicle[]>([]);
+  const [apiDrivers,  setApiDrivers]  = useState<Driver[]>([]);
+  const [allStops,    setAllStops]    = useState<Stop[]>([]);
 
   // ── Search strings ────────────────────────────────────
   const [vehSearch, setVehSearch]   = useState("");
@@ -849,35 +889,63 @@ export default function Planner() {
   const [fleetTab, setFleetTab]         = useState<"vehicles" | "drivers">("vehicles");
   const [selectedStopIds, setSelectedStopIds] = useState<Set<string>>(new Set()); // multi-select in tables
 
-  // ── Load data ──────────────────────────────────────────
-  function handleLoad() {
+  // ── Load sites on mount ──────────────────────────────
+  useEffect(() => {
+    setSitesLoading(true);
+    fetchTmsSites()
+      .then((data) => {
+        setSites(data);
+        if (data.length > 0) setSite(data[0].siteCode);
+      })
+      .catch(() => {})
+      .finally(() => setSitesLoading(false));
+  }, []);
+
+  // ── Auto-load planner data on site / date / refresh change
+  useEffect(() => {
+    if (!site || !date) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setLoaded(true);
-      setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
-      setSelectedStopIds(new Set());
-      toast({ title: "Data loaded", description: `Site ${site} · ${date}` });
-    }, 600);
-  }
+    setLoaded(false);
+    setApiVehicles([]); setApiDrivers([]); setAllStops([]);
+    setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
+    setSelectedStopIds(new Set());
+
+    loadPlannerData(site, date)
+      .then((data) => {
+        setApiVehicles((data.vehicles ?? []).map(mapVehicle));
+        setApiDrivers((data.drivers  ?? []).map(mapDriver));
+        setAllStops([
+          ...(data.drops   ?? []).map(mapStop),
+          ...(data.pickups ?? []).map(mapStop),
+        ]);
+        setLoaded(true);
+        toast({
+          title: "Data loaded",
+          description: `${data.vehicleCount} vehicles · ${data.driverCount} drivers · ${data.dropCount} drops · ${data.pickupCount} pickups`,
+        });
+      })
+      .catch((e: any) => {
+        toast({ title: "Failed to load", description: e.message, variant: "destructive" });
+      })
+      .finally(() => setLoading(false));
+  }, [site, date, refreshKey]);
 
   // ── Derived datasets ───────────────────────────────────
   const usedStopIds = useMemo(() => new Set(trips.flatMap((t) => t.stops.map((s) => s.id))), [trips]);
 
   const vehicles = useMemo(() =>
-    VEHICLES.filter((v) =>
-      v.site === site &&
+    apiVehicles.filter((v) =>
       (!vehSearch || `${v.code} ${v.vehicleNo} ${v.category}`.toLowerCase().includes(vehSearch.toLowerCase()))
-    ), [site, vehSearch]);
+    ), [apiVehicles, vehSearch]);
 
   const drivers = useMemo(() =>
-    DRIVERS.filter((d) =>
+    apiDrivers.filter((d) =>
       !drvSearch || `${d.id} ${d.name}`.toLowerCase().includes(drvSearch.toLowerCase())
-    ), [drvSearch]);
+    ), [apiDrivers, drvSearch]);
 
   const availableStops = useMemo(() =>
-    ALL_STOPS.filter((s) => s.site === site && !usedStopIds.has(s.id)),
-    [site, usedStopIds]);
+    allStops.filter((s) => !usedStopIds.has(s.id)),
+    [allStops, usedStopIds]);
 
   const drops = useMemo(() =>
     availableStops.filter((s) =>
@@ -892,8 +960,8 @@ export default function Planner() {
     ), [availableStops, pickSearch]);
 
   const draftStops = useMemo(() =>
-    ALL_STOPS.filter((s) => draftStopIds.includes(s.id)),
-    [draftStopIds]);
+    allStops.filter((s) => draftStopIds.includes(s.id)),
+    [allStops, draftStopIds]);
 
   const filteredTrips = useMemo(() =>
     trips.filter((t) =>
@@ -1059,7 +1127,10 @@ export default function Planner() {
       >
         <div className="flex flex-col gap-1">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site</label>
-          <SiteSelect value={site} onChange={setSite} />
+          {sitesLoading
+            ? <div className="h-9 flex items-center gap-2 px-3 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+            : <SiteSelect sites={sites} value={site} onChange={setSite} />
+          }
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date</label>
@@ -1070,24 +1141,34 @@ export default function Planner() {
             />
           </div>
         </div>
-        <Button onClick={handleLoad} disabled={loading} className="h-9">
-          {loading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-          {loaded ? "Refresh" : "Load Data"}
+        <Button variant="outline" disabled={loading || !site} className="h-9 gap-1.5"
+          onClick={() => setRefreshKey((k) => k + 1)}>
+          <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
+          Refresh
         </Button>
-        {loaded && (
-          <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-            <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
-            Site <span className="font-mono font-semibold text-foreground">{site}</span> ·
-            <span className="font-mono text-foreground">{date}</span>
-          </div>
-        )}
+        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          {loading
+            ? <><Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /><span>Loading…</span></>
+            : loaded
+              ? <><CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="font-mono font-semibold text-foreground">{site}</span>
+                  <span>·</span>
+                  <span className="font-mono text-foreground">{date}</span></>
+              : null
+          }
+        </div>
       </motion.div>
 
       {!loaded ? (
         <div className="bg-card rounded-xl border border-dashed border-border p-20 text-center">
-          <RouteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="font-medium text-foreground">Select a site and date, then click <span className="text-primary">Load Data</span></p>
-          <p className="text-sm text-muted-foreground mt-1">Vehicles, drivers, drops and pickups will appear below.</p>
+          {loading
+            ? <><Loader2 className="w-10 h-10 mx-auto mb-3 text-primary animate-spin" />
+                <p className="font-medium text-foreground">Loading planner data…</p>
+                <p className="text-sm text-muted-foreground mt-1 font-mono">{site} · {date}</p></>
+            : <><RouteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                <p className="font-medium text-foreground">Select a site to load planner data</p>
+                <p className="text-sm text-muted-foreground mt-1">Data loads automatically when site or date changes.</p></>
+          }
         </div>
       ) : (
         <>

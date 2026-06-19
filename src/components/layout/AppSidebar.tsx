@@ -57,7 +57,7 @@ const menuItems: MenuItem[] = [
     label: "Inside Operations", icon: Navigation,
     children: [
       { label: "Planner",       icon: ClipboardList, path: "/operations/planner" },
-      { label: "Route Planner", icon: Route,         path: "/operations/route-planner" },
+      // { label: "Route Planner", icon: Route, path: "/operations/route-planner" }, // hidden — use Planner instead
     ],
   },
   {
