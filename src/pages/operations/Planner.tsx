@@ -378,8 +378,8 @@ type ActiveTourPanelProps = {
 function genTimes(count: number): string[] {
   let mins = 7 * 60 + 30;
   return Array.from({ length: count }, () => {
-    const h = String(Math.floor(mins / 60)).padStart(2, "00");
-    const m = String(mins % 60).padStart(2, "00");
+    const h = String(Math.floor(mins / 60)).padStart(2, "0");
+    const m = String(mins % 60).padStart(2, "0");
     mins += 18 + Math.round(Math.random() * 10);
     return `${h}:${m}`;
   });
