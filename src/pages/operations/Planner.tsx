@@ -880,6 +880,12 @@ export default function Planner() {
     allStops.filter((s) => draftStopIds.includes(s.id)),
     [allStops, draftStopIds]);
 
+  // Route codes for toolbar dropdown — derived from loaded stops
+  const routeCodes = useMemo(() =>
+    [...new Set(allStops.map(s => s.routeCode).filter((c): c is string => !!c))].sort(),
+    [allStops]
+  );
+
   const filteredTrips = useMemo(() =>
     trips.filter((t) =>
       (statusFilter === "all" || t.status === statusFilter) &&
@@ -1060,7 +1066,7 @@ export default function Planner() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Routes</SelectItem>
-            {[...new Set(allStops.map(s => s.routeCode).filter(Boolean))].map(rc => (
+            {routeCodes.map(rc => (
               <SelectItem key={rc} value={rc}>{rc}</SelectItem>
             ))}
           </SelectContent>
