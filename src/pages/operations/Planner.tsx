@@ -6,6 +6,7 @@ import {
   CheckCheck, X, Play, Map as MapIcon, List, GripVertical,
   Loader2, Trash2, Lock, Unlock, RefreshCw, ChevronDown,
   Package, AlertCircle, Info, Eye, Zap, Filter,
+  Wand2, GitMerge, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -136,6 +137,35 @@ const hoursColor = (h: number) =>
 
 const dlvyColor = (s: Stop["dlvyStatus"]) =>
   s === "open" ? "text-emerald-700" : "text-amber-700";
+
+// ═══════════════════════════════════════════════════════
+// TOOLBAR BUTTON — icon-only with tooltip
+// ═══════════════════════════════════════════════════════
+function ToolbarBtn({
+  icon: Icon, label, onClick, disabled, color = "text-muted-foreground",
+  bg = "hover:bg-muted", spin = false,
+}: {
+  icon: React.ElementType; label: string; onClick?: () => void;
+  disabled?: boolean; color?: string; bg?: string; spin?: boolean;
+}) {
+  return (
+    <div className="relative group">
+      <button
+        disabled={disabled}
+        onClick={onClick}
+        className={cn(
+          "h-7 w-7 rounded-md border border-input bg-background flex items-center justify-center transition-colors disabled:opacity-40",
+          bg, color
+        )}
+      >
+        <Icon className={cn("w-3.5 h-3.5", spin && "animate-spin")} />
+      </button>
+      <span className="absolute left-1/2 -translate-x-1/2 top-8 z-50 px-2 py-1 rounded bg-foreground text-background text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-md">
+        {label}
+      </span>
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════
 // SITE SELECT — driven by real API sites
@@ -1009,10 +1039,10 @@ export default function Planner() {
     <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
       {/* ── TOOLBAR ─ compact single row ─────────────── */}
-      <div className="flex items-center gap-2 px-3 py-1 bg-card border-b border-border/60 flex-shrink-0">
+      <div className="flex items-center gap-1.5 px-3 py-1 bg-card border-b border-border/60 flex-shrink-0 flex-wrap">
         {/* Site */}
         {sitesLoading
-          ? <div className="h-8 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading sites…</div>
+          ? <div className="h-7 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" /> Loading…</div>
           : <SiteSelect sites={sites} value={site} onChange={setSite} />
         }
         {/* Date */}
@@ -1022,19 +1052,39 @@ export default function Planner() {
             className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px]"
           />
         </div>
-        {/* Refresh icon-only with tooltip */}
-        <div className="relative group">
-          <button
-            disabled={loading || !site}
-            onClick={() => setRefreshKey((k) => k + 1)}
-            className="h-7 w-7 rounded-md border border-input bg-background flex items-center justify-center hover:bg-muted disabled:opacity-40 transition-colors"
-          >
-            <RefreshCw className={cn("w-3.5 h-3.5 text-muted-foreground", loading && "animate-spin")} />
-          </button>
-          <span className="absolute left-1/2 -translate-x-1/2 top-9 z-50 px-2 py-1 rounded bg-foreground text-background text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Refresh
-          </span>
-        </div>
+
+        {/* Route Codes dropdown */}
+        <Select value={routeCode} onValueChange={setRouteCode}>
+          <SelectTrigger className="h-7 w-[130px] text-xs">
+            <SelectValue placeholder="Route Codes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Routes</SelectItem>
+            {[...new Set(allStops.map(s => s.routeCode).filter(Boolean))].map(rc => (
+              <SelectItem key={rc} value={rc}>{rc}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Refresh */}
+        <ToolbarBtn
+          icon={RefreshCw} label="Refresh" spin={loading}
+          disabled={loading || !site}
+          onClick={() => setRefreshKey((k) => k + 1)}
+          color="text-muted-foreground"
+        />
+
+        {/* Divider */}
+        <div className="h-5 w-px bg-border/50 mx-0.5" />
+
+        {/* Action buttons */}
+        <ToolbarBtn icon={Wand2}      label="Auto Generate Route"  color="text-blue-600"   bg="hover:bg-blue-50"   onClick={() => toast({ title: "Auto Generate Route", description: "Not yet implemented" })} />
+        <ToolbarBtn icon={GitMerge}   label="Group Optimisation"   color="text-slate-600"  bg="hover:bg-slate-50"  onClick={() => toast({ title: "Group Optimisation",  description: "Not yet implemented" })} />
+        <ToolbarBtn icon={Lock}       label="Group Lock"           color="text-emerald-600" bg="hover:bg-emerald-50" onClick={() => toast({ title: "Group Lock",           description: "Not yet implemented" })} />
+        <ToolbarBtn icon={Unlock}     label="Group Unlock"         color="text-violet-600" bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",         description: "Not yet implemented" })} />
+        <ToolbarBtn icon={ShieldCheck} label="Group Validate"      color="text-amber-600"  bg="hover:bg-amber-50"  onClick={() => toast({ title: "Group Validate",       description: "Not yet implemented" })} />
+        <ToolbarBtn icon={Trash2}     label="Group Delete Trips"   color="text-rose-600"   bg="hover:bg-rose-50"   onClick={() => toast({ title: "Group Delete Trips",   description: "Not yet implemented" })} />
+
         {/* Status */}
         <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
           {loading
