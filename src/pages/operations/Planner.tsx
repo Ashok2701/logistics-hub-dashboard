@@ -398,7 +398,7 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
 }: ActiveTourPanelProps) {
-  const [stopsOpen, setStopsOpen] = useState(true);
+  const [stopsOpen, setStopsOpen] = useState(false);
   const times = useMemo(() => genTimes(stops.length), [stops.length]);
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
@@ -432,130 +432,113 @@ function ActiveTourPanel({
           HEADER BAR
       ══════════════════════════════════════════ */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center flex-shrink-0">
-            <Play className="w-3.5 h-3.5 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-white leading-tight">Active Tour</h3>
-            {dropZoneActive
-              ? <p className="text-[11px] text-primary animate-pulse font-medium">Drop vehicle, driver or stops here…</p>
-              : <p className="text-[11px] text-white/40">Drag resources here or click to assign</p>
-            }
-          </div>
+        <div className="flex items-center gap-2">
+          <Play className="w-3 h-3 text-primary/80 flex-shrink-0" />
+          <h3 className="text-xs font-semibold text-white tracking-wide">Active Tour</h3>
+          {dropZoneActive && <span className="text-[10px] text-primary animate-pulse font-medium">Drop here…</span>}
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost"
-            className="h-7 text-xs gap-1 text-white/60 hover:text-white hover:bg-white/10"
+            className="h-6 text-[10px] gap-1 text-white/60 hover:text-white hover:bg-white/10 px-2"
             onClick={onClear} disabled={!hasAssignment}>
             <Trash2 className="w-3 h-3" /> Clear
           </Button>
           <Button size="sm"
-            className="h-7 text-xs gap-1.5 bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-900/30"
+            className="h-6 text-[10px] gap-1 bg-blue-600 hover:bg-blue-500 text-white border-0 px-2"
             onClick={onConfirm}>
             <CheckCheck className="w-3.5 h-3.5" /> Confirm Trip
           </Button>
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════
-          ZONE 1 — ASSIGNMENT + STATS
-      ══════════════════════════════════════════ */}
-      <div className="p-2 border-b border-border/40 bg-card">
-        <div className="flex flex-wrap gap-1.5 items-stretch">
+      {/* ── ASSIGNMENT + STATS — single compact row ── */}
+      <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border/40 bg-card flex-wrap">
 
-          {/* Vehicle slot */}
-          <AssignSlot icon={Truck} label="Vehicle" filled={!!vehicle} placeholder="Click a vehicle row above">
-            {vehicle && (
-              <div className="flex items-start justify-between w-full gap-2">
-                <div>
-                  <p className="font-mono font-bold text-base text-blue-700 leading-tight">{vehicle.code}</p>
-                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{vehicle.vehicleNo}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{vehicle.category} · Cap: {vehicle.capacity.toLocaleString()} kg</p>
-                </div>
-                <button onClick={onClearVehicle} className="text-muted-foreground/40 hover:text-destructive mt-0.5 flex-shrink-0">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-          </AssignSlot>
+        {/* Vehicle */}
+        <div
+          className={cn("flex items-center gap-1.5 rounded border px-2 py-1 min-w-[160px] flex-1",
+            vehicle ? "border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20" : "border-dashed border-border/50 bg-muted/10")}
+        >
+          <Truck className={cn("w-3 h-3 flex-shrink-0", vehicle ? "text-emerald-600" : "text-muted-foreground/40")} />
+          {vehicle ? (
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <span className="font-mono font-bold text-[11px] text-blue-700">{vehicle.code}</span>
+              <span className="text-[10px] text-muted-foreground font-mono truncate">{vehicle.vehicleNo}</span>
+              <span className="text-[10px] text-muted-foreground">{vehicle.category}</span>
+              <button onClick={onClearVehicle} className="ml-auto text-muted-foreground/40 hover:text-destructive flex-shrink-0"><X className="w-3 h-3" /></button>
+            </div>
+          ) : (
+            <span className="text-[10px] text-muted-foreground/50 italic">Click a vehicle</span>
+          )}
+        </div>
 
-          {/* Driver slot */}
-          <AssignSlot icon={Users} label="Driver" filled={!!driver} placeholder="Drag a driver here"
-            onDragOver={(e) => e.preventDefault()} onDrop={onDriverDrop}>
-            {driver && (
-              <div className="flex items-start justify-between w-full gap-2">
-                <div>
-                  <p className="font-semibold text-sm leading-tight">{driver.name}</p>
-                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{driver.id} · {driver.license}</p>
-                  <p className={cn("text-[11px] font-semibold mt-0.5", hoursColor(driver.hoursToday))}>{driver.hoursToday}h today</p>
-                </div>
-                <button onClick={onClearDriver} className="text-muted-foreground/40 hover:text-destructive mt-0.5 flex-shrink-0">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-          </AssignSlot>
+        {/* Driver */}
+        <div
+          onDragOver={(e) => e.preventDefault()} onDrop={onDriverDrop}
+          className={cn("flex items-center gap-1.5 rounded border px-2 py-1 min-w-[160px] flex-1",
+            driver ? "border-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/20" : "border-dashed border-border/50 bg-muted/10")}
+        >
+          <Users className={cn("w-3 h-3 flex-shrink-0", driver ? "text-indigo-600" : "text-muted-foreground/40")} />
+          {driver ? (
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <span className="font-semibold text-[11px] truncate">{driver.name}</span>
+              <span className="text-[10px] text-muted-foreground font-mono">{driver.id}</span>
+              <button onClick={onClearDriver} className="ml-auto text-muted-foreground/40 hover:text-destructive flex-shrink-0"><X className="w-3 h-3" /></button>
+            </div>
+          ) : (
+            <span className="text-[10px] text-muted-foreground/50 italic">Drag a driver</span>
+          )}
+        </div>
 
-          {/* Divider */}
-          <div className="w-px bg-border/40 self-stretch hidden lg:block" />
-
-          {/* Stats pills */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <StatPill label="Stops"     value={stops.length}           accent={stops.length > 0 ? "text-primary" : undefined} />
-            <StatPill label="Drops"     value={dropCount}              accent={dropCount  > 0 ? "text-rose-600"  : undefined} />
-            <StatPill label="Pickups"   value={pickCount}              accent={pickCount  > 0 ? "text-sky-600"   : undefined} />
-            <StatPill label="Weight"    value={totalWeight ? `${totalWeight} kg` : "—"} />
-            <StatPill label="Volume"    value={totalVol    ? `${totalVol} m³`    : "—"} />
-            <StatPill label="Qty"       value={totalQty    ? `${totalQty} UN`    : "—"} />
-            <StatPill label="Travel"    value={travelStr} />
-            <StatPill label="Distance"  value={distMiles ? `${distMiles} mi` : "—"} />
-          </div>
-
-          {/* Capacity bar (only when vehicle assigned) */}
+        {/* Stats inline */}
+        <div className="flex items-center gap-1 flex-wrap">
+          {[
+            { label: "Stops",    value: stops.length,    accent: stops.length > 0 ? "text-primary font-bold" : "" },
+            { label: "Drops",    value: dropCount,       accent: dropCount > 0  ? "text-rose-600 font-bold" : "" },
+            { label: "Pickups",  value: pickCount,       accent: pickCount > 0  ? "text-sky-600 font-bold"  : "" },
+            { label: "Weight",   value: totalWeight ? `${totalWeight}kg` : "—", accent: "" },
+            { label: "Vol",      value: totalVol    ? `${totalVol}m³`    : "—", accent: "" },
+            { label: "Qty",      value: totalQty    ? `${totalQty}`      : "—", accent: "" },
+            { label: "Travel",   value: travelStr,       accent: "" },
+          ].map(({ label, value, accent }) => (
+            <div key={label} className="flex flex-col items-center px-1.5 py-0.5 rounded bg-muted/40 border border-border/30 min-w-[40px]">
+              <span className={cn("text-[11px] leading-none font-semibold", accent || "text-foreground")}>{value}</span>
+              <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none mt-0.5">{label}</span>
+            </div>
+          ))}
           {vehicle && stops.length > 0 && (
-            <div className="flex flex-col justify-center gap-1 min-w-[120px]">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground">Capacity</span>
-                <span className={cn("font-bold", capPct > 90 ? "text-rose-600" : capPct > 70 ? "text-amber-600" : "text-emerald-600")}>
-                  {capPct}%
-                </span>
+            <div className="flex items-center gap-1 min-w-[80px]">
+              <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+                <div className={cn("h-full rounded-full", capColor)} style={{ width: `${capPct}%` }} />
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full transition-all duration-500", capColor)}
-                  style={{ width: `${capPct}%` }}
-                />
-              </div>
-              <p className="text-[9px] text-muted-foreground">{totalWeight.toLocaleString()} / {vehicle.capacity.toLocaleString()} kg</p>
+              <span className={cn("text-[9px] font-bold", capPct > 90 ? "text-rose-600" : "text-emerald-600")}>{capPct}%</span>
             </div>
           )}
         </div>
       </div>
 
       {/* ══════════════════════════════════════════
-          ZONE 2 — TRIP SEQUENCE TIMELINE
+          ZONE 2 — TRIP SEQUENCE (hidden by default, toggle to show)
       ══════════════════════════════════════════ */}
-      <div className="px-5 py-3 border-b border-border/40 bg-muted/10">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+      {stops.length > 0 && (
+      <div className="border-b border-border/40 bg-muted/10">
+        <button
+          onClick={() => setStopsOpen(!stopsOpen)}
+          className="w-full flex items-center justify-between px-3 py-1 hover:bg-muted/30 transition-colors"
+        >
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
             <RouteIcon className="w-3 h-3" /> Trip Sequence
+            <span className="bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full ml-1">{stops.length}</span>
           </span>
-          {stops.length > 0 && (
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block"/>Drop</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-sky-500 inline-block"/>Pickup</span>
-            </div>
-          )}
-        </div>
+          <motion.div animate={{ rotate: stopsOpen ? 180 : 0 }} transition={{ duration: 0.15 }}>
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/50" />
+          </motion.div>
+        </button>
 
-        {stops.length === 0 ? (
-          <div className="flex items-center gap-3 py-2">
-            <div className="h-0.5 flex-1 bg-border/40 rounded" />
-            <span className="text-xs text-muted-foreground/50 italic whitespace-nowrap">Add stops to build the sequence</span>
-            <div className="h-0.5 flex-1 bg-border/40 rounded" />
-          </div>
-        ) : (
+        <AnimatePresence initial={false}>
+        {stopsOpen && (
+          <motion.div key="seq" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.18 }} className="overflow-hidden">
+        {stops.length === 0 ? null : (
           <div className="overflow-x-auto pb-1">
             <div className="relative flex items-start" style={{ minWidth: stops.length * 96 }}>
               {/* Connecting line */}
@@ -588,7 +571,11 @@ function ActiveTourPanel({
             </div>
           </div>
         )}
+        </motion.div>
+        )}
+        </AnimatePresence>
       </div>
+      )}
 
       {/* ══════════════════════════════════════════
           ZONE 3 — STOPS TABLE (collapsible)
