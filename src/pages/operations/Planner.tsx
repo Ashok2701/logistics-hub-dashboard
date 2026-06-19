@@ -326,10 +326,10 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
 }
 
 // ═══════════════════════════════════════════════════════
-// ACTIVE TOUR PANEL — redesigned: 3-zone layout
-// Zone 1 (top): Assignment bar — vehicle + driver + key stats
-// Zone 2 (mid): Sequence timeline
-// Zone 3 (bottom): Stops table (collapsible)
+// ACTIVE TOUR PANEL — new design per wireframe:
+//   Left 70%: header row (vehicle | driver | dep | arv | stops | weight | vol | qty | travel)
+//   Right 30%: timeline — stop bubbles 1,2,3,4,5...
+//   Click timeline bubble → show stop detail inline (no separate zone 3)
 // ═══════════════════════════════════════════════════════
 type ActiveTourPanelProps = {
   vehicle: Vehicle | null; driver: Driver | null; stops: Stop[];
@@ -348,49 +348,11 @@ type ActiveTourPanelProps = {
 function genTimes(count: number): string[] {
   let mins = 7 * 60 + 30;
   return Array.from({ length: count }, () => {
-    const h = String(Math.floor(mins / 60)).padStart(2, "0");
-    const m = String(mins % 60).padStart(2, "0");
+    const h = String(Math.floor(mins / 60)).padStart(2, "00");
+    const m = String(mins % 60).padStart(2, "00");
     mins += 18 + Math.round(Math.random() * 10);
     return `${h}:${m}`;
   });
-}
-
-function StatPill({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
-  return (
-    <div className="flex flex-col items-center px-2 py-1 rounded bg-muted/40 border border-border/40 min-w-[56px]">
-      <span className={cn("text-xs font-bold leading-tight", accent ?? "text-foreground")}>{value}</span>
-      <span className="text-[8px] uppercase tracking-wider text-muted-foreground whitespace-nowrap">{label}</span>
-    </div>
-  );
-}
-
-function AssignSlot({
-  icon: Icon, label, filled, placeholder, children, onDragOver, onDrop,
-}: {
-  icon: React.ElementType; label: string; filled: boolean;
-  placeholder: string; children?: React.ReactNode;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent) => void;
-}) {
-  return (
-    <div
-      onDragOver={onDragOver} onDrop={onDrop}
-      className={cn(
-        "flex-1 min-w-[140px] rounded-lg border transition-all",
-        filled
-          ? "border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20"
-          : "border-dashed border-border/50 bg-muted/20 hover:border-primary/40 hover:bg-primary/3"
-      )}
-    >
-      <div className="flex items-center gap-1 px-2 pt-1.5 pb-0">
-        <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", filled ? "text-emerald-600" : "text-muted-foreground/50")} />
-        <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">{label}</span>
-      </div>
-      <div className="px-2 pb-1.5 min-h-[28px] flex items-center">
-        {filled ? children : <span className="text-xs text-muted-foreground/50 italic">{placeholder}</span>}
-      </div>
-    </div>
-  );
 }
 
 function ActiveTourPanel({
@@ -398,7 +360,7 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
 }: ActiveTourPanelProps) {
-  const [stopsOpen, setStopsOpen] = useState(false);
+  const [selectedStop, setSelectedStop] = useState<number | null>(null);
   const times = useMemo(() => genTimes(stops.length), [stops.length]);
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
@@ -410,306 +372,245 @@ function ActiveTourPanel({
   const travelStr   = stops.length
     ? `${String(Math.floor(travelMins / 60)).padStart(2,"0")}:${String(travelMins % 60).padStart(2,"0")}`
     : "—";
-  const distMiles   = stops.length ? stops.length * 12 + 30 : 0;
 
-  // capacity bar
   const capPct = vehicle ? Math.min(100, Math.round((totalWeight / vehicle.capacity) * 100)) : 0;
   const capColor = capPct > 90 ? "bg-rose-500" : capPct > 70 ? "bg-amber-500" : "bg-emerald-500";
-
   const hasAssignment = !!(vehicle || driver || stops.length);
+
+  const selectedStopData = selectedStop !== null ? stops[selectedStop] : null;
+
+  // Chip component — small inline field
+  function Chip({ label, value, onClick, filled }: { label: string; value: string; onClick?: () => void; filled?: boolean }) {
+    return (
+      <div
+        onClick={onClick}
+        className={cn(
+          "flex flex-col min-w-[60px] px-2 py-1 rounded border text-center flex-shrink-0",
+          filled ? "border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 cursor-pointer" :
+          onClick ? "border-dashed border-border/50 bg-muted/10 cursor-pointer hover:border-primary/40" :
+          "border-border/30 bg-muted/20"
+        )}
+      >
+        <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none mb-0.5">{label}</span>
+        <span className={cn("text-[11px] font-semibold leading-none truncate", filled ? "text-emerald-700" : "text-foreground")}>
+          {value || <span className="text-muted-foreground/40 italic text-[9px]">—</span>}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div
       onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
       className={cn(
-        "rounded-xl border-2 shadow-sm transition-all overflow-hidden",
-        dropZoneActive
-          ? "border-primary bg-primary/3 shadow-primary/10"
-          : "border-dashed border-border/60 bg-card"
+        "rounded-lg overflow-hidden transition-all",
+        dropZoneActive ? "ring-2 ring-primary/40 bg-primary/2" : ""
       )}
+      style={{ border: "1px solid hsl(var(--border) / 0.4)" }}
     >
-      {/* ══════════════════════════════════════════
-          HEADER BAR
-      ══════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f]">
-        <div className="flex items-center gap-2">
+      {/* ── HEADER ROW — full width single line ────────── */}
+      <div className="flex items-center justify-between px-2 py-1 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f] flex-shrink-0">
+        <div className="flex items-center gap-1">
           <Play className="w-3 h-3 text-primary/80 flex-shrink-0" />
-          <h3 className="text-xs font-semibold text-white tracking-wide">Active Tour</h3>
-          {dropZoneActive && <span className="text-[10px] text-primary animate-pulse font-medium">Drop here…</span>}
+          <span className="text-[10px] font-semibold text-white tracking-wide">Active Trip</span>
+          {dropZoneActive && <span className="text-[9px] text-primary animate-pulse ml-1">Drop here…</span>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button size="sm" variant="ghost"
-            className="h-6 text-[10px] gap-1 text-white/60 hover:text-white hover:bg-white/10 px-2"
+            className="h-5 text-[9px] gap-0.5 text-white/60 hover:text-white hover:bg-white/10 px-1.5"
             onClick={onClear} disabled={!hasAssignment}>
-            <Trash2 className="w-3 h-3" /> Clear
+            <Trash2 className="w-2.5 h-2.5" /> Clear
           </Button>
           <Button size="sm"
-            className="h-6 text-[10px] gap-1 bg-blue-600 hover:bg-blue-500 text-white border-0 px-2"
+            className="h-5 text-[9px] gap-0.5 bg-blue-600 hover:bg-blue-500 text-white border-0 px-2"
             onClick={onConfirm}>
-            <CheckCheck className="w-3.5 h-3.5" /> Confirm Trip
+            <CheckCheck className="w-2.5 h-2.5" /> Confirm
           </Button>
         </div>
       </div>
 
-      {/* ── ASSIGNMENT + STATS — single compact row ── */}
-      <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border/40 bg-card flex-wrap">
+      {/* ── MAIN ROW: 70% chips | 30% timeline ─────────── */}
+      <div className="flex items-stretch bg-card" style={{ minHeight: 48 }}>
 
-        {/* Vehicle */}
-        <div
-          className={cn("flex items-center gap-1.5 rounded border px-2 py-1 min-w-[160px] flex-1",
-            vehicle ? "border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20" : "border-dashed border-border/50 bg-muted/10")}
-        >
-          <Truck className={cn("w-3 h-3 flex-shrink-0", vehicle ? "text-emerald-600" : "text-muted-foreground/40")} />
-          {vehicle ? (
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="font-mono font-bold text-[11px] text-blue-700">{vehicle.code}</span>
-              <span className="text-[10px] text-muted-foreground font-mono truncate">{vehicle.vehicleNo}</span>
-              <span className="text-[10px] text-muted-foreground">{vehicle.category}</span>
-              <button onClick={onClearVehicle} className="ml-auto text-muted-foreground/40 hover:text-destructive flex-shrink-0"><X className="w-3 h-3" /></button>
+        {/* LEFT 70% — chips in one row */}
+        <div className="flex items-center gap-1 px-2 py-1.5 flex-wrap" style={{ width: "70%" }}>
+
+          {/* Vehicle chip */}
+          <div
+            onClick={() => !vehicle && undefined}
+            className={cn(
+              "flex flex-col min-w-[72px] px-2 py-1 rounded border flex-shrink-0",
+              vehicle
+                ? "border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20"
+                : "border-dashed border-border/50 bg-muted/10"
+            )}
+          >
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none">Vehicle</span>
+              {vehicle && <button onClick={onClearVehicle} className="text-muted-foreground/40 hover:text-destructive"><X className="w-2.5 h-2.5" /></button>}
             </div>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/50 italic">Click a vehicle</span>
-          )}
-        </div>
+            <span className={cn("text-[11px] font-mono font-bold leading-none mt-0.5 truncate", vehicle ? "text-emerald-700" : "text-muted-foreground/30 italic text-[9px]")}>
+              {vehicle ? vehicle.code : "—"}
+            </span>
+          </div>
 
-        {/* Driver */}
-        <div
-          onDragOver={(e) => e.preventDefault()} onDrop={onDriverDrop}
-          className={cn("flex items-center gap-1.5 rounded border px-2 py-1 min-w-[160px] flex-1",
-            driver ? "border-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/20" : "border-dashed border-border/50 bg-muted/10")}
-        >
-          <Users className={cn("w-3 h-3 flex-shrink-0", driver ? "text-indigo-600" : "text-muted-foreground/40")} />
-          {driver ? (
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="font-semibold text-[11px] truncate">{driver.name}</span>
-              <span className="text-[10px] text-muted-foreground font-mono">{driver.id}</span>
-              <button onClick={onClearDriver} className="ml-auto text-muted-foreground/40 hover:text-destructive flex-shrink-0"><X className="w-3 h-3" /></button>
+          {/* Driver chip */}
+          <div
+            onDragOver={(e) => e.preventDefault()} onDrop={onDriverDrop}
+            className={cn(
+              "flex flex-col min-w-[80px] px-2 py-1 rounded border flex-shrink-0",
+              driver
+                ? "border-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/20"
+                : "border-dashed border-border/50 bg-muted/10"
+            )}
+          >
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none">Driver</span>
+              {driver && <button onClick={onClearDriver} className="text-muted-foreground/40 hover:text-destructive"><X className="w-2.5 h-2.5" /></button>}
             </div>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/50 italic">Drag a driver</span>
-          )}
-        </div>
+            <span className={cn("text-[11px] font-semibold leading-none mt-0.5 truncate", driver ? "text-indigo-700" : "text-muted-foreground/30 italic text-[9px]")}>
+              {driver ? driver.name : "—"}
+            </span>
+          </div>
 
-        {/* Stats inline */}
-        <div className="flex items-center gap-1 flex-wrap">
+          {/* Separator */}
+          <div className="w-px self-stretch bg-border/30 mx-0.5" />
+
+          {/* Stat chips */}
           {[
-            { label: "Stops",    value: stops.length,    accent: stops.length > 0 ? "text-primary font-bold" : "" },
-            { label: "Drops",    value: dropCount,       accent: dropCount > 0  ? "text-rose-600 font-bold" : "" },
-            { label: "Pickups",  value: pickCount,       accent: pickCount > 0  ? "text-sky-600 font-bold"  : "" },
-            { label: "Weight",   value: totalWeight ? `${totalWeight}kg` : "—", accent: "" },
-            { label: "Vol",      value: totalVol    ? `${totalVol}m³`    : "—", accent: "" },
-            { label: "Qty",      value: totalQty    ? `${totalQty}`      : "—", accent: "" },
-            { label: "Travel",   value: travelStr,       accent: "" },
-          ].map(({ label, value, accent }) => (
-            <div key={label} className="flex flex-col items-center px-1.5 py-0.5 rounded bg-muted/40 border border-border/30 min-w-[40px]">
-              <span className={cn("text-[11px] leading-none font-semibold", accent || "text-foreground")}>{value}</span>
-              <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none mt-0.5">{label}</span>
+            { label: "Dep Site",  value: vehicle?.departureSite || "—" },
+            { label: "Arv Site",  value: vehicle?.arrivalSite   || "—" },
+            { label: "Stops",     value: String(stops.length) },
+            { label: "Drops",     value: String(dropCount) },
+            { label: "Pickups",   value: String(pickCount) },
+            { label: "Weight",    value: totalWeight ? `${totalWeight}kg` : "—" },
+            { label: "Volume",    value: totalVol    ? `${totalVol}m³`    : "—" },
+            { label: "Qty",       value: totalQty    ? String(totalQty)   : "—" },
+            { label: "Travel",    value: travelStr },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex flex-col min-w-[44px] px-1.5 py-1 rounded border border-border/30 bg-muted/20 flex-shrink-0 text-center">
+              <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none mb-0.5">{label}</span>
+              <span className="text-[11px] font-semibold leading-none text-foreground">{value}</span>
             </div>
           ))}
+
+          {/* Capacity bar */}
           {vehicle && stops.length > 0 && (
-            <div className="flex items-center gap-1 min-w-[80px]">
-              <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+            <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
+              <div className="h-1.5 w-12 rounded-full bg-muted overflow-hidden">
                 <div className={cn("h-full rounded-full", capColor)} style={{ width: `${capPct}%` }} />
               </div>
               <span className={cn("text-[9px] font-bold", capPct > 90 ? "text-rose-600" : "text-emerald-600")}>{capPct}%</span>
             </div>
           )}
         </div>
-      </div>
 
-      {/* ══════════════════════════════════════════
-          ZONE 2 — TRIP SEQUENCE (hidden by default, toggle to show)
-      ══════════════════════════════════════════ */}
-      {stops.length > 0 && (
-      <div className="border-b border-border/40 bg-muted/10">
-        <button
-          onClick={() => setStopsOpen(!stopsOpen)}
-          className="w-full flex items-center justify-between px-3 py-1 hover:bg-muted/30 transition-colors"
+        {/* RIGHT 30% — timeline ─────────────────────────── */}
+        <div
+          className="flex items-center border-l border-border/30 bg-muted/10 px-2 overflow-hidden"
+          style={{ width: "30%" }}
         >
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-            <RouteIcon className="w-3 h-3" /> Trip Sequence
-            <span className="bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full ml-1">{stops.length}</span>
-          </span>
-          <motion.div animate={{ rotate: stopsOpen ? 180 : 0 }} transition={{ duration: 0.15 }}>
-            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/50" />
-          </motion.div>
-        </button>
-
-        <AnimatePresence initial={false}>
-        {stopsOpen && (
-          <motion.div key="seq" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.18 }} className="overflow-hidden">
-        {stops.length === 0 ? null : (
-          <div className="overflow-x-auto pb-1">
-            <div className="relative flex items-start" style={{ minWidth: stops.length * 96 }}>
-              {/* Connecting line */}
-              <div className="absolute top-[18px] left-8 right-8 h-0.5 bg-emerald-400/70 rounded" />
-
-              {stops.map((s, i) => (
-                <div key={s.id} className="flex flex-col items-center flex-1 relative group">
-                  {/* Seq number */}
-                  <span className="text-[9px] font-bold text-slate-500 mb-1 leading-none">{i + 1}</span>
-                  {/* Circle node */}
-                  <div className={cn(
-                    "w-9 h-9 rounded-full border-[3px] border-white flex items-center justify-center z-10 shadow-md cursor-pointer transition-transform group-hover:scale-110",
-                    s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
-                  )}>
-                    <span className="text-xs text-white font-bold">{i + 1}</span>
-                  </div>
-                  {/* Time */}
-                  <span className="text-[9px] font-mono text-muted-foreground mt-1 leading-none">{times[i]}</span>
-                  {/* Txn */}
-                  <span className="text-[8px] text-muted-foreground/70 mt-0.5 max-w-[72px] truncate text-center leading-none">{s.txn}</span>
-                  {/* Remove on hover */}
-                  <button
-                    onClick={() => onRemoveStop(s.id)}
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-rose-300 text-rose-500 items-center justify-center hidden group-hover:flex shadow-sm hover:bg-rose-50 z-20"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                </div>
-              ))}
+          {stops.length === 0 ? (
+            <span className="text-[9px] text-muted-foreground/40 italic w-full text-center">Timeline</span>
+          ) : (
+            <div className="flex items-center w-full overflow-hidden">
+              {/* connector line */}
+              <div className="absolute h-px bg-border/40" style={{ width: "28%" }} />
+              <div className="flex items-center justify-between w-full gap-0.5 relative z-10">
+                {stops.map((s, i) => {
+                  const isSelected = selectedStop === i;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedStop(isSelected ? null : i)}
+                      title={`${s.txn} · ${s.client} · ${times[i]}`}
+                      className={cn(
+                        "flex flex-col items-center flex-shrink-0 transition-all",
+                        isSelected ? "scale-110" : "hover:scale-105"
+                      )}
+                    >
+                      <div className={cn(
+                        "rounded-full border-2 flex items-center justify-center font-bold text-[8px] transition-all",
+                        stops.length <= 6 ? "w-6 h-6" : stops.length <= 12 ? "w-5 h-5" : "w-4 h-4",
+                        isSelected
+                          ? s.type === "DROP" ? "bg-rose-600 border-rose-600 text-white" : "bg-sky-600 border-sky-600 text-white"
+                          : s.type === "DROP" ? "bg-rose-100 border-rose-400 text-rose-700" : "bg-sky-100 border-sky-400 text-sky-700"
+                      )}>
+                        {i + 1}
+                      </div>
+                      {stops.length <= 8 && (
+                        <span className="text-[7px] text-muted-foreground mt-0.5 leading-none">{times[i]}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
-        </motion.div>
-        )}
-        </AnimatePresence>
+          )}
+        </div>
       </div>
-      )}
 
-      {/* ══════════════════════════════════════════
-          ZONE 3 — STOPS TABLE (collapsible)
-      ══════════════════════════════════════════ */}
-      {stops.length > 0 && (
-        <>
-          {/* Toggle */}
-          <button
-            onClick={() => setStopsOpen(!stopsOpen)}
-            className="w-full flex items-center justify-between px-4 py-1.5 bg-muted/20 hover:bg-muted/40 border-b border-border/40 transition-colors group"
+      {/* ── SELECTED STOP DETAIL — inline, no border ──── */}
+      <AnimatePresence>
+        {selectedStopData && (
+          <motion.div
+            key={selectedStop}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden border-t border-border/20 bg-muted/10"
           >
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-              <List className="w-3 h-3" /> Stop Details
-              <span className="bg-border/60 text-muted-foreground rounded-full px-1.5 text-[9px] font-bold ml-1">{stops.length}</span>
-            </span>
-            <motion.div animate={{ rotate: stopsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/50" />
-            </motion.div>
-          </button>
-
-          <AnimatePresence initial={false}>
-            {stopsOpen && (
-              <motion.div
-                key="stops-table"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-                className="overflow-hidden"
-              >
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs min-w-[640px]">
-                    <thead>
-                      <tr className="bg-muted/30 border-b border-border/40">
-                        <th className="w-8 px-2 py-2 text-center text-[11px] font-semibold text-muted-foreground">#</th>
-                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Type</th>
-                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Document</th>
-                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Client Code</th>
-                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Client</th>
-                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Postal City</th>
-                        <th className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">Weight</th>
-                        <th className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">Vol</th>
-                        <th className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">Qty</th>
-                        <th className="w-8" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence>
-                        {stops.map((s, i) => (
-                          <motion.tr key={s.id} layout
-                            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                            className={cn(
-                              "border-b border-border/25 group hover:bg-primary/3 transition-colors",
-                              i % 2 === 1 ? "bg-muted/15" : ""
-                            )}
-                          >
-                            <td className="px-2 py-2 text-center">
-                              <span className={cn(
-                                "w-5 h-5 rounded-full text-[9px] font-bold inline-flex items-center justify-center text-white shadow-sm",
-                                s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
-                              )}>{i + 1}</span>
-                            </td>
-                            <td className="px-3 py-2">
-                              <span className={cn(
-                                "text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wide",
-                                s.type === "DROP"
-                                  ? "bg-rose-100 text-rose-700"
-                                  : "bg-sky-100 text-sky-700"
-                              )}>{s.type === "DROP" ? "DROP" : "PICK"}</span>
-                            </td>
-                            <td className="px-3 py-2 font-mono text-xs text-blue-600 hover:underline cursor-pointer whitespace-nowrap">{s.txn}</td>
-                            <td className="px-3 py-2 text-xs text-muted-foreground font-mono">{s.bpcode}</td>
-                            <td className="px-3 py-2 text-xs font-medium max-w-[140px] truncate">{s.client}</td>
-                            <td className="px-3 py-2 text-xs text-muted-foreground">{s.postalCity}</td>
-                            <td className="px-3 py-2 text-right font-mono text-xs">{s.netweight} kg</td>
-                            <td className="px-3 py-2 text-right font-mono text-xs">{s.vol} m³</td>
-                            <td className="px-3 py-2 text-right font-mono text-xs font-semibold">{s.qty}</td>
-                            <td className="px-2 py-2">
-                              <button
-                                onClick={() => onRemoveStop(s.id)}
-                                className="w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-all"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </td>
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t-2 border-border bg-muted/25 font-semibold">
-                        <td colSpan={6} className="px-3 py-2 text-right text-[11px] text-muted-foreground uppercase tracking-wider">Totals</td>
-                        <td className="px-3 py-2 text-right font-mono text-xs font-bold">{totalWeight} kg</td>
-                        <td className="px-3 py-2 text-right font-mono text-xs font-bold">{totalVol} m³</td>
-                        <td className="px-3 py-2 text-right font-mono text-xs font-bold">{totalQty}</td>
-                        <td />
-                      </tr>
-                    </tfoot>
-                  </table>
+            <div className="flex items-start gap-4 px-3 py-1.5">
+              {/* Stop type badge */}
+              <span className={cn(
+                "text-[9px] px-2 py-0.5 rounded font-bold flex-shrink-0 mt-0.5",
+                selectedStopData.type === "DROP" ? "bg-rose-100 text-rose-700" : "bg-sky-100 text-sky-700"
+              )}>
+                #{(selectedStop ?? 0) + 1} {selectedStopData.type}
+              </span>
+              <div className="grid grid-cols-6 gap-x-4 gap-y-0.5 flex-1 text-[10px]">
+                <div><span className="text-muted-foreground">Doc:</span> <span className="font-mono text-primary font-semibold">{selectedStopData.txn}</span></div>
+                <div><span className="text-muted-foreground">Client:</span> <span className="font-medium">{selectedStopData.client}</span></div>
+                <div><span className="text-muted-foreground">Code:</span> <span className="font-mono">{selectedStopData.bpcode}</span></div>
+                <div><span className="text-muted-foreground">City:</span> <span>{selectedStopData.city}</span></div>
+                <div><span className="text-muted-foreground">Time:</span> <span className="font-mono">{times[selectedStop ?? 0]}</span></div>
+                <div><span className="text-muted-foreground">Priority:</span>
+                  <span className={cn("ml-1 text-[9px] px-1 rounded font-bold",
+                    selectedStopData.priority === "URGENT" ? "bg-rose-100 text-rose-700" :
+                    selectedStopData.priority === "LOW" ? "bg-slate-100 text-slate-600" : "bg-green-100 text-green-700"
+                  )}>{selectedStopData.priority}</span>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>
-      )}
+                <div><span className="text-muted-foreground">Address:</span> <span>{selectedStopData.address}</span></div>
+                <div><span className="text-muted-foreground">Postal:</span> <span>{selectedStopData.postalCity}</span></div>
+                <div><span className="text-muted-foreground">Qty:</span> <span className="font-mono">{selectedStopData.qty}</span></div>
+                <div><span className="text-muted-foreground">Weight:</span> <span className="font-mono">{selectedStopData.netweight}kg</span></div>
+                <div><span className="text-muted-foreground">Vol:</span> <span className="font-mono">{selectedStopData.vol}m³</span></div>
+                <div>
+                  <button onClick={() => { onRemoveStop(selectedStopData.id); setSelectedStop(null); }}
+                    className="text-[9px] text-rose-500 hover:text-rose-700 font-semibold">Remove</button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Empty state */}
+      {/* empty state */}
       {!hasAssignment && (
-        <div className="flex items-center justify-center gap-6 py-6 text-muted-foreground/40">
-          <div className="flex flex-col items-center gap-1">
-            <Truck className="w-5 h-5" />
-            <span className="text-[11px]">Vehicle</span>
-          </div>
-          <span className="text-border">+</span>
-          <div className="flex flex-col items-center gap-1">
-            <Users className="w-5 h-5" />
-            <span className="text-[11px]">Driver</span>
-          </div>
-          <span className="text-border">+</span>
-          <div className="flex flex-col items-center gap-1">
-            <Package className="w-5 h-5" />
-            <span className="text-[11px]">Stops</span>
-          </div>
-          <span className="text-border text-lg">→</span>
-          <div className="flex flex-col items-center gap-1">
-            <CheckCheck className="w-5 h-5" />
-            <span className="text-[11px]">Confirm</span>
-          </div>
+        <div className="flex items-center justify-center gap-4 py-2 text-muted-foreground/30 text-[10px] bg-card">
+          <span className="flex items-center gap-1"><Truck className="w-3 h-3" /> Vehicle</span>
+          <span>+</span>
+          <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Driver</span>
+          <span>+</span>
+          <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Stops</span>
+          <span>→</span>
+          <span className="flex items-center gap-1"><CheckCheck className="w-3 h-3" /> Confirm</span>
         </div>
       )}
     </div>
   );
 }
-
 
 // ═══════════════════════════════════════════════════════
 // RESIZABLE SPLIT PANEL
@@ -1263,43 +1164,52 @@ export default function Planner() {
                 </div>
               )}
 
-              {/* DRIVERS content */}
+              {/* DRIVERS content — table format matching vehicles */}
               {fleetTab === "drivers" && (
-                <div className="overflow-auto flex-1 p-2 space-y-1.5" style={{ minHeight: 0 }}>
-                  {drivers.map((d) => {
-                    const busy = d.status !== "Available";
-                    const sel  = draftDriver?.id === d.id;
-                    return (
-                      <div key={d.id}
-                        draggable={!busy}
-                        onDragStart={(e) => onDriverDragStart(e, d)}
-                        onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
-                        className={cn(
-                          "rounded border px-2 py-1 flex items-center gap-2 transition-colors select-none text-[11px]",
-                          sel
-                            ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 ring-1 ring-indigo-300"
-                            : busy
-                              ? "opacity-50 border-border/40 bg-muted/10"
-                              : "border-border/50 bg-card cursor-grab hover:border-indigo-300 hover:bg-indigo-50/40"
-                        )}
-                      >
-                        <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
-                        <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto] items-center gap-3">
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-semibold truncate">{d.name}</p>
-                            <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{d.id} · {d.license}</p>
-                          </div>
-                          <p className={cn("text-xs font-bold whitespace-nowrap", hoursColor(d.hoursToday))}>{d.hoursToday}h today</p>
-                          <span className={cn("text-[9px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap",
-                            busy ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                          )}>{busy ? "On Trip" : "Avail"}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {drivers.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-4">No drivers found</p>
-                  )}
+                <div className="overflow-auto flex-1" style={{ minHeight: 0 }}>
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/40 sticky top-0 z-10">
+                      <tr>
+                        {["Driver Code","Driver Name","License","Status"].map((h) => (
+                          <th key={h} className="px-1.5 py-1 text-left text-[9px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/30 uppercase tracking-wide">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {drivers.map((d) => {
+                        const busy = d.status !== "Available";
+                        const sel  = draftDriver?.id === d.id;
+                        return (
+                          <tr key={d.id}
+                            draggable={!busy}
+                            onDragStart={(e) => onDriverDragStart(e, d)}
+                            onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
+                            className={cn(
+                              "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
+                              sel
+                                ? "bg-indigo-50 dark:bg-indigo-950/30"
+                                : busy ? "opacity-50 hover:bg-muted/30" : "hover:bg-indigo-50/40"
+                            )}
+                          >
+                            <td className={cn("px-1.5 py-0.5 font-mono font-bold text-[11px]", sel ? "text-indigo-700" : "text-primary")}>
+                              {d.id}
+                              {sel && <span className="ml-1 text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded font-semibold">Selected</span>}
+                            </td>
+                            <td className="px-1.5 py-0.5 font-medium">{d.name}</td>
+                            <td className="px-1.5 py-0.5 text-muted-foreground font-mono">{d.license}</td>
+                            <td className="px-1.5 py-0.5">
+                              <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-bold",
+                                busy ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                              )}>{busy ? "On Trip" : "Available"}</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {drivers.length === 0 && (
+                        <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-muted-foreground">No drivers found</td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
