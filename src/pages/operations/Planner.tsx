@@ -164,12 +164,12 @@ function SiteSelect({ sites, value, onChange }: { sites: RpSite[]; value: string
 // ═══════════════════════════════════════════════════════
 function KpiCard({ label, value, color, icon: Icon }: { label: string; value: number | string; color: string; icon: typeof Truck }) {
   return (
-    <div className={cn("rounded-lg px-4 py-3 text-white flex items-center justify-between shadow-sm", color)}>
+    <div className={cn("rounded-md px-3 py-2 text-white flex items-center justify-between shadow-sm", color)}>
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/75">{label}</p>
-        <p className="text-2xl font-bold leading-none mt-1">{value}</p>
+        <p className="text-[9px] font-semibold uppercase tracking-wider text-white/70">{label}</p>
+        <p className="text-xl font-bold leading-none mt-0.5">{value}</p>
       </div>
-      <Icon className="w-6 h-6 text-white/50" />
+      <Icon className="w-5 h-5 text-white/40" />
     </div>
   );
 }
@@ -197,17 +197,17 @@ function StopRow({
       <td className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       </td>
-      <td className="px-2 py-1.5 font-mono text-[11px] text-primary font-semibold whitespace-nowrap">{stop.txn}</td>
-      <td className="px-2 py-1.5 text-[11px] text-muted-foreground">{stop.prepList}</td>
-      <td className="px-2 py-1.5 text-[11px]">
+      <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{stop.txn}</td>
+      <td className="px-2 py-1.5 text-xs text-muted-foreground">{stop.prepList}</td>
+      <td className="px-2 py-1.5 text-xs">
         <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold", priorityColor(stop.priority))}>{stop.priority}</span>
       </td>
-      <td className="px-2 py-1.5 text-[11px] text-muted-foreground font-mono">{stop.bpcode}</td>
-      <td className="px-2 py-1.5 text-[11px] font-medium max-w-[120px] truncate">{stop.client}</td>
-      <td className="px-2 py-1.5 text-[11px] text-muted-foreground">{stop.routeCode}</td>
-      <td className="px-2 py-1.5 text-[11px] text-muted-foreground max-w-[100px] truncate">{stop.postalCity}</td>
-      <td className="px-2 py-1.5 text-[11px] font-mono">{stop.qty}</td>
-      <td className="px-2 py-1.5 text-[11px] font-mono">{stop.netweight}</td>
+      <td className="px-2 py-1.5 text-xs text-muted-foreground font-mono">{stop.bpcode}</td>
+      <td className="px-2 py-1.5 text-xs font-medium max-w-[120px] truncate">{stop.client}</td>
+      <td className="px-2 py-1.5 text-xs text-muted-foreground">{stop.routeCode}</td>
+      <td className="px-2 py-1.5 text-xs text-muted-foreground max-w-[100px] truncate">{stop.postalCity}</td>
+      <td className="px-2 py-1.5 text-xs font-mono">{stop.qty}</td>
+      <td className="px-2 py-1.5 text-xs font-mono">{stop.netweight}</td>
       <td className="px-2 py-1.5">
         <GripVertical className="w-3 h-3 text-muted-foreground/40 group-hover:text-muted-foreground" />
       </td>
@@ -259,7 +259,7 @@ function RouteMapView({ trip }: { trip: Trip | null }) {
         })}
       </svg>
       {/* Legend */}
-      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-[11px] flex items-center gap-4">
+      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs flex items-center gap-4">
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block" /> Drop</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Pickup</span>
       </div>
@@ -305,7 +305,7 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
               <td className="px-2.5 py-1.5 font-medium">{s.client}</td>
               <td className="px-2.5 py-1.5 text-muted-foreground max-w-[120px] truncate">{s.address}</td>
               <td className="px-2.5 py-1.5">{s.city}</td>
-              <td className="px-2.5 py-1.5 text-muted-foreground text-[10px]">{s.routeCode}</td>
+              <td className="px-2.5 py-1.5 text-muted-foreground text-[11px]">{s.routeCode}</td>
               <td className="px-2.5 py-1.5">
                 <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold", priorityColor(s.priority))}>{s.priority}</span>
               </td>
@@ -385,10 +385,10 @@ function AssignSlot({
     >
       <div className="flex items-center gap-1.5 px-3 pt-2 pb-0.5">
         <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", filled ? "text-emerald-600" : "text-muted-foreground/50")} />
-        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{label}</span>
+        <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">{label}</span>
       </div>
       <div className="px-3 pb-2.5 min-h-[36px] flex items-center">
-        {filled ? children : <span className="text-[11px] text-muted-foreground/50 italic">{placeholder}</span>}
+        {filled ? children : <span className="text-xs text-muted-foreground/50 italic">{placeholder}</span>}
       </div>
     </div>
   );
@@ -432,7 +432,7 @@ function ActiveTourPanel({
       {/* ══════════════════════════════════════════
           HEADER BAR
       ══════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-gradient-to-r from-slate-800 to-slate-700">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f]">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center flex-shrink-0">
             <Play className="w-3.5 h-3.5 text-primary" />
@@ -440,8 +440,8 @@ function ActiveTourPanel({
           <div>
             <h3 className="text-sm font-semibold text-white leading-tight">Active Tour</h3>
             {dropZoneActive
-              ? <p className="text-[10px] text-primary animate-pulse font-medium">Drop vehicle, driver or stops here…</p>
-              : <p className="text-[10px] text-white/40">Drag resources here or click to assign</p>
+              ? <p className="text-[11px] text-primary animate-pulse font-medium">Drop vehicle, driver or stops here…</p>
+              : <p className="text-[11px] text-white/40">Drag resources here or click to assign</p>
             }
           </div>
         </div>
@@ -471,8 +471,8 @@ function ActiveTourPanel({
               <div className="flex items-start justify-between w-full gap-2">
                 <div>
                   <p className="font-mono font-bold text-base text-blue-700 leading-tight">{vehicle.code}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{vehicle.vehicleNo}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{vehicle.category} · Cap: {vehicle.capacity.toLocaleString()} kg</p>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{vehicle.vehicleNo}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{vehicle.category} · Cap: {vehicle.capacity.toLocaleString()} kg</p>
                 </div>
                 <button onClick={onClearVehicle} className="text-muted-foreground/40 hover:text-destructive mt-0.5 flex-shrink-0">
                   <X className="w-3.5 h-3.5" />
@@ -488,8 +488,8 @@ function ActiveTourPanel({
               <div className="flex items-start justify-between w-full gap-2">
                 <div>
                   <p className="font-semibold text-sm leading-tight">{driver.name}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{driver.id} · {driver.license}</p>
-                  <p className={cn("text-[10px] font-semibold mt-0.5", hoursColor(driver.hoursToday))}>{driver.hoursToday}h today</p>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{driver.id} · {driver.license}</p>
+                  <p className={cn("text-[11px] font-semibold mt-0.5", hoursColor(driver.hoursToday))}>{driver.hoursToday}h today</p>
                 </div>
                 <button onClick={onClearDriver} className="text-muted-foreground/40 hover:text-destructive mt-0.5 flex-shrink-0">
                   <X className="w-3.5 h-3.5" />
@@ -516,7 +516,7 @@ function ActiveTourPanel({
           {/* Capacity bar (only when vehicle assigned) */}
           {vehicle && stops.length > 0 && (
             <div className="flex flex-col justify-center gap-1 min-w-[120px]">
-              <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">Capacity</span>
                 <span className={cn("font-bold", capPct > 90 ? "text-rose-600" : capPct > 70 ? "text-amber-600" : "text-emerald-600")}>
                   {capPct}%
@@ -539,11 +539,11 @@ function ActiveTourPanel({
       ══════════════════════════════════════════ */}
       <div className="px-5 py-3 border-b border-border/40 bg-muted/10">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
             <RouteIcon className="w-3 h-3" /> Trip Sequence
           </span>
           {stops.length > 0 && (
-            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block"/>Drop</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-sky-500 inline-block"/>Pickup</span>
             </div>
@@ -553,7 +553,7 @@ function ActiveTourPanel({
         {stops.length === 0 ? (
           <div className="flex items-center gap-3 py-2">
             <div className="h-0.5 flex-1 bg-border/40 rounded" />
-            <span className="text-[11px] text-muted-foreground/50 italic whitespace-nowrap">Add stops to build the sequence</span>
+            <span className="text-xs text-muted-foreground/50 italic whitespace-nowrap">Add stops to build the sequence</span>
             <div className="h-0.5 flex-1 bg-border/40 rounded" />
           </div>
         ) : (
@@ -571,7 +571,7 @@ function ActiveTourPanel({
                     "w-9 h-9 rounded-full border-[3px] border-white flex items-center justify-center z-10 shadow-md cursor-pointer transition-transform group-hover:scale-110",
                     s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
                   )}>
-                    <span className="text-[11px] text-white font-bold">{i + 1}</span>
+                    <span className="text-xs text-white font-bold">{i + 1}</span>
                   </div>
                   {/* Time */}
                   <span className="text-[9px] font-mono text-muted-foreground mt-1 leading-none">{times[i]}</span>
@@ -601,7 +601,7 @@ function ActiveTourPanel({
             onClick={() => setStopsOpen(!stopsOpen)}
             className="w-full flex items-center justify-between px-4 py-1.5 bg-muted/20 hover:bg-muted/40 border-b border-border/40 transition-colors group"
           >
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
               <List className="w-3 h-3" /> Stop Details
               <span className="bg-border/60 text-muted-foreground rounded-full px-1.5 text-[9px] font-bold ml-1">{stops.length}</span>
             </span>
@@ -624,15 +624,15 @@ function ActiveTourPanel({
                   <table className="w-full text-xs min-w-[640px]">
                     <thead>
                       <tr className="bg-muted/30 border-b border-border/40">
-                        <th className="w-8 px-2 py-2 text-center text-[10px] font-semibold text-muted-foreground">#</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Type</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Document</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Client Code</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Client</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground">Postal City</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-semibold text-muted-foreground">Weight</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-semibold text-muted-foreground">Vol</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-semibold text-muted-foreground">Qty</th>
+                        <th className="w-8 px-2 py-2 text-center text-[11px] font-semibold text-muted-foreground">#</th>
+                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Type</th>
+                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Document</th>
+                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Client Code</th>
+                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Client</th>
+                        <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">Postal City</th>
+                        <th className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">Weight</th>
+                        <th className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">Vol</th>
+                        <th className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">Qty</th>
                         <th className="w-8" />
                       </tr>
                     </thead>
@@ -660,13 +660,13 @@ function ActiveTourPanel({
                                   : "bg-sky-100 text-sky-700"
                               )}>{s.type === "DROP" ? "DROP" : "PICK"}</span>
                             </td>
-                            <td className="px-3 py-2 font-mono text-[11px] text-blue-600 hover:underline cursor-pointer whitespace-nowrap">{s.txn}</td>
-                            <td className="px-3 py-2 text-[11px] text-muted-foreground font-mono">{s.bpcode}</td>
-                            <td className="px-3 py-2 text-[11px] font-medium max-w-[140px] truncate">{s.client}</td>
-                            <td className="px-3 py-2 text-[11px] text-muted-foreground">{s.postalCity}</td>
-                            <td className="px-3 py-2 text-right font-mono text-[11px]">{s.netweight} kg</td>
-                            <td className="px-3 py-2 text-right font-mono text-[11px]">{s.vol} m³</td>
-                            <td className="px-3 py-2 text-right font-mono text-[11px] font-semibold">{s.qty}</td>
+                            <td className="px-3 py-2 font-mono text-xs text-blue-600 hover:underline cursor-pointer whitespace-nowrap">{s.txn}</td>
+                            <td className="px-3 py-2 text-xs text-muted-foreground font-mono">{s.bpcode}</td>
+                            <td className="px-3 py-2 text-xs font-medium max-w-[140px] truncate">{s.client}</td>
+                            <td className="px-3 py-2 text-xs text-muted-foreground">{s.postalCity}</td>
+                            <td className="px-3 py-2 text-right font-mono text-xs">{s.netweight} kg</td>
+                            <td className="px-3 py-2 text-right font-mono text-xs">{s.vol} m³</td>
+                            <td className="px-3 py-2 text-right font-mono text-xs font-semibold">{s.qty}</td>
                             <td className="px-2 py-2">
                               <button
                                 onClick={() => onRemoveStop(s.id)}
@@ -681,10 +681,10 @@ function ActiveTourPanel({
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-border bg-muted/25 font-semibold">
-                        <td colSpan={6} className="px-3 py-2 text-right text-[10px] text-muted-foreground uppercase tracking-wider">Totals</td>
-                        <td className="px-3 py-2 text-right font-mono text-[11px] font-bold">{totalWeight} kg</td>
-                        <td className="px-3 py-2 text-right font-mono text-[11px] font-bold">{totalVol} m³</td>
-                        <td className="px-3 py-2 text-right font-mono text-[11px] font-bold">{totalQty}</td>
+                        <td colSpan={6} className="px-3 py-2 text-right text-[11px] text-muted-foreground uppercase tracking-wider">Totals</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs font-bold">{totalWeight} kg</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs font-bold">{totalVol} m³</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs font-bold">{totalQty}</td>
                         <td />
                       </tr>
                     </tfoot>
@@ -701,22 +701,22 @@ function ActiveTourPanel({
         <div className="flex items-center justify-center gap-6 py-6 text-muted-foreground/40">
           <div className="flex flex-col items-center gap-1">
             <Truck className="w-5 h-5" />
-            <span className="text-[10px]">Vehicle</span>
+            <span className="text-[11px]">Vehicle</span>
           </div>
           <span className="text-border">+</span>
           <div className="flex flex-col items-center gap-1">
             <Users className="w-5 h-5" />
-            <span className="text-[10px]">Driver</span>
+            <span className="text-[11px]">Driver</span>
           </div>
           <span className="text-border">+</span>
           <div className="flex flex-col items-center gap-1">
             <Package className="w-5 h-5" />
-            <span className="text-[10px]">Stops</span>
+            <span className="text-[11px]">Stops</span>
           </div>
           <span className="text-border text-lg">→</span>
           <div className="flex flex-col items-center gap-1">
             <CheckCheck className="w-5 h-5" />
-            <span className="text-[10px]">Confirm</span>
+            <span className="text-[11px]">Confirm</span>
           </div>
         </div>
       )}
@@ -780,21 +780,21 @@ function ResizableSplit({
     <div>
       {/* Preset quick-buttons */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Split:</span>
+        <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Split:</span>
         {presets.map((p) => (
           <button key={p.value} onClick={() => setLeftPct(p.value)}
             className={cn(
-              "text-[10px] px-2 py-0.5 rounded border transition-colors font-mono",
+              "text-[11px] px-2 py-0.5 rounded border transition-colors font-mono",
               Math.round(leftPct) === p.value
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border/60 text-muted-foreground hover:border-primary/60 hover:text-foreground"
             )}
           >{p.label}</button>
         ))}
-        <span className="text-[10px] text-muted-foreground ml-2 font-mono">
+        <span className="text-[11px] text-muted-foreground ml-2 font-mono">
           {Math.round(leftPct)}% / {Math.round(100 - leftPct)}%
         </span>
-        <span className="text-[10px] text-muted-foreground ml-auto hidden sm:block">drag the divider to resize</span>
+        <span className="text-[11px] text-muted-foreground ml-auto hidden sm:block">drag the divider to resize</span>
       </div>
 
       {/* Split panels */}
@@ -935,12 +935,12 @@ export default function Planner() {
 
   const vehicles = useMemo(() =>
     apiVehicles.filter((v) =>
-      (!vehSearch || `${v.code} ${v.vehicleNo} ${v.category}`.toLowerCase().includes(vehSearch.toLowerCase()))
+      (!vehSearch || `${v.code} ${v.vehicleNo} ${v.category} ${v.departureSite} ${v.arrivalSite} ${v.driverName} ${v.capacity} ${v.vol} ${v.startTime}`.toLowerCase().includes(vehSearch.toLowerCase()))
     ), [apiVehicles, vehSearch]);
 
   const drivers = useMemo(() =>
     apiDrivers.filter((d) =>
-      !drvSearch || `${d.id} ${d.name}`.toLowerCase().includes(drvSearch.toLowerCase())
+      !drvSearch || `${d.id} ${d.name} ${d.license} ${d.status} ${d.hoursToday}`.toLowerCase().includes(drvSearch.toLowerCase())
     ), [apiDrivers, drvSearch]);
 
   const availableStops = useMemo(() =>
@@ -950,13 +950,13 @@ export default function Planner() {
   const drops = useMemo(() =>
     availableStops.filter((s) =>
       s.type === "DROP" &&
-      (!dropSearch || `${s.txn} ${s.client} ${s.city} ${s.routeCode} ${s.bpcode}`.toLowerCase().includes(dropSearch.toLowerCase()))
+      (!dropSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(dropSearch.toLowerCase()))
     ), [availableStops, dropSearch]);
 
   const pickups = useMemo(() =>
     availableStops.filter((s) =>
       s.type === "PICKUP" &&
-      (!pickSearch || `${s.txn} ${s.client} ${s.city} ${s.routeCode} ${s.bpcode}`.toLowerCase().includes(pickSearch.toLowerCase()))
+      (!pickSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(pickSearch.toLowerCase()))
     ), [availableStops, pickSearch]);
 
   const draftStops = useMemo(() =>
@@ -1119,121 +1119,97 @@ export default function Planner() {
   const allCurrentSelected = currentStops.length > 0 && currentStops.every((s) => selectedStopIds.has(s.id));
 
   return (
-    <div className="space-y-3 bg-background min-h-full">
+    <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
-      {/* ── TOOLBAR ──────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-        className="bg-card rounded-xl border border-border/60 shadow-sm p-3 flex flex-wrap items-end gap-3"
-      >
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site</label>
-          {sitesLoading
-            ? <div className="h-9 flex items-center gap-2 px-3 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
-            : <SiteSelect sites={sites} value={site} onChange={setSite} />
-          }
+      {/* ── TOOLBAR ─ compact single row ─────────────── */}
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-card border-b border-border/60 flex-shrink-0">
+        {/* Site */}
+        {sitesLoading
+          ? <div className="h-8 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading sites…</div>
+          : <SiteSelect sites={sites} value={site} onChange={setSite} />
+        }
+        {/* Date */}
+        <div className="relative">
+          <CalIcon className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+            className="h-8 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30"
+          />
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date</label>
-          <div className="relative">
-            <CalIcon className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-              className="h-9 pl-8 pr-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-            />
-          </div>
+        {/* Refresh icon-only with tooltip */}
+        <div className="relative group">
+          <button
+            disabled={loading || !site}
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className="h-8 w-8 rounded-md border border-input bg-background flex items-center justify-center hover:bg-muted disabled:opacity-40 transition-colors"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5 text-muted-foreground", loading && "animate-spin")} />
+          </button>
+          <span className="absolute left-1/2 -translate-x-1/2 top-9 z-50 px-2 py-1 rounded bg-foreground text-background text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Refresh
+          </span>
         </div>
-        <Button variant="outline" disabled={loading || !site} className="h-9 gap-1.5"
-          onClick={() => setRefreshKey((k) => k + 1)}>
-          <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
-          Refresh
-        </Button>
-        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+        {/* Status */}
+        <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
           {loading
-            ? <><Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /><span>Loading…</span></>
+            ? <><Loader2 className="w-3 h-3 animate-spin text-primary" /><span>Loading…</span></>
             : loaded
-              ? <><CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="font-mono font-semibold text-foreground">{site}</span>
+              ? <><CheckCheck className="w-3 h-3 text-emerald-500" />
+                  <span className="font-medium text-foreground">{site}</span>
                   <span>·</span>
-                  <span className="font-mono text-foreground">{date}</span></>
-              : null
-          }
+                  <span className="text-foreground">{date}</span></>
+              : null}
         </div>
-      </motion.div>
+      </div>
 
       {!loaded ? (
-        <div className="bg-card rounded-xl border border-dashed border-border p-20 text-center">
+        <div className="flex-1 flex items-center justify-center">
           {loading
-            ? <><Loader2 className="w-10 h-10 mx-auto mb-3 text-primary animate-spin" />
-                <p className="font-medium text-foreground">Loading planner data…</p>
-                <p className="text-sm text-muted-foreground mt-1 font-mono">{site} · {date}</p></>
-            : <><RouteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="font-medium text-foreground">Select a site to load planner data</p>
-                <p className="text-sm text-muted-foreground mt-1">Data loads automatically when site or date changes.</p></>
+            ? <div className="text-center"><Loader2 className="w-10 h-10 mx-auto mb-3 text-primary animate-spin" />
+                <p className="font-medium text-foreground text-sm">Loading planner data…</p>
+                <p className="text-xs text-muted-foreground mt-1">{site} · {date}</p></div>
+            : <div className="text-center"><RouteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                <p className="font-medium text-foreground text-sm">Select a site to load planner data</p>
+                <p className="text-xs text-muted-foreground mt-1">Data loads automatically when site or date changes.</p></div>
           }
         </div>
       ) : (
-        <>
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* ── KPI STRIP ──────────────────────────────── */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-6 gap-1.5 px-3 pt-1.5 pb-1 flex-shrink-0">
             <KpiCard label="Vehicles"          value={kpis.vehicles}       icon={Truck}           color="bg-gradient-to-br from-slate-500 to-slate-700" />
             <KpiCard label="Trips"             value={kpis.trips}          icon={RouteIcon}       color="bg-gradient-to-br from-indigo-500 to-indigo-700" />
             <KpiCard label="Assigned Docs"     value={kpis.assignedDocs}   icon={CheckCheck}      color="bg-gradient-to-br from-emerald-500 to-emerald-700" />
             <KpiCard label="Non-Assigned Docs" value={kpis.unassignedDocs} icon={AlertCircle}     color="bg-gradient-to-br from-amber-500 to-amber-600" />
-            <KpiCard label="Total Delivery Qty"value={kpis.totalDeliveryQty} icon={ArrowDownToLine} color="bg-gradient-to-br from-rose-500 to-rose-600" />
-            <KpiCard label="Total Pickup Qty"  value={kpis.totalPickupQty} icon={ArrowUpFromLine}  color="bg-gradient-to-br from-sky-500 to-sky-600" />
+            <KpiCard label="Delivery Qty"      value={kpis.totalDeliveryQty} icon={ArrowDownToLine} color="bg-gradient-to-br from-rose-500 to-rose-600" />
+            <KpiCard label="Pickup Qty"        value={kpis.totalPickupQty} icon={ArrowUpFromLine}  color="bg-gradient-to-br from-sky-500 to-sky-600" />
           </div>
 
-          {/* ── TOP SECTION: 50% Fleet | 50% Documents ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {/* ── FLEET | DOCUMENTS — fixed 40% height ─── */}
+          <div className="grid grid-cols-2 gap-1.5 px-3 pb-1" style={{ height: "35vh", minHeight: 220 }}>
 
             {/* ════════════════════════════════════════
                 LEFT 50% — FLEET (Vehicles + Drivers tabbed)
                 ════════════════════════════════════════ */}
             <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
 
-              {/* Fleet header */}
-              <div className="px-3 py-2 border-b border-border/60 bg-gradient-to-r from-slate-700 to-slate-800 flex items-center gap-2">
-                <Truck className="w-4 h-4 text-white" />
-                <h3 className="text-sm font-semibold text-white tracking-wide">Fleet</h3>
-                <span className="text-[10px] text-white/50 ml-1">vehicles & drivers</span>
-                <div className="ml-auto flex items-center gap-2 text-[10px] text-white/60">
-                  <span>{vehicles.length} vehicles</span>
-                  <span className="text-white/30">·</span>
-                  <span>{drivers.filter(d => d.status === "Available").length} avail drivers</span>
-                </div>
-              </div>
-
-              {/* Fleet tabs: Vehicles | Drivers */}
-              <div className="flex border-b border-border/60">
-                <button
-                  onClick={() => setFleetTab("vehicles")}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
-                    fleetTab === "vehicles"
-                      ? "bg-slate-600 text-white"
-                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
-                  )}
-                >
-                  <Truck className="w-3.5 h-3.5" />
-                  Vehicles
-                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
-                    fleetTab === "vehicles" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
-                  )}>{vehicles.length}</span>
-                </button>
-                <button
-                  onClick={() => setFleetTab("drivers")}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
-                    fleetTab === "drivers"
-                      ? "bg-indigo-600 text-white"
-                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
-                  )}
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  Drivers
-                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
-                    fleetTab === "drivers" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
-                  )}>{drivers.length}</span>
-                </button>
+                {/* Fleet tabs */}
+              <div className="flex border-b border-border/60 flex-shrink-0">
+                {([
+                  { key: "vehicles", label: "Vehicles", icon: Truck,  count: vehicles.length, active: "bg-slate-700 text-white" },
+                  { key: "drivers",  label: "Drivers",  icon: Users,  count: drivers.length,  active: "bg-indigo-600 text-white" },
+                ] as const).map(({ key, label, icon: Icon, count, active }) => (
+                  <button key={key} onClick={() => setFleetTab(key)}
+                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all border-b-2",
+                      fleetTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                    <span className={cn("text-[11px] rounded-full px-1.5 py-0.5 font-bold",
+                      fleetTab === key ? "bg-white/25 text-white" : "bg-muted text-muted-foreground"
+                    )}>{count}</span>
+                  </button>
+                ))}
               </div>
 
               {/* Search bar */}
@@ -1251,12 +1227,12 @@ export default function Planner() {
 
               {/* VEHICLES content */}
               {fleetTab === "vehicles" && (
-                <div className="overflow-auto flex-1" style={{ maxHeight: 300 }}>
+                <div className="overflow-auto flex-1" style={{ minHeight: 0 }}>
                   <table className="w-full text-xs">
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
                         {["Vehicle Code","Vehicle No","Category","Depart Site","Start"].map((h) => (
-                          <th key={h} className="px-2.5 py-2 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                          <th key={h} className="px-2.5 py-2 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1278,10 +1254,10 @@ export default function Planner() {
                               {v.code}
                               {sel && <span className="ml-1.5 text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold">Selected</span>}
                             </td>
-                            <td className="px-2.5 py-2 font-mono text-[10px] text-muted-foreground">{v.vehicleNo}</td>
-                            <td className="px-2.5 py-2 text-[11px]">{v.category}</td>
-                            <td className="px-2.5 py-2 text-[11px] font-mono text-muted-foreground">{v.departureSite}</td>
-                            <td className="px-2.5 py-2 text-[11px] text-muted-foreground">{v.startTime}</td>
+                            <td className="px-2.5 py-2 font-mono text-[11px] text-muted-foreground">{v.vehicleNo}</td>
+                            <td className="px-2.5 py-2 text-xs">{v.category}</td>
+                            <td className="px-2.5 py-2 text-xs font-mono text-muted-foreground">{v.departureSite}</td>
+                            <td className="px-2.5 py-2 text-xs text-muted-foreground">{v.startTime}</td>
                           </tr>
                         );
                       })}
@@ -1295,7 +1271,7 @@ export default function Planner() {
 
               {/* DRIVERS content */}
               {fleetTab === "drivers" && (
-                <div className="overflow-auto flex-1 p-2 space-y-1.5" style={{ maxHeight: 300 }}>
+                <div className="overflow-auto flex-1 p-2 space-y-1.5" style={{ minHeight: 0 }}>
                   {drivers.map((d) => {
                     const busy = d.status !== "Available";
                     const sel  = draftDriver?.id === d.id;
@@ -1317,9 +1293,9 @@ export default function Planner() {
                         <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto] items-center gap-3">
                           <div className="min-w-0">
                             <p className="text-sm font-semibold truncate">{d.name}</p>
-                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{d.id} · {d.license}</p>
+                            <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{d.id} · {d.license}</p>
                           </div>
-                          <p className={cn("text-[11px] font-bold whitespace-nowrap", hoursColor(d.hoursToday))}>{d.hoursToday}h today</p>
+                          <p className={cn("text-xs font-bold whitespace-nowrap", hoursColor(d.hoursToday))}>{d.hoursToday}h today</p>
                           <span className={cn("text-[9px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap",
                             busy ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
                           )}>{busy ? "On Trip" : "Avail"}</span>
@@ -1337,52 +1313,26 @@ export default function Planner() {
             {/* ════════════════════════════════════════
                 RIGHT 50% — DOCUMENTS (Drops + Pickups tabbed)
                 ════════════════════════════════════════ */}
-            <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
+            <div className="bg-card rounded-lg border border-border/60 shadow-sm overflow-hidden flex flex-col">
 
-              {/* Documents header */}
-              <div className="px-3 py-2 border-b border-border/60 bg-gradient-to-r from-rose-600 to-sky-600 flex items-center gap-2">
-                <Package className="w-4 h-4 text-white" />
-                <h3 className="text-sm font-semibold text-white tracking-wide">Documents</h3>
-                <span className="text-[10px] text-white/60 ml-1">drops & pickups</span>
-                <div className="ml-auto flex items-center gap-2 text-[10px] text-white/80">
-                  <span>{drops.length} drops</span>
-                  <span className="text-white/40">·</span>
-                  <span>{pickups.length} pickups</span>
-                </div>
-              </div>
-
-              {/* Docs tabs: Deliveries | Pickups */}
-              <div className="flex border-b border-border/60">
-                <button
-                  onClick={() => setStopTypeTab("drops")}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
-                    stopTypeTab === "drops"
-                      ? "bg-rose-500 text-white"
-                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
-                  )}
-                >
-                  <ArrowDownToLine className="w-3.5 h-3.5" />
-                  Deliveries
-                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
-                    stopTypeTab === "drops" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
-                  )}>{drops.length}</span>
-                </button>
-                <button
-                  onClick={() => setStopTypeTab("pickups")}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-semibold transition-colors",
-                    stopTypeTab === "pickups"
-                      ? "bg-sky-500 text-white"
-                      : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
-                  )}
-                >
-                  <ArrowUpFromLine className="w-3.5 h-3.5" />
-                  Pickups
-                  <span className={cn("text-[10px] rounded-full px-2 py-0.5",
-                    stopTypeTab === "pickups" ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"
-                  )}>{pickups.length}</span>
-                </button>
+              {/* Docs tabs */}
+              <div className="flex border-b border-border/60 flex-shrink-0">
+                {([
+                  { key: "drops",   label: "Deliveries", icon: ArrowDownToLine, count: drops.length,   active: "bg-rose-600 text-white" },
+                  { key: "pickups", label: "Pickups",    icon: ArrowUpFromLine, count: pickups.length, active: "bg-sky-600 text-white" },
+                ] as const).map(({ key, label, icon: Icon, count, active }) => (
+                  <button key={key} onClick={() => setStopTypeTab(key)}
+                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all border-b-2",
+                      stopTypeTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                    <span className={cn("text-[11px] rounded-full px-1.5 py-0.5 font-bold",
+                      stopTypeTab === key ? "bg-white/25 text-white" : "bg-muted text-muted-foreground"
+                    )}>{count}</span>
+                  </button>
+                ))}
               </div>
 
               {/* Search + action bar */}
@@ -1402,12 +1352,12 @@ export default function Planner() {
                     Add {selectedStopIds.size} to Trip
                   </Button>
                 ) : (
-                  <span className="text-[10px] text-muted-foreground flex-shrink-0 hidden sm:block">drag or select + Add</span>
+                  <span className="text-[11px] text-muted-foreground flex-shrink-0 hidden sm:block">drag or select + Add</span>
                 )}
               </div>
 
               {/* Table */}
-              <div className="overflow-auto flex-1" style={{ maxHeight: 300 }}>
+              <div className="overflow-auto flex-1" style={{ minHeight: 0 }}>
                 <table className="w-full text-xs min-w-[600px]">
                   <thead className="bg-muted/40 sticky top-0 z-10">
                     <tr>
@@ -1418,7 +1368,7 @@ export default function Planner() {
                         />
                       </th>
                       {["Transaction No","Prep List","Priority","Client Code","Client","Route Code","Postal City","Qty","Weight",""].map((h) => (
-                        <th key={h} className="px-2.5 py-2 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                        <th key={h} className="px-2.5 py-2 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1451,6 +1401,7 @@ export default function Planner() {
           </div>
 
           {/* ── ACTIVE TOUR PANEL ────────────────────────────── */}
+          </div>
           <ActiveTourPanel
             vehicle={draftVehicle}
             driver={draftDriver}
@@ -1472,6 +1423,7 @@ export default function Planner() {
             onConfirm={confirmTrip}
           />
           {/* ── BOTTOM: Resizable Trips | Map split ──────────── */}
+          <div className="px-3 pb-1 flex-shrink-0" style={{ height: "28vh", minHeight: 180 }}>
           <ResizableSplit
             defaultLeftPct={35}
             minPct={20}
@@ -1498,7 +1450,7 @@ export default function Planner() {
                       <SelectItem value="Confirmed">Confirmed</SelectItem>
                     </SelectContent>
                   </Select>
-                  <span className="text-[11px] text-muted-foreground ml-auto">({filteredTrips.length})</span>
+                  <span className="text-xs text-muted-foreground ml-auto">({filteredTrips.length})</span>
                 </div>
                 {/* Table */}
                 <div className="overflow-auto flex-1">
@@ -1507,7 +1459,7 @@ export default function Planner() {
                       <tr>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
                         {["Details","Route Code","Seq","Vehicle","Status","Lock","Driver","Depart","Arrival"].map((h) => (
-                          <th key={h} className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                          <th key={h} className="px-2 py-1.5 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1536,9 +1488,9 @@ export default function Planner() {
                                 <Info className="w-3.5 h-3.5" />
                               </button>
                             </td>
-                            <td className="px-2 py-1.5 font-mono text-[11px] text-primary font-semibold whitespace-nowrap">{t.id.slice(-12)}</td>
-                            <td className="px-2 py-1.5 text-[11px] font-mono text-center">{t.seq}</td>
-                            <td className="px-2 py-1.5 font-mono font-bold text-[11px]">{t.vehicle.code}</td>
+                            <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{t.id.slice(-12)}</td>
+                            <td className="px-2 py-1.5 text-xs font-mono text-center">{t.seq}</td>
+                            <td className="px-2 py-1.5 font-mono font-bold text-xs">{t.vehicle.code}</td>
                             <td className="px-2 py-1.5">
                               <span className={cn("text-[9px] px-2 py-0.5 rounded font-bold", statusColor(t.status))}>
                                 {t.status.toUpperCase()}
@@ -1552,9 +1504,9 @@ export default function Planner() {
                                   : <Unlock className="w-3.5 h-3.5 text-muted-foreground/50" />}
                               </button>
                             </td>
-                            <td className="px-2 py-1.5 text-[11px]">{t.driver.name}</td>
-                            <td className="px-2 py-1.5 text-[11px] font-mono text-muted-foreground">{t.departSite}</td>
-                            <td className="px-2 py-1.5 text-[11px] font-mono text-muted-foreground">{t.arrivalSite}</td>
+                            <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
+                            <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.departSite}</td>
+                            <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.arrivalSite}</td>
                           </tr>
                         );
                       })}
@@ -1580,12 +1532,12 @@ export default function Planner() {
                   )}
                   <div className={cn("flex items-center gap-0.5 border border-border rounded-md p-0.5 ml-auto")}>
                     <button onClick={() => setTripView("map")}
-                      className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1 transition-colors",
+                      className={cn("h-6 px-2 text-xs rounded flex items-center gap-1 transition-colors",
                         tripView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
                       <MapIcon className="w-3 h-3" /> Map
                     </button>
                     <button onClick={() => setTripView("list")}
-                      className={cn("h-6 px-2 text-[11px] rounded flex items-center gap-1 transition-colors",
+                      className={cn("h-6 px-2 text-xs rounded flex items-center gap-1 transition-colors",
                         tripView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
                       <List className="w-3 h-3" /> List View
                     </button>
@@ -1597,7 +1549,7 @@ export default function Planner() {
               </div>
             }
           />
-        </>
+        </div>
       )}
     </div>
   );
