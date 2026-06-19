@@ -284,11 +284,11 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
   }
   return (
     <div className="flex-1 overflow-auto min-h-[320px]">
-      <table className="w-full text-xs min-w-[600px]">
+      <table className="w-full min-w-[600px]" style={{ fontSize: "11px" }}>
         <thead className="bg-muted/40 sticky top-0 z-10">
           <tr>
             {["Seq","Type","Txn","Client","Address","City","Route","Priority","Qty","Weight"].map((h) => (
-              <th key={h} className="px-2.5 py-2 text-left font-semibold text-muted-foreground whitespace-nowrap border-b border-border/50">{h}</th>
+              <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
             ))}
           </tr>
         </thead>
@@ -1123,11 +1123,11 @@ export default function Planner() {
               {/* VEHICLES content */}
               {fleetTab === "vehicles" && (
                 <div className="overflow-auto flex-1" style={{ minHeight: 0 }}>
-                  <table className="w-full text-xs">
+                  <table className="w-full" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
                         {["Vehicle Code","Vehicle No","Category","Depart Site","Start"].map((h) => (
-                          <th key={h} className="px-2.5 py-2 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                          <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1139,20 +1139,20 @@ export default function Planner() {
                             draggable onDragStart={(e) => onVehicleDragStart(e, v)}
                             onClick={() => setDraftVehicle(sel ? null : v)}
                             className={cn(
-                              "border-b border-border/20 cursor-pointer transition-colors select-none group text-[11px]",
+                              "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
                               sel
                                 ? "bg-emerald-50 dark:bg-emerald-950/30"
                                 : "hover:bg-muted/50"
                             )}
                           >
-                            <td className={cn("px-2 py-1.5 font-mono font-bold text-[11px]", sel ? "text-emerald-700" : "text-primary")}>
+                            <td className={cn("px-2 py-1 font-mono font-bold text-[11px]", sel ? "text-emerald-700" : "text-primary")}>
                               {v.code}
                               {sel && <span className="ml-1.5 text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold">Selected</span>}
                             </td>
-                            <td className="px-2.5 py-2 font-mono text-[11px] text-muted-foreground">{v.vehicleNo}</td>
-                            <td className="px-2.5 py-2 text-xs">{v.category}</td>
-                            <td className="px-2.5 py-2 text-xs font-mono text-muted-foreground">{v.departureSite}</td>
-                            <td className="px-2.5 py-2 text-xs text-muted-foreground">{v.startTime}</td>
+                            <td className="px-2 py-1 font-mono text-muted-foreground">{v.vehicleNo}</td>
+                            <td className="px-2 py-1">{v.category}</td>
+                            <td className="px-2 py-1 font-mono text-muted-foreground">{v.departureSite}</td>
+                            <td className="px-2 py-1 text-muted-foreground">{v.startTime}</td>
                           </tr>
                         );
                       })}
@@ -1167,11 +1167,11 @@ export default function Planner() {
               {/* DRIVERS content — table format matching vehicles */}
               {fleetTab === "drivers" && (
                 <div className="overflow-auto flex-1" style={{ minHeight: 0 }}>
-                  <table className="w-full text-xs">
+                  <table className="w-full" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
                         {["Driver Code","Driver Name","License","Status"].map((h) => (
-                          <th key={h} className="px-1.5 py-1 text-left text-[9px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/30 uppercase tracking-wide">{h}</th>
+                          <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1191,13 +1191,13 @@ export default function Planner() {
                                 : busy ? "opacity-50 hover:bg-muted/30" : "hover:bg-indigo-50/40"
                             )}
                           >
-                            <td className={cn("px-1.5 py-0.5 font-mono font-bold text-[11px]", sel ? "text-indigo-700" : "text-primary")}>
+                            <td className={cn("px-2 py-1 font-mono font-bold text-[11px]", sel ? "text-indigo-700" : "text-primary")}>
                               {d.id}
                               {sel && <span className="ml-1 text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded font-semibold">Selected</span>}
                             </td>
-                            <td className="px-1.5 py-0.5 font-medium">{d.name}</td>
-                            <td className="px-1.5 py-0.5 text-muted-foreground font-mono">{d.license}</td>
-                            <td className="px-1.5 py-0.5">
+                            <td className="px-2 py-1 font-medium">{d.name}</td>
+                            <td className="px-2 py-1 font-mono text-muted-foreground">{d.license}</td>
+                            <td className="px-2 py-1">
                               <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-bold",
                                 busy ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
                               )}>{busy ? "On Trip" : "Available"}</span>
@@ -1268,17 +1268,17 @@ export default function Planner() {
 
               {/* Table */}
               <div className="overflow-auto flex-1" style={{ minHeight: 0 }}>
-                <table className="w-full text-xs min-w-[600px]">
+                <table className="w-full min-w-[600px]" style={{ fontSize: "11px" }}>
                   <thead className="bg-muted/40 sticky top-0 z-10">
                     <tr>
-                      <th className="px-2.5 py-2 border-b border-border/40 w-8">
+                      <th className="px-2 py-1 border-b border-border/30 w-7">
                         <Checkbox
                           checked={allCurrentSelected}
                           onCheckedChange={() => toggleAllStops(currentStops)}
                         />
                       </th>
                       {["Transaction No","Prep List","Priority","Client Code","Client","Route Code","Postal City","Qty","Weight",""].map((h) => (
-                        <th key={h} className="px-2.5 py-2 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
+                        <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1368,7 +1368,7 @@ export default function Planner() {
                 </div>
                 {/* Table */}
                 <div className="overflow-auto flex-1">
-                  <table className="w-full text-xs min-w-[480px]">
+                  <table className="w-full min-w-[480px]" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/30 sticky top-0 z-10">
                       <tr>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
