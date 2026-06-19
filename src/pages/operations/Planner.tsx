@@ -139,11 +139,11 @@ const dlvyColor = (s: Stop["dlvyStatus"]) =>
   s === "open" ? "text-emerald-700" : "text-amber-700";
 
 // ═══════════════════════════════════════════════════════
-// TOOLBAR BUTTON — icon-only with tooltip
+// TOOLBAR BUTTON
 // ═══════════════════════════════════════════════════════
 function ToolbarBtn({
-  icon: Icon, label, onClick, disabled, color = "text-muted-foreground",
-  bg = "hover:bg-muted", spin = false,
+  icon: Icon, label, onClick, disabled = false,
+  color = "text-muted-foreground", bg = "hover:bg-muted", spin = false,
 }: {
   icon: React.ElementType; label: string; onClick?: () => void;
   disabled?: boolean; color?: string; bg?: string; spin?: boolean;
@@ -880,11 +880,10 @@ export default function Planner() {
     allStops.filter((s) => draftStopIds.includes(s.id)),
     [allStops, draftStopIds]);
 
-  // Route codes for toolbar dropdown — derived from loaded stops
-  const routeCodes = useMemo(() =>
-    (Array.from(new Set(allStops.map(s => s.routeCode).filter(Boolean))) as string[]).sort(),
-    [allStops]
-  );
+  const routeCodes = useMemo(() => {
+    const codes = allStops.map(s => s.routeCode).filter(Boolean);
+    return Array.from(new Set(codes)).sort();
+  }, [allStops]);
 
   const filteredTrips = useMemo(() =>
     trips.filter((t) =>
@@ -1045,10 +1044,10 @@ export default function Planner() {
     <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
       {/* ── TOOLBAR ─ compact single row ─────────────── */}
-      <div className="flex items-center gap-1.5 px-3 py-1 bg-card border-b border-border/60 flex-shrink-0 flex-wrap">
+      <div className="flex items-center gap-2 px-3 py-1 bg-card border-b border-border/60 flex-shrink-0">
         {/* Site */}
         {sitesLoading
-          ? <div className="h-7 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" /> Loading…</div>
+          ? <div className="h-8 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading sites…</div>
           : <SiteSelect sites={sites} value={site} onChange={setSite} />
         }
         {/* Date */}
@@ -1058,8 +1057,7 @@ export default function Planner() {
             className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px]"
           />
         </div>
-
-        {/* Route Codes dropdown */}
+        {/* Route Codes */}
         <Select value={routeCode} onValueChange={setRouteCode}>
           <SelectTrigger className="h-7 w-[130px] text-xs">
             <SelectValue placeholder="Route Codes" />
@@ -1073,24 +1071,18 @@ export default function Planner() {
         </Select>
 
         {/* Refresh */}
-        <ToolbarBtn
-          icon={RefreshCw} label="Refresh" spin={loading}
-          disabled={loading || !site}
-          onClick={() => setRefreshKey((k) => k + 1)}
-          color="text-muted-foreground"
-        />
+        <ToolbarBtn icon={RefreshCw} label="Refresh" spin={loading}
+          disabled={loading || !site} color="text-muted-foreground"
+          onClick={() => setRefreshKey((k) => k + 1)} />
 
-        {/* Divider */}
         <div className="h-5 w-px bg-border/50 mx-0.5" />
 
-        {/* Action buttons */}
-        <ToolbarBtn icon={Wand2}      label="Auto Generate Route"  color="text-blue-600"   bg="hover:bg-blue-50"   onClick={() => toast({ title: "Auto Generate Route", description: "Not yet implemented" })} />
-        <ToolbarBtn icon={GitMerge}   label="Group Optimisation"   color="text-slate-600"  bg="hover:bg-slate-50"  onClick={() => toast({ title: "Group Optimisation",  description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Lock}       label="Group Lock"           color="text-emerald-600" bg="hover:bg-emerald-50" onClick={() => toast({ title: "Group Lock",           description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Unlock}     label="Group Unlock"         color="text-violet-600" bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",         description: "Not yet implemented" })} />
-        <ToolbarBtn icon={ShieldCheck} label="Group Validate"      color="text-amber-600"  bg="hover:bg-amber-50"  onClick={() => toast({ title: "Group Validate",       description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Trash2}     label="Group Delete Trips"   color="text-rose-600"   bg="hover:bg-rose-50"   onClick={() => toast({ title: "Group Delete Trips",   description: "Not yet implemented" })} />
-
+        <ToolbarBtn icon={Wand2}       label="Auto Generate Route" color="text-blue-600"    bg="hover:bg-blue-50"    onClick={() => toast({ title: "Auto Generate Route",  description: "Not yet implemented" })} />
+        <ToolbarBtn icon={GitMerge}    label="Group Optimisation"  color="text-slate-600"   bg="hover:bg-slate-50"   onClick={() => toast({ title: "Group Optimisation",   description: "Not yet implemented" })} />
+        <ToolbarBtn icon={Lock}        label="Group Lock"          color="text-emerald-600" bg="hover:bg-emerald-50" onClick={() => toast({ title: "Group Lock",            description: "Not yet implemented" })} />
+        <ToolbarBtn icon={Unlock}      label="Group Unlock"        color="text-violet-600"  bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",          description: "Not yet implemented" })} />
+        <ToolbarBtn icon={ShieldCheck} label="Group Validate"      color="text-amber-600"   bg="hover:bg-amber-50"   onClick={() => toast({ title: "Group Validate",        description: "Not yet implemented" })} />
+        <ToolbarBtn icon={Trash2}      label="Group Delete Trips"  color="text-rose-600"    bg="hover:bg-rose-50"    onClick={() => toast({ title: "Group Delete Trips",    description: "Not yet implemented" })} />
         {/* Status */}
         <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
           {loading
@@ -1519,9 +1511,8 @@ export default function Planner() {
             }
           />
           </div>
+          </div>
         </div>
-        </div>
-      </div>
       )}
     </div>
   );
