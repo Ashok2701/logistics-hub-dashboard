@@ -164,12 +164,12 @@ function SiteSelect({ sites, value, onChange }: { sites: RpSite[]; value: string
 // ═══════════════════════════════════════════════════════
 function KpiCard({ label, value, color, icon: Icon }: { label: string; value: number | string; color: string; icon: typeof Truck }) {
   return (
-    <div className={cn("rounded-md px-3 py-2 text-white flex items-center justify-between shadow-sm", color)}>
+    <div className={cn("rounded-lg px-3 py-2.5 text-white flex items-center justify-between shadow-sm", color)}>
       <div>
-        <p className="text-[9px] font-semibold uppercase tracking-wider text-white/70">{label}</p>
-        <p className="text-xl font-bold leading-none mt-0.5">{value}</p>
+        <p className="text-[9px] font-semibold uppercase tracking-wider text-white/70 leading-none">{label}</p>
+        <p className="text-2xl font-bold leading-none mt-1">{value}</p>
       </div>
-      <Icon className="w-5 h-5 text-white/40" />
+      <Icon className="w-5 h-5 text-white/35" />
     </div>
   );
 }
@@ -432,7 +432,7 @@ function ActiveTourPanel({
       {/* ══════════════════════════════════════════
           HEADER BAR
       ══════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f]">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f]">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center flex-shrink-0">
             <Play className="w-3.5 h-3.5 text-primary" />
@@ -1173,19 +1173,22 @@ export default function Planner() {
           }
         </div>
       ) : (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        /* Scrollable content — toolbar stays fixed, everything scrolls */
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col gap-2 px-3 py-2" style={{ minHeight: "100%", fontFamily: "Inter, system-ui, sans-serif" }}>
+
           {/* ── KPI STRIP ──────────────────────────────── */}
-          <div className="grid grid-cols-6 gap-1.5 px-3 pt-1.5 pb-1 flex-shrink-0">
-            <KpiCard label="Vehicles"          value={kpis.vehicles}       icon={Truck}           color="bg-gradient-to-br from-slate-500 to-slate-700" />
-            <KpiCard label="Trips"             value={kpis.trips}          icon={RouteIcon}       color="bg-gradient-to-br from-indigo-500 to-indigo-700" />
-            <KpiCard label="Assigned Docs"     value={kpis.assignedDocs}   icon={CheckCheck}      color="bg-gradient-to-br from-emerald-500 to-emerald-700" />
-            <KpiCard label="Non-Assigned Docs" value={kpis.unassignedDocs} icon={AlertCircle}     color="bg-gradient-to-br from-amber-500 to-amber-600" />
+          <div className="grid grid-cols-6 gap-2 flex-shrink-0">
+            <KpiCard label="Vehicles"          value={kpis.vehicles}         icon={Truck}           color="bg-gradient-to-br from-slate-500 to-slate-700" />
+            <KpiCard label="Trips"             value={kpis.trips}            icon={RouteIcon}       color="bg-gradient-to-br from-indigo-500 to-indigo-700" />
+            <KpiCard label="Assigned Docs"     value={kpis.assignedDocs}     icon={CheckCheck}      color="bg-gradient-to-br from-emerald-500 to-emerald-700" />
+            <KpiCard label="Non-Assigned Docs" value={kpis.unassignedDocs}   icon={AlertCircle}     color="bg-gradient-to-br from-amber-500 to-amber-600" />
             <KpiCard label="Delivery Qty"      value={kpis.totalDeliveryQty} icon={ArrowDownToLine} color="bg-gradient-to-br from-rose-500 to-rose-600" />
-            <KpiCard label="Pickup Qty"        value={kpis.totalPickupQty} icon={ArrowUpFromLine}  color="bg-gradient-to-br from-sky-500 to-sky-600" />
+            <KpiCard label="Pickup Qty"        value={kpis.totalPickupQty}   icon={ArrowUpFromLine} color="bg-gradient-to-br from-sky-500 to-sky-600" />
           </div>
 
-          {/* ── FLEET | DOCUMENTS — fixed 40% height ─── */}
-          <div className="grid grid-cols-2 gap-1.5 px-3 pb-1" style={{ height: "35vh", minHeight: 220 }}>
+          {/* ── FLEET | DOCUMENTS ── */}
+          <div className="grid grid-cols-2 gap-2" style={{ height: "38vh", minHeight: 240 }}>
 
             {/* ════════════════════════════════════════
                 LEFT 50% — FLEET (Vehicles + Drivers tabbed)
@@ -1199,7 +1202,7 @@ export default function Planner() {
                   { key: "drivers",  label: "Drivers",  icon: Users,  count: drivers.length,  active: "bg-indigo-600 text-white" },
                 ] as const).map(({ key, label, icon: Icon, count, active }) => (
                   <button key={key} onClick={() => setFleetTab(key)}
-                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all border-b-2",
+                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold transition-all border-b-2",
                       fleetTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
                     )}
                   >
@@ -1213,14 +1216,14 @@ export default function Planner() {
               </div>
 
               {/* Search bar */}
-              <div className="px-3 py-2 border-b border-border/40">
+              <div className="px-2 py-1.5 border-b border-border/40">
                 <div className="relative">
                   <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={fleetTab === "vehicles" ? vehSearch : drvSearch}
                     onChange={(e) => fleetTab === "vehicles" ? setVehSearch(e.target.value) : setDrvSearch(e.target.value)}
                     placeholder={`Search ${fleetTab}…`}
-                    className="h-7 pl-7 text-xs"
+                    className="h-6 pl-7 text-[11px]"
                   />
                 </div>
               </div>
@@ -1250,7 +1253,7 @@ export default function Planner() {
                                 : "hover:bg-muted/50"
                             )}
                           >
-                            <td className={cn("px-2.5 py-2 font-mono font-bold text-[12px]", sel ? "text-emerald-700" : "text-primary")}>
+                            <td className={cn("px-2 py-1.5 font-mono font-bold text-[11px]", sel ? "text-emerald-700" : "text-primary")}>
                               {v.code}
                               {sel && <span className="ml-1.5 text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded font-semibold">Selected</span>}
                             </td>
@@ -1281,7 +1284,7 @@ export default function Planner() {
                         onDragStart={(e) => onDriverDragStart(e, d)}
                         onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
                         className={cn(
-                          "rounded-lg border px-3 py-2 flex items-center gap-3 transition-colors select-none",
+                          "rounded-md border px-2 py-1.5 flex items-center gap-2 transition-colors select-none",
                           sel
                             ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 ring-1 ring-indigo-300"
                             : busy
@@ -1322,7 +1325,7 @@ export default function Planner() {
                   { key: "pickups", label: "Pickups",    icon: ArrowUpFromLine, count: pickups.length, active: "bg-sky-600 text-white" },
                 ] as const).map(({ key, label, icon: Icon, count, active }) => (
                   <button key={key} onClick={() => setStopTypeTab(key)}
-                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all border-b-2",
+                    className={cn("flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold transition-all border-b-2",
                       stopTypeTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
                     )}
                   >
@@ -1336,18 +1339,18 @@ export default function Planner() {
               </div>
 
               {/* Search + action bar */}
-              <div className="px-3 py-2 border-b border-border/40 flex items-center gap-2">
+              <div className="px-2 py-1.5 border-b border-border/40 flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={currentSearch}
                     onChange={(e) => setCurrentSearch(e.target.value)}
                     placeholder={`Search ${stopTypeTab === "drops" ? "deliveries" : "pickups"}…`}
-                    className="h-7 pl-7 text-xs"
+                    className="h-6 pl-7 text-[11px]"
                   />
                 </div>
                 {selectedStopIds.size > 0 ? (
-                  <Button size="sm" className="h-7 text-xs gap-1 flex-shrink-0" onClick={addSelectedStopsToDraft}>
+                  <Button size="sm" className="h-6 text-[11px] gap-1 flex-shrink-0" onClick={addSelectedStopsToDraft}>
                     <CheckCheck className="w-3 h-3" />
                     Add {selectedStopIds.size} to Trip
                   </Button>
@@ -1401,7 +1404,8 @@ export default function Planner() {
           </div>
 
           {/* ── ACTIVE TOUR PANEL ────────────────────────────── */}
-          <div className="px-3 pb-1 flex-shrink-0" style={{ height: "22vh", minHeight: 140, overflowY: "auto" }}>
+          {/* ── ACTIVE TOUR ── */}
+          <div>
           <ActiveTourPanel
             vehicle={draftVehicle}
             driver={draftDriver}
@@ -1423,8 +1427,10 @@ export default function Planner() {
             onConfirm={confirmTrip}
           />
           </div>
+
+          {/* ── TRIPS & MAP — scroll to see ── */}
+          <div style={{ minHeight: "40vh" }}>
           {/* ── BOTTOM: Resizable Trips | Map split ──────────── */}
-          <div className="px-3 pb-1 flex-shrink-0" style={{ height: "28vh", minHeight: 180 }}>
           <ResizableSplit
             defaultLeftPct={35}
             minPct={20}
@@ -1550,6 +1556,7 @@ export default function Planner() {
               </div>
             }
           />
+          </div>
           </div>
         </div>
       )}
