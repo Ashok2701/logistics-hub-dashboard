@@ -1182,20 +1182,25 @@ export default function Planner() {
             <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
 
                 {/* Fleet tabs */}
-              <div className="flex border-b border-border/60 flex-shrink-0">
+              {/* Pill-style tabs */}
+              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1.5 bg-muted/20 border-b border-border/40 flex-shrink-0">
                 {([
-                  { key: "vehicles", label: "Vehicles", icon: Truck,  count: vehicles.length, active: "bg-slate-700 text-white" },
-                  { key: "drivers",  label: "Drivers",  icon: Users,  count: drivers.length,  active: "bg-indigo-600 text-white" },
-                ] as const).map(({ key, label, icon: Icon, count, active }) => (
+                  { key: "vehicles", label: "Vehicles", icon: Truck, count: vehicles.length,
+                    sel: "bg-slate-700 text-white shadow-sm", unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-slate-400 hover:text-slate-700" },
+                  { key: "drivers",  label: "Drivers",  icon: Users, count: drivers.length,
+                    sel: "bg-indigo-600 text-white shadow-sm", unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-indigo-400 hover:text-indigo-700" },
+                ] as const).map(({ key, label, icon: Icon, count, sel, unsel }) => (
                   <button key={key} onClick={() => setFleetTab(key)}
-                    className={cn("flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold transition-all border-b-2",
-                      fleetTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold transition-all",
+                      fleetTab === key ? sel : unsel
                     )}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-3 h-3" />
                     {label}
-                    <span className={cn("text-[11px] rounded-full px-1.5 py-0.5 font-bold",
-                      fleetTab === key ? "bg-white/25 text-white" : "bg-muted text-muted-foreground"
+                    <span className={cn(
+                      "text-[9px] font-bold rounded-full px-1.5 py-0.5 ml-0.5",
+                      fleetTab === key ? "bg-white/25 text-white" : "bg-muted-foreground/15 text-muted-foreground"
                     )}>{count}</span>
                   </button>
                 ))}
@@ -1304,21 +1309,27 @@ export default function Planner() {
                 ════════════════════════════════════════ */}
             <div className="bg-card rounded-lg border border-border/60 shadow-sm overflow-hidden flex flex-col">
 
-              {/* Docs tabs */}
-              <div className="flex border-b border-border/60 flex-shrink-0">
+              {/* Pill-style tabs — right side */}
+              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1.5 bg-muted/20 border-b border-border/40 flex-shrink-0">
                 {([
-                  { key: "drops",   label: "Deliveries", icon: ArrowDownToLine, count: drops.length,   active: "bg-rose-600 text-white" },
-                  { key: "pickups", label: "Pickups",    icon: ArrowUpFromLine, count: pickups.length, active: "bg-sky-600 text-white" },
-                ] as const).map(({ key, label, icon: Icon, count, active }) => (
+                  { key: "drops",   label: "Deliveries", icon: ArrowDownToLine, count: drops.length,
+                    sel: "bg-rose-600 text-white shadow-sm",
+                    unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-rose-400 hover:text-rose-700" },
+                  { key: "pickups", label: "Pickups",    icon: ArrowUpFromLine, count: pickups.length,
+                    sel: "bg-sky-600 text-white shadow-sm",
+                    unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-sky-400 hover:text-sky-700" },
+                ] as const).map(({ key, label, icon: Icon, count, sel, unsel }) => (
                   <button key={key} onClick={() => setStopTypeTab(key)}
-                    className={cn("flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold transition-all border-b-2",
-                      stopTypeTab === key ? `${active} border-transparent` : "text-muted-foreground bg-muted/10 hover:bg-muted/30 border-transparent"
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold transition-all",
+                      stopTypeTab === key ? sel : unsel
                     )}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-3 h-3" />
                     {label}
-                    <span className={cn("text-[11px] rounded-full px-1.5 py-0.5 font-bold",
-                      stopTypeTab === key ? "bg-white/25 text-white" : "bg-muted text-muted-foreground"
+                    <span className={cn(
+                      "text-[9px] font-bold rounded-full px-1.5 py-0.5 ml-0.5",
+                      stopTypeTab === key ? "bg-white/25 text-white" : "bg-muted-foreground/15 text-muted-foreground"
                     )}>{count}</span>
                   </button>
                 ))}
