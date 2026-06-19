@@ -1036,11 +1036,11 @@ export default function Planner() {
     const stopIdsRaw  = e.dataTransfer.getData("text/stop-ids");
 
     if (vehicleCode) {
-      const v = VEHICLES.find((x) => x.code === vehicleCode);
+      const v = apiVehicles.find((x) => x.code === vehicleCode);
       if (v) setDraftVehicle(v);
     }
     if (driverId) {
-      const d = DRIVERS.find((x) => x.id === driverId);
+      const d = apiDrivers.find((x) => x.id === driverId);
       if (d) {
         if (d.status !== "Available") { toast({ title: "Driver unavailable", description: `${d.name} is on a trip.` }); return; }
         setDraftDriver(d);
@@ -1401,7 +1401,7 @@ export default function Planner() {
           </div>
 
           {/* ── ACTIVE TOUR PANEL ────────────────────────────── */}
-          </div>
+          <div className="px-3 pb-1 flex-shrink-0" style={{ height: "22vh", minHeight: 140, overflowY: "auto" }}>
           <ActiveTourPanel
             vehicle={draftVehicle}
             driver={draftDriver}
@@ -1413,7 +1413,7 @@ export default function Planner() {
             onDriverDrop={(e) => {
               e.stopPropagation();
               const id = e.dataTransfer.getData("text/driver-id");
-              const d = DRIVERS.find((x) => x.id === id);
+              const d = apiDrivers.find((x) => x.id === id);
               if (d) setDraftDriver(d);
             }}
             onClearVehicle={() => setDraftVehicle(null)}
@@ -1422,6 +1422,7 @@ export default function Planner() {
             onClear={clearDraft}
             onConfirm={confirmTrip}
           />
+          </div>
           {/* ── BOTTOM: Resizable Trips | Map split ──────────── */}
           <div className="px-3 pb-1 flex-shrink-0" style={{ height: "28vh", minHeight: 180 }}>
           <ResizableSplit
