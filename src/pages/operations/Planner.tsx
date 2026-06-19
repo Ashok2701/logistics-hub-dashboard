@@ -460,7 +460,7 @@ function ActiveTourPanel({
       </div>
 
       {/* ── MAIN ROW: 70% chips | 30% timeline ─────────── */}
-      <div className="flex items-stretch bg-card" style={{ minHeight: 48 }}>
+      <div className="flex items-stretch bg-card" style={{ minHeight: 64 }}>
 
         {/* LEFT 70% — chips in one row */}
         <div className="flex items-center gap-1 px-2 py-1.5 flex-wrap" style={{ width: "70%" }}>
@@ -535,43 +535,73 @@ function ActiveTourPanel({
           )}
         </div>
 
-        {/* RIGHT 30% — timeline ─────────────────────────── */}
+        {/* RIGHT 30% — road timeline ──────────────────────── */}
         <div
-          className="flex items-center border-l border-border/30 bg-muted/10 px-2 overflow-hidden"
+          className="flex items-center border-l border-border/30 bg-muted/10 px-3 overflow-hidden"
           style={{ width: "30%" }}
         >
           {stops.length === 0 ? (
-            <span className="text-[9px] text-muted-foreground/40 italic w-full text-center">Timeline</span>
+            <div className="flex items-center w-full gap-1 opacity-30">
+              <div className="w-2 h-2 rounded-full border-2 border-border bg-card flex-shrink-0" />
+              <div className="flex-1 h-px border-t-2 border-dashed border-border/50" />
+              <div className="w-2 h-2 rounded-full border-2 border-border bg-card flex-shrink-0" />
+            </div>
           ) : (
-            <div className="flex items-center w-full overflow-hidden">
-              {/* connector line */}
-              <div className="absolute h-px bg-border/40" style={{ width: "28%" }} />
-              <div className="flex items-center justify-between w-full gap-0.5 relative z-10">
+            <div className="flex items-center w-full overflow-x-auto py-1" style={{ scrollbarWidth: "none" }}>
+              <div className="flex items-center min-w-full">
                 {stops.map((s, i) => {
                   const isSelected = selectedStop === i;
+                  const isLast = i === stops.length - 1;
+                  const dotSize = stops.length <= 5 ? "w-7 h-7 text-[9px]"
+                                : stops.length <= 10 ? "w-6 h-6 text-[8px]"
+                                : "w-5 h-5 text-[7px]";
                   return (
-                    <button
-                      key={s.id}
-                      onClick={() => setSelectedStop(isSelected ? null : i)}
-                      title={`${s.txn} · ${s.client} · ${times[i]}`}
-                      className={cn(
-                        "flex flex-col items-center flex-shrink-0 transition-all",
-                        isSelected ? "scale-110" : "hover:scale-105"
-                      )}
-                    >
-                      <div className={cn(
-                        "rounded-full border-2 flex items-center justify-center font-bold text-[8px] transition-all",
-                        stops.length <= 6 ? "w-6 h-6" : stops.length <= 12 ? "w-5 h-5" : "w-4 h-4",
-                        isSelected
-                          ? s.type === "DROP" ? "bg-rose-600 border-rose-600 text-white" : "bg-sky-600 border-sky-600 text-white"
-                          : s.type === "DROP" ? "bg-rose-100 border-rose-400 text-rose-700" : "bg-sky-100 border-sky-400 text-sky-700"
-                      )}>
-                        {i + 1}
+                    <div key={s.id} className="flex items-center flex-shrink-0">
+                      {/* Stop node */}
+                      <div className="flex flex-col items-center">
+                        {/* Time above */}
+                        {stops.length <= 8 && (
+                          <span className="text-[7px] text-muted-foreground leading-none mb-0.5 font-mono">
+                            {times[i]}
+                          </span>
+                        )}
+                        {/* Circle */}
+                        <button
+                          onClick={() => setSelectedStop(isSelected ? null : i)}
+                          title={`${s.txn} · ${s.client}`}
+                          className={cn(
+                            "rounded-full border-2 flex items-center justify-center font-bold transition-all flex-shrink-0",
+                            dotSize,
+                            isSelected
+                              ? s.type === "DROP"
+                                ? "bg-rose-600 border-rose-600 text-white scale-110 shadow-md"
+                                : "bg-sky-600 border-sky-600 text-white scale-110 shadow-md"
+                              : s.type === "DROP"
+                                ? "bg-white border-rose-400 text-rose-600 hover:bg-rose-50 hover:scale-105"
+                                : "bg-white border-sky-400 text-sky-600 hover:bg-sky-50 hover:scale-105"
+                          )}
+                        >
+                          {i + 1}
+                        </button>
+                        {/* Stop label below */}
+                        {stops.length <= 6 && (
+                          <span className="text-[7px] text-muted-foreground leading-none mt-0.5 max-w-[40px] truncate text-center">
+                            {s.client.split(" ")[0]}
+                          </span>
+                        )}
                       </div>
-                      {stops.length <= 8 && (
-                        <span className="text-[7px] text-muted-foreground mt-0.5 leading-none">{times[i]}</span>
+                      {/* Road connector to next stop */}
+                      {!isLast && (
+                        <div className="flex items-center flex-shrink-0 mx-0.5"
+                          style={{ width: stops.length <= 4 ? 32 : stops.length <= 8 ? 20 : 12 }}>
+                          <div className="w-full flex items-center gap-px">
+                            <div className="flex-1 h-0.5 bg-gradient-to-r from-border to-border/60" />
+                            <div className="w-1 h-1 rounded-full bg-border/60 flex-shrink-0" />
+                            <div className="flex-1 h-0.5 bg-gradient-to-r from-border/60 to-border" />
+                          </div>
+                        </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -687,33 +717,9 @@ function ResizableSplit({
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
-  const presets = [
-    { label: "30 / 70", value: 30 },
-    { label: "50 / 50", value: 50 },
-    { label: "70 / 30", value: 70 },
-  ];
 
   return (
     <div>
-      {/* Preset quick-buttons */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Split:</span>
-        {presets.map((p) => (
-          <button key={p.value} onClick={() => setLeftPct(p.value)}
-            className={cn(
-              "text-[11px] px-2 py-0.5 rounded border transition-colors font-mono",
-              Math.round(leftPct) === p.value
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border/60 text-muted-foreground hover:border-primary/60 hover:text-foreground"
-            )}
-          >{p.label}</button>
-        ))}
-        <span className="text-[11px] text-muted-foreground ml-2 font-mono">
-          {Math.round(leftPct)}% / {Math.round(100 - leftPct)}%
-        </span>
-        <span className="text-[11px] text-muted-foreground ml-auto hidden sm:block">drag the divider to resize</span>
-      </div>
-
       {/* Split panels */}
       <div ref={containerRef} className="flex gap-0 relative" style={{ minHeight: 420 }}>
         {/* Left panel */}
