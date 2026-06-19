@@ -773,6 +773,7 @@ export default function Planner() {
   const [loading, setLoading]   = useState(false);
   const [loaded, setLoaded]     = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [routeCode, setRouteCode]   = useState("");
 
   // ── API data ──────────────────────────────────────────
   const [apiVehicles, setApiVehicles] = useState<Vehicle[]>([]);
