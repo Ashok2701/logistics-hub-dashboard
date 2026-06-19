@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Truck, Users, Calendar as CalIcon, Building2, Search, MapPin, Route as RouteIcon,
-  PackageCheck, ArrowDownToLine, ArrowUpFromLine, CheckCheck, X, Plus,
+  PackageCheck, ArrowDownToLine, ArrowUpFromLine, CheckCheck, X, Plus, RefreshCw,
   Map as MapIcon, List, GripVertical, Loader2, Trash2, AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -99,6 +99,9 @@ export default function RoutePlanner() {
   const [selectedSite, setSelectedSite] = useState<string>("");
   const [date, setDate]                 = useState(() => new Date().toISOString().slice(0, 10));
 
+  // Refresh trigger — increment to force re-fetch with same site+date
+  const [refreshKey, setRefreshKey] = useState(0);
+
   // Planner data
   const [loading, setLoading]   = useState(false);
   const [loaded, setLoaded]     = useState(false);
@@ -162,7 +165,7 @@ export default function RoutePlanner() {
         toast({ title: "Failed to load data", description: e.message, variant: "destructive" });
       })
       .finally(() => setLoading(false));
-  }, [selectedSite, date]);
+  }, [selectedSite, date, refreshKey]);
 
   // ── Filtered lists ───────────────────────────────────────
   const usedDocNums = useMemo(
@@ -298,6 +301,17 @@ export default function RoutePlanner() {
         </div>
 
 
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-1.5"
+          disabled={loading || !selectedSite}
+          onClick={() => setRefreshKey((k) => k + 1)}
+        >
+          <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
+          Refresh
+        </Button>
 
         <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
           {loading ? (
