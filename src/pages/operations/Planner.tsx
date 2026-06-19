@@ -882,7 +882,7 @@ export default function Planner() {
 
   // Route codes for toolbar dropdown — derived from loaded stops
   const routeCodes = useMemo(() =>
-    [...new Set(allStops.map(s => s.routeCode).filter((c): c is string => !!c))].sort(),
+    [...new Set(allStops.map(s => s.routeCode).filter(c => !!c))].sort() as string[],
     [allStops]
   );
 
