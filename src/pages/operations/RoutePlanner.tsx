@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Truck, Users, Calendar as CalIcon, Building2, Search, MapPin, Route as RouteIcon,
-  PackageCheck, ArrowDownToLine, ArrowUpFromLine, CheckCheck, X, Plus, Play,
+  PackageCheck, ArrowDownToLine, ArrowUpFromLine, CheckCheck, X, Plus,
   Map as MapIcon, List, GripVertical, Loader2, Trash2, AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -125,7 +125,7 @@ export default function RoutePlanner() {
 
   const [mapView, setMapView] = useState<"map" | "list">("map");
 
-  // ── Load sites on mount ──────────────────────────────────
+  // ── Load sites on mount, auto-select first ───────────────
   useEffect(() => {
     setSitesLoading(true);
     fetchTmsSites()
@@ -137,38 +137,32 @@ export default function RoutePlanner() {
       .finally(() => setSitesLoading(false));
   }, []);
 
-  // ── Load planner data ────────────────────────────────────
-  async function handleLoad() {
-    if (!selectedSite) {
-      toast({ title: "Select a site", description: "Pick a site before loading data." });
-      return;
-    }
+  // ── Auto-load planner data on site or date change ─────────
+  // Fires whenever selectedSite or date changes (including initial site set)
+  useEffect(() => {
+    if (!selectedSite || !date) return;
+
     setLoading(true);
     setError(null);
     setLoaded(false);
-    // Reset state
     setVehicles([]); setDrivers([]); setDrops([]); setPickups([]);
     setDraftVehicle(null); setDraftDriver(null); setDraftStopNums([]);
     setTrips([]); setSelectedTripId(null);
 
-    try {
-      const data = await loadPlannerData(selectedSite, date);
-      setVehicles(data.vehicles ?? []);
-      setDrivers(data.drivers  ?? []);
-      setDrops(data.drops      ?? []);
-      setPickups(data.pickups  ?? []);
-      setLoaded(true);
-      toast({
-        title: "Data loaded",
-        description: `${data.vehicleCount} vehicles · ${data.driverCount} drivers · ${data.dropCount} drops · ${data.pickupCount} pickups`,
-      });
-    } catch (e: any) {
-      setError(e.message);
-      toast({ title: "Failed to load data", description: e.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  }
+    loadPlannerData(selectedSite, date)
+      .then((data) => {
+        setVehicles(data.vehicles ?? []);
+        setDrivers(data.drivers  ?? []);
+        setDrops(data.drops      ?? []);
+        setPickups(data.pickups  ?? []);
+        setLoaded(true);
+      })
+      .catch((e: any) => {
+        setError(e.message);
+        toast({ title: "Failed to load data", description: e.message, variant: "destructive" });
+      })
+      .finally(() => setLoading(false));
+  }, [selectedSite, date]);
 
   // ── Filtered lists ───────────────────────────────────────
   const usedDocNums = useMemo(
@@ -303,30 +297,45 @@ export default function RoutePlanner() {
           </div>
         </div>
 
-        <Button onClick={handleLoad} disabled={loading || sitesLoading} className="h-9">
-          {loading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Play className="w-4 h-4 mr-1.5" />}
-          {loaded ? "Reload" : "Load Data"}
-        </Button>
 
-        {loaded && (
-          <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-            <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="font-mono text-foreground">{selectedSite}</span> ·{" "}
-            <span className="font-mono text-foreground">{date}</span>
-          </div>
-        )}
-        {error && (
-          <div className="ml-auto flex items-center gap-2 text-xs text-destructive">
-            <AlertCircle className="w-3.5 h-3.5" /> {error}
-          </div>
-        )}
+
+        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          {loading ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+            <span>Loading data…</span></>
+          ) : loaded ? (
+            <><CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="font-mono text-foreground">{selectedSite}</span>
+            <span>·</span>
+            <span className="font-mono text-foreground">{date}</span></>
+          ) : error ? (
+            <><AlertCircle className="w-3.5 h-3.5 text-destructive" />
+            <span className="text-destructive">{error}</span></>
+          ) : null}
+        </div>
       </motion.div>
 
       {!loaded ? (
         <div className="bg-card rounded-xl border border-dashed border-border p-16 text-center text-muted-foreground">
-          <RouteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
-          <p className="font-medium text-foreground">Select a site and date, then click <span className="text-primary">Load Data</span></p>
-          <p className="text-sm mt-1">Vehicles, drivers, drops and pickups will load from the server.</p>
+          {loading ? (
+            <>
+              <Loader2 className="w-10 h-10 mx-auto mb-3 text-primary animate-spin" />
+              <p className="font-medium text-foreground">Loading planner data…</p>
+              <p className="text-sm mt-1 font-mono text-primary">{selectedSite} · {date}</p>
+            </>
+          ) : error ? (
+            <>
+              <AlertCircle className="w-10 h-10 mx-auto mb-3 text-destructive" />
+              <p className="font-medium text-foreground">Failed to load data</p>
+              <p className="text-sm mt-1 text-destructive">{error}</p>
+            </>
+          ) : (
+            <>
+              <RouteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+              <p className="font-medium text-foreground">Select a site to load planner data</p>
+              <p className="text-sm mt-1">Vehicles, drivers, drops and pickups will load automatically.</p>
+            </>
+          )}
         </div>
       ) : (
         <>
