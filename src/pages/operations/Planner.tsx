@@ -219,7 +219,7 @@ function StopRow({
       onClick={onToggle}
       className={cn(
         "border-b border-border/20 cursor-pointer transition-colors select-none group",
-        selected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-blue-50/40 dark:hover:bg-blue-950/20",
+        selected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-[#eff6ff]",
         dragging && "opacity-50"
       )}
     >
@@ -1136,26 +1136,27 @@ export default function Planner() {
                 ════════════════════════════════════════ */}
             <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col">
 
-                {/* Fleet tabs */}
-              {/* Pill-style tabs */}
-              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1.5 bg-muted/20 border-b border-border/40 flex-shrink-0">
+                {/* Solid header bar — Fleet */}
+              <div className="bg-[#1e40af] px-2 py-1 flex items-center gap-1.5 flex-shrink-0">
                 {([
-                  { key: "vehicles", label: "Vehicles", icon: Truck, count: vehicles.length,
-                    sel: "bg-slate-700 text-white shadow-sm", unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-slate-400 hover:text-slate-700" },
-                  { key: "drivers",  label: "Drivers",  icon: Users, count: drivers.length,
-                    sel: "bg-indigo-600 text-white shadow-sm", unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-indigo-400 hover:text-indigo-700" },
-                ] as const).map(({ key, label, icon: Icon, count, sel, unsel }) => (
+                  { key: "vehicles", label: "Vehicles", icon: Truck,  count: vehicles.length },
+                  { key: "drivers",  label: "Drivers",  icon: Users,  count: drivers.length  },
+                ] as const).map(({ key, label, icon: Icon, count }) => (
                   <button key={key} onClick={() => setFleetTab(key)}
                     className={cn(
-                      "flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold transition-all",
-                      fleetTab === key ? sel : unsel
+                      "flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold transition-all",
+                      fleetTab === key
+                        ? "bg-white text-[#1e40af]"
+                        : "text-white/50 hover:text-white/80"
                     )}
                   >
                     <Icon className="w-3 h-3" />
                     {label}
                     <span className={cn(
-                      "text-[9px] font-bold rounded-full px-1.5 py-0.5 ml-0.5",
-                      fleetTab === key ? "bg-white/25 text-white" : "bg-muted-foreground/15 text-muted-foreground"
+                      "text-[9px] font-bold rounded-full px-1.5 py-0.5",
+                      fleetTab === key
+                        ? "bg-[#dbeafe] text-[#1e3a8a]"
+                        : "bg-white/10 text-white/50"
                     )}>{count}</span>
                   </button>
                 ))}
@@ -1181,7 +1182,7 @@ export default function Planner() {
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
                         {["Vehicle Code","Vehicle No","Category","Depart Site","Start"].map((h) => (
-                          <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
+                          <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1225,7 +1226,7 @@ export default function Planner() {
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
                         {["Driver Code","Driver Name","License","Status"].map((h) => (
-                          <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
+                          <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1273,30 +1274,31 @@ export default function Planner() {
                 ════════════════════════════════════════ */}
             <div className="bg-card rounded-lg border border-border/60 shadow-sm overflow-hidden flex flex-col">
 
-              {/* Pill-style tabs — right side */}
-              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1.5 bg-muted/20 border-b border-border/40 flex-shrink-0">
+              {/* Solid header bar — Documents */}
+              <div className="bg-[#1e40af] px-2 py-1 flex items-center gap-1.5 flex-shrink-0">
                 {([
-                  { key: "drops",   label: "Deliveries", icon: ArrowDownToLine, count: drops.length,
-                    sel: "bg-rose-600 text-white shadow-sm",
-                    unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-rose-400 hover:text-rose-700" },
-                  { key: "pickups", label: "Pickups",    icon: ArrowUpFromLine, count: pickups.length,
-                    sel: "bg-sky-600 text-white shadow-sm",
-                    unsel: "bg-white dark:bg-muted text-muted-foreground border border-border/60 hover:border-sky-400 hover:text-sky-700" },
-                ] as const).map(({ key, label, icon: Icon, count, sel, unsel }) => (
+                  { key: "drops",   label: "Deliveries", icon: ArrowDownToLine, count: drops.length   },
+                  { key: "pickups", label: "Pickups",    icon: ArrowUpFromLine, count: pickups.length },
+                ] as const).map(({ key, label, icon: Icon, count }) => (
                   <button key={key} onClick={() => setStopTypeTab(key)}
                     className={cn(
-                      "flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold transition-all",
-                      stopTypeTab === key ? sel : unsel
+                      "flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold transition-all",
+                      stopTypeTab === key
+                        ? "bg-white text-[#1e40af]"
+                        : "text-white/50 hover:text-white/80"
                     )}
                   >
                     <Icon className="w-3 h-3" />
                     {label}
                     <span className={cn(
-                      "text-[9px] font-bold rounded-full px-1.5 py-0.5 ml-0.5",
-                      stopTypeTab === key ? "bg-white/25 text-white" : "bg-muted-foreground/15 text-muted-foreground"
+                      "text-[9px] font-bold rounded-full px-1.5 py-0.5",
+                      stopTypeTab === key
+                        ? "bg-[#dbeafe] text-[#1e3a8a]"
+                        : "bg-white/10 text-white/50"
                     )}>{count}</span>
                   </button>
                 ))}
+                <span className="ml-auto text-[10px] text-white/40 hidden sm:block">drag or select + Add</span>
               </div>
 
               {/* Search + action bar */}
@@ -1316,7 +1318,6 @@ export default function Planner() {
                     Add {selectedStopIds.size} to Trip
                   </Button>
                 ) : (
-                  <span className="text-[11px] text-muted-foreground flex-shrink-0 hidden sm:block">drag or select + Add</span>
                 )}
               </div>
 
@@ -1325,14 +1326,14 @@ export default function Planner() {
                 <table className="w-full min-w-[600px]" style={{ fontSize: "11px" }}>
                   <thead className="bg-muted/40 sticky top-0 z-10">
                     <tr>
-                      <th className="px-2 py-1 border-b border-border/30 w-7">
+                      <th className="px-2 py-1 border-b w-7" style={{ background:"#eff6ff", borderColor:"#bfdbfe" }}>
                         <Checkbox
                           checked={allCurrentSelected}
                           onCheckedChange={() => toggleAllStops(currentStops)}
                         />
                       </th>
                       {["Transaction No","Prep List","Priority","Client Code","Client","Route Code","Postal City","Qty","Weight",""].map((h) => (
-                        <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
+                        <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
