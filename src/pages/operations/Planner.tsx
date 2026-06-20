@@ -1116,10 +1116,10 @@ export default function Planner() {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col gap-1.5 px-2 py-1.5" style={{ minHeight: "100%", fontFamily: "Inter, system-ui, sans-serif" }}>
+          <div className="flex flex-col gap-0 px-2 pt-2 pb-1.5" style={{ minHeight: "100%", fontFamily: "Inter, system-ui, sans-serif" }}>
 
           {/* ── KPI STRIP ──────────────────────────────── */}
-          <div className="grid grid-cols-6 gap-1.5 flex-shrink-0">
+          <div className="grid grid-cols-6 gap-1.5 flex-shrink-0 mb-2.5">
             <KpiCard label="Vehicles"          value={kpis.vehicles}         icon={Truck}           color="bg-gradient-to-br from-slate-500 to-slate-700" />
             <KpiCard label="Trips"             value={kpis.trips}            icon={RouteIcon}       color="bg-gradient-to-br from-indigo-500 to-indigo-700" />
             <KpiCard label="Assigned Docs"     value={kpis.assignedDocs}     icon={CheckCheck}      color="bg-gradient-to-br from-emerald-500 to-emerald-700" />
@@ -1129,7 +1129,7 @@ export default function Planner() {
           </div>
 
           {/* ── FLEET | DOCUMENTS ── */}
-          <div className="grid grid-cols-2 gap-2" style={{ height: "40vh", minHeight: 250 }}>
+          <div className="grid grid-cols-2 gap-2 mb-2.5" style={{ height: "40vh", minHeight: 250 }}>
 
             {/* ════════════════════════════════════════
                 LEFT 50% — FLEET (Vehicles + Drivers tabbed)
