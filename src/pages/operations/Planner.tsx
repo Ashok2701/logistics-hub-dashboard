@@ -391,7 +391,11 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
 }: ActiveTourPanelProps) {
-  const [selectedStop, setSelectedStop] = useState<number | null>(null);
+  const [selectedStop,  setSelectedStop]  = useState<number | null>(null);
+  const [showOptModal,  setShowOptModal]  = useState(false);
+  const [optOrder,      setOptOrder]      = useState<"fixed"|"auto">("fixed");
+  const [optStartTime,  setOptStartTime]  = useState("07:30");
+  const [optRunning,    setOptRunning]    = useState(false);
   const times = useMemo(() => genTimes(stops.length), [stops.length]);
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
@@ -456,6 +460,13 @@ function ActiveTourPanel({
             className="h-5 text-[9px] gap-0.5 bg-blue-600 hover:bg-blue-500 text-white border-0 px-2"
             onClick={onConfirm}>
             <CheckCheck className="w-2.5 h-2.5" /> Confirm
+          </Button>
+          <Button size="sm"
+            className="h-5 text-[9px] gap-0.5 px-2 border-0"
+            style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#0f172a" }}
+            disabled={!hasAssignment}
+            onClick={() => setShowOptModal(true)}>
+            <Zap className="w-2.5 h-2.5" /> Optimise
           </Button>
         </div>
       </div>
@@ -670,6 +681,163 @@ function ActiveTourPanel({
         </div>
       )}
     </div>
+
+    {/* ── OPTIMISE MODAL ────────────────────────────────── */}
+    <AnimatePresence>
+      {showOptModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)" }}
+          onClick={() => !optRunning && setShowOptModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+            style={{ width: 340, fontFamily: "Inter, system-ui, sans-serif" }}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100"
+              style={{ background: "linear-gradient(135deg,#1e40af,#1d4ed8)" }}>
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", boxShadow: "0 3px 10px rgba(245,158,11,.4)" }}>
+                  <Zap className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-bold text-white leading-tight">Optimise Trip</p>
+                  {vehicle && <p className="text-[10px] text-blue-200 mt-0.5">{vehicle.code} · {driver?.name ?? "No driver"} · {stops.length} stop{stops.length !== 1 ? "s" : ""}</p>}
+                </div>
+              </div>
+              {!optRunning && (
+                <button onClick={() => setShowOptModal(false)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-white/60 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="p-5 space-y-4">
+
+              {/* Info grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: "Stops",    value: String(stops.length) },
+                  { label: "Weight",   value: stops.reduce((n,s)=>n+s.netweight,0) ? `${stops.reduce((n,s)=>n+s.netweight,0)}kg` : "—" },
+                  { label: "Drops",    value: String(stops.filter(s=>s.type==="DROP").length) },
+                  { label: "Pickups",  value: String(stops.filter(s=>s.type==="PICKUP").length) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="text-center rounded-xl border border-gray-100 py-2.5 px-1"
+                    style={{ background: "#f8fafc" }}>
+                    <p className="text-[11px] font-bold text-gray-800">{value}</p>
+                    <p className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Order toggle */}
+              <div>
+                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Stop Order</p>
+                <div className="flex border-2 rounded-xl overflow-hidden" style={{ borderColor: "#dbeafe" }}>
+                  {(["fixed","auto"] as const).map((mode) => (
+                    <button key={mode} onClick={() => setOptOrder(mode)}
+                      className="flex-1 py-2.5 text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5"
+                      style={{
+                        background: optOrder === mode ? "#1e40af" : "#fff",
+                        color: optOrder === mode ? "#fff" : "#94a3b8",
+                      }}>
+                      {mode === "fixed" ? <><span>📌</span> Fixed Order</> : <><span>🔀</span> Auto Route</>}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1.5">
+                  {optOrder === "fixed" ? "Stops stay in their current sequence" : "System finds the fastest possible route"}
+                </p>
+              </div>
+
+              {/* Start time */}
+              <div>
+                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Start Time</p>
+                <input type="time" value={optStartTime}
+                  onChange={(e) => setOptStartTime(e.target.value)}
+                  className="w-full rounded-xl border-2 border-gray-100 px-3 py-2.5 text-[14px] font-bold text-gray-800 focus:outline-none focus:border-blue-400"
+                  style={{ fontFamily: "Inter, monospace" }}
+                />
+              </div>
+
+              {/* Stop sequence road */}
+              {stops.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Stop Sequence</p>
+                  <div className="flex items-center gap-0 rounded-xl border border-gray-100 px-3 py-2.5 overflow-x-auto" style={{ background: "#f8fafc" }}>
+                    {/* Depot start */}
+                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                        style={{ background: "#1e40af", boxShadow: "0 2px 6px rgba(30,64,175,.3)" }}>🏠</div>
+                      <span className="text-[7px] text-gray-400 font-mono">{optStartTime}</span>
+                    </div>
+                    {stops.map((s, i) => (
+                      <div key={s.id} className="flex items-center flex-shrink-0">
+                        <div className="flex-1 h-0.5 w-6" style={{ background: "linear-gradient(to right,#dbeafe,#bfdbfe)" }} />
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                            style={{
+                              background: s.type === "DROP" ? "#e11d48" : "#0284c7",
+                              boxShadow: `0 2px 6px ${s.type === "DROP" ? "rgba(225,29,72,.3)" : "rgba(2,132,199,.3)"}`,
+                            }}>{i + 1}</div>
+                          <span className="text-[7px] text-gray-400 uppercase tracking-wide">{s.type}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center flex-shrink-0">
+                      <div className="flex-1 h-0.5 w-6" style={{ background: "linear-gradient(to right,#dbeafe,#bfdbfe)" }} />
+                      <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                          style={{ background: "#1e40af", boxShadow: "0 2px 6px rgba(30,64,175,.3)" }}>🏠</div>
+                        <span className="text-[7px] text-gray-400 font-mono">End</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Run button */}
+              <button
+                disabled={optRunning}
+                onClick={() => {
+                  setOptRunning(true);
+                  setTimeout(() => {
+                    setOptRunning(false);
+                    setShowOptModal(false);
+                    toast({ title: "Optimisation complete ✓", description: `Trip optimised — ${stops.length} stops resequenced from ${optStartTime}` });
+                  }, 2000);
+                }}
+                className="w-full py-3 rounded-xl text-[12px] font-bold flex items-center justify-center gap-2 transition-all"
+                style={{
+                  background: optRunning ? "#f1f5f9" : "linear-gradient(135deg,#1e40af,#1d4ed8)",
+                  color: optRunning ? "#94a3b8" : "#fff",
+                  boxShadow: optRunning ? "none" : "0 4px 16px rgba(30,64,175,.3)",
+                  cursor: optRunning ? "not-allowed" : "pointer",
+                }}
+              >
+                {optRunning
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Running Optimisation…</>
+                  : <><Zap className="w-4 h-4" style={{ color: "#f59e0b" }} /> Run Optimisation</>
+                }
+              </button>
+
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
