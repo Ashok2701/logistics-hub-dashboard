@@ -727,6 +727,30 @@ function ActiveTourPanel({
 
             <div className="p-5 space-y-4">
 
+              {/* Trip info block */}
+              <div className="rounded-xl border border-gray-100 overflow-hidden" style={{ background: "#f8fafc" }}>
+                <div className="grid grid-cols-2 divide-x divide-gray-100">
+                  <div className="px-3 py-2">
+                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Trip No</p>
+                    <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{vehicle ? `DRAFT-${vehicle.code}` : "DRAFT"}</p>
+                  </div>
+                  <div className="px-3 py-2">
+                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">No of Stops</p>
+                    <p className="text-[12px] font-bold text-gray-800 mt-0.5">{stops.length}</p>
+                  </div>
+                  <div className="px-3 py-2 border-t border-gray-100">
+                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
+                    <p className="text-[12px] font-bold text-emerald-700 font-mono mt-0.5 truncate">{vehicle?.code ?? "—"}</p>
+                    {vehicle?.name && <p className="text-[9px] text-gray-500 truncate">{vehicle.name}</p>}
+                  </div>
+                  <div className="px-3 py-2 border-t border-gray-100">
+                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Driver</p>
+                    <p className="text-[12px] font-bold text-indigo-700 mt-0.5 truncate">{driver?.name ?? "—"}</p>
+                    {driver?.id && <p className="text-[9px] text-gray-500 font-mono truncate">{driver.id}</p>}
+                  </div>
+                </div>
+              </div>
+
               {/* Info grid */}
               <div className="grid grid-cols-4 gap-2">
                 {[
@@ -742,6 +766,7 @@ function ActiveTourPanel({
                   </div>
                 ))}
               </div>
+
 
               {/* Order toggle */}
               <div>
