@@ -1312,12 +1312,11 @@ export default function Planner() {
                     className="h-6 pl-6 text-[10px]"
                   />
                 </div>
-                {selectedStopIds.size > 0 ? (
+                {selectedStopIds.size > 0 && (
                   <Button size="sm" className="h-6 text-[11px] gap-1 flex-shrink-0" onClick={addSelectedStopsToDraft}>
                     <CheckCheck className="w-3 h-3" />
                     Add {selectedStopIds.size} to Trip
                   </Button>
-                ) : (
                 )}
               </div>
 
