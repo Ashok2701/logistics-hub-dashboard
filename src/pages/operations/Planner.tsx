@@ -1777,7 +1777,6 @@ export default function Planner() {
         </div>
       )}
     </div>
-    </div>
 
   </>
   );
