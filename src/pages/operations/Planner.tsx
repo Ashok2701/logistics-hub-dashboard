@@ -893,8 +893,28 @@ function ActiveTourPanel({
                 onClick={() => {
                   setOptRunning(true);
                   setTimeout(() => {
+                    // TODO: replace with real API response
+                    const travelMins = stops.length * 18;
+                    const [sh, sm] = optStartTime.split(":").map(Number);
+                    const totalMins = sh * 60 + sm + travelMins;
+                    const endH = Math.floor(totalMins / 60) % 24;
+                    const endM = totalMins % 60;
+                    const endTime = `${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}`;
+                    const daysAdded = Math.floor(totalMins / (24 * 60));
+                    const endDateObj = new Date(optStartDate);
+                    endDateObj.setDate(endDateObj.getDate() + daysAdded);
+                    const endDate = endDateObj.toISOString().slice(0, 10);
+                    const durH = Math.floor(travelMins / 60);
+                    const durM = travelMins % 60;
+                    setOptResult({
+                      endDate,
+                      endTime,
+                      arrival: endTime,
+                      duration: `${durH}h ${String(durM).padStart(2,"0")}m`,
+                      distance: `${(stops.length * 12.5).toFixed(1)} km`,
+                      cost: `$${(stops.length * 18.75).toFixed(2)}`,
+                    });
                     setOptRunning(false);
-                    setShowOptModal(false);
                     toast({ title: "Optimisation complete ✓", description: `Trip optimised — ${stops.length} stops resequenced from ${optStartTime}` });
                   }, 2000);
                 }}
