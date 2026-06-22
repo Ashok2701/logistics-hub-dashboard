@@ -670,8 +670,6 @@ function ActiveTourPanel({
         </div>
       )}
     </div>
-
-  </>
   );
 }
 
