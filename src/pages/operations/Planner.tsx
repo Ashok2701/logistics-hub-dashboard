@@ -164,6 +164,7 @@ function ToolbarBtn({
         {label}
       </span>
     </div>
+
   );
 }
 
@@ -669,6 +670,232 @@ function ActiveTourPanel({
         </div>
       )}
     </div>
+
+    {/* ── Route Management Detail Modal ── */}
+    {detailTrip && (
+      <RouteManagementDetail
+        trip={detailTrip}
+        onClose={() => setDetailTripId(null)}
+      />
+    )}
+  </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// ROUTE MANAGEMENT DETAIL MODAL
+// Opens when (i) is clicked on a trip row
+// ═══════════════════════════════════════════════════════
+function RouteManagementDetail({ trip, onClose }: { trip: Trip; onClose: () => void }) {
+  const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
+  const depTime  = "07:30";
+  const retTime  = "18:30";
+  const totalKm  = trip.distanceKm;
+  const totalMin = trip.travelTimeMin;
+  const totalH   = Math.floor(totalMin / 60);
+  const totalM   = totalMin % 60;
+  const travelCost = Math.round(totalKm * 0.045);
+  const distCost   = Math.round(totalKm * 1.5);
+  const totalCost  = travelCost + distCost;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={onClose}>
+      <div className="bg-background rounded-xl shadow-2xl border border-border/60 w-full max-w-5xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}>
+
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border/60 sticky top-0 bg-background z-10">
+          <div>
+            <h2 className="text-sm font-semibold text-primary">Route Management</h2>
+            <p className="text-[11px] text-muted-foreground mt-0.5">{trip.id}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={cn("text-[10px] px-3 py-1 rounded font-bold", statusColor(trip.status))}>
+              {trip.status.toUpperCase()}
+            </span>
+            <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+              <Truck className="w-3 h-3" /> Load to Truck
+            </Button>
+            <button onClick={onClose} className="w-7 h-7 rounded-md hover:bg-muted flex items-center justify-center">
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-5 space-y-5">
+
+          {/* ── Route info grid ── */}
+          <section>
+            <div className="grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
+              {[
+                { label: "Route Num",            value: trip.id },
+                { label: "Vehicle Load Stock",   value: `KCC${trip.seq.toString().padStart(6,"0")}XCHG0000001` },
+                { label: "Status",               value: trip.status },
+                { label: "Departure Site",        value: trip.departSite },
+                { label: "Arrival Site",          value: trip.arrivalSite },
+                { label: "Carrier",              value: trip.vehicle.category || "N/A" },
+                { label: "Vehicle Class",         value: trip.vehicle.category },
+                { label: "Vehicle",              value: trip.vehicle.code },
+                { label: "Route Type",           value: "Scheduled" },
+                { label: "Driver ID",            value: trip.driver.id },
+                { label: "Driver",               value: trip.driver.name },
+                { label: "Creation Date",        value: depDate },
+                { label: "Creation Time",        value: depTime },
+                { label: "Trip",                 value: String(trip.seq) },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-[10px] text-muted-foreground mb-0.5 uppercase tracking-wide">{label}</p>
+                  <p className="font-semibold text-primary">{value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="border-t border-border/40" />
+
+          {/* ── Planning / Actual + Photos ── */}
+          <div className="grid grid-cols-[1fr_auto] gap-6">
+            <div className="space-y-4">
+              {/* Planning */}
+              <div>
+                <h3 className="text-[11px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Planning</h3>
+                <div className="grid grid-cols-4 gap-4 text-[11px]">
+                  {[
+                    { label: "Departure Date", value: depDate },
+                    { label: "Departure Time", value: depTime },
+                    { label: "Return Date",    value: depDate },
+                    { label: "Return Time",    value: retTime },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
+                      <p className="font-semibold">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Actual */}
+              <div>
+                <h3 className="text-[11px] font-semibold text-muted-foreground mb-2 pb-1 border-b border-border/40">Actual</h3>
+                <div className="grid grid-cols-4 gap-4 text-[11px]">
+                  {["Departure Date","Departure Time","Return Date","Return Time"].map((label) => (
+                    <div key={label}>
+                      <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
+                      <p className="text-muted-foreground/40">—</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Vehicle + Driver photos */}
+            <div className="flex gap-3 flex-shrink-0">
+              <div className="text-center">
+                <div className="w-28 h-20 rounded-lg bg-muted border border-border/60 flex items-center justify-center overflow-hidden">
+                  <Truck className="w-10 h-10 text-muted-foreground/30" />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Vehicle : {trip.vehicle.code}</p>
+              </div>
+              <div className="text-center">
+                <div className="w-28 h-20 rounded-lg bg-muted border border-border/60 flex items-center justify-center overflow-hidden">
+                  <Users className="w-10 h-10 text-muted-foreground/30" />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Driver : {trip.driver.id}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-border/40" />
+
+          {/* ── Transactions table ── */}
+          <section>
+            <h3 className="text-[11px] font-semibold text-primary mb-2">Transactions</h3>
+            <div className="rounded-lg border border-border/60 overflow-hidden">
+              <table className="w-full" style={{ fontSize: "11px" }}>
+                <thead>
+                  <tr style={{ background: "#eff6ff" }}>
+                    {["Seq","Document Number","Delivery Number","Site","Status","Arrival Date/Time","Departure Date/Time","Service Time","Address","Client Code","Client","City","From Previous Distance","From Previous Travel","Waiting Time"].map(h => (
+                      <th key={h} className="px-2 py-1.5 text-left text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap border-b"
+                        style={{ color: "#1e40af", borderColor: "#bfdbfe" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {trip.stops.map((s, i) => (
+                    <tr key={s.id} className={cn("border-b border-border/20 hover:bg-muted/30", i % 2 === 1 && "bg-muted/10")}>
+                      <td className="px-2 py-1.5 font-mono font-bold text-center">{i + 1}</td>
+                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{s.txn}</td>
+                      <td className="px-2 py-1.5 text-muted-foreground">—</td>
+                      <td className="px-2 py-1.5 font-mono">{trip.departSite}</td>
+                      <td className="px-2 py-1.5">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800">Scheduled</span>
+                      </td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{depDate} 12:41</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{depDate} 13:26</td>
+                      <td className="px-2 py-1.5 font-mono">00:30</td>
+                      <td className="px-2 py-1.5 text-muted-foreground truncate max-w-[100px]">{s.address}</td>
+                      <td className="px-2 py-1.5 font-mono">{s.bpcode}</td>
+                      <td className="px-2 py-1.5 font-medium truncate max-w-[100px]">{s.client}</td>
+                      <td className="px-2 py-1.5">{s.city}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{Math.round(totalKm / Math.max(trip.stops.length, 1))} mi</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:{String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">00:15</td>
+                    </tr>
+                  ))}
+                  {trip.stops.length === 0 && (
+                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No stops on this trip</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <div className="border-t border-border/40" />
+
+          {/* ── Totals ── */}
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
+              {/* Total Drops */}
+              <div className="rounded-lg border border-border/60 p-3">
+                <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Total Drops</h4>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span className="font-mono font-semibold">{trip.totalWeight.toFixed(2)} LB</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Mass</span><span className="font-mono">60000.00 LB</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Mass(%)</span><span className="font-mono">{trip.totalWeight ? ((trip.totalWeight / 60000) * 100).toFixed(2) : "0.00"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Drops Volume</span><span className="font-mono">{trip.totalVol.toFixed(2)} GAL</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Volume</span><span className="font-mono">50000 GAL</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Vol(%)</span><span className="font-mono">{trip.totalVol ? ((trip.totalVol / 50000) * 100).toFixed(2) : "0.00"}</span></div>
+                </div>
+              </div>
+              {/* Total Pickups */}
+              <div className="rounded-lg border border-border/60 p-3">
+                <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Total Pickups</h4>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Pickup Weight</span><span className="font-mono font-semibold">0 LB</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Avail Weight</span><span className="font-mono">60000 LB</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Pickup Volume</span><span className="font-mono">0.00 GAL</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Avail Volume</span><span className="font-mono">50000 GAL</span></div>
+                </div>
+              </div>
+              {/* Totals */}
+              <div className="rounded-lg border border-border/60 p-3">
+                <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Totals</h4>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold">{totalKm} Miles</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono">{String(totalH).padStart(2,"0")}:{String(totalM).padStart(2,"0")} HH:MM</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono">{trip.stops.length}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono">{String(totalH + 1).padStart(2,"0")}:{String(totalM + 15).padStart(2,"0")} HH:MM</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono">{travelCost} USD</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono">{distCost} USD</span></div>
+                  <div className="flex justify-between border-t border-border/40 pt-1 mt-1"><span className="font-semibold">Total Cost</span><span className="font-mono font-bold text-primary">{totalCost} USD</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -805,6 +1032,7 @@ export default function Planner() {
   // ── Confirmed trips ───────────────────────────────────
   const [trips, setTrips]                   = useState<Trip[]>([]);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [detailTripId,   setDetailTripId]   = useState<string | null>(null);
   const [tripView, setTripView]             = useState<"map" | "list">("map");
 
   // ── Filters ───────────────────────────────────────────
@@ -899,6 +1127,7 @@ export default function Planner() {
     ), [trips, statusFilter, tripSearch]);
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
+  const detailTrip   = trips.find((t) => t.id === detailTripId)   ?? null;
 
   // KPIs
   const kpis = useMemo(() => ({
@@ -1048,6 +1277,7 @@ export default function Planner() {
   const allCurrentSelected = currentStops.length > 0 && currentStops.every((s) => selectedStopIds.has(s.id));
 
   return (
+    <>
     <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
       {/* ── TOOLBAR ─ compact single row ─────────────── */}
@@ -1452,7 +1682,11 @@ export default function Planner() {
                               <Checkbox checked={sel} onCheckedChange={() => selectTrip(t)} onClick={(e) => e.stopPropagation()} />
                             </td>
                             <td className="px-2 py-1.5">
-                              <button className="text-sky-600 hover:text-sky-700" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                className="text-sky-600 hover:text-sky-700 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); setDetailTripId(t.id); }}
+                                title="Route Management Detail"
+                              >
                                 <Info className="w-3.5 h-3.5" />
                               </button>
                             </td>
