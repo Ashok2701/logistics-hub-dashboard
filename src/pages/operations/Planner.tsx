@@ -2254,6 +2254,273 @@ export default function Planner() {
       )}
     </div>
 
+    {/* ── AUTO TRIP GENERATION MODAL ───────────────────── */}
+    <AnimatePresence>
+      {showAutoGen && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
+          onClick={() => !agSubmitting && setShowAutoGen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.96, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 10 }}
+            transition={{ type: "spring", damping: 22, stiffness: 260 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl w-[95vw] max-w-[1400px] max-h-[92vh] flex flex-col overflow-hidden"
+            style={{ fontFamily: "Inter, system-ui, sans-serif" }}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-blue-600 text-white">
+              <h2 className="text-base font-semibold tracking-tight">
+                Auto Trip Generation : Please select Vehicles, Drivers and Documents
+              </h2>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-auto p-5 bg-slate-50">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {/* ─── LEFT: Vehicles / Drivers ─── */}
+                <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+                    <h3 className="text-sm font-semibold text-slate-800">Vehicles</h3>
+                    <select
+                      value={agVehClass}
+                      onChange={(e) => setAgVehClass(e.target.value)}
+                      className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[180px]"
+                    >
+                      <option value="">Vehicle Class</option>
+                      {agVehicleClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="px-4 pt-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5">
+                      <button
+                        onClick={() => setAgTab("vehicles")}
+                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                          agTab === "vehicles" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                      >Vehicles</button>
+                      <button
+                        onClick={() => setAgTab("drivers")}
+                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                          agTab === "drivers" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                      >Drivers</button>
+                    </div>
+                    <input
+                      placeholder="Search..."
+                      value={agVehSearch}
+                      onChange={(e) => setAgVehSearch(e.target.value)}
+                      className="h-8 px-3 text-xs rounded border border-slate-300 bg-white w-[200px]"
+                    />
+                  </div>
+
+                  <div className="px-4 py-3 max-h-[42vh] overflow-auto">
+                    {agTab === "vehicles" ? (
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-100 text-slate-700">
+                          <tr>
+                            <th className="px-2 py-2 text-left w-8">
+                              <input
+                                type="checkbox"
+                                checked={agFilteredVehicles.length > 0 && agFilteredVehicles.every(v => agVehSel.has(v.code))}
+                                onChange={() => agToggleAll(agFilteredVehicles.map(v => v.code), agVehSel, setAgVehSel)}
+                              />
+                            </th>
+                            <th className="px-2 py-2 text-left">Vehicle Code</th>
+                            <th className="px-2 py-2 text-left">Vehicle Name</th>
+                            <th className="px-2 py-2 text-left">Vehicle Class</th>
+                            <th className="px-2 py-2 text-left">Driver</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {agFilteredVehicles.map(v => (
+                            <tr key={v.code} className="border-b border-slate-100 hover:bg-slate-50">
+                              <td className="px-2 py-1.5">
+                                <input type="checkbox" checked={agVehSel.has(v.code)} onChange={() => agToggle(agVehSel, setAgVehSel, v.code)} />
+                              </td>
+                              <td className="px-2 py-1.5 font-mono">{v.code}</td>
+                              <td className="px-2 py-1.5">{v.vehicleNo}</td>
+                              <td className="px-2 py-1.5">{v.category}</td>
+                              <td className="px-2 py-1.5">{v.driverName || "—"}</td>
+                            </tr>
+                          ))}
+                          {agFilteredVehicles.length === 0 && (
+                            <tr><td colSpan={5} className="px-2 py-6 text-center text-slate-400">No vehicles</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-100 text-slate-700">
+                          <tr>
+                            <th className="px-2 py-2 text-left w-8">
+                              <input
+                                type="checkbox"
+                                checked={agFilteredDrivers.length > 0 && agFilteredDrivers.every(d => agDrvSel.has(d.id))}
+                                onChange={() => agToggleAll(agFilteredDrivers.map(d => d.id), agDrvSel, setAgDrvSel)}
+                              />
+                            </th>
+                            <th className="px-2 py-2 text-left">Driver Code</th>
+                            <th className="px-2 py-2 text-left">Driver Name</th>
+                            <th className="px-2 py-2 text-left">License</th>
+                            <th className="px-2 py-2 text-left">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {agFilteredDrivers.map(d => (
+                            <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50">
+                              <td className="px-2 py-1.5">
+                                <input type="checkbox" checked={agDrvSel.has(d.id)} onChange={() => agToggle(agDrvSel, setAgDrvSel, d.id)} />
+                              </td>
+                              <td className="px-2 py-1.5 font-mono">{d.id}</td>
+                              <td className="px-2 py-1.5">{d.name}</td>
+                              <td className="px-2 py-1.5">{d.license || "—"}</td>
+                              <td className="px-2 py-1.5">{d.status}</td>
+                            </tr>
+                          ))}
+                          {agFilteredDrivers.length === 0 && (
+                            <tr><td colSpan={5} className="px-2 py-6 text-center text-slate-400">No drivers</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                  <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
+                    <span>Selected Vehicles: <b className="text-slate-900">{agVehSel.size}</b></span>
+                    <span>Selected Drivers: <b className="text-slate-900">{agDrvSel.size}</b></span>
+                  </div>
+                </div>
+
+                {/* ─── RIGHT: Documents ─── */}
+                <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-200 flex-wrap">
+                    <h3 className="text-sm font-semibold text-slate-800">Documents</h3>
+                    <div className="flex items-end gap-2">
+                      <div>
+                        <label className="block text-[10px] text-slate-500 mb-0.5">Start Date</label>
+                        <input type="date" value={agStartDate} onChange={(e) => setAgStartDate(e.target.value)}
+                          className="h-8 px-2 text-xs rounded border border-slate-300 bg-white" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-500 mb-0.5">End Date</label>
+                        <input type="date" value={agEndDate} onChange={(e) => setAgEndDate(e.target.value)}
+                          className="h-8 px-2 text-xs rounded border border-slate-300 bg-white" />
+                      </div>
+                      <select value={agRouteCode} onChange={(e) => setAgRouteCode(e.target.value)}
+                        className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[140px]">
+                        <option value="">Route Code</option>
+                        {routeCodes.map(rc => <option key={rc} value={rc}>{rc}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="px-4 pt-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5">
+                      <button
+                        onClick={() => setAgDocTab("deliveries")}
+                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                          agDocTab === "deliveries" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                      >Deliveries</button>
+                      <button
+                        onClick={() => setAgDocTab("pickups")}
+                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                          agDocTab === "pickups" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                      >Pickups</button>
+                    </div>
+                    <input
+                      placeholder="Search..."
+                      value={agDocSearch}
+                      onChange={(e) => setAgDocSearch(e.target.value)}
+                      className="h-8 px-3 text-xs rounded border border-slate-300 bg-white w-[200px]"
+                    />
+                  </div>
+
+                  <div className="px-4 py-3 max-h-[42vh] overflow-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-100 text-slate-700">
+                        <tr>
+                          <th className="px-2 py-2 text-left w-8">
+                            <input
+                              type="checkbox"
+                              checked={
+                                agFilteredDocs.length > 0 &&
+                                agFilteredDocs.every(s => (agDocTab === "deliveries" ? agDropSel : agPickSel).has(s.id))
+                              }
+                              onChange={() => agToggleAll(
+                                agFilteredDocs.map(s => s.id),
+                                agDocTab === "deliveries" ? agDropSel : agPickSel,
+                                agDocTab === "deliveries" ? setAgDropSel : setAgPickSel,
+                              )}
+                            />
+                          </th>
+                          <th className="px-2 py-2 text-left">Document Number</th>
+                          <th className="px-2 py-2 text-left">Client Code</th>
+                          <th className="px-2 py-2 text-left">Client Name</th>
+                          <th className="px-2 py-2 text-left">Route Code</th>
+                          <th className="px-2 py-2 text-left">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {agFilteredDocs.map(s => {
+                          const sel = agDocTab === "deliveries" ? agDropSel : agPickSel;
+                          const setSel = agDocTab === "deliveries" ? setAgDropSel : setAgPickSel;
+                          return (
+                            <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
+                              <td className="px-2 py-1.5">
+                                <input type="checkbox" checked={sel.has(s.id)} onChange={() => agToggle(sel, setSel, s.id)} />
+                              </td>
+                              <td className="px-2 py-1.5 font-mono">{s.txn}</td>
+                              <td className="px-2 py-1.5">{s.bpcode}</td>
+                              <td className="px-2 py-1.5">{s.client}</td>
+                              <td className="px-2 py-1.5">{s.routeCode || "—"}</td>
+                              <td className="px-2 py-1.5">{s.doctype}</td>
+                            </tr>
+                          );
+                        })}
+                        {agFilteredDocs.length === 0 && (
+                          <tr><td colSpan={6} className="px-2 py-6 text-center text-slate-400">No documents</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
+                    <span>Selected Drops: <b className="text-slate-900">{agDropSel.size}</b></span>
+                    <span>Selected Pickups: <b className="text-slate-900">{agPickSel.size}</b></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-end gap-3">
+              {agCanSubmit && (
+                <button
+                  onClick={agClear}
+                  disabled={agSubmitting}
+                  className="px-5 h-9 rounded-full text-xs font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                >Clear</button>
+              )}
+              <button
+                onClick={agSubmit}
+                disabled={!agCanSubmit || agSubmitting}
+                className={cn(
+                  "px-5 h-9 rounded-full text-xs font-semibold text-white transition-colors",
+                  agCanSubmit && !agSubmitting
+                    ? "bg-emerald-600 hover:bg-emerald-700 shadow"
+                    : "bg-slate-300 cursor-not-allowed"
+                )}
+              >{agSubmitting ? "Submitting..." : "Submit"}</button>
+              <button
+                onClick={() => !agSubmitting && setShowAutoGen(false)}
+                disabled={agSubmitting}
+                className="px-5 h-9 rounded-full text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              >Close</button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
   </>
   );
 }
