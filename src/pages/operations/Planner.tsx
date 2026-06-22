@@ -670,7 +670,6 @@ function ActiveTourPanel({
         </div>
       )}
     </div>
-  </>
   );
 }
 
@@ -1777,6 +1776,7 @@ export default function Planner() {
           </div>
         </div>
       )}
+    </div>
     </div>
 
   </>
