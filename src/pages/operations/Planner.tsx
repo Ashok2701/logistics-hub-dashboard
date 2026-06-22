@@ -1689,7 +1689,7 @@ export default function Planner() {
 
         <div className="h-5 w-px bg-border/50 mx-0.5" />
 
-        <ToolbarBtn icon={Wand2}       label="Auto Generate Route" color="text-blue-600"    bg="hover:bg-blue-50"    onClick={() => toast({ title: "Auto Generate Route",  description: "Not yet implemented" })} />
+        <ToolbarBtn icon={Wand2}       label="Auto Generate Route" color="text-blue-600"    bg="hover:bg-blue-50"    onClick={openAutoGen} />
         <ToolbarBtn icon={GitMerge}    label="Group Optimisation"  color="text-slate-600"   bg="hover:bg-slate-50"   onClick={() => toast({ title: "Group Optimisation",   description: "Not yet implemented" })} />
         <ToolbarBtn icon={Lock}        label="Group Lock"          color="text-emerald-600" bg="hover:bg-emerald-50" onClick={() => toast({ title: "Group Lock",            description: "Not yet implemented" })} />
         <ToolbarBtn icon={Unlock}      label="Group Unlock"        color="text-violet-600"  bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",          description: "Not yet implemented" })} />
