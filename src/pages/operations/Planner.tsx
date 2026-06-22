@@ -394,8 +394,12 @@ function ActiveTourPanel({
   const [selectedStop,  setSelectedStop]  = useState<number | null>(null);
   const [showOptModal,  setShowOptModal]  = useState(false);
   const [optOrder,      setOptOrder]      = useState<"fixed"|"auto">("fixed");
+  const [optStartDate,  setOptStartDate]  = useState(() => new Date().toISOString().slice(0, 10));
   const [optStartTime,  setOptStartTime]  = useState("07:30");
   const [optRunning,    setOptRunning]    = useState(false);
+  const [optResult,     setOptResult]     = useState<{
+    endDate: string; endTime: string; duration: string; distance: string; cost: string; arrival: string;
+  } | null>(null);
   const times = useMemo(() => genTimes(stops.length), [stops.length]);
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
@@ -727,45 +731,83 @@ function ActiveTourPanel({
 
             <div className="p-5 space-y-4">
 
-              {/* Trip info block */}
-              <div className="rounded-xl border border-gray-100 overflow-hidden" style={{ background: "#f8fafc" }}>
-                <div className="grid grid-cols-2 divide-x divide-gray-100">
-                  <div className="px-3 py-2">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Trip No</p>
-                    <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{vehicle ? `DRAFT-${vehicle.code}` : "DRAFT"}</p>
+              {/* Trip info block — always visible */}
+              <div>
+                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Trip Info</p>
+                <div className="rounded-xl border border-gray-100 overflow-hidden" style={{ background: "#f8fafc" }}>
+                  <div className="grid grid-cols-3 divide-x divide-gray-100">
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Trip No</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{vehicle ? `DRAFT-${vehicle.code}` : "DRAFT"}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
+                      <p className="text-[12px] font-bold text-emerald-700 font-mono mt-0.5 truncate">{vehicle?.code ?? "—"}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Driver</p>
+                      <p className="text-[12px] font-bold text-indigo-700 mt-0.5 truncate">{driver?.name ?? "—"}</p>
+                    </div>
                   </div>
-                  <div className="px-3 py-2">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">No of Stops</p>
-                    <p className="text-[12px] font-bold text-gray-800 mt-0.5">{stops.length}</p>
+                  <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100">
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Start Date</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5">{optStartDate}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">No of Stops</p>
+                      <p className="text-[12px] font-bold text-gray-800 mt-0.5">{stops.length}</p>
+                    </div>
                   </div>
-                  <div className="px-3 py-2 border-t border-gray-100">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
-                    <p className="text-[12px] font-bold text-emerald-700 font-mono mt-0.5 truncate">{vehicle?.code ?? "—"}</p>
-                    {vehicle?.category && <p className="text-[9px] text-gray-500 truncate">{vehicle.category}</p>}
-                  </div>
-                  <div className="px-3 py-2 border-t border-gray-100">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Driver</p>
-                    <p className="text-[12px] font-bold text-indigo-700 mt-0.5 truncate">{driver?.name ?? "—"}</p>
-                    {driver?.id && <p className="text-[9px] text-gray-500 font-mono truncate">{driver.id}</p>}
+                  <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100">
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Departure</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5">{optStartTime}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Arrival</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5">{optResult?.arrival ?? "—"}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Info grid */}
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: "Stops",    value: String(stops.length) },
-                  { label: "Weight",   value: stops.reduce((n,s)=>n+s.netweight,0) ? `${stops.reduce((n,s)=>n+s.netweight,0)}kg` : "—" },
-                  { label: "Drops",    value: String(stops.filter(s=>s.type==="DROP").length) },
-                  { label: "Pickups",  value: String(stops.filter(s=>s.type==="PICKUP").length) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="text-center rounded-xl border border-gray-100 py-2.5 px-1"
-                    style={{ background: "#f8fafc" }}>
-                    <p className="text-[11px] font-bold text-gray-800">{value}</p>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">{label}</p>
+              {/* Optimisation result — visible after optimisation */}
+              {optResult && (
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Optimisation Result
+                  </p>
+                  <div className="rounded-xl border border-emerald-100 overflow-hidden" style={{ background: "#f0fdf4" }}>
+                    <div className="grid grid-cols-2 divide-x divide-emerald-100">
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">End Date</p>
+                        <p className="text-[12px] font-bold text-emerald-900 font-mono mt-0.5">{optResult.endDate}</p>
+                      </div>
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">End Time</p>
+                        <p className="text-[12px] font-bold text-emerald-900 font-mono mt-0.5">{optResult.endTime}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 divide-x divide-emerald-100 border-t border-emerald-100">
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">Duration</p>
+                        <p className="text-[12px] font-bold text-emerald-900 mt-0.5">{optResult.duration}</p>
+                      </div>
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">Distance</p>
+                        <p className="text-[12px] font-bold text-emerald-900 mt-0.5">{optResult.distance}</p>
+                      </div>
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">Cost</p>
+                        <p className="text-[12px] font-bold text-emerald-900 mt-0.5">{optResult.cost}</p>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
 
 
               {/* Order toggle */}
@@ -788,15 +830,26 @@ function ActiveTourPanel({
                 </p>
               </div>
 
-              {/* Start time */}
-              <div>
-                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Start Time</p>
-                <input type="time" value={optStartTime}
-                  onChange={(e) => setOptStartTime(e.target.value)}
-                  className="w-full rounded-xl border-2 border-gray-100 px-3 py-2.5 text-[14px] font-bold text-gray-800 focus:outline-none focus:border-blue-400"
-                  style={{ fontFamily: "Inter, monospace" }}
-                />
+              {/* Start date + time */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Start Date</p>
+                  <input type="date" value={optStartDate}
+                    onChange={(e) => setOptStartDate(e.target.value)}
+                    className="w-full rounded-xl border-2 border-gray-100 px-3 py-2.5 text-[12px] font-bold text-gray-800 focus:outline-none focus:border-blue-400"
+                    style={{ fontFamily: "Inter, monospace" }}
+                  />
+                </div>
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Start Time</p>
+                  <input type="time" value={optStartTime}
+                    onChange={(e) => setOptStartTime(e.target.value)}
+                    className="w-full rounded-xl border-2 border-gray-100 px-3 py-2.5 text-[12px] font-bold text-gray-800 focus:outline-none focus:border-blue-400"
+                    style={{ fontFamily: "Inter, monospace" }}
+                  />
+                </div>
               </div>
+
 
               {/* Stop sequence road */}
               {stops.length > 0 && (
@@ -840,8 +893,28 @@ function ActiveTourPanel({
                 onClick={() => {
                   setOptRunning(true);
                   setTimeout(() => {
+                    // TODO: replace with real API response
+                    const travelMins = stops.length * 18;
+                    const [sh, sm] = optStartTime.split(":").map(Number);
+                    const totalMins = sh * 60 + sm + travelMins;
+                    const endH = Math.floor(totalMins / 60) % 24;
+                    const endM = totalMins % 60;
+                    const endTime = `${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}`;
+                    const daysAdded = Math.floor(totalMins / (24 * 60));
+                    const endDateObj = new Date(optStartDate);
+                    endDateObj.setDate(endDateObj.getDate() + daysAdded);
+                    const endDate = endDateObj.toISOString().slice(0, 10);
+                    const durH = Math.floor(travelMins / 60);
+                    const durM = travelMins % 60;
+                    setOptResult({
+                      endDate,
+                      endTime,
+                      arrival: endTime,
+                      duration: `${durH}h ${String(durM).padStart(2,"0")}m`,
+                      distance: `${(stops.length * 12.5).toFixed(1)} km`,
+                      cost: `$${(stops.length * 18.75).toFixed(2)}`,
+                    });
                     setOptRunning(false);
-                    setShowOptModal(false);
                     toast({ title: "Optimisation complete ✓", description: `Trip optimised — ${stops.length} stops resequenced from ${optStartTime}` });
                   }, 2000);
                 }}
