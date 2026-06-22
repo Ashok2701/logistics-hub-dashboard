@@ -1326,6 +1326,85 @@ export default function Planner() {
   const [fleetTab, setFleetTab]         = useState<"vehicles" | "drivers">("vehicles");
   const [selectedStopIds, setSelectedStopIds] = useState<Set<string>>(new Set()); // multi-select in tables
 
+  // ── Auto Trip Generation modal ────────────────────────
+  const [showAutoGen, setShowAutoGen]   = useState(false);
+  const [agTab, setAgTab]               = useState<"vehicles" | "drivers">("vehicles");
+  const [agDocTab, setAgDocTab]         = useState<"deliveries" | "pickups">("deliveries");
+  const [agVehSel, setAgVehSel]         = useState<Set<string>>(new Set());
+  const [agDrvSel, setAgDrvSel]         = useState<Set<string>>(new Set());
+  const [agDropSel, setAgDropSel]       = useState<Set<string>>(new Set());
+  const [agPickSel, setAgPickSel]       = useState<Set<string>>(new Set());
+  const [agVehClass, setAgVehClass]     = useState<string>("");
+  const [agRouteCode, setAgRouteCode]   = useState<string>("");
+  const [agStartDate, setAgStartDate]   = useState<string>(date);
+  const [agEndDate, setAgEndDate]       = useState<string>(date);
+  const [agVehSearch, setAgVehSearch]   = useState("");
+  const [agDocSearch, setAgDocSearch]   = useState("");
+  const [agSubmitting, setAgSubmitting] = useState(false);
+
+  const openAutoGen = useCallback(() => {
+    setAgVehSel(new Set()); setAgDrvSel(new Set());
+    setAgDropSel(new Set()); setAgPickSel(new Set());
+    setAgVehClass(""); setAgRouteCode("");
+    setAgStartDate(date); setAgEndDate(date);
+    setAgVehSearch(""); setAgDocSearch("");
+    setAgTab("vehicles"); setAgDocTab("deliveries");
+    setShowAutoGen(true);
+  }, [date]);
+
+  const agVehicleClasses = useMemo(
+    () => Array.from(new Set(apiVehicles.map(v => v.category).filter(Boolean))).sort(),
+    [apiVehicles]
+  );
+  const agFilteredVehicles = useMemo(() =>
+    apiVehicles.filter(v =>
+      (!agVehClass || v.category === agVehClass) &&
+      (!agVehSearch || `${v.code} ${v.vehicleNo} ${v.category} ${v.driverName}`.toLowerCase().includes(agVehSearch.toLowerCase()))
+    ), [apiVehicles, agVehClass, agVehSearch]);
+  const agFilteredDrivers = useMemo(() =>
+    apiDrivers.filter(d =>
+      !agVehSearch || `${d.id} ${d.name} ${d.license}`.toLowerCase().includes(agVehSearch.toLowerCase())
+    ), [apiDrivers, agVehSearch]);
+  const agFilteredDocs = useMemo(() => {
+    const type = agDocTab === "deliveries" ? "DROP" : "PICKUP";
+    return allStops.filter(s =>
+      s.type === type &&
+      (!agRouteCode || s.routeCode === agRouteCode) &&
+      (!agDocSearch || `${s.txn} ${s.client} ${s.bpcode} ${s.routeCode} ${s.doctype}`.toLowerCase().includes(agDocSearch.toLowerCase()))
+    );
+  }, [allStops, agDocTab, agRouteCode, agDocSearch]);
+
+  const agCanSubmit =
+    agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1;
+
+  function agToggle(set: Set<string>, setter: (s: Set<string>) => void, id: string) {
+    const next = new Set(set);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setter(next);
+  }
+  function agToggleAll(ids: string[], set: Set<string>, setter: (s: Set<string>) => void) {
+    const allOn = ids.length > 0 && ids.every(id => set.has(id));
+    const next = new Set(set);
+    ids.forEach(id => allOn ? next.delete(id) : next.add(id));
+    setter(next);
+  }
+  function agClear() {
+    setAgVehSel(new Set()); setAgDrvSel(new Set());
+    setAgDropSel(new Set()); setAgPickSel(new Set());
+  }
+  function agSubmit() {
+    if (!agCanSubmit) return;
+    setAgSubmitting(true);
+    setTimeout(() => {
+      setAgSubmitting(false);
+      setShowAutoGen(false);
+      toast({
+        title: "Auto Trip Generation submitted",
+        description: `${agVehSel.size} vehicle(s) · ${agDrvSel.size} driver(s) · ${agDropSel.size} drop(s) · ${agPickSel.size} pickup(s) sent for optimisation.`,
+      });
+    }, 800);
+  }
+
   // ── Load sites on mount ──────────────────────────────
   useEffect(() => {
     setSitesLoading(true);
