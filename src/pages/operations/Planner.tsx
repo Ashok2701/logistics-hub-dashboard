@@ -1468,116 +1468,7 @@ export default function Planner() {
                             <td className="px-2 py-1 text-muted-foreground">{v.startTime}</td>
                           </tr>
 
-                          {/* ── OPTION 3: Inline expand below the row ── */}
-                          {optTripId === t.id && (
-                            <tr>
-                              <td colSpan={12} className="p-0">
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="flex items-center gap-4 px-4 py-2.5 border-b border-[#bfdbfe] flex-wrap"
-                                    style={{ background: "linear-gradient(to right, #eff6ff, #f0f9ff)" }}>
-
-                                    {/* Route info pills */}
-                                    <div className="flex items-center gap-1.5 text-[10px] flex-shrink-0">
-                                      <span className="font-mono font-bold text-[#1e40af] bg-white border border-[#bfdbfe] px-2 py-0.5 rounded-full">{t.id.slice(-12)}</span>
-                                      <span className="text-muted-foreground">·</span>
-                                      <span className="text-muted-foreground">{t.driver.name}</span>
-                                      <span className="text-muted-foreground">·</span>
-                                      <span className="font-medium">Veh {t.vehicle.code}</span>
-                                      <span className="text-muted-foreground">·</span>
-                                      <span className="text-muted-foreground">{t.stops.length} stop{t.stops.length !== 1 ? "s" : ""}</span>
-                                    </div>
-
-                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
-
-                                    {/* Order toggle */}
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Order</span>
-                                      <div className="flex gap-1">
-                                        {(["fixed","auto"] as const).map((mode) => (
-                                          <button key={mode}
-                                            onClick={(e) => { e.stopPropagation(); setOptOrder(mode); }}
-                                            className={cn(
-                                              "px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all border",
-                                              optOrder === mode
-                                                ? "bg-[#1e40af] text-white border-[#1e40af] shadow-sm"
-                                                : "bg-white text-muted-foreground border-border/60 hover:border-[#1e40af] hover:text-[#1e40af]"
-                                            )}>{mode === "fixed" ? "Fixed" : "Auto"}</button>
-                                        ))}
-                                      </div>
-                                    </div>
-
-                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
-
-                                    {/* Start time */}
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Start</span>
-                                      <input type="time" value={optTime}
-                                        onChange={(e) => { e.stopPropagation(); setOptTime(e.target.value); }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="border border-border/60 bg-white rounded-md px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
-                                      />
-                                    </div>
-
-                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
-
-                                    {/* Stop sequence */}
-                                    {t.stops.length > 0 && (
-                                      <div className="flex items-center gap-1 flex-shrink-0">
-                                        <span className="text-[9px] text-muted-foreground uppercase tracking-wide mr-1">Seq</span>
-                                        {t.stops.map((s, i) => (
-                                          <div key={s.id} className="flex items-center gap-0.5 flex-shrink-0">
-                                            <div className={cn(
-                                              "w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0",
-                                              s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
-                                            )}>{i + 1}</div>
-                                            {i < t.stops.length - 1 && <div className="w-3 h-px bg-blue-200" />}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-
-                                    {/* Action buttons — right side */}
-                                    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); setOptTripId(null); }}
-                                        className="px-3 py-1.5 rounded-md text-[10px] border border-border/60 bg-white text-muted-foreground hover:bg-muted transition-colors"
-                                      >Cancel</button>
-                                      <button
-                                        disabled={optRunning}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setOptRunning(true);
-                                          setTimeout(() => {
-                                            setOptRunning(false);
-                                            setOptTripId(null);
-                                            toast({ title: "Optimisation complete", description: `Trip ${t.id.slice(-12)} has been optimised` });
-                                          }, 1800);
-                                        }}
-                                        className={cn(
-                                          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
-                                          optRunning
-                                            ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                            : "bg-[#1e40af] hover:bg-[#1d4ed8] text-white shadow-sm"
-                                        )}
-                                      >
-                                        {optRunning
-                                          ? <><Loader2 className="w-3 h-3 animate-spin" /> Running…</>
-                                          : <><Zap className="w-3 h-3 text-amber-400" /> Optimise</>
-                                        }
-                                      </button>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              </td>
-                            </tr>
-                          )}
-                        );
+                                                  );
                       })}
                       {vehicles.length === 0 && (
                         <tr><td colSpan={5} className="px-3 py-4 text-center text-xs text-muted-foreground">No vehicles for this site</td></tr>
@@ -1868,6 +1759,105 @@ export default function Planner() {
                             <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
                             <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.departSite}</td>
                             <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.arrivalSite}</td>
+
+                          {/* ── OPTION 3: Inline expand below trip row ── */}
+                          {optTripId === t.id && (
+                            <tr>
+                              <td colSpan={12} className="p-0 border-0">
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="flex items-center gap-4 px-4 py-2.5 border-b border-[#bfdbfe] flex-wrap"
+                                    style={{ background: "linear-gradient(to right, #eff6ff, #f0f9ff)" }}>
+                                    {/* Route info */}
+                                    <div className="flex items-center gap-1.5 text-[10px] flex-shrink-0">
+                                      <span className="font-mono font-bold text-[#1e40af] bg-white border border-[#bfdbfe] px-2 py-0.5 rounded-full">{t.id.slice(-12)}</span>
+                                      <span className="text-muted-foreground">·</span>
+                                      <span className="text-muted-foreground">{t.driver.name}</span>
+                                      <span className="text-muted-foreground">·</span>
+                                      <span className="font-medium">Veh {t.vehicle.code}</span>
+                                      <span className="text-muted-foreground">·</span>
+                                      <span className="text-muted-foreground">{t.stops.length} stop{t.stops.length !== 1 ? "s" : ""}</span>
+                                    </div>
+                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
+                                    {/* Order toggle */}
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Order</span>
+                                      <div className="flex gap-1">
+                                        {(["fixed","auto"] as const).map((mode) => (
+                                          <button key={mode}
+                                            onClick={(e) => { e.stopPropagation(); setOptOrder(mode); }}
+                                            className={cn(
+                                              "px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all border",
+                                              optOrder === mode
+                                                ? "bg-[#1e40af] text-white border-[#1e40af] shadow-sm"
+                                                : "bg-white text-muted-foreground border-border/60 hover:border-[#1e40af] hover:text-[#1e40af]"
+                                            )}>{mode === "fixed" ? "Fixed" : "Auto"}</button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
+                                    {/* Start time */}
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Start</span>
+                                      <input type="time" value={optTime}
+                                        onChange={(e) => { e.stopPropagation(); setOptTime(e.target.value); }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="border border-border/60 bg-white rounded-md px-2 py-1 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                      />
+                                    </div>
+                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
+                                    {/* Stop sequence */}
+                                    {t.stops.length > 0 && (
+                                      <div className="flex items-center gap-1 flex-shrink-0">
+                                        <span className="text-[9px] text-muted-foreground uppercase tracking-wide mr-1">Seq</span>
+                                        {t.stops.map((s, i) => (
+                                          <div key={s.id} className="flex items-center gap-0.5">
+                                            <div className={cn(
+                                              "w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white",
+                                              s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
+                                            )}>{i + 1}</div>
+                                            {i < t.stops.length - 1 && <div className="w-3 h-px bg-blue-200" />}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {/* Buttons */}
+                                    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+                                      <button onClick={(e) => { e.stopPropagation(); setOptTripId(null); }}
+                                        className="px-3 py-1.5 rounded-md text-[10px] border border-border/60 bg-white text-muted-foreground hover:bg-muted transition-colors">
+                                        Cancel
+                                      </button>
+                                      <button
+                                        disabled={optRunning}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOptRunning(true);
+                                          setTimeout(() => {
+                                            setOptRunning(false);
+                                            setOptTripId(null);
+                                            toast({ title: "Optimisation complete", description: `Trip ${t.id.slice(-12)} optimised` });
+                                          }, 1800);
+                                        }}
+                                        className={cn(
+                                          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
+                                          optRunning ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                                     : "bg-[#1e40af] hover:bg-[#1d4ed8] text-white shadow-sm"
+                                        )}>
+                                        {optRunning
+                                          ? <><Loader2 className="w-3 h-3 animate-spin" /> Running…</>
+                                          : <><Zap className="w-3 h-3 text-amber-400" /> Optimise</>}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              </td>
+                            </tr>
+                          )}
                           </tr>
                         );
                       })}
