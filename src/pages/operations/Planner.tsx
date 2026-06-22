@@ -839,6 +839,7 @@ function ActiveTourPanel({
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 }
 
