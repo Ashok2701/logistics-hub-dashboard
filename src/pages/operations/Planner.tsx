@@ -394,8 +394,12 @@ function ActiveTourPanel({
   const [selectedStop,  setSelectedStop]  = useState<number | null>(null);
   const [showOptModal,  setShowOptModal]  = useState(false);
   const [optOrder,      setOptOrder]      = useState<"fixed"|"auto">("fixed");
+  const [optStartDate,  setOptStartDate]  = useState(() => new Date().toISOString().slice(0, 10));
   const [optStartTime,  setOptStartTime]  = useState("07:30");
   const [optRunning,    setOptRunning]    = useState(false);
+  const [optResult,     setOptResult]     = useState<{
+    endDate: string; endTime: string; duration: string; distance: string; cost: string; arrival: string;
+  } | null>(null);
   const times = useMemo(() => genTimes(stops.length), [stops.length]);
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
