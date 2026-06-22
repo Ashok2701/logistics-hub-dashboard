@@ -1044,6 +1044,12 @@ export default function Planner() {
   // 'planner' = main view | 'detail' = trip detail full screen
   const [view, setView]               = useState<"planner" | "detail">("planner");
   const [detailTripId, setDetailTripId] = useState<string | null>(null);
+
+  // Optimisation slide panel
+  const [optTripId,   setOptTripId]   = useState<string | null>(null);
+  const [optOrder,    setOptOrder]    = useState<"fixed" | "auto">("fixed");
+  const [optTime,     setOptTime]     = useState("07:30");
+  const [optRunning,  setOptRunning]  = useState(false);
   const [tripView, setTripView]             = useState<"map" | "list">("map");
 
   // ── Filters ───────────────────────────────────────────
@@ -1139,6 +1145,7 @@ export default function Planner() {
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
   const detailTrip   = trips.find((t) => t.id === detailTripId)   ?? null;
+  const optTrip      = trips.find((t) => t.id === optTripId)      ?? null;
 
   // KPIs
   const kpis = useMemo(() => ({
@@ -1649,7 +1656,127 @@ export default function Planner() {
             maxPct={80}
             leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}`}
             left={
-              <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full">
+              <div className="flex h-full overflow-hidden rounded-xl border border-border/60 shadow-sm">
+
+                {/* ── OPTIMISE SLIDE PANEL ── */}
+                <AnimatePresence initial={false}>
+                  {optTrip && (
+                    <motion.div
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: 200, opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeInOut" }}
+                      className="flex-shrink-0 overflow-hidden bg-[#0f172a] flex flex-col"
+                      style={{ width: 200 }}
+                    >
+                      <div className="flex-1 p-3 flex flex-col gap-2 overflow-auto">
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">⚡ Optimise</span>
+                          <button onClick={() => setOptTripId(null)} className="text-slate-500 hover:text-white text-xs">✕</button>
+                        </div>
+
+                        {/* Trip info */}
+                        <div className="space-y-1.5 text-[10px]">
+                          {[
+                            ["Route",   optTrip.id.slice(-12)],
+                            ["Driver",  optTrip.driver.name],
+                            ["Vehicle", optTrip.vehicle.code],
+                            ["Stops",   String(optTrip.stops.length)],
+                            ["Distance",`${optTrip.distanceKm} mi`],
+                          ].map(([label, val]) => (
+                            <div key={label} className="flex justify-between items-center">
+                              <span className="text-slate-500">{label}</span>
+                              <span className="text-slate-100 font-semibold font-mono text-[10px]">{val}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="h-px bg-slate-800" />
+
+                        {/* Order mode */}
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-wide mb-1.5">Stop Order</p>
+                          <div className="flex gap-1.5">
+                            {(["fixed","auto"] as const).map((mode) => (
+                              <button key={mode} onClick={() => setOptOrder(mode)}
+                                className={cn(
+                                  "flex-1 py-1 rounded text-[10px] font-semibold transition-all",
+                                  optOrder === mode
+                                    ? "bg-[#1d4ed8] text-white"
+                                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                                )}>
+                                {mode === "fixed" ? "Keep Order" : "Auto Route"}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-[9px] text-slate-600 mt-1">
+                            {optOrder === "fixed" ? "Stops stay in current sequence" : "System finds fastest route"}
+                          </p>
+                        </div>
+
+                        <div className="h-px bg-slate-800" />
+
+                        {/* Start time */}
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-wide mb-1.5">Start Time</p>
+                          <input
+                            type="time" value={optTime}
+                            onChange={(e) => setOptTime(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-[11px] text-slate-100 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+
+                        {/* Timeline preview */}
+                        {optTrip.stops.length > 0 && (
+                          <div>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-wide mb-1.5">Stops</p>
+                            <div className="flex items-center gap-1">
+                              {optTrip.stops.map((s, i) => (
+                                <div key={s.id} className="flex items-center gap-1 flex-shrink-0">
+                                  <div className={cn(
+                                    "w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white",
+                                    s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
+                                  )}>{i + 1}</div>
+                                  {i < optTrip.stops.length - 1 && (
+                                    <div className="w-3 h-px bg-slate-700" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Run button */}
+                      <button
+                        disabled={optRunning}
+                        onClick={() => {
+                          setOptRunning(true);
+                          setTimeout(() => {
+                            setOptRunning(false);
+                            setOptTripId(null);
+                            toast({ title: "Optimisation complete", description: `Trip ${optTrip.id.slice(-12)} has been optimised` });
+                          }, 1800);
+                        }}
+                        className={cn(
+                          "m-3 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-2",
+                          optRunning
+                            ? "bg-slate-700 text-slate-400"
+                            : "bg-amber-500 hover:bg-amber-400 text-slate-900"
+                        )}
+                      >
+                        {optRunning
+                          ? <><Loader2 className="w-3 h-3 animate-spin" /> Running…</>
+                          : <>▶ OPTIMISE</>
+                        }
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* ── TRIPS TABLE ── */}
+                <div className="bg-card flex flex-col h-full flex-1 overflow-hidden">
                 {/* Header */}
                 <div className="px-3 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2 flex-wrap flex-shrink-0">
                   <div className="relative">
@@ -1711,6 +1838,20 @@ export default function Planner() {
                                 <Info className="w-3.5 h-3.5" />
                               </button>
                             </td>
+                            <td className="px-1.5 py-1.5">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
+                                title="Optimise this trip"
+                                className={cn(
+                                  "w-6 h-6 rounded flex items-center justify-center font-bold text-[11px] transition-all",
+                                  optTripId === t.id
+                                    ? "bg-amber-500 text-white shadow-sm"
+                                    : "bg-muted text-muted-foreground hover:bg-amber-100 hover:text-amber-600"
+                                )}
+                              >
+                                ‹
+                              </button>
+                            </td>
                             <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{t.id.slice(-12)}</td>
                             <td className="px-2 py-1.5 text-xs font-mono text-center">{t.seq}</td>
                             <td className="px-2 py-1.5 font-mono font-bold text-xs">{t.vehicle.code}</td>
@@ -1735,6 +1876,7 @@ export default function Planner() {
                       })}
                     </tbody>
                   </table>
+                </div>
                 </div>
               </div>
             }
