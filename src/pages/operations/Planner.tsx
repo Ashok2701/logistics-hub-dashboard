@@ -731,45 +731,83 @@ function ActiveTourPanel({
 
             <div className="p-5 space-y-4">
 
-              {/* Trip info block */}
-              <div className="rounded-xl border border-gray-100 overflow-hidden" style={{ background: "#f8fafc" }}>
-                <div className="grid grid-cols-2 divide-x divide-gray-100">
-                  <div className="px-3 py-2">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Trip No</p>
-                    <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{vehicle ? `DRAFT-${vehicle.code}` : "DRAFT"}</p>
+              {/* Trip info block — always visible */}
+              <div>
+                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Trip Info</p>
+                <div className="rounded-xl border border-gray-100 overflow-hidden" style={{ background: "#f8fafc" }}>
+                  <div className="grid grid-cols-3 divide-x divide-gray-100">
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Trip No</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{vehicle ? `DRAFT-${vehicle.code}` : "DRAFT"}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
+                      <p className="text-[12px] font-bold text-emerald-700 font-mono mt-0.5 truncate">{vehicle?.code ?? "—"}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Driver</p>
+                      <p className="text-[12px] font-bold text-indigo-700 mt-0.5 truncate">{driver?.name ?? "—"}</p>
+                    </div>
                   </div>
-                  <div className="px-3 py-2">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">No of Stops</p>
-                    <p className="text-[12px] font-bold text-gray-800 mt-0.5">{stops.length}</p>
+                  <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100">
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Start Date</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5">{optStartDate}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">No of Stops</p>
+                      <p className="text-[12px] font-bold text-gray-800 mt-0.5">{stops.length}</p>
+                    </div>
                   </div>
-                  <div className="px-3 py-2 border-t border-gray-100">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
-                    <p className="text-[12px] font-bold text-emerald-700 font-mono mt-0.5 truncate">{vehicle?.code ?? "—"}</p>
-                    {vehicle?.category && <p className="text-[9px] text-gray-500 truncate">{vehicle.category}</p>}
-                  </div>
-                  <div className="px-3 py-2 border-t border-gray-100">
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Driver</p>
-                    <p className="text-[12px] font-bold text-indigo-700 mt-0.5 truncate">{driver?.name ?? "—"}</p>
-                    {driver?.id && <p className="text-[9px] text-gray-500 font-mono truncate">{driver.id}</p>}
+                  <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100">
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Departure</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5">{optStartTime}</p>
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Arrival</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5">{optResult?.arrival ?? "—"}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Info grid */}
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: "Stops",    value: String(stops.length) },
-                  { label: "Weight",   value: stops.reduce((n,s)=>n+s.netweight,0) ? `${stops.reduce((n,s)=>n+s.netweight,0)}kg` : "—" },
-                  { label: "Drops",    value: String(stops.filter(s=>s.type==="DROP").length) },
-                  { label: "Pickups",  value: String(stops.filter(s=>s.type==="PICKUP").length) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="text-center rounded-xl border border-gray-100 py-2.5 px-1"
-                    style={{ background: "#f8fafc" }}>
-                    <p className="text-[11px] font-bold text-gray-800">{value}</p>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">{label}</p>
+              {/* Optimisation result — visible after optimisation */}
+              {optResult && (
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Optimisation Result
+                  </p>
+                  <div className="rounded-xl border border-emerald-100 overflow-hidden" style={{ background: "#f0fdf4" }}>
+                    <div className="grid grid-cols-2 divide-x divide-emerald-100">
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">End Date</p>
+                        <p className="text-[12px] font-bold text-emerald-900 font-mono mt-0.5">{optResult.endDate}</p>
+                      </div>
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">End Time</p>
+                        <p className="text-[12px] font-bold text-emerald-900 font-mono mt-0.5">{optResult.endTime}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 divide-x divide-emerald-100 border-t border-emerald-100">
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">Duration</p>
+                        <p className="text-[12px] font-bold text-emerald-900 mt-0.5">{optResult.duration}</p>
+                      </div>
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">Distance</p>
+                        <p className="text-[12px] font-bold text-emerald-900 mt-0.5">{optResult.distance}</p>
+                      </div>
+                      <div className="px-3 py-2">
+                        <p className="text-[9px] text-emerald-700/70 uppercase tracking-wide font-semibold">Cost</p>
+                        <p className="text-[12px] font-bold text-emerald-900 mt-0.5">{optResult.cost}</p>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
 
 
               {/* Order toggle */}
