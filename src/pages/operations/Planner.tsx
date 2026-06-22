@@ -435,6 +435,7 @@ function ActiveTourPanel({
   }
 
   return (
+    <>
     <div
       onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
       className={cn(
@@ -838,6 +839,7 @@ function ActiveTourPanel({
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 }
 
