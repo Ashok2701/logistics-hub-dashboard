@@ -741,7 +741,7 @@ function ActiveTourPanel({
                   <div className="px-3 py-2 border-t border-gray-100">
                     <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
                     <p className="text-[12px] font-bold text-emerald-700 font-mono mt-0.5 truncate">{vehicle?.code ?? "—"}</p>
-                    {vehicle?.name && <p className="text-[9px] text-gray-500 truncate">{vehicle.name}</p>}
+                    {vehicle?.category && <p className="text-[9px] text-gray-500 truncate">{vehicle.category}</p>}
                   </div>
                   <div className="px-3 py-2 border-t border-gray-100">
                     <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Driver</p>
