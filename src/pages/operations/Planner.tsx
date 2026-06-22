@@ -830,15 +830,26 @@ function ActiveTourPanel({
                 </p>
               </div>
 
-              {/* Start time */}
-              <div>
-                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Start Time</p>
-                <input type="time" value={optStartTime}
-                  onChange={(e) => setOptStartTime(e.target.value)}
-                  className="w-full rounded-xl border-2 border-gray-100 px-3 py-2.5 text-[14px] font-bold text-gray-800 focus:outline-none focus:border-blue-400"
-                  style={{ fontFamily: "Inter, monospace" }}
-                />
+              {/* Start date + time */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Start Date</p>
+                  <input type="date" value={optStartDate}
+                    onChange={(e) => setOptStartDate(e.target.value)}
+                    className="w-full rounded-xl border-2 border-gray-100 px-3 py-2.5 text-[12px] font-bold text-gray-800 focus:outline-none focus:border-blue-400"
+                    style={{ fontFamily: "Inter, monospace" }}
+                  />
+                </div>
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Start Time</p>
+                  <input type="time" value={optStartTime}
+                    onChange={(e) => setOptStartTime(e.target.value)}
+                    className="w-full rounded-xl border-2 border-gray-100 px-3 py-2.5 text-[12px] font-bold text-gray-800 focus:outline-none focus:border-blue-400"
+                    style={{ fontFamily: "Inter, monospace" }}
+                  />
+                </div>
               </div>
+
 
               {/* Stop sequence road */}
               {stops.length > 0 && (
