@@ -6,7 +6,7 @@ import {
   CheckCheck, X, Play, Map as MapIcon, List, GripVertical,
   Loader2, Trash2, Lock, Unlock, RefreshCw, ChevronDown,
   Package, AlertCircle, Info, Eye, Zap, Filter,
-  Wand2, GitMerge, ShieldCheck,
+  Wand2, GitMerge, ShieldCheck, ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -671,22 +671,16 @@ function ActiveTourPanel({
       )}
     </div>
 
-    {/* ── Route Management Detail Modal ── */}
-    {detailTrip && (
-      <RouteManagementDetail
-        trip={detailTrip}
-        onClose={() => setDetailTripId(null)}
-      />
-    )}
   </>
   );
 }
 
 // ═══════════════════════════════════════════════════════
-// ROUTE MANAGEMENT DETAIL MODAL
-// Opens when (i) is clicked on a trip row
+// ROUTE MANAGEMENT DETAIL — full screen page
+// Shown when (i) is clicked on a trip row
+// Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
-function RouteManagementDetail({ trip, onClose }: { trip: Trip; onClose: () => void }) {
+function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => void }) {
   const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
   const depTime  = "07:30";
   const retTime  = "18:30";
@@ -699,27 +693,44 @@ function RouteManagementDetail({ trip, onClose }: { trip: Trip; onClose: () => v
   const totalCost  = travelCost + distCost;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      onClick={onClose}>
-      <div className="bg-background rounded-xl shadow-2xl border border-border/60 w-full max-w-5xl max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}>
+    <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
+      <div className="flex-1 overflow-y-auto">
 
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border/60 sticky top-0 bg-background z-10">
-          <div>
-            <h2 className="text-sm font-semibold text-primary">Route Management</h2>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{trip.id}</p>
+        {/* ── Full-page header ── */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border/60 sticky top-0 bg-background z-10 shadow-sm">
+          {/* Back button */}
+          <button onClick={onBack}
+            className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+            Back to Planner
+          </button>
+
+          {/* Centred title */}
+          <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none">
+            <h2 className="text-sm font-semibold">Route Management</h2>
+            <p className="text-[10px] text-muted-foreground font-mono">{trip.id}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={cn("text-[10px] px-3 py-1 rounded font-bold", statusColor(trip.status))}>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-1.5">
+            <span className={cn("text-[10px] px-2 py-0.5 rounded font-bold", statusColor(trip.status))}>
               {trip.status.toUpperCase()}
             </span>
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
+              <RouteIcon className="w-3 h-3" /> Optimise
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
+              <Lock className="w-3 h-3" /> Lock
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
+              <ShieldCheck className="w-3 h-3" /> Validate
+            </Button>
+            <Button size="sm" className="h-7 text-[11px] gap-1 bg-emerald-600 hover:bg-emerald-700 text-white border-0">
               <Truck className="w-3 h-3" /> Load to Truck
             </Button>
-            <button onClick={onClose} className="w-7 h-7 rounded-md hover:bg-muted flex items-center justify-center">
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
+            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-rose-600 hover:bg-rose-50">
+              <Trash2 className="w-3 h-3" /> Delete
+            </Button>
           </div>
         </div>
 
@@ -1032,7 +1043,9 @@ export default function Planner() {
   // ── Confirmed trips ───────────────────────────────────
   const [trips, setTrips]                   = useState<Trip[]>([]);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
-  const [detailTripId,   setDetailTripId]   = useState<string | null>(null);
+  // 'planner' = main view | 'detail' = trip detail full screen
+  const [view, setView]               = useState<"planner" | "detail">("planner");
+  const [detailTripId, setDetailTripId] = useState<string | null>(null);
   const [tripView, setTripView]             = useState<"map" | "list">("map");
 
   // ── Filters ───────────────────────────────────────────
@@ -1275,6 +1288,16 @@ export default function Planner() {
   const currentSearch = stopTypeTab === "drops" ? dropSearch : pickSearch;
   const setCurrentSearch = stopTypeTab === "drops" ? setDropSearch : setPickSearch;
   const allCurrentSelected = currentStops.length > 0 && currentStops.every((s) => selectedStopIds.has(s.id));
+
+  // ── If detail view, render full-screen detail page ─────────
+  if (view === "detail" && detailTrip) {
+    return (
+      <RouteManagementDetail
+        trip={detailTrip}
+        onBack={() => { setView("planner"); setDetailTripId(null); }}
+      />
+    );
+  }
 
   return (
     <>
@@ -1684,7 +1707,7 @@ export default function Planner() {
                             <td className="px-2 py-1.5">
                               <button
                                 className="text-sky-600 hover:text-sky-700 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); setDetailTripId(t.id); }}
+                                onClick={(e) => { e.stopPropagation(); setDetailTripId(t.id); setView("detail"); }}
                                 title="Route Management Detail"
                               >
                                 <Info className="w-3.5 h-3.5" />
