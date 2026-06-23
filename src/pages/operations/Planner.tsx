@@ -178,8 +178,6 @@ function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip {
     tripId: r.tripId, tripCode: r.tripCode, optiStatus: r.optiStatus,
     lockFlag: r.lockFlag, createDate: r.createDate, updateDate: r.updateDate,
     ...fallback,
-    // ensure API identifiers always win
-    tripId: r.tripId, tripCode: r.tripCode,
   };
 }
 
