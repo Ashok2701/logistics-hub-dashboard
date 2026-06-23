@@ -160,7 +160,7 @@ function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip {
   const driver: Driver = fallback?.driver ?? {
     id: r.driverId ?? "", name: r.driverName, license: "", status: "On Trip", hoursToday: 0,
   };
-  return {
+  const base: Trip = {
     id: r.tripCode,
     routeCode: r.tripCode,
     seq: 0,
@@ -177,8 +177,9 @@ function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip {
     createdAt: r.createDate, departSite: r.depSite ?? r.site, arrivalSite: r.arrSite ?? r.site,
     tripId: r.tripId, tripCode: r.tripCode, optiStatus: r.optiStatus,
     lockFlag: r.lockFlag, createDate: r.createDate, updateDate: r.updateDate,
-    ...fallback,
   };
+  // Fallback supplies snapshot defaults; API identifiers must win
+  return { ...fallback, ...base };
 }
 
 const hoursColor = (h: number) =>
