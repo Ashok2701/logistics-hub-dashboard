@@ -1494,6 +1494,20 @@ export default function Planner() {
         toast({ title: "Failed to load", description: e.message, variant: "destructive" });
       })
       .finally(() => setLoading(false));
+
+    // Load existing trips from backend; merge with any locally confirmed trips (dedupe by tripCode)
+    tripApi.loadTrips(site, date)
+      .then((apiTrips) => {
+        if (!apiTrips || apiTrips.length === 0) return;
+        const mapped = apiTrips.map((r) => tripFromApi(r));
+        setTrips((prev) => {
+          const codes = new Set(prev.map((t) => t.tripCode ?? t.id));
+          const merged = [...prev];
+          mapped.forEach((t) => { if (!codes.has(t.tripCode ?? t.id)) merged.push(t); });
+          return merged.map((t, i) => ({ ...t, seq: i + 1 }));
+        });
+      })
+      .catch(() => { /* silent — endpoint may be empty / offline */ });
   }, [site, date, refreshKey]);
 
   // ── Derived datasets ───────────────────────────────────
