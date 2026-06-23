@@ -2246,13 +2246,27 @@ export default function Planner() {
                               </span>
                             </td>
                             <td className="px-2 py-1.5">
-                              <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
-                                className="flex items-center justify-center w-6 h-6 rounded hover:bg-muted">
-                                {t.locked
-                                  ? <Lock className="w-3.5 h-3.5 text-orange-500" />
-                                  : <Unlock className="w-3.5 h-3.5 text-muted-foreground/50" />}
-                              </button>
+                              <div className="flex items-center gap-0.5">
+                                <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
+                                  title={t.locked ? "Unlock" : "Lock"}
+                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-muted">
+                                  {t.locked
+                                    ? <Lock className="w-3.5 h-3.5 text-amber-500" />
+                                    : <Unlock className="w-3.5 h-3.5 text-muted-foreground/50" />}
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); validateTrip(t.id); }}
+                                  title="Validate"
+                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-green-50">
+                                  <ShieldCheck className={cn("w-3.5 h-3.5", t.optiStatus === "Validated" ? "text-green-600" : "text-muted-foreground/50")} />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); deleteTrip(t.id); }}
+                                  title="Delete"
+                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-rose-50">
+                                  <Trash2 className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-rose-600" />
+                                </button>
+                              </div>
                             </td>
+
                             <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
                             <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.departSite}</td>
                             <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.arrivalSite}</td>
