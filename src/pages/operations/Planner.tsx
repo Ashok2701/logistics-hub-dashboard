@@ -108,7 +108,7 @@ function mapStop(s: RpStop): Stop {
 // ═══════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════
-type TripStatus = "Open" | "Optimized" | "Locked" | "Confirmed";
+type TripStatus = "Open" | "Optimized" | "Optimised" | "Locked" | "Confirmed" | "Validated";
 type Trip = {
   id: string; routeCode: string; seq: number;
   vehicle: Vehicle; driver: Driver; stops: Stop[];
@@ -116,6 +116,13 @@ type Trip = {
   totalQty: number; pickups: number; deliveries: number;
   status: TripStatus; locked: boolean; tmsValidated: boolean;
   createdAt: string; departSite: string; arrivalSite: string;
+  // API-backed fields (present once trip is persisted)
+  tripId?: number;
+  tripCode?: string;
+  optiStatus?: OptiStatus;
+  lockFlag?: number;
+  createDate?: string;
+  updateDate?: string;
 };
 
 // ═══════════════════════════════════════════════════════
@@ -127,11 +134,54 @@ const priorityColor = (p: Stop["priority"]) =>
   : "bg-green-100 text-green-800 border-green-200";
 
 const statusColor = (s: TripStatus) => ({
-  Open:      "bg-sky-100 text-sky-800",
-  Optimized: "bg-violet-100 text-violet-800",
-  Locked:    "bg-orange-100 text-orange-800",
+  Open:      "bg-slate-100 text-slate-700",
+  Optimized: "bg-blue-100 text-blue-800",
+  Optimised: "bg-blue-100 text-blue-800",
+  Locked:    "bg-amber-100 text-amber-800",
+  Validated: "bg-green-100 text-green-800",
   Confirmed: "bg-emerald-100 text-emerald-800",
 }[s]);
+
+// Map API optiStatus → internal status
+function statusFromApi(s: OptiStatus): TripStatus {
+  return s === "Optimised" ? "Optimised" : s;
+}
+
+// Convert an API TripResponseDTO into local Trip shape (best-effort with snapshots)
+function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip {
+  const stops: Stop[] = Array.isArray(r.stopObjects) && r.stopObjects.length
+    ? r.stopObjects as Stop[]
+    : (fallback?.stops ?? []);
+  const vehicle: Vehicle = (r.vehicleObject as Vehicle) ?? fallback?.vehicle ?? {
+    code: r.vehicleCode, vehicleNo: r.vehicleCode, departureSite: r.depSite ?? "",
+    arrivalSite: r.arrSite ?? "", driverName: r.driverName, category: "",
+    capacity: 0, vol: 0, maxOrders: 0, startTime: r.startTime, site: r.site,
+  };
+  const driver: Driver = fallback?.driver ?? {
+    id: r.driverId ?? "", name: r.driverName, license: "", status: "On Trip", hoursToday: 0,
+  };
+  return {
+    id: r.tripCode,
+    routeCode: r.tripCode,
+    seq: 0,
+    vehicle, driver, stops,
+    distanceKm: Number(r.totalDistance) || 0,
+    travelTimeMin: 0,
+    totalWeight: Number(r.totalWeight) || 0,
+    totalVol: Number(r.totalVolume ?? 0) || 0,
+    totalQty: 0,
+    pickups: r.pickups, deliveries: r.drops,
+    status: statusFromApi(r.optiStatus),
+    locked: r.lockFlag === 1,
+    tmsValidated: r.optiStatus === "Validated",
+    createdAt: r.createDate, departSite: r.depSite ?? r.site, arrivalSite: r.arrSite ?? r.site,
+    tripId: r.tripId, tripCode: r.tripCode, optiStatus: r.optiStatus,
+    lockFlag: r.lockFlag, createDate: r.createDate, updateDate: r.updateDate,
+    ...fallback,
+    // ensure API identifiers always win
+    tripId: r.tripId, tripCode: r.tripCode,
+  };
+}
 
 const hoursColor = (h: number) =>
   h >= 10 ? "text-rose-600" : h >= 8 ? "text-amber-600" : "text-emerald-600";
