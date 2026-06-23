@@ -2331,14 +2331,24 @@ export default function Planner() {
                                       </button>
                                       <button
                                         disabled={optRunning}
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
                                           setOptRunning(true);
-                                          setTimeout(() => {
+                                          try {
+                                            if (t.tripId != null) {
+                                              const resp = await tripApi.optimiseTrip(t.tripId, optOrder, optTime);
+                                              setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+                                            } else {
+                                              // Local-only trip — mark optimised in UI
+                                              setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" } : x));
+                                            }
+                                            toast({ title: "Optimisation complete", description: `Trip ${t.tripCode ?? t.id.slice(-12)} optimised` });
+                                          } catch (err: any) {
+                                            toast({ title: "Optimisation failed", description: err?.message ?? "Unknown error", variant: "destructive" });
+                                          } finally {
                                             setOptRunning(false);
                                             setOptTripId(null);
-                                            toast({ title: "Optimisation complete", description: `Trip ${t.id.slice(-12)} optimised` });
-                                          }, 1800);
+                                          }
                                         }}
                                         className={cn(
                                           "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
@@ -2349,6 +2359,7 @@ export default function Planner() {
                                           ? <><Loader2 className="w-3 h-3 animate-spin" /> Running…</>
                                           : <><Zap className="w-3 h-3 text-amber-400" /> Optimise</>}
                                       </button>
+
                                     </div>
                                   </div>
                                 </motion.div>
