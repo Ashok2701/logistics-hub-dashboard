@@ -1635,7 +1635,7 @@ export default function Planner() {
     toast({ title: `${selectedStopIds.size} stop(s) added to active trip` });
   }
 
-  function confirmTrip() {
+  async function confirmTrip() {
     if (!draftVehicle) return toast({ title: "Select a vehicle", description: "Click a vehicle row to assign." });
     if (!draftDriver)  return toast({ title: "Assign a driver",  description: "Drag a driver or click a driver row." });
     if (!draftStopIds.length) return toast({ title: "Add stops", description: "Select drops/pickups and add to trip." });
@@ -1645,24 +1645,73 @@ export default function Planner() {
     const totalQty    = draftStops.reduce((n, s) => n + s.qty, 0);
     const deliveries  = draftStops.filter((s) => s.type === "DROP").length;
     const pickupCount = draftStops.filter((s) => s.type === "PICKUP").length;
-    const newId       = `XVR-${date.replace(/-/g, "")}-${site}-${String(trips.length + 1).padStart(3, "0")}`;
+    const distanceKm  = Math.round(40 + draftStops.length * 12 + Math.random() * 30);
+    const travelMin   = Math.round(60 + draftStops.length * 18);
+    const travelHHMM  = `${String(Math.floor(travelMin / 60)).padStart(2, "0")}:${String(travelMin % 60).padStart(2, "0")}`;
+    const capacity    = Number(draftVehicle.capacity) || 0;
+    const capVol      = Number(draftVehicle.vol) || 0;
+    const fallbackId  = `XVR-${date.replace(/-/g, "")}-${site}-${String(trips.length + 1).padStart(3, "0")}`;
 
-    const trip: Trip = {
-      id: newId,
+    const totalObject = {
+      totalWeight, totalVol, totalQty, deliveries, pickups: pickupCount,
+      distanceKm, travelMin, capacity, capVol,
+    };
+
+    const payload = {
+      site,
+      docDate: date,
+      driverId: draftDriver.id,
+      driverName: draftDriver.name,
+      vehicleCode: draftVehicle.code,
+      depSite: site,
+      arrSite: site,
+      drops: deliveries,
+      pickups: pickupCount,
+      noOfPackages: totalQty,
+      startTime: draftVehicle.startTime || "07:30",
+      endTime: "18:30",
+      totalWeight: String(totalWeight),
+      totalVolume: String(totalVol),
+      capacity: String(capacity),
+      uomCapacity: "LB",
+      uomVolume: "GAL",
+      totalDistance: String(distanceKm),
+      uomDistance: "mi",
+      travelTime: travelHHMM,
+      weightPct: capacity > 0 ? Number((totalWeight / capacity).toFixed(4)) : 0,
+      volumePct: capVol > 0 ? Number((totalVol / capVol).toFixed(4)) : 0,
+      totalCost: "0",
+      notes: "",
+      generatedBy: "PLANNER",
+      userCode: "SYSTEM",
+      stopObjects: draftStops as any[],
+      vehicleObject: draftVehicle as any,
+      totalObject,
+    };
+
+    const fallback: Trip = {
+      id: fallbackId,
       routeCode: `Route code ${trips.length + 1}`,
       seq: trips.length + 1,
       vehicle: draftVehicle, driver: draftDriver, stops: draftStops,
-      distanceKm: Math.round(40 + draftStops.length * 12 + Math.random() * 30),
-      travelTimeMin: Math.round(60 + draftStops.length * 18),
+      distanceKm, travelTimeMin: travelMin,
       totalWeight, totalVol, totalQty, deliveries, pickups: pickupCount,
       status: "Open", locked: false, tmsValidated: false,
       createdAt: new Date().toLocaleTimeString(),
       departSite: site, arrivalSite: site,
     };
-    setTrips((prev) => [...prev, trip]);
-    setSelectedTripId(trip.id);
-    clearDraft();
-    toast({ title: "Trip confirmed", description: `${newId} · ${draftStops.length} stops · ${totalWeight} kg` });
+
+    try {
+      const resp = await tripApi.createTrip(payload);
+      const trip = tripFromApi(resp, fallback);
+      trip.seq = trips.length + 1;
+      setTrips((prev) => [...prev, trip]);
+      setSelectedTripId(trip.id);
+      clearDraft();
+      toast({ title: "Trip confirmed", description: `${resp.tripCode} · ${draftStops.length} stops · ${totalWeight} kg` });
+    } catch (e: any) {
+      toast({ title: "Failed to confirm trip", description: e?.message ?? "Unknown error", variant: "destructive" });
+    }
   }
 
   // ── Trip row actions ───────────────────────────────────
@@ -1674,16 +1723,53 @@ export default function Planner() {
     setDraftStopIds(t.stops.map((s) => s.id));
   }
 
-  function lockTrip(id: string) {
-    setTrips((prev) => prev.map((t) =>
-      t.id === id ? { ...t, locked: !t.locked, status: t.locked ? "Optimized" : "Locked" } : t
-    ));
+  async function setTripStatus(trip: Trip, optiStatus: OptiStatus, lockFlag: number) {
+    if (trip.tripId == null) {
+      // Local-only trip (not yet persisted) — update UI optimistically
+      setTrips((prev) => prev.map((t) => t.id === trip.id
+        ? { ...t, status: optiStatus === "Optimised" ? "Optimised" : optiStatus, locked: lockFlag === 1, optiStatus, lockFlag }
+        : t));
+      return;
+    }
+    try {
+      const resp = await tripApi.updateTripStatus(trip.tripId, {
+        optiStatus, lockFlag, notes: "", userCode: "SYSTEM",
+      });
+      setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
+      toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
+    } catch (e: any) {
+      toast({ title: "Status update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    }
   }
-  function deleteTrip(id: string) {
-    setTrips((prev) => prev.filter((t) => t.id !== id));
+
+  function lockTrip(id: string) {
+    const t = trips.find((x) => x.id === id);
+    if (!t) return;
+    const willLock = !t.locked;
+    setTripStatus(t, willLock ? "Locked" : "Open", willLock ? 1 : 0);
+  }
+
+  function validateTrip(id: string) {
+    const t = trips.find((x) => x.id === id);
+    if (!t) return;
+    setTripStatus(t, "Validated", 1);
+  }
+
+  async function deleteTrip(id: string) {
+    const t = trips.find((x) => x.id === id);
+    if (t?.tripId != null) {
+      try {
+        await tripApi.deleteTrip(t.tripId);
+      } catch (e: any) {
+        toast({ title: "Delete failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+        return;
+      }
+    }
+    setTrips((prev) => prev.filter((x) => x.id !== id));
     if (selectedTripId === id) { setSelectedTripId(null); clearDraft(); }
     toast({ title: "Trip removed" });
   }
+
 
   // ── Render ─────────────────────────────────────────────
   const currentStops = stopTypeTab === "drops" ? drops : pickups;
