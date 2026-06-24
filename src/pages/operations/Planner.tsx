@@ -2286,19 +2286,20 @@ export default function Planner() {
                     <thead className="bg-muted/30 sticky top-0 z-10">
                       <tr>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
-                        {["Details","Route Code","Seq","Vehicle","Status","Lock","Driver","Depart","Arrival"].map((h) => (
+                        {["Trip Code","Details","Status","Vehicle","Driver","Stops","List","Actions"].map((h) => (
                           <th key={h} className="px-2 py-1.5 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {filteredTrips.length === 0 && (
-                        <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-muted-foreground">
+                        <tr><td colSpan={9} className="px-3 py-12 text-center text-xs text-muted-foreground">
                           {trips.length === 0 ? "No trips yet — confirm a trip above" : "No trips match filters"}
                         </td></tr>
                       )}
                       {filteredTrips.map((t) => {
                         const sel = t.id === selectedTripId;
+                        const apiStatus = t.optiStatus ?? (t.status as OptiStatus);
                         return (
                           <tr key={t.id}
                             onClick={() => selectTrip(t)}
@@ -2311,6 +2312,9 @@ export default function Planner() {
                             <td className="px-2 py-1.5">
                               <Checkbox checked={sel} onCheckedChange={() => selectTrip(t)} onClick={(e) => e.stopPropagation()} />
                             </td>
+                            <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">
+                              {t.tripCode ?? t.id.slice(-12)}
+                            </td>
                             <td className="px-2 py-1.5">
                               <button
                                 className="text-sky-600 hover:text-sky-700 transition-colors"
@@ -2320,30 +2324,37 @@ export default function Planner() {
                                 <Info className="w-3.5 h-3.5" />
                               </button>
                             </td>
-                            <td className="px-1.5 py-1.5">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
-                                title="Optimise this trip"
-                                className={cn(
-                                  "w-6 h-6 rounded flex items-center justify-center text-[11px] transition-all",
-                                  optTripId === t.id
-                                    ? "bg-amber-500 text-white shadow-sm"
-                                    : "bg-muted text-muted-foreground hover:bg-amber-100 hover:text-amber-600"
-                                )}
-                              >
-                                <Zap className="w-3 h-3" />
-                              </button>
-                            </td>
-                            <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{t.id.slice(-12)}</td>
-                            <td className="px-2 py-1.5 text-xs font-mono text-center">{t.seq}</td>
-                            <td className="px-2 py-1.5 font-mono font-bold text-xs">{t.vehicle.code}</td>
                             <td className="px-2 py-1.5">
                               <span className={cn("text-[9px] px-2 py-0.5 rounded font-bold", statusColor(t.status))}>
-                                {t.status.toUpperCase()}
+                                {String(apiStatus ?? t.status).toUpperCase()}
                               </span>
+                            </td>
+                            <td className="px-2 py-1.5 font-mono font-bold text-xs">{t.vehicle.code}</td>
+                            <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
+                            <td className="px-2 py-1.5 text-xs font-mono text-center">{t.stops.length}</td>
+                            <td className="px-2 py-1.5">
+                              <button
+                                title="Show stops as list"
+                                onClick={(e) => { e.stopPropagation(); selectTrip(t); setTripView("list"); }}
+                                className="flex items-center justify-center w-6 h-6 rounded hover:bg-primary/10 text-primary"
+                              >
+                                <List className="w-3.5 h-3.5" />
+                              </button>
                             </td>
                             <td className="px-2 py-1.5">
                               <div className="flex items-center gap-0.5">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
+                                  title="Optimise this trip"
+                                  className={cn(
+                                    "w-6 h-6 rounded flex items-center justify-center transition-all",
+                                    optTripId === t.id
+                                      ? "bg-amber-500 text-white shadow-sm"
+                                      : "hover:bg-amber-100 text-muted-foreground hover:text-amber-600"
+                                  )}
+                                >
+                                  <Zap className="w-3 h-3" />
+                                </button>
                                 <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
                                   title={t.locked ? "Unlock" : "Lock"}
                                   className="flex items-center justify-center w-6 h-6 rounded hover:bg-muted">
@@ -2364,9 +2375,6 @@ export default function Planner() {
                               </div>
                             </td>
 
-                            <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
-                            <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.departSite}</td>
-                            <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.arrivalSite}</td>
 
                           {/* ── OPTION 3: Inline expand below trip row ── */}
                           {optTripId === t.id && (
