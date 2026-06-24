@@ -1397,6 +1397,7 @@ export default function Planner() {
   const [stopTypeTab, setStopTypeTab]   = useState<"drops" | "pickups">("drops");
   const [fleetTab, setFleetTab]         = useState<"vehicles" | "drivers">("vehicles");
   const [selectedStopIds, setSelectedStopIds] = useState<Set<string>>(new Set()); // multi-select in tables
+  const [toPlanOnly, setToPlanOnly] = useState<boolean>(false);
 
   // ── Auto Trip Generation modal ────────────────────────
   const [showAutoGen, setShowAutoGen]   = useState(false);
