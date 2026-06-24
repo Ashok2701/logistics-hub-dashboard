@@ -2080,7 +2080,7 @@ export default function Planner() {
                           <tr key={d.id}
                             draggable={!busy}
                             onDragStart={(e) => onDriverDragStart(e, d)}
-                            onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
+                            onClick={() => { if (!busy) reassignDriver(sel ? null : d); }}
                             className={cn(
                               "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
                               sel
