@@ -150,9 +150,9 @@ function statusFromApi(s: OptiStatus): TripStatus {
 // Convert an API TripResponseDTO into local Trip shape (best-effort with snapshots)
 function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip {
   const stops: Stop[] = Array.isArray(r.stopObjects) && r.stopObjects.length
-    ? r.stopObjects as Stop[]
+    ? (r.stopObjects as unknown as Stop[])
     : (fallback?.stops ?? []);
-  const vehicle: Vehicle = (r.vehicleObject as Vehicle) ?? fallback?.vehicle ?? {
+  const vehicle: Vehicle = (r.vehicleObject as unknown as Vehicle) ?? fallback?.vehicle ?? {
     code: r.vehicleCode, vehicleNo: r.vehicleCode, departureSite: r.depSite ?? "",
     arrivalSite: r.arrSite ?? "", driverName: r.driverName, category: "",
     capacity: 0, vol: 0, maxOrders: 0, startTime: r.startTime, site: r.site,
@@ -1677,30 +1677,34 @@ export default function Planner() {
       driverId: draftDriver.id,
       driverName: draftDriver.name,
       vehicleCode: draftVehicle.code,
-      depSite: site,
-      arrSite: site,
+      depSite: (draftVehicle as any).departureSite || site,
+      arrSite: (draftVehicle as any).arrivalSite || site,
       drops: deliveries,
       pickups: pickupCount,
       noOfPackages: totalQty,
       startTime: draftVehicle.startTime || "07:30",
-      endTime: "18:30",
+      endTime: "",
       totalWeight: String(totalWeight),
       totalVolume: String(totalVol),
       capacity: String(capacity),
-      uomCapacity: "LB",
-      uomVolume: "GAL",
-      totalDistance: String(distanceKm),
+      uomCapacity: (draftVehicle as any).weightUnit || "KG",
+      uomVolume: (draftVehicle as any).volumeUnit || "M3",
       uomDistance: "mi",
-      travelTime: travelHHMM,
-      weightPct: capacity > 0 ? Number((totalWeight / capacity).toFixed(4)) : 0,
-      volumePct: capVol > 0 ? Number((totalVol / capVol).toFixed(4)) : 0,
-      totalCost: "0",
+      weightPct: capacity > 0 ? Number(((totalWeight / capacity) * 100).toFixed(4)) : 0,
+      volumePct: capVol > 0 ? Number(((totalVol / capVol) * 100).toFixed(4)) : 0,
+      travelTime: "",
+      totalTime: "",
+      totalDistance: "",
+      totalCost: "",
+      distanceCost: "",
+      fixedCost: "",
+      serviceCost: "",
       notes: "",
       generatedBy: "PLANNER",
       userCode: "SYSTEM",
-      stopObjects: draftStops as any[],
+      stopObjects: draftStops as any,
       vehicleObject: draftVehicle as any,
-      totalObject,
+      totalObject: null as any,
     };
 
     const fallback: Trip = {
