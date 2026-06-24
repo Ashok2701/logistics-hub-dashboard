@@ -104,6 +104,8 @@ function mapStop(s: RpStop): Stop {
     dlvyStatus:  s.routeStatus === "Allocated" ? "Allocated" : "open",
     lat:         Number(s.latitude ?? 0),
     lng:         Number(s.longitude ?? 0),
+    routeStatus: s.routeStatus && s.routeStatus.trim() ? s.routeStatus : "To Plan",
+    routeTagColor: s.routeColor ?? null,
   };
 }
 
