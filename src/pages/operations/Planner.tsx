@@ -44,6 +44,8 @@ type Stop = {
   qty: number; netweight: number; vol: number;
   dlvyStatus: "open" | "Allocated" | "8";
   lat: number; lng: number;
+  routeStatus: string;             // "To Plan" | "Planned" | …
+  routeTagColor?: string | null;   // hex for Type badge background
 };
 
 // ── Mappers: API types → Planner internal types ──────────────
