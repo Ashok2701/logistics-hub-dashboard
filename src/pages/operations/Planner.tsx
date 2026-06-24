@@ -2021,7 +2021,7 @@ export default function Planner() {
                       </tr>
                     </thead>
                     <tbody>
-                      {drivers.map((d) => {
+                      {drivers.map((d, i) => {
                         const busy = d.status !== "Available";
                         const sel  = draftDriver?.id === d.id;
                         return (
@@ -2033,7 +2033,9 @@ export default function Planner() {
                               "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
                               sel
                                 ? "bg-indigo-50 dark:bg-indigo-950/30"
-                                : busy ? "opacity-50 hover:bg-muted/30" : "hover:bg-indigo-50/40"
+                                : busy
+                                  ? cn(i % 2 === 1 && "bg-muted/30", "opacity-50 hover:bg-muted/30")
+                                  : cn(i % 2 === 1 && "bg-muted/30", "hover:bg-indigo-50/40")
                             )}
                           >
                             <td className={cn("px-2 py-1 font-mono font-bold text-[11px]", sel ? "text-indigo-700" : "text-primary")}>
