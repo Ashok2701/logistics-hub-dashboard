@@ -150,9 +150,9 @@ function statusFromApi(s: OptiStatus): TripStatus {
 // Convert an API TripResponseDTO into local Trip shape (best-effort with snapshots)
 function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip {
   const stops: Stop[] = Array.isArray(r.stopObjects) && r.stopObjects.length
-    ? r.stopObjects as Stop[]
+    ? (r.stopObjects as unknown as Stop[])
     : (fallback?.stops ?? []);
-  const vehicle: Vehicle = (r.vehicleObject as Vehicle) ?? fallback?.vehicle ?? {
+  const vehicle: Vehicle = (r.vehicleObject as unknown as Vehicle) ?? fallback?.vehicle ?? {
     code: r.vehicleCode, vehicleNo: r.vehicleCode, departureSite: r.depSite ?? "",
     arrivalSite: r.arrSite ?? "", driverName: r.driverName, category: "",
     capacity: 0, vol: 0, maxOrders: 0, startTime: r.startTime, site: r.site,
