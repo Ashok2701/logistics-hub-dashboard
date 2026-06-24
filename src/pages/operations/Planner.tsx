@@ -1553,16 +1553,18 @@ export default function Planner() {
     [allStops, usedStopIds]);
 
   const drops = useMemo(() =>
-    availableStops.filter((s) =>
+    allStops.filter((s) =>
       s.type === "DROP" &&
+      (!toPlanOnly || (!usedStopIds.has(s.id) && !draftStopIds.includes(s.id) && (s.routeStatus === "To Plan" || !s.routeStatus))) &&
       (!dropSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(dropSearch.toLowerCase()))
-    ), [availableStops, dropSearch]);
+    ), [allStops, dropSearch, toPlanOnly, usedStopIds, draftStopIds]);
 
   const pickups = useMemo(() =>
-    availableStops.filter((s) =>
+    allStops.filter((s) =>
       s.type === "PICKUP" &&
+      (!toPlanOnly || (!usedStopIds.has(s.id) && !draftStopIds.includes(s.id) && (s.routeStatus === "To Plan" || !s.routeStatus))) &&
       (!pickSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(pickSearch.toLowerCase()))
-    ), [availableStops, pickSearch]);
+    ), [allStops, pickSearch, toPlanOnly, usedStopIds, draftStopIds]);
 
   const draftStops = useMemo(() =>
     allStops.filter((s) => draftStopIds.includes(s.id)),
