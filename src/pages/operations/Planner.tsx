@@ -1495,19 +1495,21 @@ export default function Planner() {
       })
       .finally(() => setLoading(false));
 
-    // Load existing trips from backend; merge with any locally confirmed trips (dedupe by tripCode)
+    // Load existing trips for the selected site + date from backend.
+    // Replace persisted trips with API response; preserve any local-only (unsaved) trips.
     tripApi.loadTrips(site, date)
       .then((apiTrips) => {
-        if (!apiTrips || apiTrips.length === 0) return;
-        const mapped = apiTrips.map((r) => tripFromApi(r));
+        const mapped = (apiTrips ?? []).map((r) => tripFromApi(r));
         setTrips((prev) => {
-          const codes = new Set(prev.map((t) => t.tripCode ?? t.id));
-          const merged = [...prev];
-          mapped.forEach((t) => { if (!codes.has(t.tripCode ?? t.id)) merged.push(t); });
+          const localOnly = prev.filter((t) => t.tripId == null);
+          const merged = [...mapped, ...localOnly];
           return merged.map((t, i) => ({ ...t, seq: i + 1 }));
         });
       })
-      .catch(() => { /* silent — endpoint may be empty / offline */ });
+      .catch(() => {
+        // Endpoint may be empty / offline — drop persisted trips from previous site/date.
+        setTrips((prev) => prev.filter((t) => t.tripId == null).map((t, i) => ({ ...t, seq: i + 1 })));
+      });
   }, [site, date, refreshKey]);
 
   // ── Derived datasets ───────────────────────────────────
@@ -1727,6 +1729,8 @@ export default function Planner() {
       setSelectedTripId(trip.id);
       clearDraft();
       toast({ title: "Trip confirmed", description: `${resp.tripCode} · ${draftStops.length} stops · ${totalWeight} kg` });
+      // Refetch trips for the current site + date so the list reflects backend state.
+      setRefreshKey((k) => k + 1);
     } catch (e: any) {
       toast({ title: "Failed to confirm trip", description: e?.message ?? "Unknown error", variant: "destructive" });
     }
