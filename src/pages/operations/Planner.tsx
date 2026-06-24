@@ -2107,6 +2107,14 @@ export default function Planner() {
                     Add {selectedStopIds.size} to Trip
                   </Button>
                 )}
+                <label className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap pl-1">
+                  <Checkbox
+                    checked={toPlanOnly}
+                    onCheckedChange={(c) => setToPlanOnly(Boolean(c))}
+                    className="h-3 w-3"
+                  />
+                  To Plan
+                </label>
               </div>
 
               {/* Table */}
@@ -2120,15 +2128,16 @@ export default function Planner() {
                           onCheckedChange={() => toggleAllStops(currentStops)}
                         />
                       </th>
-                      {["Transaction No","Prep List","Priority","Client Code","Client","Route Code","Postal City","Qty","Weight",""].map((h) => (
+                      {["Transaction No","Type","Priority","Client Code","Route Code","Postal City","Qty","Weight",""].map((h) => (
                         <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {currentStops.map((s) => (
+                    {currentStops.map((s, i) => (
                       <StopRow
-                        key={s.id} stop={s}
+                        key={s.id} stop={s} index={i}
+                        used={usedStopIds.has(s.id) || draftStopIds.includes(s.id)}
                         selected={selectedStopIds.has(s.id)}
                         onToggle={() => toggleSelectedStop(s.id)}
                         dragging={dragStopIds.includes(s.id)}
@@ -2142,7 +2151,7 @@ export default function Planner() {
                     ))}
                     {currentStops.length === 0 && (
                       <tr>
-                        <td colSpan={11} className="px-3 py-10 text-center text-xs text-muted-foreground">
+                        <td colSpan={10} className="px-3 py-10 text-center text-xs text-muted-foreground">
                           No {stopTypeTab === "drops" ? "deliveries" : "pickups"} available
                         </td>
                       </tr>
