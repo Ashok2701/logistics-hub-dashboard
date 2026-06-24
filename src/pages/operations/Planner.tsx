@@ -1976,7 +1976,7 @@ export default function Planner() {
                       </tr>
                     </thead>
                     <tbody>
-                      {vehicles.map((v) => {
+                      {vehicles.map((v, i) => {
                         const sel = draftVehicle?.code === v.code;
                         return (
                           <tr key={v.code}
@@ -1986,7 +1986,7 @@ export default function Planner() {
                               "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
                               sel
                                 ? "bg-emerald-50 dark:bg-emerald-950/30"
-                                : "hover:bg-muted/50"
+                                : cn(i % 2 === 1 && "bg-muted/30", "hover:bg-muted/50")
                             )}
                           >
                             <td className={cn("px-2 py-1 font-mono font-bold text-[11px]", sel ? "text-emerald-700" : "text-primary")}>
