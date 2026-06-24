@@ -278,4 +278,5 @@ export const tripApi = {
     return optimiseTrip(id, payloadOrOrderMode);
   },
   deleteTrip,
+  updateTrip,
 };
