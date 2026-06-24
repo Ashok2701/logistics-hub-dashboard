@@ -1680,6 +1680,7 @@ export default function Planner() {
 
   function clearDraft() {
     setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
+    loadedTripRef.current = null;
   }
 
   function addSelectedStopsToDraft() {
