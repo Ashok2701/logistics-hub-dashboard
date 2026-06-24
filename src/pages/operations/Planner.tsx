@@ -1602,6 +1602,7 @@ export default function Planner() {
       ids.forEach((id) => { if (!next.includes(id)) next.push(id); });
       return next;
     });
+    setAllStops((prev) => prev.map((s) => ids.includes(s.id) ? { ...s, routeStatus: "Planned" } : s));
   }, []);
 
   const toggleSelectedStop = useCallback((id: string) => {
