@@ -108,6 +108,7 @@ export interface TripRecord {
 export type TripResponseDTO = TripRecord;
 
 export interface CreateTripPayload {
+  tripCode?: string;
   site: string;
   docDate: string;
   driverId: string;
