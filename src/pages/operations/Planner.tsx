@@ -2865,6 +2865,32 @@ export default function Planner() {
       )}
     </AnimatePresence>
 
+    {/* Confirmation dialog (vehicle/driver reassign etc.) */}
+    <AlertDialog
+      open={!!confirmDialog?.open}
+      onOpenChange={(o) => { if (!o) setConfirmDialog(null); }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{confirmDialog?.title}</AlertDialogTitle>
+          <AlertDialogDescription>{confirmDialog?.description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>No</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={async () => {
+              const fn = confirmDialog?.onConfirm;
+              setConfirmDialog(null);
+              if (fn) await fn();
+            }}
+          >
+            {confirmDialog?.confirmLabel ?? "Yes"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
   </>
   );
 }
+
