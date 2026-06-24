@@ -2194,7 +2194,7 @@ export default function Planner() {
           <div style={{ minHeight: "40vh" }}>
           {/* ── BOTTOM: Resizable Trips | Map split ──────────── */}
           <ResizableSplit
-            defaultLeftPct={35}
+            defaultLeftPct={60}
             minPct={20}
             maxPct={80}
             leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}`}
