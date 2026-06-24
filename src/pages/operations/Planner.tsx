@@ -2033,7 +2033,7 @@ export default function Planner() {
                         return (
                           <tr key={v.code}
                             draggable onDragStart={(e) => onVehicleDragStart(e, v)}
-                            onClick={() => setDraftVehicle(sel ? null : v)}
+                            onClick={() => reassignVehicle(sel ? null : v)}
                             className={cn(
                               "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
                               sel
