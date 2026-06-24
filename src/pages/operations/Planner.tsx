@@ -1392,6 +1392,17 @@ export default function Planner() {
   const [optRunning,  setOptRunning]  = useState(false);
   const [tripView, setTripView]             = useState<"map" | "list">("map");
 
+  // Confirmation dialog (vehicle/driver reassign etc.)
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean; title: string; description: string;
+    confirmLabel?: string; onConfirm: () => void | Promise<void>;
+  } | null>(null);
+
+  // Track the loaded trip baseline so stop add/remove on a selected persisted trip
+  // can be auto-synced to the backend.
+  const loadedTripRef = useRef<{ tripId: number; stopIds: string[] } | null>(null);
+  const stopSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // ── Filters ───────────────────────────────────────────
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [stopTypeTab, setStopTypeTab]   = useState<"drops" | "pickups">("drops");
