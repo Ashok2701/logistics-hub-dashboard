@@ -2232,10 +2232,10 @@ export default function Planner() {
               e.stopPropagation();
               const id = e.dataTransfer.getData("text/driver-id");
               const d = apiDrivers.find((x) => x.id === id);
-              if (d) setDraftDriver(d);
+              if (d) reassignDriver(d);
             }}
-            onClearVehicle={() => setDraftVehicle(null)}
-            onClearDriver={() => setDraftDriver(null)}
+            onClearVehicle={() => reassignVehicle(null)}
+            onClearDriver={() => reassignDriver(null)}
             onRemoveStop={(id) => setDraftStopIds((prev) => prev.filter((x) => x !== id))}
             onClear={clearDraft}
             onConfirm={confirmTrip}
