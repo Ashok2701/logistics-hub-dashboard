@@ -1771,6 +1771,58 @@ export default function Planner() {
     setDraftStopIds(t.stops.map((s) => s.id));
   }
 
+  // Reassign vehicle/driver on a persisted trip — with confirmation + backend sync.
+  async function reassignVehicle(v: Vehicle | null) {
+    const trip = trips.find((x) => x.id === selectedTripId);
+    if (!trip) { setDraftVehicle(v); return; }
+    const ok = window.confirm(
+      v ? `Change vehicle of trip ${trip.tripCode ?? trip.id} to ${v.code}?`
+        : `Remove vehicle from trip ${trip.tripCode ?? trip.id}?`
+    );
+    if (!ok) return;
+    setDraftVehicle(v);
+    setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, vehicle: v ?? x.vehicle } : x));
+    if (trip.tripId != null && v) {
+      try {
+        const resp = await tripApi.updateTrip(trip.tripId, {
+          vehicleCode: v.code,
+          depSite: (v as any).departureSite || trip.departSite,
+          arrSite: (v as any).arrivalSite || trip.arrivalSite,
+          vehicleObject: v as any,
+        });
+        setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
+        toast({ title: "Vehicle updated", description: trip.tripCode ?? trip.id });
+      } catch (e: any) {
+        toast({ title: "Vehicle update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+      }
+    }
+  }
+
+  async function reassignDriver(d: Driver | null) {
+    const trip = trips.find((x) => x.id === selectedTripId);
+    if (!trip) { setDraftDriver(d); return; }
+    const ok = window.confirm(
+      d ? `Change driver of trip ${trip.tripCode ?? trip.id} to ${d.name}?`
+        : `Remove driver from trip ${trip.tripCode ?? trip.id}?`
+    );
+    if (!ok) return;
+    setDraftDriver(d);
+    setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, driver: d ?? x.driver } : x));
+    if (trip.tripId != null && d) {
+      try {
+        const resp = await tripApi.updateTrip(trip.tripId, {
+          driverId: d.id,
+          driverName: d.name,
+        });
+        setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
+        toast({ title: "Driver updated", description: trip.tripCode ?? trip.id });
+      } catch (e: any) {
+        toast({ title: "Driver update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+      }
+    }
+  }
+
+
   async function setTripStatus(trip: Trip, optiStatus: OptiStatus, lockFlag: number) {
     if (trip.tripId == null) {
       // Local-only trip (not yet persisted) — update UI optimistically
