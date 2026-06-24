@@ -382,6 +382,14 @@
     font-weight: 600 !important;
     letter-spacing: 0.04em;
   }
+
+  /* Global zebra striping for all tables */
+  table > tbody > tr:nth-child(even):not([data-state="selected"]) {
+    background-color: hsl(var(--muted) / 0.45);
+  }
+  table > tbody > tr:hover:not([data-state="selected"]) {
+    background-color: hsl(var(--primary) / 0.08) !important;
+  }
 }
 
 @layer utilities {
