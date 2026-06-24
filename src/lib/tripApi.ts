@@ -242,6 +242,14 @@ export async function deleteTrip(id: number | string): Promise<void> {
   await handle<void>(res);
 }
 
+// Partial update — used when re-assigning vehicle or driver from the planner.
+export async function updateTrip(id: number | string, payload: Partial<CreateTripPayload>): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${id}`, {
+    method: "PATCH", headers: authHeaders(), body: JSON.stringify(payload),
+  });
+  return handle<TripRecord>(res);
+}
+
 // Namespaced object kept for backward compatibility with existing imports.
 export const tripApi = {
   createTrip,
@@ -270,4 +278,5 @@ export const tripApi = {
     return optimiseTrip(id, payloadOrOrderMode);
   },
   deleteTrip,
+  updateTrip,
 };

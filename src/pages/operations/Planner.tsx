@@ -1771,6 +1771,58 @@ export default function Planner() {
     setDraftStopIds(t.stops.map((s) => s.id));
   }
 
+  // Reassign vehicle/driver on a persisted trip — with confirmation + backend sync.
+  async function reassignVehicle(v: Vehicle | null) {
+    const trip = trips.find((x) => x.id === selectedTripId);
+    if (!trip) { setDraftVehicle(v); return; }
+    const ok = window.confirm(
+      v ? `Change vehicle of trip ${trip.tripCode ?? trip.id} to ${v.code}?`
+        : `Remove vehicle from trip ${trip.tripCode ?? trip.id}?`
+    );
+    if (!ok) return;
+    setDraftVehicle(v);
+    setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, vehicle: v ?? x.vehicle } : x));
+    if (trip.tripId != null && v) {
+      try {
+        const resp = await tripApi.updateTrip(trip.tripId, {
+          vehicleCode: v.code,
+          depSite: (v as any).departureSite || trip.departSite,
+          arrSite: (v as any).arrivalSite || trip.arrivalSite,
+          vehicleObject: v as any,
+        });
+        setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
+        toast({ title: "Vehicle updated", description: trip.tripCode ?? trip.id });
+      } catch (e: any) {
+        toast({ title: "Vehicle update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+      }
+    }
+  }
+
+  async function reassignDriver(d: Driver | null) {
+    const trip = trips.find((x) => x.id === selectedTripId);
+    if (!trip) { setDraftDriver(d); return; }
+    const ok = window.confirm(
+      d ? `Change driver of trip ${trip.tripCode ?? trip.id} to ${d.name}?`
+        : `Remove driver from trip ${trip.tripCode ?? trip.id}?`
+    );
+    if (!ok) return;
+    setDraftDriver(d);
+    setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, driver: d ?? x.driver } : x));
+    if (trip.tripId != null && d) {
+      try {
+        const resp = await tripApi.updateTrip(trip.tripId, {
+          driverId: d.id,
+          driverName: d.name,
+        });
+        setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
+        toast({ title: "Driver updated", description: trip.tripCode ?? trip.id });
+      } catch (e: any) {
+        toast({ title: "Driver update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+      }
+    }
+  }
+
+
   async function setTripStatus(trip: Trip, optiStatus: OptiStatus, lockFlag: number) {
     if (trip.tripId == null) {
       // Local-only trip (not yet persisted) — update UI optimistically
@@ -1981,7 +2033,7 @@ export default function Planner() {
                         return (
                           <tr key={v.code}
                             draggable onDragStart={(e) => onVehicleDragStart(e, v)}
-                            onClick={() => setDraftVehicle(sel ? null : v)}
+                            onClick={() => reassignVehicle(sel ? null : v)}
                             className={cn(
                               "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
                               sel
@@ -2028,7 +2080,7 @@ export default function Planner() {
                           <tr key={d.id}
                             draggable={!busy}
                             onDragStart={(e) => onDriverDragStart(e, d)}
-                            onClick={() => { if (!busy) setDraftDriver(sel ? null : d); }}
+                            onClick={() => { if (!busy) reassignDriver(sel ? null : d); }}
                             className={cn(
                               "border-b border-border/20 cursor-pointer transition-colors select-none text-[11px]",
                               sel
@@ -2180,10 +2232,10 @@ export default function Planner() {
               e.stopPropagation();
               const id = e.dataTransfer.getData("text/driver-id");
               const d = apiDrivers.find((x) => x.id === id);
-              if (d) setDraftDriver(d);
+              if (d) reassignDriver(d);
             }}
-            onClearVehicle={() => setDraftVehicle(null)}
-            onClearDriver={() => setDraftDriver(null)}
+            onClearVehicle={() => reassignVehicle(null)}
+            onClearDriver={() => reassignDriver(null)}
             onRemoveStop={(id) => setDraftStopIds((prev) => prev.filter((x) => x !== id))}
             onClear={clearDraft}
             onConfirm={confirmTrip}
@@ -2234,19 +2286,20 @@ export default function Planner() {
                     <thead className="bg-muted/30 sticky top-0 z-10">
                       <tr>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
-                        {["Details","Route Code","Seq","Vehicle","Status","Lock","Driver","Depart","Arrival"].map((h) => (
+                        {["Trip Code","Details","Status","Vehicle","Driver","Stops","List","Actions"].map((h) => (
                           <th key={h} className="px-2 py-1.5 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {filteredTrips.length === 0 && (
-                        <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-muted-foreground">
+                        <tr><td colSpan={9} className="px-3 py-12 text-center text-xs text-muted-foreground">
                           {trips.length === 0 ? "No trips yet — confirm a trip above" : "No trips match filters"}
                         </td></tr>
                       )}
                       {filteredTrips.map((t) => {
                         const sel = t.id === selectedTripId;
+                        const apiStatus = t.optiStatus ?? (t.status as OptiStatus);
                         return (
                           <tr key={t.id}
                             onClick={() => selectTrip(t)}
@@ -2259,6 +2312,9 @@ export default function Planner() {
                             <td className="px-2 py-1.5">
                               <Checkbox checked={sel} onCheckedChange={() => selectTrip(t)} onClick={(e) => e.stopPropagation()} />
                             </td>
+                            <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">
+                              {t.tripCode ?? t.id.slice(-12)}
+                            </td>
                             <td className="px-2 py-1.5">
                               <button
                                 className="text-sky-600 hover:text-sky-700 transition-colors"
@@ -2268,30 +2324,37 @@ export default function Planner() {
                                 <Info className="w-3.5 h-3.5" />
                               </button>
                             </td>
-                            <td className="px-1.5 py-1.5">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
-                                title="Optimise this trip"
-                                className={cn(
-                                  "w-6 h-6 rounded flex items-center justify-center text-[11px] transition-all",
-                                  optTripId === t.id
-                                    ? "bg-amber-500 text-white shadow-sm"
-                                    : "bg-muted text-muted-foreground hover:bg-amber-100 hover:text-amber-600"
-                                )}
-                              >
-                                <Zap className="w-3 h-3" />
-                              </button>
-                            </td>
-                            <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{t.id.slice(-12)}</td>
-                            <td className="px-2 py-1.5 text-xs font-mono text-center">{t.seq}</td>
-                            <td className="px-2 py-1.5 font-mono font-bold text-xs">{t.vehicle.code}</td>
                             <td className="px-2 py-1.5">
                               <span className={cn("text-[9px] px-2 py-0.5 rounded font-bold", statusColor(t.status))}>
-                                {t.status.toUpperCase()}
+                                {String(apiStatus ?? t.status).toUpperCase()}
                               </span>
+                            </td>
+                            <td className="px-2 py-1.5 font-mono font-bold text-xs">{t.vehicle.code}</td>
+                            <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
+                            <td className="px-2 py-1.5 text-xs font-mono text-center">{t.stops.length}</td>
+                            <td className="px-2 py-1.5">
+                              <button
+                                title="Show stops as list"
+                                onClick={(e) => { e.stopPropagation(); selectTrip(t); setTripView("list"); }}
+                                className="flex items-center justify-center w-6 h-6 rounded hover:bg-primary/10 text-primary"
+                              >
+                                <List className="w-3.5 h-3.5" />
+                              </button>
                             </td>
                             <td className="px-2 py-1.5">
                               <div className="flex items-center gap-0.5">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
+                                  title="Optimise this trip"
+                                  className={cn(
+                                    "w-6 h-6 rounded flex items-center justify-center transition-all",
+                                    optTripId === t.id
+                                      ? "bg-amber-500 text-white shadow-sm"
+                                      : "hover:bg-amber-100 text-muted-foreground hover:text-amber-600"
+                                  )}
+                                >
+                                  <Zap className="w-3 h-3" />
+                                </button>
                                 <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
                                   title={t.locked ? "Unlock" : "Lock"}
                                   className="flex items-center justify-center w-6 h-6 rounded hover:bg-muted">
@@ -2312,9 +2375,6 @@ export default function Planner() {
                               </div>
                             </td>
 
-                            <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
-                            <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.departSite}</td>
-                            <td className="px-2 py-1.5 text-xs font-mono text-muted-foreground">{t.arrivalSite}</td>
 
                           {/* ── OPTION 3: Inline expand below trip row ── */}
                           {optTripId === t.id && (
