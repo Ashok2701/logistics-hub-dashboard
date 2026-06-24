@@ -1688,46 +1688,41 @@ export default function Planner() {
     toast({ title: `${selectedStopIds.size} stop(s) added to active trip` });
   }
 
-  async function confirmTrip() {
-    if (!draftVehicle) return toast({ title: "Select a vehicle", description: "Click a vehicle row to assign." });
-    if (!draftDriver)  return toast({ title: "Assign a driver",  description: "Drag a driver or click a driver row." });
-    if (!draftStopIds.length) return toast({ title: "Add stops", description: "Select drops/pickups and add to trip." });
+  // Build the FULL trip payload — used for both create and update.
+  // For updates, pass `tripCode` so the backend distinguishes the update path.
+  function buildTripPayload(
+    vehicle: Vehicle,
+    driver: Driver,
+    stops: Stop[],
+    extra?: { tripCode?: string }
+  ) {
+    const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
+    const totalVol    = stops.reduce((n, s) => n + s.vol, 0);
+    const totalQty    = stops.reduce((n, s) => n + s.qty, 0);
+    const deliveries  = stops.filter((s) => s.type === "DROP").length;
+    const pickupCount = stops.filter((s) => s.type === "PICKUP").length;
+    const capacity    = Number(vehicle.capacity) || 0;
+    const capVol      = Number(vehicle.vol) || 0;
 
-    const totalWeight = draftStops.reduce((n, s) => n + s.netweight, 0);
-    const totalVol    = draftStops.reduce((n, s) => n + s.vol, 0);
-    const totalQty    = draftStops.reduce((n, s) => n + s.qty, 0);
-    const deliveries  = draftStops.filter((s) => s.type === "DROP").length;
-    const pickupCount = draftStops.filter((s) => s.type === "PICKUP").length;
-    const distanceKm  = Math.round(40 + draftStops.length * 12 + Math.random() * 30);
-    const travelMin   = Math.round(60 + draftStops.length * 18);
-    const travelHHMM  = `${String(Math.floor(travelMin / 60)).padStart(2, "0")}:${String(travelMin % 60).padStart(2, "0")}`;
-    const capacity    = Number(draftVehicle.capacity) || 0;
-    const capVol      = Number(draftVehicle.vol) || 0;
-    const fallbackId  = `XVR-${date.replace(/-/g, "")}-${site}-${String(trips.length + 1).padStart(3, "0")}`;
-
-    const totalObject = {
-      totalWeight, totalVol, totalQty, deliveries, pickups: pickupCount,
-      distanceKm, travelMin, capacity, capVol,
-    };
-
-    const payload = {
+    return {
+      ...(extra?.tripCode ? { tripCode: extra.tripCode } : {}),
       site,
       docDate: date,
-      driverId: draftDriver.id,
-      driverName: draftDriver.name,
-      vehicleCode: draftVehicle.code,
-      depSite: (draftVehicle as any).departureSite || site,
-      arrSite: (draftVehicle as any).arrivalSite || site,
+      driverId: driver.id,
+      driverName: driver.name,
+      vehicleCode: vehicle.code,
+      depSite: (vehicle as any).departureSite || site,
+      arrSite: (vehicle as any).arrivalSite || site,
       drops: deliveries,
       pickups: pickupCount,
       noOfPackages: totalQty,
-      startTime: draftVehicle.startTime || "07:30",
+      startTime: vehicle.startTime || "07:30",
       endTime: "",
       totalWeight: String(totalWeight),
       totalVolume: String(totalVol),
       capacity: String(capacity),
-      uomCapacity: (draftVehicle as any).weightUnit || "KG",
-      uomVolume: (draftVehicle as any).volumeUnit || "M3",
+      uomCapacity: (vehicle as any).weightUnit || "KG",
+      uomVolume: (vehicle as any).volumeUnit || "M3",
       uomDistance: "mi",
       weightPct: capacity > 0 ? Number(((totalWeight / capacity) * 100).toFixed(4)) : 0,
       volumePct: capVol > 0 ? Number(((totalVol / capVol) * 100).toFixed(4)) : 0,
@@ -1741,10 +1736,27 @@ export default function Planner() {
       notes: "",
       generatedBy: "PLANNER",
       userCode: "SYSTEM",
-      stopObjects: draftStops as any,
-      vehicleObject: draftVehicle as any,
+      stopObjects: stops as any,
+      vehicleObject: vehicle as any,
       totalObject: null as any,
     };
+  }
+
+  async function confirmTrip() {
+    if (!draftVehicle) return toast({ title: "Select a vehicle", description: "Click a vehicle row to assign." });
+    if (!draftDriver)  return toast({ title: "Assign a driver",  description: "Drag a driver or click a driver row." });
+    if (!draftStopIds.length) return toast({ title: "Add stops", description: "Select drops/pickups and add to trip." });
+
+    const totalWeight = draftStops.reduce((n, s) => n + s.netweight, 0);
+    const deliveries  = draftStops.filter((s) => s.type === "DROP").length;
+    const pickupCount = draftStops.filter((s) => s.type === "PICKUP").length;
+    const totalVol    = draftStops.reduce((n, s) => n + s.vol, 0);
+    const totalQty    = draftStops.reduce((n, s) => n + s.qty, 0);
+    const distanceKm  = Math.round(40 + draftStops.length * 12 + Math.random() * 30);
+    const travelMin   = Math.round(60 + draftStops.length * 18);
+    const fallbackId  = `XVR-${date.replace(/-/g, "")}-${site}-${String(trips.length + 1).padStart(3, "0")}`;
+
+    const payload = buildTripPayload(draftVehicle, draftDriver, draftStops);
 
     const fallback: Trip = {
       id: fallbackId,
@@ -1773,6 +1785,27 @@ export default function Planner() {
     }
   }
 
+  // Push the full trip payload to backend for an existing trip.
+  async function pushTripUpdate(
+    trip: Trip,
+    vehicle: Vehicle,
+    driver: Driver,
+    stops: Stop[],
+    successMsg?: string,
+  ) {
+    if (trip.tripId == null || !trip.tripCode) return;
+    try {
+      const payload = buildTripPayload(vehicle, driver, stops, { tripCode: trip.tripCode });
+      const resp = await tripApi.updateTrip(trip.tripId, payload);
+      setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
+      if (successMsg) toast({ title: successMsg, description: trip.tripCode });
+      // refresh baseline for stop-sync detection
+      loadedTripRef.current = { tripId: trip.tripId, stopIds: stops.map((s) => s.id) };
+    } catch (e: any) {
+      toast({ title: "Trip update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    }
+  }
+
   // ── Trip row actions ───────────────────────────────────
   function selectTrip(t: Trip) {
     setSelectedTripId(t.id);
@@ -1780,58 +1813,77 @@ export default function Planner() {
     setDraftVehicle(t.vehicle);
     setDraftDriver(t.driver);
     setDraftStopIds(t.stops.map((s) => s.id));
+    loadedTripRef.current = t.tripId != null
+      ? { tripId: t.tripId, stopIds: t.stops.map((s) => s.id) }
+      : null;
   }
 
   // Reassign vehicle/driver on a persisted trip — with confirmation + backend sync.
   async function reassignVehicle(v: Vehicle | null) {
     const trip = trips.find((x) => x.id === selectedTripId);
-    if (!trip) { setDraftVehicle(v); return; }
-    const ok = window.confirm(
-      v ? `Change vehicle of trip ${trip.tripCode ?? trip.id} to ${v.code}?`
-        : `Remove vehicle from trip ${trip.tripCode ?? trip.id}?`
-    );
-    if (!ok) return;
-    setDraftVehicle(v);
-    setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, vehicle: v ?? x.vehicle } : x));
-    if (trip.tripId != null && v) {
-      try {
-        const resp = await tripApi.updateTrip(trip.tripId, {
-          vehicleCode: v.code,
-          depSite: (v as any).departureSite || trip.departSite,
-          arrSite: (v as any).arrivalSite || trip.arrivalSite,
-          vehicleObject: v as any,
-        });
-        setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
-        toast({ title: "Vehicle updated", description: trip.tripCode ?? trip.id });
-      } catch (e: any) {
-        toast({ title: "Vehicle update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
-      }
+    if (!trip || trip.tripId == null) { setDraftVehicle(v); return; }
+    if (!v) {
+      setDraftVehicle(null);
+      setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, vehicle: v ?? x.vehicle } : x));
+      return;
     }
+    setConfirmDialog({
+      open: true,
+      title: "Change vehicle?",
+      description: `Reassign vehicle of trip ${trip.tripCode ?? trip.id} to ${v.code} (${v.vehicleNo}). The active tour will be updated and saved.`,
+      confirmLabel: "Yes, change",
+      onConfirm: async () => {
+        setDraftVehicle(v);
+        setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, vehicle: v } : x));
+        await pushTripUpdate(trip, v, trip.driver, trip.stops, "Vehicle updated");
+      },
+    });
   }
 
   async function reassignDriver(d: Driver | null) {
     const trip = trips.find((x) => x.id === selectedTripId);
-    if (!trip) { setDraftDriver(d); return; }
-    const ok = window.confirm(
-      d ? `Change driver of trip ${trip.tripCode ?? trip.id} to ${d.name}?`
-        : `Remove driver from trip ${trip.tripCode ?? trip.id}?`
-    );
-    if (!ok) return;
-    setDraftDriver(d);
-    setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, driver: d ?? x.driver } : x));
-    if (trip.tripId != null && d) {
-      try {
-        const resp = await tripApi.updateTrip(trip.tripId, {
-          driverId: d.id,
-          driverName: d.name,
-        });
-        setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
-        toast({ title: "Driver updated", description: trip.tripCode ?? trip.id });
-      } catch (e: any) {
-        toast({ title: "Driver update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
-      }
+    if (!trip || trip.tripId == null) { setDraftDriver(d); return; }
+    if (!d) {
+      setDraftDriver(null);
+      setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, driver: d ?? x.driver } : x));
+      return;
     }
+    setConfirmDialog({
+      open: true,
+      title: "Change driver?",
+      description: `Reassign driver of trip ${trip.tripCode ?? trip.id} to ${d.name}. The active tour will be updated and saved.`,
+      confirmLabel: "Yes, change",
+      onConfirm: async () => {
+        setDraftDriver(d);
+        setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, driver: d } : x));
+        await pushTripUpdate(trip, trip.vehicle, d, trip.stops, "Driver updated");
+      },
+    });
   }
+
+  // Auto-sync stop add/remove on a selected persisted trip (debounced).
+  useEffect(() => {
+    const baseline = loadedTripRef.current;
+    if (!baseline) return;
+    const trip = trips.find((x) => x.tripId === baseline.tripId);
+    if (!trip || !draftVehicle || !draftDriver) return;
+
+    const a = baseline.stopIds.slice().sort().join("|");
+    const b = draftStopIds.slice().sort().join("|");
+    if (a === b) return;
+
+    if (stopSyncTimerRef.current) clearTimeout(stopSyncTimerRef.current);
+    stopSyncTimerRef.current = setTimeout(() => {
+      pushTripUpdate(trip, draftVehicle, draftDriver, draftStops, "Trip stops updated");
+    }, 700);
+    return () => {
+      if (stopSyncTimerRef.current) clearTimeout(stopSyncTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftStopIds]);
+
+
+
 
 
   async function setTripStatus(trip: Trip, optiStatus: OptiStatus, lockFlag: number) {
