@@ -44,6 +44,8 @@ type Stop = {
   qty: number; netweight: number; vol: number;
   dlvyStatus: "open" | "Allocated" | "8";
   lat: number; lng: number;
+  routeStatus: string;             // "To Plan" | "Planned" | …
+  routeTagColor?: string | null;   // hex for Type badge background
 };
 
 // ── Mappers: API types → Planner internal types ──────────────
@@ -102,6 +104,8 @@ function mapStop(s: RpStop): Stop {
     dlvyStatus:  s.routeStatus === "Allocated" ? "Allocated" : "open",
     lat:         Number(s.latitude ?? 0),
     lng:         Number(s.longitude ?? 0),
+    routeStatus: s.routeStatus && s.routeStatus.trim() ? s.routeStatus : "To Plan",
+    routeTagColor: s.routeColor ?? null,
   };
 }
 
@@ -258,38 +262,56 @@ function KpiCard({ label, value, color, icon: Icon }: { label: string; value: nu
 // STOP ROW — used in drops/pickups table
 // ═══════════════════════════════════════════════════════
 function StopRow({
-  stop, selected, onToggle, onDragStart, dragging,
+  stop, selected, onToggle, onDragStart, dragging, used, index,
 }: {
   stop: Stop; selected: boolean; onToggle: () => void;
   onDragStart: (e: DragEvent) => void; dragging: boolean;
+  used?: boolean; index?: number;
 }) {
+  const tagColor = stop.routeTagColor || "#e2e8f0";
+  const tagText  = stop.routeTagColor ? "#ffffff" : "#334155";
   return (
     <tr
-      draggable
-      onDragStart={onDragStart}
-      onClick={onToggle}
+      draggable={!used}
+      onDragStart={(e) => { if (used) { e.preventDefault(); return; } onDragStart(e); }}
+      onClick={() => { if (!used) onToggle(); }}
       className={cn(
-        "border-b border-border/20 cursor-pointer transition-colors select-none group",
-        selected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-[#eff6ff]",
+        "border-b border-border/20 transition-colors select-none group",
+        used
+          ? "opacity-50 cursor-not-allowed bg-muted/40"
+          : cn(
+              "cursor-pointer",
+              selected
+                ? "bg-primary/5 border-l-2 border-l-primary"
+                : (index ?? 0) % 2 === 1
+                  ? "bg-muted/30 hover:bg-[#eff6ff]"
+                  : "hover:bg-[#eff6ff]"
+            ),
         dragging && "opacity-50"
       )}
     >
       <td className="px-1.5 py-0.5" onClick={(e) => e.stopPropagation()}>
-        <Checkbox checked={selected} onCheckedChange={onToggle} />
+        <Checkbox checked={selected} onCheckedChange={onToggle} disabled={used} />
       </td>
       <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{stop.txn}</td>
-      <td className="px-2 py-1.5 text-xs text-muted-foreground">{stop.prepList}</td>
+      <td className="px-2 py-1.5 text-xs">
+        <span
+          className="text-[9px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide"
+          style={{ background: tagColor, color: tagText }}
+        >
+          {stop.prepList}
+        </span>
+      </td>
       <td className="px-2 py-1.5 text-xs">
         <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold", priorityColor(stop.priority))}>{stop.priority}</span>
       </td>
       <td className="px-2 py-1.5 text-xs text-muted-foreground font-mono">{stop.bpcode}</td>
-      <td className="px-2 py-1.5 text-xs font-medium max-w-[120px] truncate">{stop.client}</td>
       <td className="px-2 py-1.5 text-xs text-muted-foreground">{stop.routeCode}</td>
       <td className="px-2 py-1.5 text-xs text-muted-foreground max-w-[100px] truncate">{stop.postalCity}</td>
       <td className="px-2 py-1.5 text-xs font-mono">{stop.qty}</td>
       <td className="px-2 py-1.5 text-xs font-mono">{stop.netweight}</td>
       <td className="px-2 py-1.5">
-        <GripVertical className="w-3 h-3 text-muted-foreground/30" />
+        {!used && <GripVertical className="w-3 h-3 text-muted-foreground/30" />}
       </td>
     </tr>
   );
@@ -1375,6 +1397,7 @@ export default function Planner() {
   const [stopTypeTab, setStopTypeTab]   = useState<"drops" | "pickups">("drops");
   const [fleetTab, setFleetTab]         = useState<"vehicles" | "drivers">("vehicles");
   const [selectedStopIds, setSelectedStopIds] = useState<Set<string>>(new Set()); // multi-select in tables
+  const [toPlanOnly, setToPlanOnly] = useState<boolean>(false);
 
   // ── Auto Trip Generation modal ────────────────────────
   const [showAutoGen, setShowAutoGen]   = useState(false);
@@ -1530,16 +1553,18 @@ export default function Planner() {
     [allStops, usedStopIds]);
 
   const drops = useMemo(() =>
-    availableStops.filter((s) =>
+    allStops.filter((s) =>
       s.type === "DROP" &&
+      (!toPlanOnly || (!usedStopIds.has(s.id) && !draftStopIds.includes(s.id) && (s.routeStatus === "To Plan" || !s.routeStatus))) &&
       (!dropSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(dropSearch.toLowerCase()))
-    ), [availableStops, dropSearch]);
+    ), [allStops, dropSearch, toPlanOnly, usedStopIds, draftStopIds]);
 
   const pickups = useMemo(() =>
-    availableStops.filter((s) =>
+    allStops.filter((s) =>
       s.type === "PICKUP" &&
+      (!toPlanOnly || (!usedStopIds.has(s.id) && !draftStopIds.includes(s.id) && (s.routeStatus === "To Plan" || !s.routeStatus))) &&
       (!pickSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(pickSearch.toLowerCase()))
-    ), [availableStops, pickSearch]);
+    ), [allStops, pickSearch, toPlanOnly, usedStopIds, draftStopIds]);
 
   const draftStops = useMemo(() =>
     allStops.filter((s) => draftStopIds.includes(s.id)),
@@ -1577,6 +1602,7 @@ export default function Planner() {
       ids.forEach((id) => { if (!next.includes(id)) next.push(id); });
       return next;
     });
+    setAllStops((prev) => prev.map((s) => ids.includes(s.id) ? { ...s, routeStatus: "Planned" } : s));
   }, []);
 
   const toggleSelectedStop = useCallback((id: string) => {
@@ -2082,6 +2108,14 @@ export default function Planner() {
                     Add {selectedStopIds.size} to Trip
                   </Button>
                 )}
+                <label className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap pl-1">
+                  <Checkbox
+                    checked={toPlanOnly}
+                    onCheckedChange={(c) => setToPlanOnly(Boolean(c))}
+                    className="h-3 w-3"
+                  />
+                  To Plan
+                </label>
               </div>
 
               {/* Table */}
@@ -2095,15 +2129,16 @@ export default function Planner() {
                           onCheckedChange={() => toggleAllStops(currentStops)}
                         />
                       </th>
-                      {["Transaction No","Prep List","Priority","Client Code","Client","Route Code","Postal City","Qty","Weight",""].map((h) => (
+                      {["Transaction No","Type","Priority","Client Code","Route Code","Postal City","Qty","Weight",""].map((h) => (
                         <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {currentStops.map((s) => (
+                    {currentStops.map((s, i) => (
                       <StopRow
-                        key={s.id} stop={s}
+                        key={s.id} stop={s} index={i}
+                        used={usedStopIds.has(s.id) || draftStopIds.includes(s.id)}
                         selected={selectedStopIds.has(s.id)}
                         onToggle={() => toggleSelectedStop(s.id)}
                         dragging={dragStopIds.includes(s.id)}
@@ -2117,7 +2152,7 @@ export default function Planner() {
                     ))}
                     {currentStops.length === 0 && (
                       <tr>
-                        <td colSpan={11} className="px-3 py-10 text-center text-xs text-muted-foreground">
+                        <td colSpan={10} className="px-3 py-10 text-center text-xs text-muted-foreground">
                           No {stopTypeTab === "drops" ? "deliveries" : "pickups"} available
                         </td>
                       </tr>
