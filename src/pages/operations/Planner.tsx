@@ -2353,6 +2353,7 @@ export default function Planner() {
                   <table className="w-full min-w-[480px]" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/30 sticky top-0 z-10">
                       <tr>
+                        <th className="px-2 py-1.5 border-b border-border/40 w-7"></th>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
                         {["Trip Code","Details","Status","Vehicle","Driver","Stops","List","Actions"].map((h) => (
                           <th key={h} className="px-2 py-1.5 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
