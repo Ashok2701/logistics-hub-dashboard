@@ -1923,7 +1923,7 @@ export default function Planner() {
     setTripStatus(t, "Validated", 1);
   }
 
-  async function deleteTrip(id: string) {
+  async function performDeleteTrip(id: string) {
     const t = trips.find((x) => x.id === id);
     if (t?.tripId != null) {
       try {
@@ -1937,6 +1937,19 @@ export default function Planner() {
     if (selectedTripId === id) { setSelectedTripId(null); clearDraft(); }
     toast({ title: "Trip removed" });
   }
+
+  function deleteTrip(id: string) {
+    const t = trips.find((x) => x.id === id);
+    if (!t) return;
+    setConfirmDialog({
+      open: true,
+      title: "Delete Trip",
+      description: `Do you want to delete trip ${t.code}?`,
+      confirmLabel: "Yes",
+      onConfirm: () => performDeleteTrip(id),
+    });
+  }
+
 
 
   // ── Render ─────────────────────────────────────────────
