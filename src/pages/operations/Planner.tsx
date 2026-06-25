@@ -1944,7 +1944,7 @@ export default function Planner() {
     setConfirmDialog({
       open: true,
       title: "Delete Trip",
-      description: `Do you want to delete trip ${t.code}?`,
+      description: `Do you want to delete trip ${t.tripCode ?? t.id}?`,
       confirmLabel: "Yes",
       onConfirm: () => performDeleteTrip(id),
     });
