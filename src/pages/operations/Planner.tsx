@@ -2403,7 +2403,7 @@ export default function Planner() {
                               )}
                             </td>
                             <td className="px-2 py-1.5">
-                              <Checkbox checked={sel} onCheckedChange={() => selectTrip(t)} onClick={(e) => e.stopPropagation()} />
+                              <Checkbox checked={sel} onCheckedChange={() => { if (sel) { setSelectedTripId(null); clearDraft(); } else { selectTrip(t); } }} onClick={(e) => e.stopPropagation()} />
                             </td>
                             <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">
                               {t.tripCode ?? t.id.slice(-12)}
