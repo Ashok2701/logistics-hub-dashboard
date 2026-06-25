@@ -2362,7 +2362,7 @@ export default function Planner() {
                     </thead>
                     <tbody>
                       {filteredTrips.length === 0 && (
-                        <tr><td colSpan={9} className="px-3 py-12 text-center text-xs text-muted-foreground">
+                        <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-muted-foreground">
                           {trips.length === 0 ? "No trips yet — confirm a trip above" : "No trips match filters"}
                         </td></tr>
                       )}
