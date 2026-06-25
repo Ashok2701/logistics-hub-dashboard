@@ -2378,6 +2378,17 @@ export default function Planner() {
                               t.locked ? "bg-amber-50/40" : ""
                             )}
                           >
+                            <td className="px-1 py-1.5 w-7">
+                              {(apiStatus === "Open" || apiStatus === "Optimised") && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); deleteTrip(t.id); }}
+                                  title="Delete trip"
+                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-rose-50 text-muted-foreground/60 hover:text-rose-600 transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </td>
                             <td className="px-2 py-1.5">
                               <Checkbox checked={sel} onCheckedChange={() => selectTrip(t)} onClick={(e) => e.stopPropagation()} />
                             </td>
