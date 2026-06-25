@@ -2368,7 +2368,7 @@ export default function Planner() {
                       <tr>
                         <th className="px-2 py-1.5 border-b border-border/40 w-7"></th>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
-                        {["Trip Code","Details","Status","Vehicle","Driver","Stops","List","Actions"].map((h) => (
+                        {["Trip Code","Details","Status","Vehicle","Driver","Stops","Actions"].map((h) => (
                           <th key={h} className="px-2 py-1.5 text-left text-[11px] font-semibold text-muted-foreground whitespace-nowrap border-b border-border/40">{h}</th>
                         ))}
                       </tr>
@@ -2426,44 +2426,30 @@ export default function Planner() {
                             <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
                             <td className="px-2 py-1.5 text-xs font-mono text-center">{t.stops.length}</td>
                             <td className="px-2 py-1.5">
-                              <button
-                                title="Show stops as list"
-                                onClick={(e) => { e.stopPropagation(); selectTrip(t); setTripView("list"); }}
-                                className="flex items-center justify-center w-6 h-6 rounded hover:bg-primary/10 text-primary"
-                              >
-                                <List className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                            <td className="px-2 py-1.5">
-                              <div className="flex items-center gap-0.5">
+                              <div className="flex items-center gap-1">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
                                   title="Optimise this trip"
                                   className={cn(
-                                    "w-6 h-6 rounded flex items-center justify-center transition-all",
+                                    "w-8 h-8 rounded flex items-center justify-center transition-all",
                                     optTripId === t.id
                                       ? "bg-amber-500 text-white shadow-sm"
                                       : "hover:bg-amber-100 text-muted-foreground hover:text-amber-600"
                                   )}
                                 >
-                                  <Zap className="w-3 h-3" />
+                                  <Zap className="w-4 h-4" />
                                 </button>
                                 <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
                                   title={t.locked ? "Unlock" : "Lock"}
-                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-muted">
+                                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-muted">
                                   {t.locked
-                                    ? <Lock className="w-3.5 h-3.5 text-amber-500" />
-                                    : <Unlock className="w-3.5 h-3.5 text-muted-foreground/50" />}
+                                    ? <Lock className="w-4 h-4 text-amber-500" />
+                                    : <Unlock className="w-4 h-4 text-muted-foreground/50" />}
                                 </button>
                                 <button onClick={(e) => { e.stopPropagation(); validateTrip(t.id); }}
                                   title="Validate"
-                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-green-50">
-                                  <ShieldCheck className={cn("w-3.5 h-3.5", t.optiStatus === "Validated" ? "text-green-600" : "text-muted-foreground/50")} />
-                                </button>
-                                <button onClick={(e) => { e.stopPropagation(); deleteTrip(t.id); }}
-                                  title="Delete"
-                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-rose-50">
-                                  <Trash2 className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-rose-600" />
+                                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-green-50">
+                                  <ShieldCheck className={cn("w-4 h-4", t.optiStatus === "Validated" ? "text-green-600" : "text-muted-foreground/50")} />
                                 </button>
                               </div>
                             </td>
