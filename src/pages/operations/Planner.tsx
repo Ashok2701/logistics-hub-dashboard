@@ -351,14 +351,12 @@ function RouteMapView({ trip, site }: { trip: Trip | null; site?: RpSite | null 
           className="absolute inset-0 w-full h-full border-0"
           loading="lazy"
         />
-        {/* Warehouse marker overlay (centered) */}
+        {/* Home / Warehouse pointer marker at the site coordinates */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="flex flex-col items-center -translate-y-3">
-            <div className="bg-primary text-primary-foreground rounded-full p-2 shadow-lg ring-4 ring-primary/20">
-              <Warehouse className="w-5 h-5" />
-            </div>
-            <div className="mt-1 bg-white/95 backdrop-blur rounded-md border border-border/60 shadow px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap">
-              {site?.siteName ?? site?.siteCode}
+          <div className="relative flex flex-col items-center" style={{ transform: "translateY(-50%)" }}>
+            <MapPin className="w-10 h-10 text-primary fill-primary drop-shadow-md" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] bg-primary-foreground rounded-full p-0.5">
+              <Warehouse className="w-4 h-4 text-primary" />
             </div>
           </div>
         </div>
