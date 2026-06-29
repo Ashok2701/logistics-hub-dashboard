@@ -1524,9 +1524,11 @@ export default function Planner() {
           ...(data.pickups ?? []).map(mapStop),
         ]);
         setLoaded(true);
-        toast({
-          title: "Data loaded",
-          description: `${data.vehicleCount} vehicles · ${data.driverCount} drivers · ${data.dropCount} drops · ${data.pickupCount} pickups`,
+        setLoadStats({
+          vehicles: data.vehicleCount ?? 0,
+          drivers:  data.driverCount ?? 0,
+          drops:    data.dropCount ?? 0,
+          pickups:  data.pickupCount ?? 0,
         });
       })
       .catch((e: any) => {
