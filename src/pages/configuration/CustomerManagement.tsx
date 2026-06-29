@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowLeft, Pencil, RefreshCw, Loader2, Plus, Trash2, MapPin } from "lucide-react";
+import { Search, ArrowLeft, Pencil, RefreshCw, Loader2, Plus, Trash2, MapPin, Locate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
