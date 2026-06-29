@@ -2467,9 +2467,9 @@ export default function Planner() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); deleteTrip(t.id); }}
                                   title="Delete trip"
-                                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-rose-50 text-muted-foreground/60 hover:text-rose-600 transition-colors"
+                                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-input bg-white text-slate-500 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 transition-all duration-200 shadow-sm"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-5 h-5" />
                                 </button>
                               )}
                             </td>
