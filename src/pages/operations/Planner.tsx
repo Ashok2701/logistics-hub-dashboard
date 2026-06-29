@@ -586,23 +586,23 @@ function ActiveTourPanel({
           <span className="text-[10px] font-semibold text-white tracking-wide">Active Trip</span>
           {dropZoneActive && <span className="text-[9px] text-primary animate-pulse ml-1">Drop here…</span>}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost"
-            className="h-5 text-[9px] gap-0.5 text-white/60 hover:text-white hover:bg-white/10 px-1.5"
+            className="h-7 text-[9px] gap-1 text-white/70 hover:text-white hover:bg-white/10 px-2 rounded-lg"
             onClick={onClear} disabled={!hasAssignment}>
-            <Trash2 className="w-2.5 h-2.5" /> Clear
+            <Trash2 className="w-4 h-4" /> Clear
           </Button>
           <Button size="sm"
-            className="h-5 text-[9px] gap-0.5 bg-blue-600 hover:bg-blue-500 text-white border-0 px-2"
+            className="h-7 text-[9px] gap-1 bg-emerald-500 hover:bg-emerald-400 text-white border-0 px-2.5 rounded-lg shadow-sm"
             onClick={onConfirm}>
-            <CheckCheck className="w-2.5 h-2.5" /> Confirm
+            <CheckCheck className="w-4 h-4" /> Confirm
           </Button>
           <Button size="sm"
-            className="h-5 text-[9px] gap-0.5 px-2 border-0"
+            className="h-7 text-[9px] gap-1 px-2.5 border-0 rounded-lg shadow-sm"
             style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#0f172a" }}
             disabled={!hasAssignment}
             onClick={() => setShowOptModal(true)}>
-            <Zap className="w-2.5 h-2.5" /> Optimise
+            <Zap className="w-4 h-4" /> Optimise
           </Button>
         </div>
       </div>
