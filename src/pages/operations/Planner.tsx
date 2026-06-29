@@ -625,7 +625,7 @@ function ActiveTourPanel({
           >
             <div className="flex items-center justify-between gap-1">
               <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none">Vehicle</span>
-              {vehicle && <button onClick={onClearVehicle} className="text-muted-foreground/40 hover:text-destructive"><X className="w-2.5 h-2.5" /></button>}
+              {vehicle && <button onClick={onClearVehicle} className="w-4 h-4 flex items-center justify-center rounded-full text-emerald-700/50 hover:text-rose-600 hover:bg-rose-100 transition-colors"><X className="w-3.5 h-3.5" /></button>}
             </div>
             <span className={cn("text-[11px] font-mono font-bold leading-none mt-0.5 truncate", vehicle ? "text-emerald-700" : "text-muted-foreground/30 italic text-[9px]")}>
               {vehicle ? vehicle.code : "—"}
