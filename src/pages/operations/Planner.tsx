@@ -580,10 +580,12 @@ function ActiveTourPanel({
       style={{ border: "1px solid hsl(var(--border) / 0.4)" }}
     >
       {/* ── HEADER ROW — full width single line ────────── */}
-      <div className="flex items-center justify-between px-2 py-1 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f] flex-shrink-0">
-        <div className="flex items-center gap-1">
-          <Play className="w-3 h-3 text-primary/80 flex-shrink-0" />
-          <span className="text-[10px] font-semibold text-white tracking-wide">Active Trip</span>
+      <div className="flex items-center justify-between px-2.5 py-1.5 bg-gradient-to-r from-[#0f172a] to-[#1e3a5f] flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center">
+            <Play className="w-4 h-4 text-primary/90 flex-shrink-0" />
+          </div>
+          <span className="text-[11px] font-semibold text-white tracking-wide">Active Trip</span>
           {dropZoneActive && <span className="text-[9px] text-primary animate-pulse ml-1">Drop here…</span>}
         </div>
         <div className="flex items-center gap-2">
