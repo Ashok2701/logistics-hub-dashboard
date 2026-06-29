@@ -690,3 +690,53 @@ function FlagSwitch({ label, checked, onChange }: { label: string; checked: bool
     </label>
   );
 }
+
+function AddressMiniMap({ lat, lng, label }: { lat: number | null; lng: number | null; label?: string }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (lat == null || lng == null) return;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelled || !containerRef.current) return;
+      if (!mapRef.current) {
+        const map = L.map(containerRef.current, { zoomControl: true, attributionControl: false }).setView([lat, lng], 14);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+        mapRef.current = map;
+      } else {
+        mapRef.current.setView([lat, lng], 14);
+      }
+      const icon = L.divIcon({
+        className: "addr-marker",
+        html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;transform:translateY(-100%)">
+            <div style="background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-radius:9999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid hsl(var(--primary));margin-top:-1px"></div>
+          </div>`,
+        iconSize: [0, 0], iconAnchor: [0, 0],
+      });
+      if (markerRef.current) { mapRef.current.removeLayer(markerRef.current); }
+      markerRef.current = L.marker([lat, lng], { icon, title: label }).addTo(mapRef.current);
+    })();
+    return () => { cancelled = true; };
+  }, [lat, lng, label]);
+
+  useEffect(() => () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } }, []);
+
+  if (lat == null || lng == null) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center text-center px-4">
+        <div>
+          <MapPin className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">No coordinates yet</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-0.5">Click Locate to geocode this address</p>
+        </div>
+      </div>
+    );
+  }
+  return <div ref={containerRef} className="absolute inset-0" />;
+}
