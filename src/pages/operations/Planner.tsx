@@ -1977,17 +1977,21 @@ export default function Planner() {
     <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
       {/* ── TOOLBAR ─ compact single row ─────────────── */}
-      <div className="flex items-center gap-2 px-3 py-1 bg-card border-b border-border/60 flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-50 via-blue-50/60 to-indigo-50/60 border-b border-border/60 flex-shrink-0 shadow-sm">
         {/* Site */}
         {sitesLoading
           ? <div className="h-8 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading sites…</div>
           : <SiteSelect sites={sites} value={site} onChange={setSite} />
         }
         {/* Date */}
-        <div className="relative">
+        <div className="relative cursor-pointer" onClick={(e) => {
+          const inp = (e.currentTarget.querySelector("input[type=date]") as HTMLInputElement | null);
+          inp?.showPicker?.(); inp?.focus();
+        }}>
           <CalIcon className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-            className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px]"
+            onClick={(e) => { (e.currentTarget as HTMLInputElement).showPicker?.(); }}
+            className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px] cursor-pointer"
           />
         </div>
         {/* Route Codes */}
