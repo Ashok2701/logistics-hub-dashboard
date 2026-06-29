@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect, type DragEvent } from "react";
+import "leaflet/dist/leaflet.css";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Truck, Users, Calendar as CalIcon, Building2, Search,
@@ -332,7 +333,7 @@ function SiteLeafletMap({ lat, lng, site }: { lat: number; lng: number; site?: R
     let cancelled = false;
     (async () => {
       const L = (await import("leaflet")).default;
-      await import("leaflet/dist/leaflet.css");
+      // leaflet css imported at top of file
       if (cancelled || !containerRef.current) return;
       if (mapRef.current) {
         mapRef.current.setView([lat, lng], 13);
