@@ -1511,6 +1511,7 @@ export default function Planner() {
     if (!site || !date) return;
     setLoading(true);
     setLoaded(false);
+    setLoadStats(null);
     setApiVehicles([]); setApiDrivers([]); setAllStops([]);
     setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
     setSelectedStopIds(new Set());
