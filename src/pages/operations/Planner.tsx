@@ -806,14 +806,14 @@ function ActiveTourPanel({
 
       {/* empty state */}
       {!hasAssignment && (
-        <div className="flex items-center justify-center gap-4 py-2 text-muted-foreground/30 text-[10px] bg-card">
-          <span className="flex items-center gap-1"><Truck className="w-3 h-3" /> Vehicle</span>
+        <div className="flex items-center justify-center gap-4 py-3 text-muted-foreground/40 text-[11px] bg-card">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-dashed border-slate-200"><Truck className="w-5 h-5" /> Vehicle</span>
           <span>+</span>
-          <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Driver</span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-dashed border-slate-200"><Users className="w-5 h-5" /> Driver</span>
           <span>+</span>
-          <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Stops</span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-dashed border-slate-200"><Package className="w-5 h-5" /> Stops</span>
           <span>→</span>
-          <span className="flex items-center gap-1"><CheckCheck className="w-3 h-3" /> Confirm</span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/50 border border-dashed border-emerald-200 text-emerald-600"><CheckCheck className="w-5 h-5" /> Confirm</span>
         </div>
       )}
     </div>
