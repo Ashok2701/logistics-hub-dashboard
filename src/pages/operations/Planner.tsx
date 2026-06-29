@@ -6,7 +6,7 @@ import {
   CheckCheck, X, Play, Map as MapIcon, List, GripVertical,
   Loader2, Trash2, Lock, Unlock, RefreshCw, ChevronDown,
   Package, AlertCircle, Info, Eye, Zap, Filter,
-  Wand2, GitMerge, ShieldCheck, ChevronLeft,
+  Wand2, GitMerge, ShieldCheck, ChevronLeft, Warehouse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -324,13 +324,48 @@ function StopRow({
 // ═══════════════════════════════════════════════════════
 // MAP VIEW
 // ═══════════════════════════════════════════════════════
-function RouteMapView({ trip }: { trip: Trip | null }) {
+function RouteMapView({ trip, site }: { trip: Trip | null; site?: RpSite | null }) {
+  // No trip selected → show OSM map centered on the selected site with a warehouse marker
   if (!trip) {
+    const lat = site && site.latitude != null ? Number(site.latitude) : null;
+    const lng = site && site.longitude != null ? Number(site.longitude) : null;
+    if (lat == null || lng == null || (lat === 0 && lng === 0)) {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]">
+          <div className="text-center">
+            <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Select a site to preview its location</p>
+          </div>
+        </div>
+      );
+    }
+    const d = 0.08;
+    const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
+    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]">
-        <div className="text-center">
-          <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Select a trip to preview its route</p>
+      <div className="relative flex-1 min-h-[320px] bg-slate-50 overflow-hidden">
+        <iframe
+          key={`${lat},${lng}`}
+          title="Site map"
+          src={src}
+          className="absolute inset-0 w-full h-full border-0"
+          loading="lazy"
+        />
+        {/* Warehouse marker overlay (centered) */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div className="flex flex-col items-center -translate-y-3">
+            <div className="bg-primary text-primary-foreground rounded-full p-2 shadow-lg ring-4 ring-primary/20">
+              <Warehouse className="w-5 h-5" />
+            </div>
+            <div className="mt-1 bg-white/95 backdrop-blur rounded-md border border-border/60 shadow px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap">
+              {site?.siteName ?? site?.siteCode}
+            </div>
+          </div>
+        </div>
+        {/* Coords pill */}
+        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur rounded-lg border border-border/60 px-2.5 py-1.5 text-[11px] shadow">
+          <span className="font-semibold text-primary">{site?.siteCode}</span>
+          <span className="text-muted-foreground ml-1.5">{lat.toFixed(4)}, {lng.toFixed(4)}</span>
         </div>
       </div>
     );
@@ -1358,6 +1393,7 @@ export default function Planner() {
   const [date, setDate]         = useState(format(new Date(), "yyyy-MM-dd"));
   const [loading, setLoading]   = useState(false);
   const [loaded, setLoaded]     = useState(false);
+  const [loadStats, setLoadStats] = useState<{vehicles:number;drivers:number;drops:number;pickups:number}|null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [routeCode, setRouteCode]   = useState("");
 
@@ -1510,6 +1546,7 @@ export default function Planner() {
     if (!site || !date) return;
     setLoading(true);
     setLoaded(false);
+    setLoadStats(null);
     setApiVehicles([]); setApiDrivers([]); setAllStops([]);
     setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
     setSelectedStopIds(new Set());
@@ -1523,9 +1560,11 @@ export default function Planner() {
           ...(data.pickups ?? []).map(mapStop),
         ]);
         setLoaded(true);
-        toast({
-          title: "Data loaded",
-          description: `${data.vehicleCount} vehicles · ${data.driverCount} drivers · ${data.dropCount} drops · ${data.pickupCount} pickups`,
+        setLoadStats({
+          vehicles: data.vehicleCount ?? 0,
+          drivers:  data.driverCount ?? 0,
+          drops:    data.dropCount ?? 0,
+          pickups:  data.pickupCount ?? 0,
         });
       })
       .catch((e: any) => {
@@ -1973,17 +2012,21 @@ export default function Planner() {
     <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
       {/* ── TOOLBAR ─ compact single row ─────────────── */}
-      <div className="flex items-center gap-2 px-3 py-1 bg-card border-b border-border/60 flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-50 via-blue-50/60 to-indigo-50/60 border-b border-border/60 flex-shrink-0 shadow-sm">
         {/* Site */}
         {sitesLoading
           ? <div className="h-8 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading sites…</div>
           : <SiteSelect sites={sites} value={site} onChange={setSite} />
         }
         {/* Date */}
-        <div className="relative">
+        <div className="relative cursor-pointer" onClick={(e) => {
+          const inp = (e.currentTarget.querySelector("input[type=date]") as HTMLInputElement | null);
+          inp?.showPicker?.(); inp?.focus();
+        }}>
           <CalIcon className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-            className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px]"
+            onClick={(e) => { (e.currentTarget as HTMLInputElement).showPicker?.(); }}
+            className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px] cursor-pointer"
           />
         </div>
         {/* Route Codes */}
@@ -2012,16 +2055,24 @@ export default function Planner() {
         <ToolbarBtn icon={Unlock}      label="Group Unlock"        color="text-violet-600"  bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",          description: "Not yet implemented" })} />
         <ToolbarBtn icon={ShieldCheck} label="Group Validate"      color="text-amber-600"   bg="hover:bg-amber-50"   onClick={() => toast({ title: "Group Validate",        description: "Not yet implemented" })} />
         <ToolbarBtn icon={Trash2}      label="Group Delete Trips"  color="text-rose-600"    bg="hover:bg-rose-50"    onClick={() => toast({ title: "Group Delete Trips",    description: "Not yet implemented" })} />
-        {/* Status */}
-        <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-          {loading
-            ? <><Loader2 className="w-3 h-3 animate-spin text-primary" /><span>Loading…</span></>
-            : loaded
-              ? <><CheckCheck className="w-3 h-3 text-emerald-500" />
-                  <span className="font-medium text-foreground">{site}</span>
-                  <span>·</span>
-                  <span className="text-foreground">{date}</span></>
-              : null}
+        {/* Status pill */}
+        <div className="ml-auto flex items-center gap-2">
+          {loading && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium border border-blue-200">
+              <Loader2 className="w-3 h-3 animate-spin" /> Loading…
+            </div>
+          )}
+          {!loading && loaded && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold border border-emerald-200 shadow-sm">
+              <CheckCheck className="w-3.5 h-3.5" />
+              <span>{site}</span><span className="opacity-60">·</span><span>{date}</span>
+              {loadStats && (
+                <span className="opacity-80 font-normal ml-1">
+                  · {loadStats.vehicles}V · {loadStats.drivers}D · {loadStats.drops}↓ · {loadStats.pickups}↑
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -2602,7 +2653,7 @@ export default function Planner() {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  {tripView === "map" ? <RouteMapView trip={selectedTrip} /> : <TripStopListView trip={selectedTrip} />}
+                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} /> : <TripStopListView trip={selectedTrip} />}
                 </div>
               </div>
             }
