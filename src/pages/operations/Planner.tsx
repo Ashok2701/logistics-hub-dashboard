@@ -2497,30 +2497,40 @@ export default function Planner() {
                             <td className="px-2 py-1.5 text-xs">{t.driver.name}</td>
                             <td className="px-2 py-1.5 text-xs font-mono text-center">{t.stops.length}</td>
                             <td className="px-2 py-1.5">
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1.5">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
                                   title="Optimise this trip"
                                   className={cn(
-                                    "w-8 h-8 rounded flex items-center justify-center transition-all",
+                                    "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border shadow-sm",
                                     optTripId === t.id
-                                      ? "bg-amber-500 text-white shadow-sm"
-                                      : "hover:bg-amber-100 text-muted-foreground hover:text-amber-600"
+                                      ? "bg-amber-500 border-amber-500 text-white shadow-amber-500/30"
+                                      : "bg-white border-input text-amber-600 hover:bg-amber-50 hover:border-amber-200 hover:shadow-amber-500/15"
                                   )}
                                 >
-                                  <Zap className="w-4 h-4" />
+                                  <Zap className="w-5 h-5" />
                                 </button>
                                 <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
                                   title={t.locked ? "Unlock" : "Lock"}
-                                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-muted">
+                                  className={cn(
+                                    "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border shadow-sm bg-white",
+                                    t.locked
+                                      ? "border-amber-200 text-amber-600 hover:bg-amber-50 hover:shadow-amber-500/15"
+                                      : "border-input text-slate-600 hover:bg-slate-50 hover:border-slate-200"
+                                  )}>
                                   {t.locked
-                                    ? <Lock className="w-4 h-4 text-amber-500" />
-                                    : <Unlock className="w-4 h-4 text-muted-foreground/50" />}
+                                    ? <Lock className="w-5 h-5 text-amber-600" />
+                                    : <Unlock className="w-5 h-5 text-slate-500" />}
                                 </button>
                                 <button onClick={(e) => { e.stopPropagation(); validateTrip(t.id); }}
                                   title="Validate"
-                                  className="flex items-center justify-center w-8 h-8 rounded hover:bg-green-50">
-                                  <ShieldCheck className={cn("w-4 h-4", t.optiStatus === "Validated" ? "text-green-600" : "text-muted-foreground/50")} />
+                                  className={cn(
+                                    "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border shadow-sm bg-white",
+                                    t.optiStatus === "Validated"
+                                      ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:shadow-emerald-500/15"
+                                      : "border-input text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600"
+                                  )}>
+                                  <ShieldCheck className={cn("w-5 h-5", t.optiStatus === "Validated" ? "text-emerald-600" : "text-slate-500")} />
                                 </button>
                               </div>
                             </td>
