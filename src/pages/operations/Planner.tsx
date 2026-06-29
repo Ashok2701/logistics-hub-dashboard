@@ -324,13 +324,48 @@ function StopRow({
 // ═══════════════════════════════════════════════════════
 // MAP VIEW
 // ═══════════════════════════════════════════════════════
-function RouteMapView({ trip }: { trip: Trip | null }) {
+function RouteMapView({ trip, site }: { trip: Trip | null; site?: RpSite | null }) {
+  // No trip selected → show OSM map centered on the selected site with a warehouse marker
   if (!trip) {
+    const lat = site && site.latitude != null ? Number(site.latitude) : null;
+    const lng = site && site.longitude != null ? Number(site.longitude) : null;
+    if (lat == null || lng == null || (lat === 0 && lng === 0)) {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]">
+          <div className="text-center">
+            <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Select a site to preview its location</p>
+          </div>
+        </div>
+      );
+    }
+    const d = 0.08;
+    const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
+    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]">
-        <div className="text-center">
-          <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Select a trip to preview its route</p>
+      <div className="relative flex-1 min-h-[320px] bg-slate-50 overflow-hidden">
+        <iframe
+          key={`${lat},${lng}`}
+          title="Site map"
+          src={src}
+          className="absolute inset-0 w-full h-full border-0"
+          loading="lazy"
+        />
+        {/* Warehouse marker overlay (centered) */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div className="flex flex-col items-center -translate-y-3">
+            <div className="bg-primary text-primary-foreground rounded-full p-2 shadow-lg ring-4 ring-primary/20">
+              <Warehouse className="w-5 h-5" />
+            </div>
+            <div className="mt-1 bg-white/95 backdrop-blur rounded-md border border-border/60 shadow px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap">
+              {site?.siteName ?? site?.siteCode}
+            </div>
+          </div>
+        </div>
+        {/* Coords pill */}
+        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur rounded-lg border border-border/60 px-2.5 py-1.5 text-[11px] shadow">
+          <span className="font-semibold text-primary">{site?.siteCode}</span>
+          <span className="text-muted-foreground ml-1.5">{lat.toFixed(4)}, {lng.toFixed(4)}</span>
         </div>
       </div>
     );
