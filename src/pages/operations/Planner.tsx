@@ -358,6 +358,9 @@ function RouteMapView({ trip, site }: { trip: Trip | null; site?: RpSite | null 
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] bg-primary-foreground rounded-full p-0.5">
               <Warehouse className="w-4 h-4 text-primary" />
             </div>
+            <div className="mt-1 bg-white/95 backdrop-blur rounded-md border border-border/60 shadow px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap">
+              {site?.siteName ?? site?.siteCode}
+            </div>
           </div>
         </div>
         {/* Coords pill */}
