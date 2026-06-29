@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import "leaflet/dist/leaflet.css";
 import { motion } from "framer-motion";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { SortableTableHead } from "@/components/shared/SortableTh";
@@ -465,26 +466,55 @@ export default function CustomerManagement() {
                     <div className="py-12 text-center text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading address…</div>
                   ) : (
                     <div className="space-y-6">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <h3 className="text-sm font-semibold">{selectedAddress.addressCode} — {addrLabel(selectedAddress)}</h3>
-                          {selectedAddress.city && <p className="text-xs text-muted-foreground mt-0.5">{selectedAddress.city}</p>}
-                          {(selectedAddress.latitude != null && selectedAddress.longitude != null) ? (
-                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-primary" />
-                              <span className="font-mono">{Number(selectedAddress.latitude).toFixed(6)}, {Number(selectedAddress.longitude).toFixed(6)}</span>
-                            </p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground/70 mt-1 italic">No coordinates — click Locate to geocode</p>
-                          )}
+                      {/* Address + Map split */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Left: address details */}
+                        <div className="rounded-lg border border-border bg-secondary/20 p-4 space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="text-sm font-semibold">{selectedAddress.addressCode} — {addrLabel(selectedAddress)}</h3>
+                            {isDefault(selectedAddress) && <StatusBadge status="Default" variant="primary" />}
+                          </div>
+                          <div className="space-y-1.5 text-sm">
+                            {selectedAddress.addressLine1 && <div className="text-foreground">{selectedAddress.addressLine1}</div>}
+                            {selectedAddress.addressLine2 && <div className="text-foreground">{selectedAddress.addressLine2}</div>}
+                            {selectedAddress.addressLine3 && <div className="text-foreground">{selectedAddress.addressLine3}</div>}
+                            <div className="text-muted-foreground text-xs">
+                              {[selectedAddress.city, selectedAddress.stateCode, selectedAddress.postalCode].filter(Boolean).join(", ")}
+                              {selectedAddress.countryName ? ` · ${selectedAddress.countryName}` : selectedAddress.countryCode ? ` · ${selectedAddress.countryCode}` : ""}
+                            </div>
+                          </div>
+                          <Separator />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Latitude</Label>
+                              <div className="mt-1 text-sm font-mono">
+                                {selectedAddress.latitude != null ? Number(selectedAddress.latitude).toFixed(6) : <span className="text-muted-foreground/70 italic font-sans text-xs">— not set —</span>}
+                              </div>
+                            </div>
+                            <div>
+                              <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Longitude</Label>
+                              <div className="mt-1 text-sm font-mono">
+                                {selectedAddress.longitude != null ? Number(selectedAddress.longitude).toFixed(6) : <span className="text-muted-foreground/70 italic font-sans text-xs">— not set —</span>}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <button
-                          onClick={handleLocateAddr}
-                          disabled={locatingAddr || savingAddr}
-                          className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50 shrink-0"
-                        >
-                          {locatingAddr ? <Loader2 className="w-4 h-4 animate-spin" /> : <Locate className="w-4 h-4" />} Locate
-                        </button>
+
+                        {/* Right: map */}
+                        <div className="relative rounded-lg border border-border overflow-hidden bg-slate-50 min-h-[260px]">
+                          <button
+                            onClick={handleLocateAddr}
+                            disabled={locatingAddr || savingAddr}
+                            className="absolute top-2 right-2 z-[400] h-8 px-3 rounded-md text-xs font-semibold bg-white/95 backdrop-blur border border-primary text-primary hover:bg-primary hover:text-primary-foreground inline-flex items-center gap-1.5 disabled:opacity-50 shadow"
+                          >
+                            {locatingAddr ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Locate className="w-3.5 h-3.5" />} Locate
+                          </button>
+                          <AddressMiniMap
+                            lat={selectedAddress.latitude != null ? Number(selectedAddress.latitude) : null}
+                            lng={selectedAddress.longitude != null ? Number(selectedAddress.longitude) : null}
+                            label={addrLabel(selectedAddress)}
+                          />
+                        </div>
                       </div>
 
                       <Section title="Flags">
@@ -659,4 +689,54 @@ function FlagSwitch({ label, checked, onChange }: { label: string; checked: bool
       <span className="text-sm">{label}</span>
     </label>
   );
+}
+
+function AddressMiniMap({ lat, lng, label }: { lat: number | null; lng: number | null; label?: string }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (lat == null || lng == null) return;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelled || !containerRef.current) return;
+      if (!mapRef.current) {
+        const map = L.map(containerRef.current, { zoomControl: true, attributionControl: false }).setView([lat, lng], 14);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+        mapRef.current = map;
+      } else {
+        mapRef.current.setView([lat, lng], 14);
+      }
+      const icon = L.divIcon({
+        className: "addr-marker",
+        html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;transform:translateY(-100%)">
+            <div style="background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-radius:9999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid hsl(var(--primary));margin-top:-1px"></div>
+          </div>`,
+        iconSize: [0, 0], iconAnchor: [0, 0],
+      });
+      if (markerRef.current) { mapRef.current.removeLayer(markerRef.current); }
+      markerRef.current = L.marker([lat, lng], { icon, title: label }).addTo(mapRef.current);
+    })();
+    return () => { cancelled = true; };
+  }, [lat, lng, label]);
+
+  useEffect(() => () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } }, []);
+
+  if (lat == null || lng == null) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center text-center px-4">
+        <div>
+          <MapPin className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">No coordinates yet</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-0.5">Click Locate to geocode this address</p>
+        </div>
+      </div>
+    );
+  }
+  return <div ref={containerRef} className="absolute inset-0" />;
 }
