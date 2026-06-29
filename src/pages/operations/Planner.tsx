@@ -2481,11 +2481,11 @@ export default function Planner() {
                             </td>
                             <td className="px-2 py-1.5">
                               <button
-                                className="text-sky-600 hover:text-sky-700 transition-colors"
+                                className="flex items-center justify-center w-9 h-9 rounded-lg border border-input bg-white text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 shadow-sm"
                                 onClick={(e) => { e.stopPropagation(); setDetailTripId(t.id); setView("detail"); }}
                                 title="Route Management Detail"
                               >
-                                <Info className="w-3.5 h-3.5" />
+                                <Info className="w-5 h-5" />
                               </button>
                             </td>
                             <td className="px-2 py-1.5">
