@@ -2037,18 +2037,20 @@ export default function Planner() {
       <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-50 via-blue-50/60 to-indigo-50/60 border-b border-border/60 flex-shrink-0 shadow-sm">
         {/* Site */}
         {sitesLoading
-          ? <div className="h-8 flex items-center gap-1.5 px-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading sites…</div>
+          ? <div className="h-9 flex items-center gap-2 px-3 text-xs text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border"><Loader2 className="w-4 h-4 animate-spin" /> Loading sites…</div>
           : <SiteSelect sites={sites} value={site} onChange={setSite} />
         }
         {/* Date */}
-        <div className="relative cursor-pointer" onClick={(e) => {
+        <div className="relative cursor-pointer h-9 flex items-center rounded-lg border border-input bg-background pl-8 pr-2 hover:border-primary/40 transition-colors" onClick={(e) => {
           const inp = (e.currentTarget.querySelector("input[type=date]") as HTMLInputElement | null);
           inp?.showPicker?.(); inp?.focus();
         }}>
-          <CalIcon className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <CalIcon className="w-3.5 h-3.5 text-primary pointer-events-none" />
+          </div>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
             onClick={(e) => { (e.currentTarget as HTMLInputElement).showPicker?.(); }}
-            className="h-7 pl-6 pr-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-ring/30 w-[130px] cursor-pointer"
+            className="h-7 bg-transparent text-xs focus:outline-none w-[120px] cursor-pointer"
           />
         </div>
         {/* Route Codes */}
