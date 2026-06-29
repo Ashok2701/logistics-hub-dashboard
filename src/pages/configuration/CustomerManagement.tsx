@@ -66,6 +66,7 @@ export default function CustomerManagement() {
   const [addr, setAddr] = useState<AddrForm>(emptyAddr);
   const [loadingAddr, setLoadingAddr] = useState(false);
   const [savingAddr, setSavingAddr] = useState(false);
+  const [locatingAddr, setLocatingAddr] = useState(false);
   const [categories, setCategories] = useState<VehicleCategory[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
 
