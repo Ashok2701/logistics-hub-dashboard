@@ -465,9 +465,26 @@ export default function CustomerManagement() {
                     <div className="py-12 text-center text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading address…</div>
                   ) : (
                     <div className="space-y-6">
-                      <div>
-                        <h3 className="text-sm font-semibold">{selectedAddress.addressCode} — {addrLabel(selectedAddress)}</h3>
-                        {selectedAddress.city && <p className="text-xs text-muted-foreground mt-0.5">{selectedAddress.city}</p>}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold">{selectedAddress.addressCode} — {addrLabel(selectedAddress)}</h3>
+                          {selectedAddress.city && <p className="text-xs text-muted-foreground mt-0.5">{selectedAddress.city}</p>}
+                          {(selectedAddress.latitude != null && selectedAddress.longitude != null) ? (
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-primary" />
+                              <span className="font-mono">{Number(selectedAddress.latitude).toFixed(6)}, {Number(selectedAddress.longitude).toFixed(6)}</span>
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground/70 mt-1 italic">No coordinates — click Locate to geocode</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleLocateAddr}
+                          disabled={locatingAddr || savingAddr}
+                          className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50 shrink-0"
+                        >
+                          {locatingAddr ? <Loader2 className="w-4 h-4 animate-spin" /> : <Locate className="w-4 h-4" />} Locate
+                        </button>
                       </div>
 
                       <Section title="Flags">
