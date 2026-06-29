@@ -1358,6 +1358,7 @@ export default function Planner() {
   const [date, setDate]         = useState(format(new Date(), "yyyy-MM-dd"));
   const [loading, setLoading]   = useState(false);
   const [loaded, setLoaded]     = useState(false);
+  const [loadStats, setLoadStats] = useState<{vehicles:number;drivers:number;drops:number;pickups:number}|null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [routeCode, setRouteCode]   = useState("");
 
