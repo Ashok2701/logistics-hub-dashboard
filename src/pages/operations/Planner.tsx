@@ -341,7 +341,7 @@ function RouteMapView({ trip, site }: { trip: Trip | null; site?: RpSite | null 
     }
     const d = 0.08;
     const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
-    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
     return (
       <div className="relative flex-1 min-h-[320px] bg-slate-50 overflow-hidden">
         <iframe
