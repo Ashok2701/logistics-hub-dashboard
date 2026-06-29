@@ -2087,8 +2087,10 @@ export default function Planner() {
             </div>
           )}
           {!loading && loaded && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold border border-emerald-200 shadow-sm">
-              <CheckCheck className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold border border-emerald-200 shadow-sm">
+              <div className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center">
+                <CheckCheck className="w-4 h-4 text-emerald-600" />
+              </div>
               <span>{site}</span><span className="opacity-60">·</span><span>{date}</span>
               {loadStats && (
                 <span className="opacity-80 font-normal ml-1">
