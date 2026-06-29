@@ -2020,16 +2020,24 @@ export default function Planner() {
         <ToolbarBtn icon={Unlock}      label="Group Unlock"        color="text-violet-600"  bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",          description: "Not yet implemented" })} />
         <ToolbarBtn icon={ShieldCheck} label="Group Validate"      color="text-amber-600"   bg="hover:bg-amber-50"   onClick={() => toast({ title: "Group Validate",        description: "Not yet implemented" })} />
         <ToolbarBtn icon={Trash2}      label="Group Delete Trips"  color="text-rose-600"    bg="hover:bg-rose-50"    onClick={() => toast({ title: "Group Delete Trips",    description: "Not yet implemented" })} />
-        {/* Status */}
-        <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-          {loading
-            ? <><Loader2 className="w-3 h-3 animate-spin text-primary" /><span>Loading…</span></>
-            : loaded
-              ? <><CheckCheck className="w-3 h-3 text-emerald-500" />
-                  <span className="font-medium text-foreground">{site}</span>
-                  <span>·</span>
-                  <span className="text-foreground">{date}</span></>
-              : null}
+        {/* Status pill */}
+        <div className="ml-auto flex items-center gap-2">
+          {loading && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium border border-blue-200">
+              <Loader2 className="w-3 h-3 animate-spin" /> Loading…
+            </div>
+          )}
+          {!loading && loaded && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold border border-emerald-200 shadow-sm">
+              <CheckCheck className="w-3.5 h-3.5" />
+              <span>{site}</span><span className="opacity-60">·</span><span>{date}</span>
+              {loadStats && (
+                <span className="opacity-80 font-normal ml-1">
+                  · {loadStats.vehicles}V · {loadStats.drivers}D · {loadStats.drops}↓ · {loadStats.pickups}↑
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
