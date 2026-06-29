@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef, useEffect, type DragEvent } from "react";
+import React, { useMemo, useState, useCallback, useRef, useEffect, type DragEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Truck, Users, Calendar as CalIcon, Building2, Search,
