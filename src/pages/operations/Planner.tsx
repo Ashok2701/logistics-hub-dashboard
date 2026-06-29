@@ -2082,8 +2082,11 @@ export default function Planner() {
         {/* Status pill */}
         <div className="ml-auto flex items-center gap-2">
           {loading && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium border border-blue-200">
-              <Loader2 className="w-3 h-3 animate-spin" /> Loading…
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-xs font-medium border border-blue-200">
+              <div className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center">
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              </div>
+              Loading…
             </div>
           )}
           {!loading && loaded && (
