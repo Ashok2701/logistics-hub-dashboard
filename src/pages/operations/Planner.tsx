@@ -6,7 +6,7 @@ import {
   CheckCheck, X, Play, Map as MapIcon, List, GripVertical,
   Loader2, Trash2, Lock, Unlock, RefreshCw, ChevronDown,
   Package, AlertCircle, Info, Eye, Zap, Filter,
-  Wand2, GitMerge, ShieldCheck, ChevronLeft,
+  Wand2, GitMerge, ShieldCheck, ChevronLeft, Warehouse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
