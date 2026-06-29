@@ -198,6 +198,7 @@ export default function CustomerManagement() {
     }
     setSavingAddr(true);
     try {
+      const cur = (detail.addresses ?? []).find((x) => x.addressCode === selectedAddrCode);
       const payload = {
         anyTimeWindow: addr.anyTimeWindow,
         anyVehicleCategory: addr.anyVehicleCategory,
@@ -207,6 +208,8 @@ export default function CustomerManagement() {
         })),
         vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
         drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
+        latitude: cur?.latitude ?? null,
+        longitude: cur?.longitude ?? null,
         updatedBy: currentUser(),
       };
       const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
@@ -218,6 +221,56 @@ export default function CustomerManagement() {
     } catch (err: any) {
       toast({ title: "Failed to save address", description: err?.message ?? String(err), variant: "destructive" });
     } finally { setSavingAddr(false); }
+  };
+
+  const handleLocateAddr = async () => {
+    if (!detail || !selectedAddrCode) return;
+    const a = (detail.addresses ?? []).find((x) => x.addressCode === selectedAddrCode);
+    if (!a) return;
+    const parts = [
+      a.addressLine1, a.addressLine2, a.addressLine3,
+      a.city, a.stateCode, a.postalCode, a.countryName || a.countryCode,
+    ].filter((p) => p && String(p).trim() !== "");
+    if (parts.length === 0) {
+      toast({ title: "No address available", description: "Cannot locate without address details.", variant: "destructive" });
+      return;
+    }
+    setLocatingAddr(true);
+    try {
+      const query = encodeURIComponent(parts.join(", "));
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error(`Geocoding failed (${res.status})`);
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        toast({ title: "Location not found", description: "No coordinates found for this address.", variant: "destructive" });
+        return;
+      }
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+      const payload = {
+        anyTimeWindow: addr.anyTimeWindow,
+        anyVehicleCategory: addr.anyVehicleCategory,
+        anyDriver: addr.anyDriver,
+        timeWindows: addr.timeWindows.map((t, i) => ({
+          fromTime: t.fromTime, toTime: t.toTime, displayOrder: t.displayOrder ?? i,
+        })),
+        vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
+        drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
+        latitude: lat,
+        longitude: lon,
+        updatedBy: currentUser(),
+      };
+      const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
+      setDetail((d) => d ? {
+        ...d,
+        addresses: (d.addresses ?? []).map((x) => x.addressCode === selectedAddrCode ? { ...x, ...updated, latitude: lat, longitude: lon } : x),
+      } : d);
+      toast({ title: "Coordinates updated", description: `${lat}, ${lon}` });
+    } catch (err: any) {
+      toast({ title: "Failed to locate", description: err?.message ?? String(err), variant: "destructive" });
+    } finally { setLocatingAddr(false); }
   };
 
   // Grid mutators for address tab
