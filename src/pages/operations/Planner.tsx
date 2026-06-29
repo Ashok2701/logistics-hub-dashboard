@@ -2653,7 +2653,7 @@ export default function Planner() {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  {tripView === "map" ? <RouteMapView trip={selectedTrip} /> : <TripStopListView trip={selectedTrip} />}
+                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} /> : <TripStopListView trip={selectedTrip} />}
                 </div>
               </div>
             }
