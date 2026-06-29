@@ -292,6 +292,8 @@ export interface CustomerAddressTmsPayload {
   timeWindows: AddressTimeWindow[];
   vehicles: AddressVehicleRow[];
   drivers: AddressDriverRow[];
+  latitude?: number | null;
+  longitude?: number | null;
   updatedBy?: string | null;
 }
 

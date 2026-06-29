@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowLeft, Pencil, RefreshCw, Loader2, Plus, Trash2, MapPin } from "lucide-react";
+import { Search, ArrowLeft, Pencil, RefreshCw, Loader2, Plus, Trash2, MapPin, Locate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -66,6 +66,7 @@ export default function CustomerManagement() {
   const [addr, setAddr] = useState<AddrForm>(emptyAddr);
   const [loadingAddr, setLoadingAddr] = useState(false);
   const [savingAddr, setSavingAddr] = useState(false);
+  const [locatingAddr, setLocatingAddr] = useState(false);
   const [categories, setCategories] = useState<VehicleCategory[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
 
@@ -197,6 +198,7 @@ export default function CustomerManagement() {
     }
     setSavingAddr(true);
     try {
+      const cur = (detail.addresses ?? []).find((x) => x.addressCode === selectedAddrCode);
       const payload = {
         anyTimeWindow: addr.anyTimeWindow,
         anyVehicleCategory: addr.anyVehicleCategory,
@@ -206,6 +208,8 @@ export default function CustomerManagement() {
         })),
         vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
         drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
+        latitude: cur?.latitude ?? null,
+        longitude: cur?.longitude ?? null,
         updatedBy: currentUser(),
       };
       const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
@@ -217,6 +221,56 @@ export default function CustomerManagement() {
     } catch (err: any) {
       toast({ title: "Failed to save address", description: err?.message ?? String(err), variant: "destructive" });
     } finally { setSavingAddr(false); }
+  };
+
+  const handleLocateAddr = async () => {
+    if (!detail || !selectedAddrCode) return;
+    const a = (detail.addresses ?? []).find((x) => x.addressCode === selectedAddrCode);
+    if (!a) return;
+    const parts = [
+      a.addressLine1, a.addressLine2, a.addressLine3,
+      a.city, a.stateCode, a.postalCode, a.countryName || a.countryCode,
+    ].filter((p) => p && String(p).trim() !== "");
+    if (parts.length === 0) {
+      toast({ title: "No address available", description: "Cannot locate without address details.", variant: "destructive" });
+      return;
+    }
+    setLocatingAddr(true);
+    try {
+      const query = encodeURIComponent(parts.join(", "));
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error(`Geocoding failed (${res.status})`);
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        toast({ title: "Location not found", description: "No coordinates found for this address.", variant: "destructive" });
+        return;
+      }
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+      const payload = {
+        anyTimeWindow: addr.anyTimeWindow,
+        anyVehicleCategory: addr.anyVehicleCategory,
+        anyDriver: addr.anyDriver,
+        timeWindows: addr.timeWindows.map((t, i) => ({
+          fromTime: t.fromTime, toTime: t.toTime, displayOrder: t.displayOrder ?? i,
+        })),
+        vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
+        drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
+        latitude: lat,
+        longitude: lon,
+        updatedBy: currentUser(),
+      };
+      const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
+      setDetail((d) => d ? {
+        ...d,
+        addresses: (d.addresses ?? []).map((x) => x.addressCode === selectedAddrCode ? { ...x, ...updated, latitude: lat, longitude: lon } : x),
+      } : d);
+      toast({ title: "Coordinates updated", description: `${lat}, ${lon}` });
+    } catch (err: any) {
+      toast({ title: "Failed to locate", description: err?.message ?? String(err), variant: "destructive" });
+    } finally { setLocatingAddr(false); }
   };
 
   // Grid mutators for address tab
@@ -411,9 +465,26 @@ export default function CustomerManagement() {
                     <div className="py-12 text-center text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading address…</div>
                   ) : (
                     <div className="space-y-6">
-                      <div>
-                        <h3 className="text-sm font-semibold">{selectedAddress.addressCode} — {addrLabel(selectedAddress)}</h3>
-                        {selectedAddress.city && <p className="text-xs text-muted-foreground mt-0.5">{selectedAddress.city}</p>}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold">{selectedAddress.addressCode} — {addrLabel(selectedAddress)}</h3>
+                          {selectedAddress.city && <p className="text-xs text-muted-foreground mt-0.5">{selectedAddress.city}</p>}
+                          {(selectedAddress.latitude != null && selectedAddress.longitude != null) ? (
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-primary" />
+                              <span className="font-mono">{Number(selectedAddress.latitude).toFixed(6)}, {Number(selectedAddress.longitude).toFixed(6)}</span>
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground/70 mt-1 italic">No coordinates — click Locate to geocode</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleLocateAddr}
+                          disabled={locatingAddr || savingAddr}
+                          className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50 shrink-0"
+                        >
+                          {locatingAddr ? <Loader2 className="w-4 h-4 animate-spin" /> : <Locate className="w-4 h-4" />} Locate
+                        </button>
                       </div>
 
                       <Section title="Flags">
