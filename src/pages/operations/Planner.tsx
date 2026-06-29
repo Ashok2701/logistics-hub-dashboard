@@ -333,7 +333,7 @@ function SiteLeafletMap({ lat, lng, site }: { lat: number; lng: number; site?: R
     let cancelled = false;
     (async () => {
       const L = (await import("leaflet")).default;
-      await import("leaflet/dist/leaflet.css");
+      // leaflet css imported at top of file
       if (cancelled || !containerRef.current) return;
       if (mapRef.current) {
         mapRef.current.setView([lat, lng], 13);
