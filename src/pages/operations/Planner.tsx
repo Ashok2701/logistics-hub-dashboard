@@ -541,7 +541,8 @@ function ActiveTourPanel({
   const dropCount   = stops.filter((s) => s.type === "DROP").length;
   const pickCount   = stops.filter((s) => s.type === "PICKUP").length;
   const travelMins  = stops.length * 18;
-  const travelStr   = stops.length
+  const isOptimized = selectedTripStatus === "Optimised" || selectedTripStatus === "Optimized";
+  const travelStr   = (stops.length && isOptimized)
     ? `${String(Math.floor(travelMins / 60)).padStart(2,"0")}:${String(travelMins % 60).padStart(2,"0")}`
     : "—";
 
@@ -1098,13 +1099,14 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
   const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
   const depTime  = "07:30";
   const retTime  = "18:30";
-  const totalKm  = trip.distanceKm;
-  const totalMin = trip.travelTimeMin;
+  const isOpen   = trip.status === "Open";
+  const totalKm  = isOpen ? 0 : trip.distanceKm;
+  const totalMin = isOpen ? 0 : trip.travelTimeMin;
   const totalH   = Math.floor(totalMin / 60);
   const totalM   = totalMin % 60;
-  const travelCost = Math.round(totalKm * 0.045);
-  const distCost   = Math.round(totalKm * 1.5);
-  const totalCost  = travelCost + distCost;
+  const travelCost = isOpen ? 0 : Math.round(totalKm * 0.045);
+  const distCost   = isOpen ? 0 : Math.round(totalKm * 1.5);
+  const totalCost  = isOpen ? 0 : travelCost + distCost;
 
   return (
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
@@ -1262,9 +1264,9 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                       <td className="px-2 py-1.5 font-mono">{s.bpcode}</td>
                       <td className="px-2 py-1.5 font-medium truncate max-w-[100px]">{s.client}</td>
                       <td className="px-2 py-1.5">{s.city}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{Math.round(totalKm / Math.max(trip.stops.length, 1))} mi</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:{String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">00:15</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : "00:15"}</td>
                     </tr>
                   ))}
                   {trip.stops.length === 0 && (
@@ -1306,13 +1308,13 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
               <div className="rounded-lg border border-border/60 p-3">
                 <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Totals</h4>
                 <div className="space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold">{totalKm} Miles</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono">{String(totalH).padStart(2,"0")}:{String(totalM).padStart(2,"0")} HH:MM</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold">{isOpen ? "—" : `${totalKm} Miles`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM`}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono">{trip.stops.length}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono">{String(totalH + 1).padStart(2,"0")}:{String(totalM + 15).padStart(2,"0")} HH:MM</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono">{travelCost} USD</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono">{distCost} USD</span></div>
-                  <div className="flex justify-between border-t border-border/40 pt-1 mt-1"><span className="font-semibold">Total Cost</span><span className="font-mono font-bold text-primary">{totalCost} USD</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH + 1).padStart(2,"0")}:${String(totalM + 15).padStart(2,"0")} HH:MM`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono">{isOpen ? "—" : `${travelCost} USD`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono">{isOpen ? "—" : `${distCost} USD`}</span></div>
+                  <div className="flex justify-between border-t border-border/40 pt-1 mt-1"><span className="font-semibold">Total Cost</span><span className="font-mono font-bold text-primary">{isOpen ? "—" : `${totalCost} USD`}</span></div>
                 </div>
               </div>
             </div>
