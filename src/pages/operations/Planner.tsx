@@ -541,7 +541,8 @@ function ActiveTourPanel({
   const dropCount   = stops.filter((s) => s.type === "DROP").length;
   const pickCount   = stops.filter((s) => s.type === "PICKUP").length;
   const travelMins  = stops.length * 18;
-  const travelStr   = stops.length
+  const isOptimized = selectedTripStatus === "Optimised" || selectedTripStatus === "Optimized";
+  const travelStr   = (stops.length && isOptimized)
     ? `${String(Math.floor(travelMins / 60)).padStart(2,"0")}:${String(travelMins % 60).padStart(2,"0")}`
     : "—";
 
