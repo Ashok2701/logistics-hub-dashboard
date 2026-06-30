@@ -1308,13 +1308,13 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
               <div className="rounded-lg border border-border/60 p-3">
                 <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Totals</h4>
                 <div className="space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold">{totalKm} Miles</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono">{String(totalH).padStart(2,"0")}:{String(totalM).padStart(2,"0")} HH:MM</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold">{isOpen ? "—" : `${totalKm} Miles`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM`}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono">{trip.stops.length}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono">{String(totalH + 1).padStart(2,"0")}:{String(totalM + 15).padStart(2,"0")} HH:MM</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono">{travelCost} USD</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono">{distCost} USD</span></div>
-                  <div className="flex justify-between border-t border-border/40 pt-1 mt-1"><span className="font-semibold">Total Cost</span><span className="font-mono font-bold text-primary">{totalCost} USD</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH + 1).padStart(2,"0")}:${String(totalM + 15).padStart(2,"0")} HH:MM`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono">{isOpen ? "—" : `${travelCost} USD`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono">{isOpen ? "—" : `${distCost} USD`}</span></div>
+                  <div className="flex justify-between border-t border-border/40 pt-1 mt-1"><span className="font-semibold">Total Cost</span><span className="font-mono font-bold text-primary">{isOpen ? "—" : `${totalCost} USD`}</span></div>
                 </div>
               </div>
             </div>
