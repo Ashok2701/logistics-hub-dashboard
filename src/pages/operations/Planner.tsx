@@ -522,6 +522,7 @@ function ActiveTourPanel({
   vehicle, driver, stops,
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
+  selectedTripStatus,
 }: ActiveTourPanelProps) {
   const [selectedStop,  setSelectedStop]  = useState<number | null>(null);
   const [showOptModal,  setShowOptModal]  = useState(false);
