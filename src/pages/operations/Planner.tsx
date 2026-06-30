@@ -1264,9 +1264,9 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                       <td className="px-2 py-1.5 font-mono">{s.bpcode}</td>
                       <td className="px-2 py-1.5 font-medium truncate max-w-[100px]">{s.client}</td>
                       <td className="px-2 py-1.5">{s.city}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{Math.round(totalKm / Math.max(trip.stops.length, 1))} mi</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:{String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">00:15</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : "00:15"}</td>
                     </tr>
                   ))}
                   {trip.stops.length === 0 && (
