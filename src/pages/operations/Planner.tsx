@@ -2418,7 +2418,7 @@ export default function Planner() {
               title: "Generate trip?",
               description: "Are you sure you want to generate this trip?",
               confirmLabel: "Yes",
-              onConfirm: () => confirmTrip(),
+              onConfirm: async () => { await confirmTrip(); },
             })}
             selectedTripStatus={selectedTrip?.optiStatus ?? (selectedTrip?.status as string | undefined) ?? null}
           />
