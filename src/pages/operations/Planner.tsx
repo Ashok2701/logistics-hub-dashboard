@@ -591,23 +591,36 @@ function ActiveTourPanel({
           {dropZoneActive && <span className="text-[9px] text-primary animate-pulse ml-1">Drop here…</span>}
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost"
-            className="h-7 text-[9px] gap-1 text-white/70 hover:text-white hover:bg-white/10 px-2 rounded-lg"
-            onClick={onClear} disabled={!hasAssignment}>
-            <Trash2 className="w-4 h-4" /> Clear
-          </Button>
-          <Button size="sm"
-            className="h-7 text-[9px] gap-1 bg-emerald-500 hover:bg-emerald-400 text-white border-0 px-2.5 rounded-lg shadow-sm"
-            onClick={onConfirm}>
-            <CheckCheck className="w-4 h-4" /> Confirm
-          </Button>
-          <Button size="sm"
-            className="h-7 text-[9px] gap-1 px-2.5 border-0 rounded-lg shadow-sm"
-            style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#0f172a" }}
-            disabled={!hasAssignment}
-            onClick={() => setShowOptModal(true)}>
-            <Zap className="w-4 h-4" /> Optimise
-          </Button>
+          {(() => {
+            const isEmpty = !vehicle && !driver && stops.length === 0;
+            const editable = !selectedTripStatus
+              || selectedTripStatus === "Open"
+              || selectedTripStatus === "Optimised"
+              || selectedTripStatus === "Optimized";
+            const showConfirm = !isEmpty && editable;
+            const canConfirm = !!vehicle && !!driver && stops.length >= 1;
+            const showOptimise = !!selectedTripStatus && editable;
+            return (
+              <>
+                {showConfirm && (
+                  <Button size="sm"
+                    className="h-7 text-[9px] gap-1 bg-emerald-500 hover:bg-emerald-400 text-white border-0 px-2.5 rounded-lg shadow-sm disabled:opacity-50"
+                    disabled={!canConfirm}
+                    onClick={onConfirm}>
+                    <CheckCheck className="w-4 h-4" /> Confirm
+                  </Button>
+                )}
+                {showOptimise && (
+                  <Button size="sm"
+                    className="h-7 text-[9px] gap-1 px-2.5 border-0 rounded-lg shadow-sm"
+                    style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#0f172a" }}
+                    onClick={() => setShowOptModal(true)}>
+                    <Zap className="w-4 h-4" /> Optimise
+                  </Button>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
