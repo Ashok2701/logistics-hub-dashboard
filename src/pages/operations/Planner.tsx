@@ -505,6 +505,7 @@ type ActiveTourPanelProps = {
   onRemoveStop: (id: string) => void;
   onClear: () => void;
   onConfirm: () => void;
+  selectedTripStatus?: string | null;
 };
 
 function genTimes(count: number): string[] {
