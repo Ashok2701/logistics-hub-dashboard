@@ -580,7 +580,7 @@ function ActiveTourPanel({
       style={{ border: "1px solid hsl(var(--border) / 0.4)" }}
     >
       {/* ── HEADER ROW — full width single line ────────── */}
-      <div className="flex items-center justify-between px-2.5 py-1.5 bg-gradient-header flex-shrink-0">
+      <div className="flex items-center justify-between px-2.5 py-1.5 flex-shrink-0" style={{ background: "linear-gradient(135deg, #5b6b8c, #3d4a63)" }}>
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-white/15 flex items-center justify-center">
             <Play className="w-4 h-4 text-white flex-shrink-0" />
