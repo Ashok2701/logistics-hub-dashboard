@@ -2415,6 +2415,7 @@ export default function Planner() {
             onRemoveStop={(id) => setDraftStopIds((prev) => prev.filter((x) => x !== id))}
             onClear={clearDraft}
             onConfirm={() => setConfirmDialog({
+              open: true,
               title: "Generate trip?",
               description: "Are you sure you want to generate this trip?",
               confirmLabel: "Yes",
