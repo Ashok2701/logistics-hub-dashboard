@@ -2414,7 +2414,13 @@ export default function Planner() {
             onClearDriver={() => reassignDriver(null)}
             onRemoveStop={(id) => setDraftStopIds((prev) => prev.filter((x) => x !== id))}
             onClear={clearDraft}
-            onConfirm={confirmTrip}
+            onConfirm={() => setConfirmDialog({
+              title: "Generate trip?",
+              description: "Are you sure you want to generate this trip?",
+              confirmLabel: "Yes",
+              onConfirm: () => confirmTrip(),
+            })}
+            selectedTripStatus={selectedTrip?.optiStatus ?? (selectedTrip?.status as string | undefined) ?? null}
           />
           </div>
 
