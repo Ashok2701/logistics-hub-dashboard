@@ -1099,13 +1099,14 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
   const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
   const depTime  = "07:30";
   const retTime  = "18:30";
-  const totalKm  = trip.distanceKm;
-  const totalMin = trip.travelTimeMin;
+  const isOpen   = trip.status === "Open";
+  const totalKm  = isOpen ? 0 : trip.distanceKm;
+  const totalMin = isOpen ? 0 : trip.travelTimeMin;
   const totalH   = Math.floor(totalMin / 60);
   const totalM   = totalMin % 60;
-  const travelCost = Math.round(totalKm * 0.045);
-  const distCost   = Math.round(totalKm * 1.5);
-  const totalCost  = travelCost + distCost;
+  const travelCost = isOpen ? 0 : Math.round(totalKm * 0.045);
+  const distCost   = isOpen ? 0 : Math.round(totalKm * 1.5);
+  const totalCost  = isOpen ? 0 : travelCost + distCost;
 
   return (
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
