@@ -248,22 +248,30 @@ export default function CustomerManagement() {
         toast({ title: "Location not found", description: "No coordinates found for this address.", variant: "destructive" });
         return;
       }
-      const lat = parseFloat(data[0].lat);
-      const lon = parseFloat(data[0].lon);
-      const payload = {
-        anyTimeWindow: addr.anyTimeWindow,
-        anyVehicleCategory: addr.anyVehicleCategory,
-        anyDriver: addr.anyDriver,
-        timeWindows: addr.timeWindows.map((t, i) => ({
+      const lat = Number(parseFloat(data[0].lat).toFixed(6));
+      const lon = Number(parseFloat(data[0].lon).toFixed(6));
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        toast({ title: "Invalid coordinates", description: "Geocoder returned non-numeric values.", variant: "destructive" });
+        return;
+      }
+      // Build payload from currently-loaded address record so we don't blank out
+      // time windows / vehicles / drivers if the address tab was never opened.
+      const payload: any = {
+        anyTimeWindow: !!(a.anyTimeWindow ?? addr.anyTimeWindow),
+        anyVehicleCategory: !!(a.anyVehicleCategory ?? addr.anyVehicleCategory),
+        anyDriver: !!(a.anyDriver ?? addr.anyDriver),
+        timeWindows: (a.timeWindows ?? addr.timeWindows ?? []).map((t: any, i: number) => ({
           fromTime: t.fromTime, toTime: t.toTime, displayOrder: t.displayOrder ?? i,
         })),
-        vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
-        drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
+        vehicles: (a.vehicles ?? addr.vehicles ?? []).map((v: any) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
+        drivers: (a.drivers ?? addr.drivers ?? []).map((d: any) => ({ driverId: d.driverId })),
         latitude: lat,
         longitude: lon,
         updatedBy: currentUser(),
       };
+      console.log("[Locate] PUT payload", payload);
       const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
+      console.log("[Locate] response", updated);
       setDetail((d) => d ? {
         ...d,
         addresses: (d.addresses ?? []).map((x) => x.addressCode === selectedAddrCode ? { ...x, ...updated, latitude: lat, longitude: lon } : x),
