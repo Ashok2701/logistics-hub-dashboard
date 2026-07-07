@@ -511,6 +511,7 @@ type ActiveTourPanelProps = {
   siteLat?: number;
   siteLng?: number;
   activeTripId?: number | null;
+  activeTripCode?: string | null;
   planDate?: string;
 };
 
@@ -529,7 +530,7 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
   selectedTripStatus,
-  siteLat = 0, siteLng = 0, activeTripId = null, planDate = "",
+  siteLat = 0, siteLng = 0, activeTripId = null, activeTripCode = null, planDate = "",
 }: ActiveTourPanelProps) {
   const [selectedStop,  setSelectedStop]  = useState<number | null>(null);
   const [showOptModal,  setShowOptModal]  = useState(false);
@@ -894,7 +895,7 @@ function ActiveTourPanel({
                   <div className="grid grid-cols-3 divide-x divide-gray-100">
                     <div className="px-3 py-2">
                       <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Trip No</p>
-                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{vehicle ? `DRAFT-${vehicle.code}` : "DRAFT"}</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{activeTripCode ?? (vehicle ? `DRAFT-${vehicle.code}` : "DRAFT")}</p>
                     </div>
                     <div className="px-3 py-2">
                       <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
@@ -2618,6 +2619,7 @@ export default function Planner() {
             siteLat={currentSiteObj?.latitude ? Number(currentSiteObj.latitude) : 0}
             siteLng={currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0}
             activeTripId={trips.find(t => t.vehicle.code === draftVehicle?.code)?.tripId ?? null}
+            activeTripCode={trips.find(t => t.vehicle.code === draftVehicle?.code)?.tripCode ?? null}
             planDate={date}
             dropZoneActive={dropZoneActive}
             onDragOver={(e) => { e.preventDefault(); setDropZoneActive(true); }}
@@ -2862,18 +2864,76 @@ export default function Planner() {
                                         disabled={optRunning}
                                         onClick={async (e) => {
                                           e.stopPropagation();
+                                          const depLat = currentSiteObj?.latitude  ? Number(currentSiteObj.latitude)  : 0;
+                                          const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
+                                          if (!depLat || !depLng) {
+                                            toast({ title: "Missing site coordinates", variant: "destructive" }); return;
+                                          }
+                                          const tripStops = t.stops;
+                                          const missing = tripStops.filter(s => !s.lat || !s.lng);
+                                          if (missing.length) {
+                                            toast({ title: `${missing.length} stop(s) missing coordinates`, variant: "destructive" }); return;
+                                          }
                                           setOptRunning(true);
                                           try {
+                                            const startSec  = hhmmToSec(optTime);
+                                            const capGrams  = Math.round((t.vehicle.capacity ?? 60000) * 1000);
+
+                                            const vroomVehicle = {
+                                              id: 1, description: t.vehicle.code,
+                                              start: [depLng, depLat] as [number,number],
+                                              end:   [depLng, depLat] as [number,number],
+                                              capacity: [capGrams] as [number],
+                                              time_window: [startSec, hhmmToSec("23:59")] as [number,number],
+                                              max_tasks: 999,
+                                            };
+                                            const vroomJobs = tripStops.map((s, i) => ({
+                                              id: i + 1, description: s.txn,
+                                              location: [s.lng, s.lat] as [number,number],
+                                              service: 1800,
+                                              ...(s.type === "DROP"
+                                                ? { delivery: [Math.round((s.netweight||1)*1000)] as [number] }
+                                                : { pickup:   [Math.round((s.netweight||1)*1000)] as [number] }),
+                                              priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
+                                            }));
+
+                                            const result = await callVroom([vroomVehicle], vroomJobs);
+                                            if (!result.routes?.length) throw new Error("VROOM returned no routes");
+
+                                            const route    = result.routes[0];
+                                            const jobSteps = route.steps.filter((st: VroomStep) => st.type === "job");
+                                            const endStep  = route.steps.find((st: VroomStep)  => st.type === "end");
+                                            const endTime  = secToHHMM(endStep ? endStep.arrival : startSec + route.duration);
+                                            const totalDistKm = (route.distance / 1000).toFixed(1);
+                                            const travelHHMM  = secToHHMM(route.duration);
+
+                                            const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
+                                              seq: i + 1, docNum: st.description ?? "",
+                                              arrivalDate: date,   arrivalTime:   secToHHMM(st.arrival),
+                                              departureDate: date, departureTime: secToHHMM(st.arrival + st.service),
+                                              fromPrevDistance:    ((st.distance ?? 0) / 1000).toFixed(1),
+                                              fromPrevTravelTime:  secToHHMM(st.duration),
+                                              serviceTime: secToHHMM(st.service),
+                                              waitingTime: secToHHMM(st.waiting_time ?? 0),
+                                            }));
+
                                             if (t.tripId != null) {
-                                              const resp = await tripApi.optimiseTrip(t.tripId, optOrder, optTime);
+                                              const { optimiseTrip } = await import("@/lib/tripApi");
+                                              const resp = await optimiseTrip(t.tripId, {
+                                                orderMode: optOrder, startTime: optTime, endTime,
+                                                travelTime: travelHHMM, totalTime: travelHHMM,
+                                                totalDistance: totalDistKm, uomDistance: "km",
+                                                totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
+                                                stopResults,
+                                              });
                                               setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
                                             } else {
-                                              // Local-only trip — mark optimised in UI
-                                              setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" } : x));
+                                              setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" as any } : x));
                                             }
-                                            toast({ title: "Optimisation complete", description: `Trip ${t.tripCode ?? t.id.slice(-12)} optimised` });
+                                            toast({ title: "Optimisation complete ✓",
+                                              description: `Trip ${t.tripCode ?? t.id.slice(-12)} · ${totalDistKm} km · end ${endTime}` });
                                           } catch (err: any) {
-                                            toast({ title: "Optimisation failed", description: err?.message ?? "Unknown error", variant: "destructive" });
+                                            toast({ title: "Optimisation failed", description: err?.message ?? "VROOM error", variant: "destructive" });
                                           } finally {
                                             setOptRunning(false);
                                             setOptTripId(null);
