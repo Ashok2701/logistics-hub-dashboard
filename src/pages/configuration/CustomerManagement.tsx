@@ -283,6 +283,7 @@ export default function CustomerManagement() {
         ...d,
         addresses: (d.addresses ?? []).map((x) => x.addressCode === selectedAddrCode ? { ...x, ...updated, latitude: lat, longitude: lon } : x),
       } : d);
+      setAddr((prev) => ({ ...prev, latitude: String(lat), longitude: String(lon) }));
       toast({ title: "Coordinates updated", description: `${lat}, ${lon}` });
     } catch (err: any) {
       toast({ title: "Failed to locate", description: err?.message ?? String(err), variant: "destructive" });
