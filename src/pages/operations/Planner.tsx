@@ -507,6 +507,11 @@ type ActiveTourPanelProps = {
   onClear: () => void;
   onConfirm: () => void;
   selectedTripStatus?: string | null;
+  // Optimisation context
+  siteLat?: number;
+  siteLng?: number;
+  activeTripId?: number | null;
+  planDate?: string;
 };
 
 function genTimes(count: number): string[] {
@@ -524,6 +529,7 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
   selectedTripStatus,
+  siteLat = 0, siteLng = 0, activeTripId = null, planDate = "",
 }: ActiveTourPanelProps) {
   const [selectedStop,  setSelectedStop]  = useState<number | null>(null);
   const [showOptModal,  setShowOptModal]  = useState(false);
@@ -1042,8 +1048,8 @@ function ActiveTourPanel({
                 disabled={optRunning}
                 onClick={async () => {
                   if (!stops.length) return;
-                  const depLat = currentSiteObj?.latitude  ? Number(currentSiteObj.latitude)  : 0;
-                  const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
+                  const depLat = siteLat;
+                  const depLng = siteLng;
                   if (!depLat || !depLng) {
                     toast({ title: "Missing site coordinates", description: "Set lat/lng for this site first", variant: "destructive" }); return;
                   }
@@ -1090,9 +1096,9 @@ function ActiveTourPanel({
                     const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
                       seq: i + 1,
                       docNum: st.description ?? "",
-                      arrivalDate:   date,
+                      arrivalDate:   planDate,
                       arrivalTime:   secToHHMM(st.arrival),
-                      departureDate: date,
+                      departureDate: planDate,
                       departureTime: secToHHMM(st.arrival + st.service),
                       fromPrevDistance:    ((st.distance ?? 0) / 1000).toFixed(1),
                       fromPrevTravelTime:  secToHHMM(st.duration),
@@ -1101,7 +1107,7 @@ function ActiveTourPanel({
                     }));
 
                     setOptResult({
-                      endDate: date, endTime,
+                      endDate: planDate, endTime,
                       arrival: endTime,
                       duration: travelHHMM,
                       distance: `${totalDistKm} km`,
@@ -1109,7 +1115,6 @@ function ActiveTourPanel({
                     });
 
                     // Persist to backend if tripId available
-                    const activeTripId = trips.find(t => t.vehicle.code === vehicle?.code)?.tripId;
                     if (activeTripId) {
                       const { optimiseTrip } = await import("@/lib/tripApi");
                       await optimiseTrip(activeTripId, {
@@ -1634,7 +1639,7 @@ export default function Planner() {
       // ── Build selected vehicles ──────────────────────────────
       const selVehicles = apiVehicles.filter(v => agVehSel.has(v.vehicleCode));
       const vroomVehicles = selVehicles.map((v, i) => {
-        const startSec = hhmmToSec(v.startTime ?? "07:00");
+        const startSec = hhmmToSec("07:00");  // RpVehicle has no startTime
         return {
           id: i + 1,
           description: v.vehicleCode,
@@ -1739,7 +1744,7 @@ export default function Planner() {
             generatedBy: "AUTO",
             userCode: "SYSTEM",
             stopObjects: routeStops,
-            vehicleObject: vehObj ?? null,
+            vehicleObject: (vehObj ?? null) as any,
             totalObject: { stopResults },
           });
 
@@ -2610,6 +2615,10 @@ export default function Planner() {
             vehicle={draftVehicle}
             driver={draftDriver}
             stops={draftStops}
+            siteLat={currentSiteObj?.latitude ? Number(currentSiteObj.latitude) : 0}
+            siteLng={currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0}
+            activeTripId={trips.find(t => t.vehicle.code === draftVehicle?.code)?.tripId ?? null}
+            planDate={date}
             dropZoneActive={dropZoneActive}
             onDragOver={(e) => { e.preventDefault(); setDropZoneActive(true); }}
             onDragLeave={() => setDropZoneActive(false)}
