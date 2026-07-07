@@ -216,8 +216,8 @@ export default function CustomerManagement() {
         })),
         vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
         drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
-        latitude: cur?.latitude ?? null,
-        longitude: cur?.longitude ?? null,
+        latitude: addr.latitude.trim() === "" ? null : parseFloat(addr.latitude),
+        longitude: addr.longitude.trim() === "" ? null : parseFloat(addr.longitude),
         updatedBy: currentUser(),
       };
       const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
