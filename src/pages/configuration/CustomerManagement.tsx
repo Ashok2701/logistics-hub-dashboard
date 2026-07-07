@@ -30,10 +30,13 @@ type AddrForm = {
   timeWindows: AddressTimeWindow[];
   vehicles: { vehicleCategoryCode: string }[];
   drivers: { driverId: string }[];
+  latitude: string;
+  longitude: string;
 };
 const emptyAddr: AddrForm = {
   anyTimeWindow: false, anyVehicleCategory: false, anyDriver: false,
   timeWindows: [], vehicles: [], drivers: [],
+  latitude: "", longitude: "",
 };
 
 const isTmsActive = (c: Customer) =>
