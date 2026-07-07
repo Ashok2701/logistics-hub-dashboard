@@ -152,6 +152,8 @@ export default function CustomerManagement() {
       timeWindows: a.timeWindows ?? [],
       vehicles: (a.vehicles ?? []).map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
       drivers: (a.drivers ?? []).map((d) => ({ driverId: d.driverId })),
+      latitude: a.latitude != null ? String(a.latitude) : "",
+      longitude: a.longitude != null ? String(a.longitude) : "",
     });
     setLoadingAddr(true);
     try {
@@ -163,6 +165,8 @@ export default function CustomerManagement() {
         timeWindows: data.timeWindows ?? [],
         vehicles: (data.vehicles ?? []).map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
         drivers: (data.drivers ?? []).map((d) => ({ driverId: d.driverId })),
+        latitude: data.latitude != null ? String(data.latitude) : "",
+        longitude: data.longitude != null ? String(data.longitude) : "",
       });
       // update merged address in detail
       setDetail((d) => d ? {
