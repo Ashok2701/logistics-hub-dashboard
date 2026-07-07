@@ -30,10 +30,13 @@ type AddrForm = {
   timeWindows: AddressTimeWindow[];
   vehicles: { vehicleCategoryCode: string }[];
   drivers: { driverId: string }[];
+  latitude: string;
+  longitude: string;
 };
 const emptyAddr: AddrForm = {
   anyTimeWindow: false, anyVehicleCategory: false, anyDriver: false,
   timeWindows: [], vehicles: [], drivers: [],
+  latitude: "", longitude: "",
 };
 
 const isTmsActive = (c: Customer) =>
@@ -149,6 +152,8 @@ export default function CustomerManagement() {
       timeWindows: a.timeWindows ?? [],
       vehicles: (a.vehicles ?? []).map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
       drivers: (a.drivers ?? []).map((d) => ({ driverId: d.driverId })),
+      latitude: a.latitude != null ? String(a.latitude) : "",
+      longitude: a.longitude != null ? String(a.longitude) : "",
     });
     setLoadingAddr(true);
     try {
@@ -160,6 +165,8 @@ export default function CustomerManagement() {
         timeWindows: data.timeWindows ?? [],
         vehicles: (data.vehicles ?? []).map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
         drivers: (data.drivers ?? []).map((d) => ({ driverId: d.driverId })),
+        latitude: data.latitude != null ? String(data.latitude) : "",
+        longitude: data.longitude != null ? String(data.longitude) : "",
       });
       // update merged address in detail
       setDetail((d) => d ? {
@@ -209,8 +216,8 @@ export default function CustomerManagement() {
         })),
         vehicles: addr.vehicles.map((v) => ({ vehicleCategoryCode: v.vehicleCategoryCode })),
         drivers: addr.drivers.map((d) => ({ driverId: d.driverId })),
-        latitude: cur?.latitude ?? null,
-        longitude: cur?.longitude ?? null,
+        latitude: addr.latitude.trim() === "" ? null : parseFloat(addr.latitude),
+        longitude: addr.longitude.trim() === "" ? null : parseFloat(addr.longitude),
         updatedBy: currentUser(),
       };
       const updated = await customerApi.updateAddress(detail.customerCode, selectedAddrCode, payload);
@@ -276,6 +283,7 @@ export default function CustomerManagement() {
         ...d,
         addresses: (d.addresses ?? []).map((x) => x.addressCode === selectedAddrCode ? { ...x, ...updated, latitude: lat, longitude: lon } : x),
       } : d);
+      setAddr((prev) => ({ ...prev, latitude: String(lat), longitude: String(lon) }));
       toast({ title: "Coordinates updated", description: `${lat}, ${lon}` });
     } catch (err: any) {
       toast({ title: "Failed to locate", description: err?.message ?? String(err), variant: "destructive" });
@@ -495,15 +503,11 @@ export default function CustomerManagement() {
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Latitude</Label>
-                              <div className="mt-1 text-sm font-mono">
-                                {selectedAddress.latitude != null ? Number(selectedAddress.latitude).toFixed(6) : <span className="text-muted-foreground/70 italic font-sans text-xs">— not set —</span>}
-                              </div>
+                              <Input value={addr.latitude} onChange={(e) => setAddr((t) => ({ ...t, latitude: e.target.value }))} placeholder="e.g. 34.0522" className="h-9 mt-1 font-mono" />
                             </div>
                             <div>
                               <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Longitude</Label>
-                              <div className="mt-1 text-sm font-mono">
-                                {selectedAddress.longitude != null ? Number(selectedAddress.longitude).toFixed(6) : <span className="text-muted-foreground/70 italic font-sans text-xs">— not set —</span>}
-                              </div>
+                              <Input value={addr.longitude} onChange={(e) => setAddr((t) => ({ ...t, longitude: e.target.value }))} placeholder="e.g. -118.2437" className="h-9 mt-1 font-mono" />
                             </div>
                           </div>
                         </div>
