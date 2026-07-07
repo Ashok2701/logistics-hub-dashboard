@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { fetchTmsSites, loadPlannerData, type RpSite, type RpVehicle, type RpDriver, type RpStop } from "@/lib/routePlannerApi";
+import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi";
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
 
 // ═══════════════════════════════════════════════════════
@@ -1039,33 +1040,97 @@ function ActiveTourPanel({
               {/* Run button */}
               <button
                 disabled={optRunning}
-                onClick={() => {
+                onClick={async () => {
+                  if (!stops.length) return;
+                  const depLat = currentSiteObj?.latitude  ? Number(currentSiteObj.latitude)  : 0;
+                  const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
+                  if (!depLat || !depLng) {
+                    toast({ title: "Missing site coordinates", description: "Set lat/lng for this site first", variant: "destructive" }); return;
+                  }
+                  const missing = stops.filter(s => !s.lat || !s.lng);
+                  if (missing.length) {
+                    toast({ title: "Missing stop coordinates", description: `${missing.length} stop(s) missing lat/lng`, variant: "destructive" }); return;
+                  }
                   setOptRunning(true);
-                  setTimeout(() => {
-                    // TODO: replace with real API response
-                    const travelMins = stops.length * 18;
-                    const [sh, sm] = optStartTime.split(":").map(Number);
-                    const totalMins = sh * 60 + sm + travelMins;
-                    const endH = Math.floor(totalMins / 60) % 24;
-                    const endM = totalMins % 60;
-                    const endTime = `${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}`;
-                    const daysAdded = Math.floor(totalMins / (24 * 60));
-                    const endDateObj = new Date(optStartDate);
-                    endDateObj.setDate(endDateObj.getDate() + daysAdded);
-                    const endDate = endDateObj.toISOString().slice(0, 10);
-                    const durH = Math.floor(travelMins / 60);
-                    const durM = travelMins % 60;
+                  try {
+                    const startSec = hhmmToSec(optStartTime);
+                    const capGrams = Math.round((vehicle?.capacity ?? 60000) * 1000);
+
+                    const vroomVehicle = {
+                      id: 1,
+                      description: vehicle?.code ?? "VEH",
+                      start: [depLng, depLat] as [number,number],
+                      end:   [depLng, depLat] as [number,number],
+                      capacity: [capGrams] as [number],
+                      time_window: [startSec, hhmmToSec("23:59")] as [number,number],
+                      max_tasks: 999,
+                    };
+
+                    const vroomJobs = stops.map((s, i) => ({
+                      id: i + 1,
+                      description: s.txn,
+                      location: [s.lng, s.lat] as [number,number],
+                      service: 1800,  // 30 min default
+                      ...(s.type === "DROP"
+                        ? { delivery: [Math.round((s.netweight || 1) * 1000)] as [number] }
+                        : { pickup:   [Math.round((s.netweight || 1) * 1000)] as [number] }),
+                      priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
+                    }));
+
+                    const result = await callVroom([vroomVehicle], vroomJobs);
+                    if (!result.routes?.length) throw new Error("VROOM returned no routes");
+
+                    const route   = result.routes[0];
+                    const jobSteps = route.steps.filter((st: VroomStep) => st.type === "job");
+                    const endStep  = route.steps.find((st: VroomStep)  => st.type === "end");
+                    const endTime  = secToHHMM(endStep ? endStep.arrival : startSec + route.duration);
+                    const totalDistKm = (route.distance / 1000).toFixed(1);
+                    const travelHHMM  = secToHHMM(route.duration);
+
+                    const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
+                      seq: i + 1,
+                      docNum: st.description ?? "",
+                      arrivalDate:   date,
+                      arrivalTime:   secToHHMM(st.arrival),
+                      departureDate: date,
+                      departureTime: secToHHMM(st.arrival + st.service),
+                      fromPrevDistance:    ((st.distance ?? 0) / 1000).toFixed(1),
+                      fromPrevTravelTime:  secToHHMM(st.duration),
+                      serviceTime: secToHHMM(st.service),
+                      waitingTime: secToHHMM(st.waiting_time ?? 0),
+                    }));
+
                     setOptResult({
-                      endDate,
-                      endTime,
+                      endDate: date, endTime,
                       arrival: endTime,
-                      duration: `${durH}h ${String(durM).padStart(2,"0")}m`,
-                      distance: `${(stops.length * 12.5).toFixed(1)} km`,
-                      cost: `$${(stops.length * 18.75).toFixed(2)}`,
+                      duration: travelHHMM,
+                      distance: `${totalDistKm} km`,
+                      cost: "",
                     });
-                    setOptRunning(false);
-                    toast({ title: "Optimisation complete ✓", description: `Trip optimised — ${stops.length} stops resequenced from ${optStartTime}` });
-                  }, 2000);
+
+                    // Persist to backend if tripId available
+                    const activeTripId = trips.find(t => t.vehicle.code === vehicle?.code)?.tripId;
+                    if (activeTripId) {
+                      const { optimiseTrip } = await import("@/lib/tripApi");
+                      await optimiseTrip(activeTripId, {
+                        orderMode: optOrder, startTime: optStartTime, endTime,
+                        travelTime: travelHHMM, totalTime: travelHHMM,
+                        totalDistance: totalDistKm, uomDistance: "km",
+                        totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
+                        stopResults,
+                      });
+                      setTrips(prev => prev.map(t =>
+                        t.tripId === activeTripId ? { ...t, optiStatus: "Optimised" as any } : t
+                      ));
+                    }
+
+                    toast({ title: "Optimisation complete ✓",
+                      description: `${jobSteps.length} stops · ${totalDistKm} km · end ${endTime}` });
+                  } catch(err) {
+                    toast({ title: "Optimisation failed",
+                      description: err instanceof Error ? err.message : "VROOM error",
+                      variant: "destructive" });
+                  } finally { setOptRunning(false); }
                 }}
                 className="w-full py-3 rounded-xl text-[12px] font-bold flex items-center justify-center gap-2 transition-all"
                 style={{
@@ -1555,17 +1620,158 @@ export default function Planner() {
     setAgVehSel(new Set()); setAgDrvSel(new Set());
     setAgDropSel(new Set()); setAgPickSel(new Set());
   }
-  function agSubmit() {
+  async function agSubmit() {
     if (!agCanSubmit) return;
+    const depLat = currentSiteObj?.latitude  ? Number(currentSiteObj.latitude)  : 0;
+    const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
+    if (!depLat || !depLng) {
+      toast({ title: "Missing site coordinates", description: "Set lat/lng for this site first", variant: "destructive" });
+      return;
+    }
+
     setAgSubmitting(true);
-    setTimeout(() => {
-      setAgSubmitting(false);
+    try {
+      // ── Build selected vehicles ──────────────────────────────
+      const selVehicles = apiVehicles.filter(v => agVehSel.has(v.vehicleCode));
+      const vroomVehicles = selVehicles.map((v, i) => {
+        const startSec = hhmmToSec(v.startTime ?? "07:00");
+        return {
+          id: i + 1,
+          description: v.vehicleCode,
+          start: [depLng, depLat] as [number,number],
+          end:   [depLng, depLat] as [number,number],
+          capacity: [Math.round(Number(v.capacityWeight ?? 60000) * 1000)] as [number],
+          time_window: [startSec, hhmmToSec("23:59")] as [number,number],
+          max_tasks: 999,
+        };
+      });
+
+      // ── Build selected jobs ──────────────────────────────────
+      const selDocs = allStops.filter(s =>
+        (s.type === "DROP"   && agDropSel.has(s.id)) ||
+        (s.type === "PICKUP" && agPickSel.has(s.id))
+      );
+
+      const missingCoords = selDocs.filter(s => !s.lat || !s.lng);
+      if (missingCoords.length) {
+        toast({ title: "Missing coordinates", description: `${missingCoords.length} stop(s) missing lat/lng`, variant: "destructive" });
+        setAgSubmitting(false); return;
+      }
+
+      const vroomJobs = selDocs.map((s, i) => ({
+        id: i + 1,
+        description: s.txn,
+        location: [s.lng, s.lat] as [number,number],
+        service: 1800,
+        ...(s.type === "DROP"
+          ? { delivery: [Math.round((s.netweight || 1) * 1000)] as [number] }
+          : { pickup:   [Math.round((s.netweight || 1) * 1000)] as [number] }),
+        priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
+      }));
+
+      // ── Call VROOM ────────────────────────────────────────────
+      const result = await callVroom(vroomVehicles, vroomJobs);
+
+      if (!result.routes?.length) {
+        toast({ title: "No routes generated", description: "VROOM could not assign any stops to vehicles", variant: "destructive" });
+        return;
+      }
+
+      // ── Build trips from VROOM routes ─────────────────────────
+      const { createTrip } = await import("@/lib/tripApi");
+      let createdCount = 0;
+
+      for (const route of result.routes) {
+        const vehCode  = route.description;
+        const vehObj   = selVehicles.find(v => v.vehicleCode === vehCode);
+        const driverId = [...agDrvSel][0] ?? "";
+        const driverObj = apiDrivers.find(d => d.id === driverId);
+
+        const jobSteps = route.steps.filter((st: VroomStep) => st.type === "job");
+        if (!jobSteps.length) continue;
+
+        const endStep  = route.steps.find((st: VroomStep) => st.type === "end");
+        const endTime  = secToHHMM(endStep ? endStep.arrival : 0);
+        const startTime = secToHHMM(route.steps[0]?.arrival ?? hhmmToSec("07:00"));
+        const totalDistKm = (route.distance / 1000).toFixed(1);
+        const travelHHMM  = secToHHMM(route.duration);
+
+        const routeStops = jobSteps.map((st: VroomStep) =>
+          selDocs.find(s => s.txn === st.description)
+        ).filter(Boolean) as typeof selDocs;
+
+        const drops   = routeStops.filter(s => s.type === "DROP").length;
+        const pickups = routeStops.filter(s => s.type === "PICKUP").length;
+        const totalWt = routeStops.reduce((n, s) => n + (s.netweight || 0), 0);
+        const totalVl = routeStops.reduce((n, s) => n + (s.vol || 0), 0);
+
+        const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
+          seq: i + 1,
+          docNum: st.description ?? "",
+          arrivalDate: date, arrivalTime: secToHHMM(st.arrival),
+          departureDate: date, departureTime: secToHHMM(st.arrival + st.service),
+          fromPrevDistance: ((st.distance ?? 0) / 1000).toFixed(1),
+          fromPrevTravelTime: secToHHMM(st.duration),
+          serviceTime: secToHHMM(st.service),
+          waitingTime: secToHHMM(st.waiting_time ?? 0),
+        }));
+
+        try {
+          const tripResp = await createTrip({
+            site, docDate: date,
+            driverId, driverName: driverObj?.name ?? driverId,
+            vehicleCode: vehCode,
+            depSite: vehObj ? site : site,
+            arrSite: vehObj ? site : site,
+            drops, pickups,
+            noOfPackages: routeStops.reduce((n, s) => n + (s.qty || 0), 0),
+            startTime, endTime,
+            travelTime: travelHHMM, totalTime: travelHHMM,
+            totalWeight: String(totalWt.toFixed(2)),
+            totalVolume: String(totalVl.toFixed(2)),
+            capacity:    String(vehObj?.capacityWeight ?? 60000),
+            uomCapacity: "KG", uomVolume: "M3", uomDistance: "km",
+            weightPct: vehObj?.capacityWeight ? totalWt / Number(vehObj.capacityWeight) * 100 : 0,
+            volumePct: 0,
+            totalDistance: totalDistKm,
+            totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
+            notes: "Auto generated by VROOM",
+            generatedBy: "AUTO",
+            userCode: "SYSTEM",
+            stopObjects: routeStops,
+            vehicleObject: vehObj ?? null,
+            totalObject: { stopResults },
+          });
+
+          // Persist optimisation results
+          const { optimiseTrip } = await import("@/lib/tripApi");
+          await optimiseTrip(tripResp.tripId!, {
+            orderMode: "auto", startTime, endTime,
+            travelTime: travelHHMM, totalTime: travelHHMM,
+            totalDistance: totalDistKm, uomDistance: "km",
+            totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
+            stopResults,
+          });
+
+          setTrips(prev => [...prev, tripFromApi(tripResp)]);
+          createdCount++;
+        } catch(e) {
+          console.error("Failed to create trip for vehicle", vehCode, e);
+        }
+      }
+
       setShowAutoGen(false);
       toast({
-        title: "Auto Trip Generation submitted",
-        description: `${agVehSel.size} vehicle(s) · ${agDrvSel.size} driver(s) · ${agDropSel.size} drop(s) · ${agPickSel.size} pickup(s) sent for optimisation.`,
+        title: `${createdCount} trip(s) generated ✓`,
+        description: `${result.unassigned?.length ?? 0} unassigned stops`,
       });
-    }, 800);
+    } catch(err) {
+      toast({ title: "Auto generation failed",
+        description: err instanceof Error ? err.message : "VROOM error",
+        variant: "destructive" });
+    } finally {
+      setAgSubmitting(false);
+    }
   }
 
   // ── Load sites on mount ──────────────────────────────
@@ -1677,6 +1883,8 @@ export default function Planner() {
   const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
   const detailTrip   = trips.find((t) => t.id === detailTripId)   ?? null;
   const optTrip      = trips.find((t) => t.id === optTripId)      ?? null;
+  // site object for depot lat/lng
+  const currentSiteObj = sites.find(s => s.siteCode === site) ?? null;
 
   // KPIs
   const kpis = useMemo(() => ({
