@@ -502,15 +502,11 @@ export default function CustomerManagement() {
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Latitude</Label>
-                              <div className="mt-1 text-sm font-mono">
-                                {selectedAddress.latitude != null ? Number(selectedAddress.latitude).toFixed(6) : <span className="text-muted-foreground/70 italic font-sans text-xs">— not set —</span>}
-                              </div>
+                              <Input value={addr.latitude} onChange={(e) => setAddr((t) => ({ ...t, latitude: e.target.value }))} placeholder="e.g. 34.0522" className="h-9 mt-1 font-mono" />
                             </div>
                             <div>
                               <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">Longitude</Label>
-                              <div className="mt-1 text-sm font-mono">
-                                {selectedAddress.longitude != null ? Number(selectedAddress.longitude).toFixed(6) : <span className="text-muted-foreground/70 italic font-sans text-xs">— not set —</span>}
-                              </div>
+                              <Input value={addr.longitude} onChange={(e) => setAddr((t) => ({ ...t, longitude: e.target.value }))} placeholder="e.g. -118.2437" className="h-9 mt-1 font-mono" />
                             </div>
                           </div>
                         </div>
