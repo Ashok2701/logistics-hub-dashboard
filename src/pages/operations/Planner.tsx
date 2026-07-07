@@ -541,6 +541,7 @@ function ActiveTourPanel({
   const [optResult,     setOptResult]     = useState<{
     endDate: string; endTime: string; duration: string; distance: string; cost: string; arrival: string;
   } | null>(null);
+  const [optError, setOptError] = useState<{ title: string; detail: string } | null>(null);
   const times = useMemo(() => genTimes(stops.length), [stops.length]);
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
@@ -1052,11 +1053,13 @@ function ActiveTourPanel({
                   const depLat = siteLat;
                   const depLng = siteLng;
                   if (!depLat || !depLng) {
-                    toast({ title: "Missing site coordinates", description: "Set lat/lng for this site first", variant: "destructive" }); return;
+                    setOptError({ title: "Missing Site Coordinates", detail: "This site has no latitude/longitude. Go to Configuration → Customers → select the site address and set lat/lng." });
+                    return;
                   }
                   const missing = stops.filter(s => !s.lat || !s.lng);
                   if (missing.length) {
-                    toast({ title: "Missing stop coordinates", description: `${missing.length} stop(s) missing lat/lng`, variant: "destructive" }); return;
+                    setOptError({ title: "Missing Stop Coordinates", detail: `${missing.length} stop(s) are missing lat/lng coordinates:\n${missing.map(s => `• ${s.txn} — ${s.client}`).join("\n")}\n\nGo to Configuration → Customers → update each address with coordinates.` });
+                    return;
                   }
                   setOptRunning(true);
                   try {
@@ -1133,9 +1136,8 @@ function ActiveTourPanel({
                     toast({ title: "Optimisation complete ✓",
                       description: `${jobSteps.length} stops · ${totalDistKm} km · end ${endTime}` });
                   } catch(err) {
-                    toast({ title: "Optimisation failed",
-                      description: err instanceof Error ? err.message : "VROOM error",
-                      variant: "destructive" });
+                    const msg = err instanceof Error ? err.message : String(err);
+                    setOptError({ title: "Optimisation Failed", detail: msg });
                   } finally { setOptRunning(false); }
                 }}
                 className="w-full py-3 rounded-xl text-[12px] font-bold flex items-center justify-center gap-2 transition-all"
@@ -1152,6 +1154,49 @@ function ActiveTourPanel({
                 }
               </button>
 
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* ── Error popup (VROOM / validation errors) ──────── */}
+      {optError && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={() => setOptError(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+            style={{ width: 380, fontFamily: "Inter, system-ui, sans-serif" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 px-5 py-4"
+              style={{ background: "linear-gradient(135deg,#dc2626,#b91c1c)" }}>
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-[13px] font-bold text-white flex-1">{optError.title}</p>
+              <button onClick={() => setOptError(null)}
+                className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 text-white/70 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-[12px] text-gray-700 whitespace-pre-line leading-relaxed">
+                {optError.detail}
+              </p>
+            </div>
+            <div className="px-5 pb-4 flex justify-end">
+              <button onClick={() => setOptError(null)}
+                className="px-5 py-2 rounded-lg text-[12px] font-bold bg-red-600 hover:bg-red-700 text-white transition-colors">
+                OK
+              </button>
             </div>
           </motion.div>
         </motion.div>
@@ -1575,6 +1620,7 @@ export default function Planner() {
   const [agVehSearch, setAgVehSearch]   = useState("");
   const [agDocSearch, setAgDocSearch]   = useState("");
   const [agSubmitting, setAgSubmitting] = useState(false);
+  const [vroomError, setVroomError] = useState<{ title: string; detail: string } | null>(null);
 
   const openAutoGen = useCallback(() => {
     setAgVehSel(new Set()); setAgDrvSel(new Set());
@@ -1631,7 +1677,7 @@ export default function Planner() {
     const depLat = currentSiteObj?.latitude  ? Number(currentSiteObj.latitude)  : 0;
     const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
     if (!depLat || !depLng) {
-      toast({ title: "Missing site coordinates", description: "Set lat/lng for this site first", variant: "destructive" });
+      setVroomError({ title: "Missing Site Coordinates", detail: "This site has no latitude/longitude.\nGo to Configuration → Customers → select the site address and set lat/lng." });
       return;
     }
 
@@ -1660,7 +1706,7 @@ export default function Planner() {
 
       const missingCoords = selDocs.filter(s => !s.lat || !s.lng);
       if (missingCoords.length) {
-        toast({ title: "Missing coordinates", description: `${missingCoords.length} stop(s) missing lat/lng`, variant: "destructive" });
+        setVroomError({ title: "Missing Stop Coordinates", detail: `${missingCoords.length} stop(s) missing lat/lng:\n${missingCoords.map(s => `• ${s.txn} — ${s.client}`).join("\n")}` });
         setAgSubmitting(false); return;
       }
 
@@ -1679,7 +1725,7 @@ export default function Planner() {
       const result = await callVroom(vroomVehicles, vroomJobs);
 
       if (!result.routes?.length) {
-        toast({ title: "No routes generated", description: "VROOM could not assign any stops to vehicles", variant: "destructive" });
+        setVroomError({ title: "No Routes Generated", detail: "VROOM could not assign any stops to vehicles.\n\nPossible reasons:\n• Vehicle capacity too small for the selected stops\n• Stops too far from site location\n• Invalid coordinates" });
         return;
       }
 
@@ -1772,9 +1818,8 @@ export default function Planner() {
         description: `${result.unassigned?.length ?? 0} unassigned stops`,
       });
     } catch(err) {
-      toast({ title: "Auto generation failed",
-        description: err instanceof Error ? err.message : "VROOM error",
-        variant: "destructive" });
+      const msg = err instanceof Error ? err.message : "VROOM error. Check that all stops and site have valid coordinates.";
+      setVroomError({ title: "Auto Generation Failed", detail: msg });
     } finally {
       setAgSubmitting(false);
     }
@@ -2933,7 +2978,7 @@ export default function Planner() {
                                             toast({ title: "Optimisation complete ✓",
                                               description: `Trip ${t.tripCode ?? t.id.slice(-12)} · ${totalDistKm} km · end ${endTime}` });
                                           } catch (err: any) {
-                                            toast({ title: "Optimisation failed", description: err?.message ?? "VROOM error", variant: "destructive" });
+                                            setVroomError({ title: "Optimisation Failed", detail: err?.message ?? "VROOM error. Check that all stops have valid coordinates." });
                                           } finally {
                                             setOptRunning(false);
                                             setOptTripId(null);
@@ -3295,6 +3340,43 @@ export default function Planner() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* ── VROOM Error Popup (inline Zap + Auto Generate) ── */}
+    {vroomError && (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center"
+        style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)" }}
+        onClick={() => setVroomError(null)}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.94, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+          style={{ width: 400, fontFamily: "Inter, system-ui, sans-serif" }}
+          onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-3 px-5 py-4"
+            style={{ background: "linear-gradient(135deg,#dc2626,#b91c1c)" }}>
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-[13px] font-bold text-white flex-1">{vroomError.title}</p>
+            <button onClick={() => setVroomError(null)}
+              className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 text-white/70 hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-[12px] text-gray-700 whitespace-pre-line leading-relaxed">
+              {vroomError.detail}
+            </p>
+          </div>
+          <div className="px-5 pb-4 flex justify-end">
+            <button onClick={() => setVroomError(null)}
+              className="px-5 py-2 rounded-lg text-[12px] font-bold bg-red-600 hover:bg-red-700 text-white transition-colors">
+              OK
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    )}
 
   </>
   );
