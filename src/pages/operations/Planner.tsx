@@ -2402,7 +2402,206 @@ export default function Planner() {
     });
   }
 
+  // ── Group selection & actions ──────────────────────────
+  useEffect(() => { setSelectedTripIds(new Set()); }, [site, date]);
 
+  function toggleTripSel(id: string) {
+    setSelectedTripIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function toggleAllTrips(list: Trip[]) {
+    const allIds = list.map(t => t.id);
+    const allSelected = allIds.length > 0 && allIds.every(id => selectedTripIds.has(id));
+    setSelectedTripIds(allSelected ? new Set() : new Set(allIds));
+  }
+
+  async function runGroupStatus(
+    kind: "lock" | "unlock" | "validate",
+    eligible: Trip[],
+    optiStatus: OptiStatus,
+    lockFlag: number,
+    successLabel: string,
+  ) {
+    setGroupBusy({ kind, done: 0, total: eligible.length });
+    let ok = 0;
+    for (let i = 0; i < eligible.length; i++) {
+      const t = eligible[i];
+      try {
+        if (t.tripId != null) {
+          const resp = await tripApi.updateTripStatus(t.tripId, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
+          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+        } else {
+          setTrips((prev) => prev.map((x) => x.id === t.id
+            ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
+            : x));
+        }
+        ok++;
+      } catch (e: any) {
+        setVroomError({ title: `${successLabel} failed`, detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "Unknown error"}` });
+        break;
+      }
+      setGroupBusy({ kind, done: i + 1, total: eligible.length });
+    }
+    setGroupBusy(null);
+    if (ok > 0) toast({ title: `${ok} trip(s) ${successLabel}` });
+  }
+
+  async function groupLock() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => !t.locked);
+    if (!eligible.length) { setVroomError({ title: "No Trips to Lock", detail: "All selected trips are already locked." }); return; }
+    setConfirmDialog({
+      open: true,
+      title: "Lock trips",
+      description: `Lock ${eligible.length} trip(s)? This will send them to X3.`,
+      confirmLabel: "Yes, lock",
+      onConfirm: () => runGroupStatus("lock", eligible, "Locked", 1, "locked"),
+    });
+  }
+
+  async function groupUnlock() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => t.locked);
+    if (!eligible.length) { setVroomError({ title: "No Trips to Unlock", detail: "No selected trips are currently locked." }); return; }
+    await runGroupStatus("unlock", eligible, "Open", 0, "unlocked");
+  }
+
+  async function groupValidate() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => t.locked === true && t.optiStatus !== "Validated");
+    if (!eligible.length) { setVroomError({ title: "No Trips to Validate", detail: "Group Validate requires selected trips that are Locked and not yet Validated." }); return; }
+    setConfirmDialog({
+      open: true,
+      title: "Validate trips",
+      description: `Validate ${eligible.length} trip(s)? This cannot be undone.`,
+      confirmLabel: "Yes, validate",
+      onConfirm: () => runGroupStatus("validate", eligible, "Validated", 1, "validated"),
+    });
+  }
+
+  async function groupDelete() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => !t.locked);
+    const lockedCount = selected.length - eligible.length;
+    if (!eligible.length) {
+      setVroomError({ title: "Cannot Delete", detail: `All ${lockedCount} selected trip(s) are locked and cannot be deleted.\nUnlock them first.` });
+      return;
+    }
+    setConfirmDialog({
+      open: true,
+      title: "Delete trips",
+      description: `Delete ${eligible.length} trip(s)?${lockedCount > 0 ? `\n(Note: ${lockedCount} locked trip(s) will be skipped)` : ""}`,
+      confirmLabel: "Yes, delete",
+      onConfirm: async () => {
+        setGroupBusy({ kind: "delete", done: 0, total: eligible.length });
+        let ok = 0;
+        for (let i = 0; i < eligible.length; i++) {
+          const t = eligible[i];
+          try {
+            if (t.tripId != null) await tripApi.deleteTrip(t.tripId);
+            setTrips((prev) => prev.filter((x) => x.id !== t.id));
+            setSelectedTripIds((prev) => { const n = new Set(prev); n.delete(t.id); return n; });
+            if (selectedTripId === t.id) { setSelectedTripId(null); clearDraft(); }
+            ok++;
+          } catch (e: any) {
+            setVroomError({ title: "Delete failed", detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "Unknown error"}` });
+            break;
+          }
+          setGroupBusy({ kind: "delete", done: i + 1, total: eligible.length });
+        }
+        setGroupBusy(null);
+        if (ok > 0) toast({ title: `${ok} trip(s) deleted` });
+      },
+    });
+  }
+
+  async function groupOptimise() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => t.optiStatus === "Open" && !!t.driver?.name);
+    if (!eligible.length) {
+      setVroomError({ title: "No Eligible Trips", detail: "Group Optimise requires selected trips with status 'Open' and a driver assigned." });
+      return;
+    }
+    const depLat = currentSiteObj?.latitude ? Number(currentSiteObj.latitude) : 0;
+    const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
+    if (!depLat || !depLng) {
+      setVroomError({ title: "Missing Site Coordinates", detail: "This site has no latitude/longitude.\nGo to Configuration → Customers → select the site address and set lat/lng." });
+      return;
+    }
+
+    setGroupBusy({ kind: "optimise", done: 0, total: eligible.length });
+    let ok = 0;
+    for (let i = 0; i < eligible.length; i++) {
+      const t = eligible[i];
+      try {
+        const missing = t.stops.filter(s => !s.lat || !s.lng);
+        if (missing.length) throw new Error(`${missing.length} stop(s) missing coordinates`);
+        const startSec = hhmmToSec("07:30");
+        const capGrams = Math.round((t.vehicle.capacity ?? 60000) * 1000);
+        const vroomVehicle = {
+          id: 1, description: t.vehicle.code,
+          start: [depLng, depLat] as [number, number],
+          end:   [depLng, depLat] as [number, number],
+          capacity: [capGrams] as [number],
+          time_window: [startSec, hhmmToSec("23:59")] as [number, number],
+          max_tasks: 999,
+        };
+        const vroomJobs = t.stops.map((s, idx) => ({
+          id: idx + 1, description: s.txn,
+          location: [s.lng, s.lat] as [number, number],
+          service: 1800,
+          ...(s.type === "DROP"
+            ? { delivery: [Math.round((s.netweight || 1) * 1000)] as [number] }
+            : { pickup:   [Math.round((s.netweight || 1) * 1000)] as [number] }),
+          priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
+        }));
+        const result = await callVroom([vroomVehicle], vroomJobs);
+        if (!result.routes?.length) throw new Error("VROOM returned no routes");
+        const route = result.routes[0];
+        const jobSteps = route.steps.filter((st: VroomStep) => st.type === "job");
+        const endStep = route.steps.find((st: VroomStep) => st.type === "end");
+        const endTime = secToHHMM(endStep ? endStep.arrival : startSec + route.duration);
+        const totalDistKm = (route.distance / 1000).toFixed(1);
+        const travelHHMM = secToHHMM(route.duration);
+        const stopResults = jobSteps.map((st: VroomStep, idx: number) => ({
+          seq: idx + 1, docNum: st.description ?? "",
+          arrivalDate: date, arrivalTime: secToHHMM(st.arrival),
+          departureDate: date, departureTime: secToHHMM(st.arrival + st.service),
+          fromPrevDistance: ((st.distance ?? 0) / 1000).toFixed(1),
+          fromPrevTravelTime: secToHHMM(st.duration),
+          serviceTime: secToHHMM(st.service),
+          waitingTime: secToHHMM(st.waiting_time ?? 0),
+        }));
+        if (t.tripId != null) {
+          const resp = await tripApi.optimiseTrip(t.tripId, {
+            orderMode: "auto", startTime: "07:30", endTime,
+            travelTime: travelHHMM, totalTime: travelHHMM,
+            totalDistance: totalDistKm, uomDistance: "km",
+            totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
+            stopResults,
+          });
+          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+        } else {
+          setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" as any } : x));
+        }
+        ok++;
+      } catch (e: any) {
+        setVroomError({ title: "Optimisation failed", detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "VROOM error"}` });
+        break;
+      }
+      setGroupBusy({ kind: "optimise", done: i + 1, total: eligible.length });
+    }
+    setGroupBusy(null);
+    if (ok > 0) toast({ title: `${ok} trip(s) optimised` });
+  }
 
   // ── Render ─────────────────────────────────────────────
   const currentStops = stopTypeTab === "drops" ? drops : pickups;
