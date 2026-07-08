@@ -604,6 +604,8 @@ type ActiveTourPanelProps = {
   tripDepSite?: string | null;
   tripArrSite?: string | null;
   tripDistanceKm?: number | null;
+  tripStartTime?: string | null;
+  tripEndTime?: string | null;
   // Optimisation context
   siteLat?: number;
   siteLng?: number;
