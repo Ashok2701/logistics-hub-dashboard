@@ -143,6 +143,8 @@ type Trip = {
   lockFlag?: number;
   createDate?: string;
   updateDate?: string;
+  startTime?: string;
+  endTime?: string;
 };
 
 // ═══════════════════════════════════════════════════════
