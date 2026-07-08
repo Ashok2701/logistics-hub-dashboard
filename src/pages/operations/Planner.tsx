@@ -52,6 +52,16 @@ type Stop = {
   lat: number; lng: number;
   routeStatus: string;             // "To Plan" | "Planned" | …
   routeTagColor?: string | null;   // hex for Type badge background
+  // Optimisation output (populated once trip is optimised)
+  seq?: number;
+  arrivalDate?: string;
+  arrivalTime?: string;
+  departureDate?: string;
+  departureTime?: string;
+  fromPrevDistance?: string;
+  fromPrevTravelTime?: string;
+  serviceTime?: string;
+  waitingTime?: string;
 };
 
 // ── Mappers: API types → Planner internal types ──────────────
@@ -515,12 +525,16 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
       </div>
     );
   }
+  const isOptimised = trip.stops.some((s) => s.arrivalTime || s.departureTime);
+  const headers = isOptimised
+    ? ["Seq","Type","Txn","Client","City","Arrival","Departure","Service","Waiting","Dist (km)","Qty","Weight"]
+    : ["Seq","Type","Txn","Client","Address","City","Route","Priority","Qty","Weight"];
   return (
     <div className="flex-1 overflow-auto min-h-[320px]">
       <table className="w-full min-w-[600px]" style={{ fontSize: "11px" }}>
         <thead className="bg-muted/40 sticky top-0 z-10">
           <tr>
-            {["Seq","Type","Txn","Client","Address","City","Route","Priority","Qty","Weight"].map((h) => (
+            {headers.map((h) => (
               <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
             ))}
           </tr>
@@ -528,19 +542,32 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
         <tbody>
           {trip.stops.map((s, i) => (
             <tr key={s.id} className={cn("border-b border-border/30 hover:bg-muted/30", i % 2 === 0 ? "" : "bg-muted/10")}>
-              <td className="px-2.5 py-1.5 font-mono font-bold text-center">{i + 1}</td>
+              <td className="px-2.5 py-1.5 font-mono font-bold text-center">{s.seq ?? i + 1}</td>
               <td className="px-2.5 py-1.5">
                 <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold",
                   s.type === "DROP" ? "bg-rose-100 text-rose-700" : "bg-sky-100 text-sky-700")}>{s.type}</span>
               </td>
               <td className="px-2.5 py-1.5 font-mono text-primary">{s.txn}</td>
               <td className="px-2.5 py-1.5 font-medium">{s.client}</td>
-              <td className="px-2.5 py-1.5 text-muted-foreground max-w-[120px] truncate">{s.address}</td>
-              <td className="px-2.5 py-1.5">{s.city}</td>
-              <td className="px-2.5 py-1.5 text-muted-foreground text-[11px]">{s.routeCode}</td>
-              <td className="px-2.5 py-1.5">
-                <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold", priorityColor(s.priority))}>{s.priority}</span>
-              </td>
+              {isOptimised ? (
+                <>
+                  <td className="px-2.5 py-1.5">{s.city}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.arrivalTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.departureTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.serviceTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.waitingTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.fromPrevDistance ?? "—"}</td>
+                </>
+              ) : (
+                <>
+                  <td className="px-2.5 py-1.5 text-muted-foreground max-w-[120px] truncate">{s.address}</td>
+                  <td className="px-2.5 py-1.5">{s.city}</td>
+                  <td className="px-2.5 py-1.5 text-muted-foreground text-[11px]">{s.routeCode}</td>
+                  <td className="px-2.5 py-1.5">
+                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold", priorityColor(s.priority))}>{s.priority}</span>
+                  </td>
+                </>
+              )}
               <td className="px-2.5 py-1.5 font-mono">{s.qty}</td>
               <td className="px-2.5 py-1.5 font-mono">{s.netweight} kg</td>
             </tr>
@@ -570,13 +597,17 @@ type ActiveTourPanelProps = {
   onClear: () => void;
   onConfirm: () => void;
   selectedTripStatus?: string | null;
+  // Trip-level identity
+  tripDepSite?: string | null;
+  tripArrSite?: string | null;
+  tripDistanceKm?: number | null;
   // Optimisation context
   siteLat?: number;
   siteLng?: number;
   activeTripId?: number | null;
   activeTripCode?: string | null;
   planDate?: string;
-  onTripOptimised?: (tripId: number) => void;
+  onTripOptimised?: (tripId: number, stopResults: any[], totals: { distanceKm: number; travelTime: string; endTime: string }) => void;
 };
 
 function genTimes(count: number): string[] {
@@ -594,6 +625,7 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
   selectedTripStatus,
+  tripDepSite = null, tripArrSite = null, tripDistanceKm = null,
   siteLat = 0, siteLng = 0, activeTripId = null, activeTripCode = null, planDate = "",
   onTripOptimised,
 }: ActiveTourPanelProps) {
@@ -747,9 +779,9 @@ function ActiveTourPanel({
           <div className="w-px self-stretch bg-border/30 mx-0.5" />
 
           {/* Stat chips */}
-          {[
-            { label: "Dep Site",  value: vehicle?.departureSite || "—" },
-            { label: "Arv Site",  value: vehicle?.arrivalSite   || "—" },
+          {([
+            { label: "Dep Site",  value: tripDepSite || vehicle?.departureSite || "—" },
+            { label: "Arv Site",  value: tripArrSite || vehicle?.arrivalSite   || "—" },
             { label: "Stops",     value: String(stops.length) },
             { label: "Drops",     value: String(dropCount) },
             { label: "Pickups",   value: String(pickCount) },
@@ -757,7 +789,10 @@ function ActiveTourPanel({
             { label: "Volume",    value: totalVol    ? `${totalVol}m³`    : "—" },
             { label: "Qty",       value: totalQty    ? String(totalQty)   : "—" },
             { label: "Travel",    value: travelStr },
-          ].map(({ label, value }) => (
+            ...(selectedTripStatus && selectedTripStatus !== "Open" && tripDistanceKm != null
+              ? [{ label: "Distance", value: `${Number(tripDistanceKm).toFixed(1)} km` }]
+              : []),
+          ] as { label: string; value: string }[]).map(({ label, value }) => (
             <div key={label} className="flex flex-col min-w-[44px] px-1.5 py-1 rounded border border-border/30 bg-muted/20 flex-shrink-0 text-center">
               <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none mb-0.5">{label}</span>
               <span className="text-[11px] font-semibold leading-none text-foreground">{value}</span>
@@ -1193,7 +1228,7 @@ function ActiveTourPanel({
                         totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
                         stopResults,
                       });
-                      onTripOptimised?.(activeTripId);
+                      onTripOptimised?.(activeTripId, stopResults, { distanceKm: Number(totalDistKm), travelTime: travelHHMM, endTime });
                     }
 
                     toast({ title: "Optimisation complete ✓",
@@ -2751,9 +2786,22 @@ export default function Planner() {
               onConfirm: async () => { await confirmTrip(); },
             })}
             selectedTripStatus={selectedTrip?.optiStatus ?? (selectedTrip?.status as string | undefined) ?? null}
-            onTripOptimised={(tripId) => setTrips(prev => prev.map(t =>
-              t.tripId === tripId ? { ...t, optiStatus: "Optimised" as any } : t
-            ))}
+            tripDepSite={selectedTrip?.departSite ?? null}
+            tripArrSite={selectedTrip?.arrivalSite ?? null}
+            tripDistanceKm={selectedTrip?.distanceKm ?? null}
+            onTripOptimised={(tripId, stopResults, totals) => setTrips(prev => prev.map(t => {
+              if (t.tripId !== tripId) return t;
+              const byDoc = new Map<string, any>((stopResults ?? []).map((r: any) => [r.docNum, r]));
+              const mergedStops = t.stops.map((s) => {
+                const r = byDoc.get(s.txn);
+                return r ? { ...s, seq: r.seq, arrivalDate: r.arrivalDate, arrivalTime: r.arrivalTime,
+                  departureDate: r.departureDate, departureTime: r.departureTime,
+                  fromPrevDistance: r.fromPrevDistance, fromPrevTravelTime: r.fromPrevTravelTime,
+                  serviceTime: r.serviceTime, waitingTime: r.waitingTime } : s;
+              }).sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+              return { ...t, stops: mergedStops, optiStatus: "Optimised" as any,
+                status: "Optimised", distanceKm: totals.distanceKm };
+            }))}
           />
           </div>
 
