@@ -154,12 +154,12 @@ const priorityColor = (p: Stop["priority"]) =>
   : "bg-green-100 text-green-800 border-green-200";
 
 const statusColor = (s: TripStatus) => ({
-  Open:      "bg-slate-100 text-slate-700",
-  Optimized: "bg-blue-100 text-blue-800",
-  Optimised: "bg-blue-100 text-blue-800",
-  Locked:    "bg-amber-100 text-amber-800",
-  Validated: "bg-green-100 text-green-800",
-  Confirmed: "bg-emerald-100 text-emerald-800",
+  Open:      "bg-gray-100 text-gray-700",
+  Optimized: "bg-blue-100 text-blue-700",
+  Optimised: "bg-blue-100 text-blue-700",
+  Locked:    "bg-amber-100 text-amber-700",
+  Validated: "bg-green-100 text-green-700",
+  Confirmed: "bg-green-100 text-green-700",
 }[s]);
 
 // Map API optiStatus → internal status
@@ -1462,27 +1462,35 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                   </tr>
                 </thead>
                 <tbody>
-                  {trip.stops.map((s, i) => (
+                  {trip.stops.map((s, i) => {
+                    const arr = s.arrivalDate || s.arrivalTime ? `${s.arrivalDate ?? depDate} ${s.arrivalTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 12:41`);
+                    const dep = s.departureDate || s.departureTime ? `${s.departureDate ?? depDate} ${s.departureTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 13:26`);
+                    const svc = s.serviceTime ?? (isOpen ? "—" : "00:30");
+                    const fpd = s.fromPrevDistance ?? (isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`);
+                    const fpt = s.fromPrevTravelTime ?? (isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`);
+                    const wait = s.waitingTime ?? (isOpen ? "—" : "00:15");
+                    return (
                     <tr key={s.id} className={cn("border-b border-border/20 hover:bg-muted/30", i % 2 === 1 && "bg-muted/10")}>
-                      <td className="px-2 py-1.5 font-mono font-bold text-center">{i + 1}</td>
-                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{s.txn}</td>
+                      <td className="px-2 py-1.5 font-mono font-bold text-center">{s.seq ?? i + 1}</td>
+                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{(s as any).docNum ?? s.txn}</td>
                       <td className="px-2 py-1.5 text-muted-foreground">—</td>
                       <td className="px-2 py-1.5 font-mono">{trip.departSite}</td>
                       <td className="px-2 py-1.5">
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800">Scheduled</span>
                       </td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{depDate} 12:41</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{depDate} 13:26</td>
-                      <td className="px-2 py-1.5 font-mono">00:30</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{arr}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{dep}</td>
+                      <td className="px-2 py-1.5 font-mono">{svc}</td>
                       <td className="px-2 py-1.5 text-muted-foreground truncate max-w-[100px]">{s.address}</td>
                       <td className="px-2 py-1.5 font-mono">{s.bpcode}</td>
                       <td className="px-2 py-1.5 font-medium truncate max-w-[100px]">{s.client}</td>
                       <td className="px-2 py-1.5">{s.city}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : "00:15"}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{fpd}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{fpt}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{wait}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {trip.stops.length === 0 && (
                     <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No stops on this trip</td></tr>
                   )}
@@ -1743,6 +1751,7 @@ export default function Planner() {
     apiDrivers.filter(d =>
       !agVehSearch || `${d.id} ${d.name} ${d.license}`.toLowerCase().includes(agVehSearch.toLowerCase())
     ), [apiDrivers, agVehSearch]);
+  const agUsedStopIds = useMemo(() => new Set(trips.flatMap((t) => t.stops.map((s) => s.id))), [trips]);
   const agFilteredDocs = useMemo(() => {
     const type = agDocTab === "deliveries" ? "DROP" : "PICKUP";
     return allStops.filter(s =>
@@ -1750,13 +1759,13 @@ export default function Planner() {
       // Only show documents NOT already assigned to a trip (To Plan only)
       (s.routeStatus === "To Plan" || !s.routeStatus || s.routeStatus.trim() === "") &&
       // Exclude stops already in a confirmed trip (usedStopIds)
-      !usedStopIds.has(s.id) &&
+      !agUsedStopIds.has(s.id) &&
       // Exclude stops already in the current draft
       !draftStopIds.includes(s.id) &&
       (!agRouteCode || s.routeCode === agRouteCode) &&
       (!agDocSearch || `${s.txn} ${s.client} ${s.bpcode} ${s.routeCode}`.toLowerCase().includes(agDocSearch.toLowerCase()))
     );
-  }, [allStops, agDocTab, agRouteCode, agDocSearch, usedStopIds, draftStopIds]);
+  }, [allStops, agDocTab, agRouteCode, agDocSearch, agUsedStopIds, draftStopIds]);
 
   const agCanSubmit =
     agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1;
@@ -2899,7 +2908,19 @@ export default function Planner() {
                             <td className="px-2 py-1.5">
                               <button
                                 className="flex items-center justify-center w-9 h-9 rounded-lg border border-input bg-white text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 shadow-sm"
-                                onClick={(e) => { e.stopPropagation(); setDetailTripId(t.id); setView("detail"); }}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (t.tripId != null) {
+                                    try {
+                                      const resp = await tripApi.getTripById(t.tripId);
+                                      setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+                                    } catch (err: any) {
+                                      toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
+                                    }
+                                  }
+                                  setDetailTripId(t.id);
+                                  setView("detail");
+                                }}
                                 title="Route Management Detail"
                               >
                                 <Info className="w-5 h-5" />
