@@ -836,9 +836,36 @@ function ActiveTourPanel({
           ) : (
             <div className="flex items-center w-full overflow-x-auto py-1" style={{ scrollbarWidth: "none" }}>
               <div className="flex items-center min-w-full">
+                {/* Departure site node */}
+                <div className="flex items-center flex-shrink-0">
+                  <div className="flex flex-col items-center">
+                    {stops.length <= 8 && (
+                      <span className="text-[7px] text-muted-foreground leading-none mb-0.5 font-mono">
+                        {startLabel || "—"}
+                      </span>
+                    )}
+                    <div
+                      title={`Depart ${tripDepSite ?? ""}`}
+                      className="w-7 h-7 rounded-full border-2 border-emerald-500 bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0"
+                    >
+                      <Warehouse className="w-3.5 h-3.5" />
+                    </div>
+                    {stops.length <= 6 && (
+                      <span className="text-[7px] text-muted-foreground leading-none mt-0.5 max-w-[40px] truncate text-center">
+                        {tripDepSite ?? "Site"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center flex-shrink-0 mx-0.5" style={{ width: stops.length <= 4 ? 32 : stops.length <= 8 ? 20 : 12 }}>
+                    <div className="w-full flex items-center gap-px">
+                      <div className="flex-1 h-0.5 bg-gradient-to-r from-border to-border/60" />
+                      <div className="w-1 h-1 rounded-full bg-border/60 flex-shrink-0" />
+                      <div className="flex-1 h-0.5 bg-gradient-to-r from-border/60 to-border" />
+                    </div>
+                  </div>
+                </div>
                 {stops.map((s, i) => {
                   const isSelected = selectedStop === i;
-                  const isLast = i === stops.length - 1;
                   const dotSize = stops.length <= 5 ? "w-7 h-7 text-[9px]"
                                 : stops.length <= 10 ? "w-6 h-6 text-[8px]"
                                 : "w-5 h-5 text-[7px]";
@@ -849,13 +876,13 @@ function ActiveTourPanel({
                         {/* Time above */}
                         {stops.length <= 8 && (
                           <span className="text-[7px] text-muted-foreground leading-none mb-0.5 font-mono">
-                            {times[i]}
+                            {times[i] || "—"}
                           </span>
                         )}
                         {/* Circle */}
                         <button
                           onClick={() => setSelectedStop(isSelected ? null : i)}
-                          title={`${s.txn} · ${s.client}`}
+                          title={`${s.txn} · ${s.client}${s.arrivalTime ? ` · arr ${s.arrivalTime}` : ""}`}
                           className={cn(
                             "rounded-full border-2 flex items-center justify-center font-bold transition-all flex-shrink-0",
                             dotSize,
@@ -877,25 +904,45 @@ function ActiveTourPanel({
                           </span>
                         )}
                       </div>
-                      {/* Road connector to next stop */}
-                      {!isLast && (
-                        <div className="flex items-center flex-shrink-0 mx-0.5"
-                          style={{ width: stops.length <= 4 ? 32 : stops.length <= 8 ? 20 : 12 }}>
-                          <div className="w-full flex items-center gap-px">
-                            <div className="flex-1 h-0.5 bg-gradient-to-r from-border to-border/60" />
-                            <div className="w-1 h-1 rounded-full bg-border/60 flex-shrink-0" />
-                            <div className="flex-1 h-0.5 bg-gradient-to-r from-border/60 to-border" />
-                          </div>
+                      {/* Road connector to next node (stop or arrival site) */}
+                      <div className="flex items-center flex-shrink-0 mx-0.5"
+                        style={{ width: stops.length <= 4 ? 32 : stops.length <= 8 ? 20 : 12 }}>
+                        <div className="w-full flex items-center gap-px">
+                          <div className="flex-1 h-0.5 bg-gradient-to-r from-border to-border/60" />
+                          <div className="w-1 h-1 rounded-full bg-border/60 flex-shrink-0" />
+                          <div className="flex-1 h-0.5 bg-gradient-to-r from-border/60 to-border" />
                         </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })}
+                {/* Arrival site node */}
+                <div className="flex items-center flex-shrink-0">
+                  <div className="flex flex-col items-center">
+                    {stops.length <= 8 && (
+                      <span className="text-[7px] text-muted-foreground leading-none mb-0.5 font-mono">
+                        {endLabel || "—"}
+                      </span>
+                    )}
+                    <div
+                      title={`Arrive ${tripArrSite ?? ""}`}
+                      className="w-7 h-7 rounded-full border-2 border-indigo-500 bg-indigo-50 text-indigo-700 flex items-center justify-center flex-shrink-0"
+                    >
+                      <Warehouse className="w-3.5 h-3.5" />
+                    </div>
+                    {stops.length <= 6 && (
+                      <span className="text-[7px] text-muted-foreground leading-none mt-0.5 max-w-[40px] truncate text-center">
+                        {tripArrSite ?? "Site"}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
 
       {/* ── SELECTED STOP DETAIL — inline, no border ──── */}
       <AnimatePresence>
