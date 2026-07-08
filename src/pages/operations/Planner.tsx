@@ -1228,7 +1228,7 @@ function ActiveTourPanel({
                         totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
                         stopResults,
                       });
-                      onTripOptimised?.(activeTripId);
+                      onTripOptimised?.(activeTripId, stopResults, { distanceKm: Number(totalDistKm), travelTime: travelHHMM, endTime });
                     }
 
                     toast({ title: "Optimisation complete ✓",
