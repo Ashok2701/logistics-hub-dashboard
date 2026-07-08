@@ -3029,7 +3029,7 @@ export default function Planner() {
             defaultLeftPct={60}
             minPct={20}
             maxPct={80}
-            leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}`}
+            leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}${selectedTripIds.size ? ` (${selectedTripIds.size} selected)` : ""}`}
             left={
               <div className="flex h-full overflow-hidden rounded-xl border border-border/60 shadow-sm">
 
