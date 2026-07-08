@@ -52,6 +52,16 @@ type Stop = {
   lat: number; lng: number;
   routeStatus: string;             // "To Plan" | "Planned" | …
   routeTagColor?: string | null;   // hex for Type badge background
+  // Optimisation output (populated once trip is optimised)
+  seq?: number;
+  arrivalDate?: string;
+  arrivalTime?: string;
+  departureDate?: string;
+  departureTime?: string;
+  fromPrevDistance?: string;
+  fromPrevTravelTime?: string;
+  serviceTime?: string;
+  waitingTime?: string;
 };
 
 // ── Mappers: API types → Planner internal types ──────────────
