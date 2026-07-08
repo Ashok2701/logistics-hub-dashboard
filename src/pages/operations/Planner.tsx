@@ -597,13 +597,17 @@ type ActiveTourPanelProps = {
   onClear: () => void;
   onConfirm: () => void;
   selectedTripStatus?: string | null;
+  // Trip-level identity
+  tripDepSite?: string | null;
+  tripArrSite?: string | null;
+  tripDistanceKm?: number | null;
   // Optimisation context
   siteLat?: number;
   siteLng?: number;
   activeTripId?: number | null;
   activeTripCode?: string | null;
   planDate?: string;
-  onTripOptimised?: (tripId: number) => void;
+  onTripOptimised?: (tripId: number, stopResults: any[], totals: { distanceKm: number; travelTime: string; endTime: string }) => void;
 };
 
 function genTimes(count: number): string[] {
