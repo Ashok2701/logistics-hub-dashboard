@@ -3078,7 +3078,7 @@ export default function Planner() {
                   serviceTime: r.serviceTime, waitingTime: r.waitingTime } : s;
               }).sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
               return { ...t, stops: mergedStops, optiStatus: "Optimised" as any,
-                status: "Optimised", distanceKm: totals.distanceKm };
+                status: "Optimised", distanceKm: totals.distanceKm, endTime: totals.endTime };
             }))}
           />
           </div>
