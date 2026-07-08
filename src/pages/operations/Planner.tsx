@@ -199,6 +199,7 @@ function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip {
     createdAt: r.createDate, departSite: r.depSite ?? r.site, arrivalSite: r.arrSite ?? r.site,
     tripId: r.tripId, tripCode: r.tripCode, optiStatus: r.optiStatus,
     lockFlag: r.lockFlag, createDate: r.createDate, updateDate: r.updateDate,
+    startTime: r.startTime, endTime: r.endTime,
   };
   // Fallback supplies snapshot defaults; API identifiers must win
   return { ...fallback, ...base };
