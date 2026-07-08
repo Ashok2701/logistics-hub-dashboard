@@ -1472,7 +1472,7 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                     return (
                     <tr key={s.id} className={cn("border-b border-border/20 hover:bg-muted/30", i % 2 === 1 && "bg-muted/10")}>
                       <td className="px-2 py-1.5 font-mono font-bold text-center">{s.seq ?? i + 1}</td>
-                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{s.docNum ?? s.txn}</td>
+                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{(s as any).docNum ?? s.txn}</td>
                       <td className="px-2 py-1.5 text-muted-foreground">—</td>
                       <td className="px-2 py-1.5 font-mono">{trip.departSite}</td>
                       <td className="px-2 py-1.5">
