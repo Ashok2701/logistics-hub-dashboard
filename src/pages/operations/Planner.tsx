@@ -2900,7 +2900,19 @@ export default function Planner() {
                             <td className="px-2 py-1.5">
                               <button
                                 className="flex items-center justify-center w-9 h-9 rounded-lg border border-input bg-white text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 shadow-sm"
-                                onClick={(e) => { e.stopPropagation(); setDetailTripId(t.id); setView("detail"); }}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (t.tripId != null) {
+                                    try {
+                                      const resp = await tripApi.getTripById(t.tripId);
+                                      setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+                                    } catch (err: any) {
+                                      toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
+                                    }
+                                  }
+                                  setDetailTripId(t.id);
+                                  setView("detail");
+                                }}
                                 title="Route Management Detail"
                               >
                                 <Info className="w-5 h-5" />
