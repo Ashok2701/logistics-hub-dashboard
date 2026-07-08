@@ -525,12 +525,16 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
       </div>
     );
   }
+  const isOptimised = trip.stops.some((s) => s.arrivalTime || s.departureTime);
+  const headers = isOptimised
+    ? ["Seq","Type","Txn","Client","City","Arrival","Departure","Service","Waiting","Dist (km)","Qty","Weight"]
+    : ["Seq","Type","Txn","Client","Address","City","Route","Priority","Qty","Weight"];
   return (
     <div className="flex-1 overflow-auto min-h-[320px]">
       <table className="w-full min-w-[600px]" style={{ fontSize: "11px" }}>
         <thead className="bg-muted/40 sticky top-0 z-10">
           <tr>
-            {["Seq","Type","Txn","Client","Address","City","Route","Priority","Qty","Weight"].map((h) => (
+            {headers.map((h) => (
               <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap border-b border-border/30">{h}</th>
             ))}
           </tr>
@@ -538,19 +542,32 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
         <tbody>
           {trip.stops.map((s, i) => (
             <tr key={s.id} className={cn("border-b border-border/30 hover:bg-muted/30", i % 2 === 0 ? "" : "bg-muted/10")}>
-              <td className="px-2.5 py-1.5 font-mono font-bold text-center">{i + 1}</td>
+              <td className="px-2.5 py-1.5 font-mono font-bold text-center">{s.seq ?? i + 1}</td>
               <td className="px-2.5 py-1.5">
                 <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold",
                   s.type === "DROP" ? "bg-rose-100 text-rose-700" : "bg-sky-100 text-sky-700")}>{s.type}</span>
               </td>
               <td className="px-2.5 py-1.5 font-mono text-primary">{s.txn}</td>
               <td className="px-2.5 py-1.5 font-medium">{s.client}</td>
-              <td className="px-2.5 py-1.5 text-muted-foreground max-w-[120px] truncate">{s.address}</td>
-              <td className="px-2.5 py-1.5">{s.city}</td>
-              <td className="px-2.5 py-1.5 text-muted-foreground text-[11px]">{s.routeCode}</td>
-              <td className="px-2.5 py-1.5">
-                <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold", priorityColor(s.priority))}>{s.priority}</span>
-              </td>
+              {isOptimised ? (
+                <>
+                  <td className="px-2.5 py-1.5">{s.city}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.arrivalTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.departureTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.serviceTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.waitingTime || "—"}</td>
+                  <td className="px-2.5 py-1.5 font-mono">{s.fromPrevDistance ?? "—"}</td>
+                </>
+              ) : (
+                <>
+                  <td className="px-2.5 py-1.5 text-muted-foreground max-w-[120px] truncate">{s.address}</td>
+                  <td className="px-2.5 py-1.5">{s.city}</td>
+                  <td className="px-2.5 py-1.5 text-muted-foreground text-[11px]">{s.routeCode}</td>
+                  <td className="px-2.5 py-1.5">
+                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold", priorityColor(s.priority))}>{s.priority}</span>
+                  </td>
+                </>
+              )}
               <td className="px-2.5 py-1.5 font-mono">{s.qty}</td>
               <td className="px-2.5 py-1.5 font-mono">{s.netweight} kg</td>
             </tr>
