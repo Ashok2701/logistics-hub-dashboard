@@ -546,13 +546,6 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
             </tr>
           ))}
         </tbody>
-        <tfoot className="bg-muted/20 border-t-2 border-border">
-          <tr>
-            <td colSpan={8} className="px-2.5 py-1.5 text-xs font-semibold text-right text-muted-foreground">Totals:</td>
-            <td className="px-2.5 py-1.5 font-mono font-bold text-xs">{trip.totalQty}</td>
-            <td className="px-2.5 py-1.5 font-mono font-bold text-xs">{trip.totalWeight} kg</td>
-          </tr>
-        </tfoot>
       </table>
     </div>
   );
