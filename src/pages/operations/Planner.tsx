@@ -375,64 +375,140 @@ function SiteLeafletMap({ lat, lng, site }: { lat: number; lng: number; site?: R
   );
 }
 
-function RouteMapView({ trip, site }: { trip: Trip | null; site?: RpSite | null }) {
-  if (!trip) {
-    const lat = site && site.latitude != null ? Number(site.latitude) : null;
-    const lng = site && site.longitude != null ? Number(site.longitude) : null;
-    if (lat == null || lng == null || (lat === 0 && lng === 0)) {
-      return (
-        <div className="flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]">
-          <div className="text-center">
-            <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Select a site to preview its location</p>
-          </div>
+function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; site?: RpSite | null; sites?: RpSite[] }) {
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const mapRef = React.useRef<any>(null);
+  const layerRef = React.useRef<any>(null);
+
+  // No trip → fall back to single-site preview
+  const showTrip = !!trip;
+  const fallbackLat = site && site.latitude != null ? Number(site.latitude) : null;
+  const fallbackLng = site && site.longitude != null ? Number(site.longitude) : null;
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelled || !containerRef.current) return;
+
+      if (!mapRef.current) {
+        mapRef.current = L.map(containerRef.current, { zoomControl: true, attributionControl: false });
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(mapRef.current);
+      }
+      const map = mapRef.current;
+
+      if (layerRef.current) { map.removeLayer(layerRef.current); layerRef.current = null; }
+      const group = L.layerGroup().addTo(map);
+      layerRef.current = group;
+
+      const pts: [number, number][] = [];
+
+      const siteIcon = (label: string, color: string) => L.divIcon({
+        className: "site-warehouse-marker",
+        html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;transform:translateY(-100%)">
+            <div style="background:${color};color:#fff;border-radius:9999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"/><rect width="12" height="12" x="6" y="10"/></svg>
+            </div>
+            <div style="margin-top:2px;background:white;border:1px solid #e5e7eb;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.15)">${label}</div>
+          </div>`,
+        iconSize: [0, 0], iconAnchor: [0, 0],
+      });
+
+      const stopIcon = (n: number, type: "DROP" | "PICKUP") => {
+        const color = type === "DROP" ? "#e11d48" : "#0284c7";
+        return L.divIcon({
+          className: "stop-marker",
+          html: `<div style="background:${color};color:#fff;border-radius:9999px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white">${n}</div>`,
+          iconSize: [26, 26], iconAnchor: [13, 13],
+        });
+      };
+
+      if (showTrip && trip) {
+        // Departure & arrival sites
+        const depSite = sites.find(s => s.siteCode === trip.departSite);
+        const arrSite = sites.find(s => s.siteCode === trip.arrivalSite);
+        const addSite = (s: RpSite | undefined, label: string, color: string) => {
+          if (!s || s.latitude == null || s.longitude == null) return;
+          const lat = Number(s.latitude), lng = Number(s.longitude);
+          if (!lat && !lng) return;
+          L.marker([lat, lng], { icon: siteIcon(`${label}: ${s.siteCode}`, color) }).addTo(group);
+          pts.push([lat, lng]);
+        };
+        addSite(depSite, "DEP", "#10b981");
+        if (arrSite && arrSite.siteCode !== depSite?.siteCode) addSite(arrSite, "ARR", "#f59e0b");
+
+        // Stops
+        const stopPts: [number, number][] = [];
+        trip.stops.forEach((s, i) => {
+          const lat = Number(s.lat), lng = Number(s.lng);
+          if (!lat || !lng) return;
+          L.marker([lat, lng], { icon: stopIcon(i + 1, s.type) })
+            .bindPopup(`<b>${i + 1}. ${s.type}</b><br/>${s.txn}<br/>${s.client}<br/>${s.address ?? ""}`)
+            .addTo(group);
+          stopPts.push([lat, lng]);
+          pts.push([lat, lng]);
+        });
+
+        // Route polyline: dep → stops → arr
+        const linePts: [number, number][] = [];
+        if (depSite?.latitude != null && depSite?.longitude != null) linePts.push([Number(depSite.latitude), Number(depSite.longitude)]);
+        linePts.push(...stopPts);
+        if (arrSite?.latitude != null && arrSite?.longitude != null) linePts.push([Number(arrSite.latitude), Number(arrSite.longitude)]);
+        if (linePts.length > 1) {
+          L.polyline(linePts, { color: "#6366f1", weight: 3, opacity: 0.7, dashArray: "6 4" }).addTo(group);
+        }
+
+        if (pts.length > 0) {
+          map.fitBounds(L.latLngBounds(pts as any), { padding: [30, 30], maxZoom: 14 });
+        } else {
+          map.setView([0, 0], 2);
+        }
+      } else if (fallbackLat != null && fallbackLng != null && !(fallbackLat === 0 && fallbackLng === 0)) {
+        L.marker([fallbackLat, fallbackLng], { icon: siteIcon(site?.siteCode ?? "Site", "hsl(var(--primary))") }).addTo(group);
+        map.setView([fallbackLat, fallbackLng], 13);
+      } else {
+        map.setView([0, 0], 2);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [trip?.id, trip?.stops, site?.siteCode, sites, fallbackLat, fallbackLng, showTrip]);
+
+  React.useEffect(() => {
+    return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
+  }, []);
+
+  if (!showTrip && (fallbackLat == null || fallbackLng == null || (fallbackLat === 0 && fallbackLng === 0))) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]">
+        <div className="text-center">
+          <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Select a trip or site to preview on the map</p>
         </div>
-      );
-    }
-    return <SiteLeafletMap lat={lat} lng={lng} site={site} />;
+      </div>
+    );
   }
-  const stops = trip.stops;
+
   return (
-    <div className="relative flex-1 min-h-[320px] bg-gradient-to-br from-blue-50/60 via-sky-50/40 to-indigo-50/50 overflow-hidden">
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 420 300" preserveAspectRatio="none">
-        <defs>
-          <pattern id="mapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#cbd5e1" strokeWidth="0.4" opacity="0.6" />
-          </pattern>
-        </defs>
-        <rect width="420" height="300" fill="url(#mapGrid)" />
-        {stops.length > 1 && (
-          <polyline
-            points={stops.map((s) => `${Math.min(s.lng * 1.2, 410)},${Math.min(s.lat * 1.12, 290)}`).join(" ")}
-            fill="none" stroke="#6366f1" strokeWidth="2.5" strokeDasharray="6 3" opacity="0.7"
-          />
-        )}
-        {stops.map((s, i) => {
-          const cx = Math.min(s.lng * 1.2, 410);
-          const cy = Math.min(s.lat * 1.12, 290);
-          const color = s.type === "DROP" ? "#e11d48" : "#0284c7";
-          return (
-            <g key={s.id}>
-              <circle cx={cx} cy={cy} r="12" fill={color} opacity="0.15" />
-              <circle cx={cx} cy={cy} r="8" fill={color} stroke="white" strokeWidth="2" />
-              <text x={cx} y={cy + 3.5} textAnchor="middle" fill="white" fontSize="8" fontWeight="700">{i + 1}</text>
-            </g>
-          );
-        })}
-      </svg>
-      {/* Legend */}
-      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs flex items-center gap-4">
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block" /> Drop</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Pickup</span>
-      </div>
-      {/* Trip info */}
-      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs">
-        <p className="font-semibold">{trip.vehicle.code} · {trip.driver.name}</p>
-        <p className="text-muted-foreground mt-0.5">{trip.distanceKm} km · {Math.floor(trip.travelTimeMin / 60)}h {trip.travelTimeMin % 60}m · {stops.length} stops</p>
-      </div>
+    <div className="relative flex-1 min-h-[320px] bg-slate-50 overflow-hidden">
+      <div ref={containerRef} className="absolute inset-0" />
+      {showTrip && trip && (
+        <>
+          <div className="absolute top-3 left-3 z-[400] bg-white/95 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs shadow pointer-events-none">
+            <p className="font-semibold">{trip.vehicle.code} · {trip.driver.name}</p>
+            <p className="text-muted-foreground mt-0.5">{trip.distanceKm} km · {Math.floor(trip.travelTimeMin / 60)}h {trip.travelTimeMin % 60}m · {trip.stops.length} stops</p>
+          </div>
+          <div className="absolute bottom-3 left-3 z-[400] bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs flex items-center gap-4 pointer-events-none">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: "#10b981" }} /> Dep</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: "#f59e0b" }} /> Arr</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block" /> Drop</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Pickup</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
+
 
 // ═══════════════════════════════════════════════════════
 // STOP LIST VIEW (for selected trip)
@@ -3041,7 +3117,7 @@ export default function Planner() {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} /> : <TripStopListView trip={selectedTrip} />}
+                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} />}
                 </div>
               </div>
             }
