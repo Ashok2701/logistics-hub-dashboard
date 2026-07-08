@@ -1682,6 +1682,8 @@ export default function Planner() {
   // ── Confirmed trips ───────────────────────────────────
   const [trips, setTrips]                   = useState<Trip[]>([]);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [selectedTripIds, setSelectedTripIds] = useState<Set<string>>(new Set());
+  const [groupBusy, setGroupBusy] = useState<null | { kind: "optimise" | "lock" | "unlock" | "validate" | "delete"; done: number; total: number }>(null);
   // 'planner' = main view | 'detail' = trip detail full screen
   const [view, setView]               = useState<"planner" | "detail">("planner");
   const [detailTripId, setDetailTripId] = useState<string | null>(null);
