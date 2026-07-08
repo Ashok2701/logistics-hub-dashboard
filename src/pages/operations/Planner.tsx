@@ -3065,6 +3065,13 @@ export default function Planner() {
                   <table className="w-full min-w-[480px]" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/30 sticky top-0 z-10">
                       <tr>
+                        <th className="px-2 py-1.5 border-b border-border/40 w-8 text-center">
+                          <Checkbox
+                            checked={filteredTrips.length > 0 && filteredTrips.every(t => selectedTripIds.has(t.id))}
+                            onCheckedChange={() => toggleAllTrips(filteredTrips)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </th>
                         <th className="px-2 py-1.5 border-b border-border/40 w-7"></th>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
                         {["Trip Code","Details","Status","Vehicle","Driver","Stops","Actions"].map((h) => (
@@ -3074,22 +3081,30 @@ export default function Planner() {
                     </thead>
                     <tbody>
                       {filteredTrips.length === 0 && (
-                        <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-muted-foreground">
+                        <tr><td colSpan={11} className="px-3 py-12 text-center text-xs text-muted-foreground">
                           {trips.length === 0 ? "No trips yet — confirm a trip above" : "No trips match filters"}
                         </td></tr>
                       )}
                       {filteredTrips.map((t) => {
                         const sel = t.id === selectedTripId;
+                        const groupSel = selectedTripIds.has(t.id);
                         const apiStatus = t.optiStatus ?? (t.status as OptiStatus);
                         return (
                           <tr key={t.id}
                             onClick={() => selectTrip(t)}
                             className={cn(
                               "border-b border-border/30 cursor-pointer transition-colors group",
-                              sel ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/40",
+                              sel ? "bg-primary/5 border-l-2 border-l-primary" : groupSel ? "bg-blue-50" : "hover:bg-muted/40",
                               t.locked ? "bg-amber-50/40" : ""
                             )}
                           >
+                            <td className="px-2 py-1.5 w-8 text-center">
+                              <Checkbox
+                                checked={groupSel}
+                                onCheckedChange={() => toggleTripSel(t.id)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </td>
                             <td className="px-1 py-1.5 w-7">
                               {(apiStatus === "Open" || apiStatus === "Optimised") && (
                                 <button
