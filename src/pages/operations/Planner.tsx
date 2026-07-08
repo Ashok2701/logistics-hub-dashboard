@@ -3194,7 +3194,7 @@ export default function Planner() {
                           {/* ── OPTION 3: Inline expand below trip row ── */}
                           {optTripId === t.id && (
                             <tr>
-                              <td colSpan={12} className="p-0 border-0">
+                              <td colSpan={13} className="p-0 border-0">
                                 <motion.div
                                   initial={{ height: 0, opacity: 0 }}
                                   animate={{ height: "auto", opacity: 1 }}
