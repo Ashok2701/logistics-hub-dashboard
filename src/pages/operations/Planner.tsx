@@ -1682,6 +1682,8 @@ export default function Planner() {
   // ── Confirmed trips ───────────────────────────────────
   const [trips, setTrips]                   = useState<Trip[]>([]);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [selectedTripIds, setSelectedTripIds] = useState<Set<string>>(new Set());
+  const [groupBusy, setGroupBusy] = useState<null | { kind: "optimise" | "lock" | "unlock" | "validate" | "delete"; done: number; total: number }>(null);
   // 'planner' = main view | 'detail' = trip detail full screen
   const [view, setView]               = useState<"planner" | "detail">("planner");
   const [detailTripId, setDetailTripId] = useState<string | null>(null);
@@ -2400,7 +2402,206 @@ export default function Planner() {
     });
   }
 
+  // ── Group selection & actions ──────────────────────────
+  useEffect(() => { setSelectedTripIds(new Set()); }, [site, date]);
 
+  function toggleTripSel(id: string) {
+    setSelectedTripIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function toggleAllTrips(list: Trip[]) {
+    const allIds = list.map(t => t.id);
+    const allSelected = allIds.length > 0 && allIds.every(id => selectedTripIds.has(id));
+    setSelectedTripIds(allSelected ? new Set() : new Set(allIds));
+  }
+
+  async function runGroupStatus(
+    kind: "lock" | "unlock" | "validate",
+    eligible: Trip[],
+    optiStatus: OptiStatus,
+    lockFlag: number,
+    successLabel: string,
+  ) {
+    setGroupBusy({ kind, done: 0, total: eligible.length });
+    let ok = 0;
+    for (let i = 0; i < eligible.length; i++) {
+      const t = eligible[i];
+      try {
+        if (t.tripId != null) {
+          const resp = await tripApi.updateTripStatus(t.tripId, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
+          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+        } else {
+          setTrips((prev) => prev.map((x) => x.id === t.id
+            ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
+            : x));
+        }
+        ok++;
+      } catch (e: any) {
+        setVroomError({ title: `${successLabel} failed`, detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "Unknown error"}` });
+        break;
+      }
+      setGroupBusy({ kind, done: i + 1, total: eligible.length });
+    }
+    setGroupBusy(null);
+    if (ok > 0) toast({ title: `${ok} trip(s) ${successLabel}` });
+  }
+
+  async function groupLock() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => !t.locked);
+    if (!eligible.length) { setVroomError({ title: "No Trips to Lock", detail: "All selected trips are already locked." }); return; }
+    setConfirmDialog({
+      open: true,
+      title: "Lock trips",
+      description: `Lock ${eligible.length} trip(s)? This will send them to X3.`,
+      confirmLabel: "Yes, lock",
+      onConfirm: () => runGroupStatus("lock", eligible, "Locked", 1, "locked"),
+    });
+  }
+
+  async function groupUnlock() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => t.locked);
+    if (!eligible.length) { setVroomError({ title: "No Trips to Unlock", detail: "No selected trips are currently locked." }); return; }
+    await runGroupStatus("unlock", eligible, "Open", 0, "unlocked");
+  }
+
+  async function groupValidate() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => t.locked === true && t.optiStatus !== "Validated");
+    if (!eligible.length) { setVroomError({ title: "No Trips to Validate", detail: "Group Validate requires selected trips that are Locked and not yet Validated." }); return; }
+    setConfirmDialog({
+      open: true,
+      title: "Validate trips",
+      description: `Validate ${eligible.length} trip(s)? This cannot be undone.`,
+      confirmLabel: "Yes, validate",
+      onConfirm: () => runGroupStatus("validate", eligible, "Validated", 1, "validated"),
+    });
+  }
+
+  async function groupDelete() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => !t.locked);
+    const lockedCount = selected.length - eligible.length;
+    if (!eligible.length) {
+      setVroomError({ title: "Cannot Delete", detail: `All ${lockedCount} selected trip(s) are locked and cannot be deleted.\nUnlock them first.` });
+      return;
+    }
+    setConfirmDialog({
+      open: true,
+      title: "Delete trips",
+      description: `Delete ${eligible.length} trip(s)?${lockedCount > 0 ? `\n(Note: ${lockedCount} locked trip(s) will be skipped)` : ""}`,
+      confirmLabel: "Yes, delete",
+      onConfirm: async () => {
+        setGroupBusy({ kind: "delete", done: 0, total: eligible.length });
+        let ok = 0;
+        for (let i = 0; i < eligible.length; i++) {
+          const t = eligible[i];
+          try {
+            if (t.tripId != null) await tripApi.deleteTrip(t.tripId);
+            setTrips((prev) => prev.filter((x) => x.id !== t.id));
+            setSelectedTripIds((prev) => { const n = new Set(prev); n.delete(t.id); return n; });
+            if (selectedTripId === t.id) { setSelectedTripId(null); clearDraft(); }
+            ok++;
+          } catch (e: any) {
+            setVroomError({ title: "Delete failed", detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "Unknown error"}` });
+            break;
+          }
+          setGroupBusy({ kind: "delete", done: i + 1, total: eligible.length });
+        }
+        setGroupBusy(null);
+        if (ok > 0) toast({ title: `${ok} trip(s) deleted` });
+      },
+    });
+  }
+
+  async function groupOptimise() {
+    const selected = trips.filter(t => selectedTripIds.has(t.id));
+    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
+    const eligible = selected.filter(t => t.optiStatus === "Open" && !!t.driver?.name);
+    if (!eligible.length) {
+      setVroomError({ title: "No Eligible Trips", detail: "Group Optimise requires selected trips with status 'Open' and a driver assigned." });
+      return;
+    }
+    const depLat = currentSiteObj?.latitude ? Number(currentSiteObj.latitude) : 0;
+    const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
+    if (!depLat || !depLng) {
+      setVroomError({ title: "Missing Site Coordinates", detail: "This site has no latitude/longitude.\nGo to Configuration → Customers → select the site address and set lat/lng." });
+      return;
+    }
+
+    setGroupBusy({ kind: "optimise", done: 0, total: eligible.length });
+    let ok = 0;
+    for (let i = 0; i < eligible.length; i++) {
+      const t = eligible[i];
+      try {
+        const missing = t.stops.filter(s => !s.lat || !s.lng);
+        if (missing.length) throw new Error(`${missing.length} stop(s) missing coordinates`);
+        const startSec = hhmmToSec("07:30");
+        const capGrams = Math.round((t.vehicle.capacity ?? 60000) * 1000);
+        const vroomVehicle = {
+          id: 1, description: t.vehicle.code,
+          start: [depLng, depLat] as [number, number],
+          end:   [depLng, depLat] as [number, number],
+          capacity: [capGrams] as [number],
+          time_window: [startSec, hhmmToSec("23:59")] as [number, number],
+          max_tasks: 999,
+        };
+        const vroomJobs = t.stops.map((s, idx) => ({
+          id: idx + 1, description: s.txn,
+          location: [s.lng, s.lat] as [number, number],
+          service: 1800,
+          ...(s.type === "DROP"
+            ? { delivery: [Math.round((s.netweight || 1) * 1000)] as [number] }
+            : { pickup:   [Math.round((s.netweight || 1) * 1000)] as [number] }),
+          priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
+        }));
+        const result = await callVroom([vroomVehicle], vroomJobs);
+        if (!result.routes?.length) throw new Error("VROOM returned no routes");
+        const route = result.routes[0];
+        const jobSteps = route.steps.filter((st: VroomStep) => st.type === "job");
+        const endStep = route.steps.find((st: VroomStep) => st.type === "end");
+        const endTime = secToHHMM(endStep ? endStep.arrival : startSec + route.duration);
+        const totalDistKm = (route.distance / 1000).toFixed(1);
+        const travelHHMM = secToHHMM(route.duration);
+        const stopResults = jobSteps.map((st: VroomStep, idx: number) => ({
+          seq: idx + 1, docNum: st.description ?? "",
+          arrivalDate: date, arrivalTime: secToHHMM(st.arrival),
+          departureDate: date, departureTime: secToHHMM(st.arrival + st.service),
+          fromPrevDistance: ((st.distance ?? 0) / 1000).toFixed(1),
+          fromPrevTravelTime: secToHHMM(st.duration),
+          serviceTime: secToHHMM(st.service),
+          waitingTime: secToHHMM(st.waiting_time ?? 0),
+        }));
+        if (t.tripId != null) {
+          const resp = await tripApi.optimiseTrip(t.tripId, {
+            orderMode: "auto", startTime: "07:30", endTime,
+            travelTime: travelHHMM, totalTime: travelHHMM,
+            totalDistance: totalDistKm, uomDistance: "km",
+            totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
+            stopResults,
+          });
+          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+        } else {
+          setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" as any } : x));
+        }
+        ok++;
+      } catch (e: any) {
+        setVroomError({ title: "Optimisation failed", detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "VROOM error"}` });
+        break;
+      }
+      setGroupBusy({ kind: "optimise", done: i + 1, total: eligible.length });
+    }
+    setGroupBusy(null);
+    if (ok > 0) toast({ title: `${ok} trip(s) optimised` });
+  }
 
   // ── Render ─────────────────────────────────────────────
   const currentStops = stopTypeTab === "drops" ? drops : pickups;
@@ -2463,11 +2664,12 @@ export default function Planner() {
         <div className="h-5 w-px bg-border/50 mx-0.5" />
 
         <ToolbarBtn icon={Wand2}       label="Auto Generate Route" color="text-blue-600"    bg="hover:bg-blue-50"    onClick={openAutoGen} />
-        <ToolbarBtn icon={GitMerge}    label="Group Optimisation"  color="text-slate-600"   bg="hover:bg-slate-50"   onClick={() => toast({ title: "Group Optimisation",   description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Lock}        label="Group Lock"          color="text-emerald-600" bg="hover:bg-emerald-50" onClick={() => toast({ title: "Group Lock",            description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Unlock}      label="Group Unlock"        color="text-violet-600"  bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",          description: "Not yet implemented" })} />
-        <ToolbarBtn icon={ShieldCheck} label="Group Validate"      color="text-amber-600"   bg="hover:bg-amber-50"   onClick={() => toast({ title: "Group Validate",        description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Trash2}      label="Group Delete Trips"  color="text-rose-600"    bg="hover:bg-rose-50"    onClick={() => toast({ title: "Group Delete Trips",    description: "Not yet implemented" })} />
+        <ToolbarBtn icon={GitMerge}    label={groupBusy?.kind === "optimise" ? `Optimising ${groupBusy.done}/${groupBusy.total}…` : "Group Optimisation"} color="text-slate-600"   bg="hover:bg-slate-50"   disabled={!!groupBusy} spin={groupBusy?.kind === "optimise"} onClick={groupOptimise} />
+        <ToolbarBtn icon={Lock}        label={groupBusy?.kind === "lock"     ? `Locking ${groupBusy.done}/${groupBusy.total}…`    : "Group Lock"}         color="text-emerald-600" bg="hover:bg-emerald-50" disabled={!!groupBusy} spin={groupBusy?.kind === "lock"}     onClick={groupLock} />
+        <ToolbarBtn icon={Unlock}      label={groupBusy?.kind === "unlock"   ? `Unlocking ${groupBusy.done}/${groupBusy.total}…`  : "Group Unlock"}       color="text-violet-600"  bg="hover:bg-violet-50"  disabled={!!groupBusy} spin={groupBusy?.kind === "unlock"}   onClick={groupUnlock} />
+        <ToolbarBtn icon={ShieldCheck} label={groupBusy?.kind === "validate" ? `Validating ${groupBusy.done}/${groupBusy.total}…` : "Group Validate"}     color="text-amber-600"   bg="hover:bg-amber-50"   disabled={!!groupBusy} spin={groupBusy?.kind === "validate"} onClick={groupValidate} />
+        <ToolbarBtn icon={Trash2}      label={groupBusy?.kind === "delete"   ? `Deleting ${groupBusy.done}/${groupBusy.total}…`   : "Group Delete Trips"} color="text-rose-600"    bg="hover:bg-rose-50"    disabled={!!groupBusy} spin={groupBusy?.kind === "delete"}   onClick={groupDelete} />
+
         {/* Status pill */}
         <div className="ml-auto flex items-center gap-2">
           {loading && (
@@ -2827,7 +3029,7 @@ export default function Planner() {
             defaultLeftPct={60}
             minPct={20}
             maxPct={80}
-            leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}`}
+            leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}${selectedTripIds.size ? ` (${selectedTripIds.size} selected)` : ""}`}
             left={
               <div className="flex h-full overflow-hidden rounded-xl border border-border/60 shadow-sm">
 
@@ -2863,6 +3065,13 @@ export default function Planner() {
                   <table className="w-full min-w-[480px]" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/30 sticky top-0 z-10">
                       <tr>
+                        <th className="px-2 py-1.5 border-b border-border/40 w-8 text-center">
+                          <Checkbox
+                            checked={filteredTrips.length > 0 && filteredTrips.every(t => selectedTripIds.has(t.id))}
+                            onCheckedChange={() => toggleAllTrips(filteredTrips)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </th>
                         <th className="px-2 py-1.5 border-b border-border/40 w-7"></th>
                         <th className="px-2 py-1.5 border-b border-border/40 w-6"></th>
                         {["Trip Code","Details","Status","Vehicle","Driver","Stops","Actions"].map((h) => (
@@ -2872,22 +3081,30 @@ export default function Planner() {
                     </thead>
                     <tbody>
                       {filteredTrips.length === 0 && (
-                        <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-muted-foreground">
+                        <tr><td colSpan={11} className="px-3 py-12 text-center text-xs text-muted-foreground">
                           {trips.length === 0 ? "No trips yet — confirm a trip above" : "No trips match filters"}
                         </td></tr>
                       )}
                       {filteredTrips.map((t) => {
                         const sel = t.id === selectedTripId;
+                        const groupSel = selectedTripIds.has(t.id);
                         const apiStatus = t.optiStatus ?? (t.status as OptiStatus);
                         return (
                           <tr key={t.id}
                             onClick={() => selectTrip(t)}
                             className={cn(
                               "border-b border-border/30 cursor-pointer transition-colors group",
-                              sel ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/40",
+                              sel ? "bg-primary/5 border-l-2 border-l-primary" : groupSel ? "bg-blue-50" : "hover:bg-muted/40",
                               t.locked ? "bg-amber-50/40" : ""
                             )}
                           >
+                            <td className="px-2 py-1.5 w-8 text-center">
+                              <Checkbox
+                                checked={groupSel}
+                                onCheckedChange={() => toggleTripSel(t.id)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </td>
                             <td className="px-1 py-1.5 w-7">
                               {(apiStatus === "Open" || apiStatus === "Optimised") && (
                                 <button
@@ -2977,7 +3194,7 @@ export default function Planner() {
                           {/* ── OPTION 3: Inline expand below trip row ── */}
                           {optTripId === t.id && (
                             <tr>
-                              <td colSpan={12} className="p-0 border-0">
+                              <td colSpan={13} className="p-0 border-0">
                                 <motion.div
                                   initial={{ height: 0, opacity: 0 }}
                                   animate={{ height: "auto", opacity: 1 }}
