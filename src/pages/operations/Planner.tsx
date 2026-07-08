@@ -1743,6 +1743,7 @@ export default function Planner() {
     apiDrivers.filter(d =>
       !agVehSearch || `${d.id} ${d.name} ${d.license}`.toLowerCase().includes(agVehSearch.toLowerCase())
     ), [apiDrivers, agVehSearch]);
+  const agUsedStopIds = useMemo(() => new Set(trips.flatMap((t) => t.stops.map((s) => s.id))), [trips]);
   const agFilteredDocs = useMemo(() => {
     const type = agDocTab === "deliveries" ? "DROP" : "PICKUP";
     return allStops.filter(s =>
