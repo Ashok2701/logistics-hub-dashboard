@@ -492,18 +492,12 @@ function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; site?: Rp
     <div className="relative flex-1 min-h-[320px] bg-slate-50 overflow-hidden">
       <div ref={containerRef} className="absolute inset-0" />
       {showTrip && trip && (
-        <>
-          <div className="absolute top-3 left-3 z-[400] bg-white/95 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs shadow pointer-events-none">
-            <p className="font-semibold">{trip.vehicle.code} · {trip.driver.name}</p>
-            <p className="text-muted-foreground mt-0.5">{trip.distanceKm} km · {Math.floor(trip.travelTimeMin / 60)}h {trip.travelTimeMin % 60}m · {trip.stops.length} stops</p>
-          </div>
-          <div className="absolute bottom-3 left-3 z-[400] bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs flex items-center gap-4 pointer-events-none">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: "#10b981" }} /> Dep</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: "#f59e0b" }} /> Arr</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block" /> Drop</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Pickup</span>
-          </div>
-        </>
+        <div className="absolute bottom-3 left-3 z-[400] bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs flex items-center gap-4 pointer-events-none">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: "#10b981" }} /> Dep</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: "#f59e0b" }} /> Arr</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block" /> Drop</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Pickup</span>
+        </div>
       )}
     </div>
   );
@@ -552,13 +546,6 @@ function TripStopListView({ trip }: { trip: Trip | null }) {
             </tr>
           ))}
         </tbody>
-        <tfoot className="bg-muted/20 border-t-2 border-border">
-          <tr>
-            <td colSpan={8} className="px-2.5 py-1.5 text-xs font-semibold text-right text-muted-foreground">Totals:</td>
-            <td className="px-2.5 py-1.5 font-mono font-bold text-xs">{trip.totalQty}</td>
-            <td className="px-2.5 py-1.5 font-mono font-bold text-xs">{trip.totalWeight} kg</td>
-          </tr>
-        </tfoot>
       </table>
     </div>
   );
