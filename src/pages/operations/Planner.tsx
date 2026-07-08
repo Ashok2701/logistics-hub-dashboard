@@ -630,7 +630,7 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
   selectedTripStatus,
-  tripDepSite = null, tripArrSite = null, tripDistanceKm = null,
+  tripDepSite = null, tripArrSite = null, tripDistanceKm = null, tripStartTime = null, tripEndTime = null,
   siteLat = 0, siteLng = 0, activeTripId = null, activeTripCode = null, planDate = "",
   onTripOptimised,
 }: ActiveTourPanelProps) {
