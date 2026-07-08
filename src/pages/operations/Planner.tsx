@@ -1751,13 +1751,13 @@ export default function Planner() {
       // Only show documents NOT already assigned to a trip (To Plan only)
       (s.routeStatus === "To Plan" || !s.routeStatus || s.routeStatus.trim() === "") &&
       // Exclude stops already in a confirmed trip (usedStopIds)
-      !usedStopIds.has(s.id) &&
+      !agUsedStopIds.has(s.id) &&
       // Exclude stops already in the current draft
       !draftStopIds.includes(s.id) &&
       (!agRouteCode || s.routeCode === agRouteCode) &&
       (!agDocSearch || `${s.txn} ${s.client} ${s.bpcode} ${s.routeCode}`.toLowerCase().includes(agDocSearch.toLowerCase()))
     );
-  }, [allStops, agDocTab, agRouteCode, agDocSearch, usedStopIds, draftStopIds]);
+  }, [allStops, agDocTab, agRouteCode, agDocSearch, agUsedStopIds, draftStopIds]);
 
   const agCanSubmit =
     agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1;
