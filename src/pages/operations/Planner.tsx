@@ -779,9 +779,9 @@ function ActiveTourPanel({
           <div className="w-px self-stretch bg-border/30 mx-0.5" />
 
           {/* Stat chips */}
-          {[
-            { label: "Dep Site",  value: vehicle?.departureSite || "—" },
-            { label: "Arv Site",  value: vehicle?.arrivalSite   || "—" },
+          {([
+            { label: "Dep Site",  value: tripDepSite || vehicle?.departureSite || "—" },
+            { label: "Arv Site",  value: tripArrSite || vehicle?.arrivalSite   || "—" },
             { label: "Stops",     value: String(stops.length) },
             { label: "Drops",     value: String(dropCount) },
             { label: "Pickups",   value: String(pickCount) },
@@ -789,7 +789,10 @@ function ActiveTourPanel({
             { label: "Volume",    value: totalVol    ? `${totalVol}m³`    : "—" },
             { label: "Qty",       value: totalQty    ? String(totalQty)   : "—" },
             { label: "Travel",    value: travelStr },
-          ].map(({ label, value }) => (
+            ...(selectedTripStatus && selectedTripStatus !== "Open" && tripDistanceKm != null
+              ? [{ label: "Distance", value: `${Number(tripDistanceKm).toFixed(1)} km` }]
+              : []),
+          ] as { label: string; value: string }[]).map(({ label, value }) => (
             <div key={label} className="flex flex-col min-w-[44px] px-1.5 py-1 rounded border border-border/30 bg-muted/20 flex-shrink-0 text-center">
               <span className="text-[8px] uppercase tracking-wide text-muted-foreground leading-none mb-0.5">{label}</span>
               <span className="text-[11px] font-semibold leading-none text-foreground">{value}</span>
