@@ -2090,9 +2090,21 @@ export default function Planner() {
       (!pickSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(pickSearch.toLowerCase()))
     ), [allStops, pickSearch, toPlanOnly, usedStopIds, draftStopIds]);
 
-  const draftStops = useMemo(() =>
-    allStops.filter((s) => draftStopIds.includes(s.id)),
-    [allStops, draftStopIds]);
+  const draftStops = useMemo(() => {
+    const selTrip = trips.find((t) => t.id === selectedTripId);
+    const tripStopMap = new Map(selTrip?.stops.map((s) => [s.id, s]) ?? []);
+    const base = allStops.filter((s) => draftStopIds.includes(s.id));
+    // Overlay optimisation output (arrivalTime, departureTime, seq, …) from the selected trip.
+    const merged = base.map((s) => {
+      const t = tripStopMap.get(s.id);
+      return t ? { ...s, ...t } : s;
+    });
+    // If the selected trip is optimised, honour its seq ordering.
+    if (selTrip && merged.some((s) => s.seq != null)) {
+      merged.sort((a, b) => (a.seq ?? 999) - (b.seq ?? 999));
+    }
+    return merged;
+  }, [allStops, draftStopIds, trips, selectedTripId]);
 
   const routeCodes = useMemo(() => {
     const codes = allStops.map(s => s.routeCode).filter(Boolean);
