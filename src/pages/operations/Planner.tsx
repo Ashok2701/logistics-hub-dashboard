@@ -154,12 +154,12 @@ const priorityColor = (p: Stop["priority"]) =>
   : "bg-green-100 text-green-800 border-green-200";
 
 const statusColor = (s: TripStatus) => ({
-  Open:      "bg-slate-100 text-slate-700",
-  Optimized: "bg-blue-100 text-blue-800",
-  Optimised: "bg-blue-100 text-blue-800",
-  Locked:    "bg-amber-100 text-amber-800",
-  Validated: "bg-green-100 text-green-800",
-  Confirmed: "bg-emerald-100 text-emerald-800",
+  Open:      "bg-gray-100 text-gray-700",
+  Optimized: "bg-blue-100 text-blue-700",
+  Optimised: "bg-blue-100 text-blue-700",
+  Locked:    "bg-amber-100 text-amber-700",
+  Validated: "bg-green-100 text-green-700",
+  Confirmed: "bg-green-100 text-green-700",
 }[s]);
 
 // Map API optiStatus → internal status
