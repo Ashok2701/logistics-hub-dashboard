@@ -3065,6 +3065,8 @@ export default function Planner() {
             tripDepSite={selectedTrip?.departSite ?? null}
             tripArrSite={selectedTrip?.arrivalSite ?? null}
             tripDistanceKm={selectedTrip?.distanceKm ?? null}
+            tripStartTime={selectedTrip?.startTime ?? null}
+            tripEndTime={selectedTrip?.endTime ?? null}
             onTripOptimised={(tripId, stopResults, totals) => setTrips(prev => prev.map(t => {
               if (t.tripId !== tripId) return t;
               const byDoc = new Map<string, any>((stopResults ?? []).map((r: any) => [r.docNum, r]));
