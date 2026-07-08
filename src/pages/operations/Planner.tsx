@@ -2786,9 +2786,22 @@ export default function Planner() {
               onConfirm: async () => { await confirmTrip(); },
             })}
             selectedTripStatus={selectedTrip?.optiStatus ?? (selectedTrip?.status as string | undefined) ?? null}
-            onTripOptimised={(tripId) => setTrips(prev => prev.map(t =>
-              t.tripId === tripId ? { ...t, optiStatus: "Optimised" as any } : t
-            ))}
+            tripDepSite={selectedTrip?.departSite ?? null}
+            tripArrSite={selectedTrip?.arrivalSite ?? null}
+            tripDistanceKm={selectedTrip?.distanceKm ?? null}
+            onTripOptimised={(tripId, stopResults, totals) => setTrips(prev => prev.map(t => {
+              if (t.tripId !== tripId) return t;
+              const byDoc = new Map<string, any>((stopResults ?? []).map((r: any) => [r.docNum, r]));
+              const mergedStops = t.stops.map((s) => {
+                const r = byDoc.get(s.txn);
+                return r ? { ...s, seq: r.seq, arrivalDate: r.arrivalDate, arrivalTime: r.arrivalTime,
+                  departureDate: r.departureDate, departureTime: r.departureTime,
+                  fromPrevDistance: r.fromPrevDistance, fromPrevTravelTime: r.fromPrevTravelTime,
+                  serviceTime: r.serviceTime, waitingTime: r.waitingTime } : s;
+              }).sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+              return { ...t, stops: mergedStops, optiStatus: "Optimised" as any,
+                status: "Optimised", distanceKm: totals.distanceKm };
+            }))}
           />
           </div>
 
