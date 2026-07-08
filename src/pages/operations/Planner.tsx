@@ -644,7 +644,14 @@ function ActiveTourPanel({
     endDate: string; endTime: string; duration: string; distance: string; cost: string; arrival: string;
   } | null>(null);
   const [optError, setOptError] = useState<{ title: string; detail: string } | null>(null);
-  const times = useMemo(() => genTimes(stops.length), [stops.length]);
+  const fallbackTimes = useMemo(() => genTimes(stops.length), [stops.length]);
+  const times = useMemo(
+    () => stops.map((s, i) => s.arrivalTime || fallbackTimes[i]),
+    [stops, fallbackTimes]
+  );
+  const hasOptTimes = stops.some((s) => !!s.arrivalTime);
+  const startLabel = tripStartTime || (hasOptTimes ? "07:30" : "");
+  const endLabel = tripEndTime || (hasOptTimes && stops.length ? (stops[stops.length - 1].departureTime || "") : "");
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
   const totalVol    = stops.reduce((n, s) => n + s.vol, 0);
