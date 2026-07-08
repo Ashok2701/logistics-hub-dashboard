@@ -2664,11 +2664,12 @@ export default function Planner() {
         <div className="h-5 w-px bg-border/50 mx-0.5" />
 
         <ToolbarBtn icon={Wand2}       label="Auto Generate Route" color="text-blue-600"    bg="hover:bg-blue-50"    onClick={openAutoGen} />
-        <ToolbarBtn icon={GitMerge}    label="Group Optimisation"  color="text-slate-600"   bg="hover:bg-slate-50"   onClick={() => toast({ title: "Group Optimisation",   description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Lock}        label="Group Lock"          color="text-emerald-600" bg="hover:bg-emerald-50" onClick={() => toast({ title: "Group Lock",            description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Unlock}      label="Group Unlock"        color="text-violet-600"  bg="hover:bg-violet-50"  onClick={() => toast({ title: "Group Unlock",          description: "Not yet implemented" })} />
-        <ToolbarBtn icon={ShieldCheck} label="Group Validate"      color="text-amber-600"   bg="hover:bg-amber-50"   onClick={() => toast({ title: "Group Validate",        description: "Not yet implemented" })} />
-        <ToolbarBtn icon={Trash2}      label="Group Delete Trips"  color="text-rose-600"    bg="hover:bg-rose-50"    onClick={() => toast({ title: "Group Delete Trips",    description: "Not yet implemented" })} />
+        <ToolbarBtn icon={GitMerge}    label={groupBusy?.kind === "optimise" ? `Optimising ${groupBusy.done}/${groupBusy.total}…` : "Group Optimisation"} color="text-slate-600"   bg="hover:bg-slate-50"   disabled={!!groupBusy} spin={groupBusy?.kind === "optimise"} onClick={groupOptimise} />
+        <ToolbarBtn icon={Lock}        label={groupBusy?.kind === "lock"     ? `Locking ${groupBusy.done}/${groupBusy.total}…`    : "Group Lock"}         color="text-emerald-600" bg="hover:bg-emerald-50" disabled={!!groupBusy} spin={groupBusy?.kind === "lock"}     onClick={groupLock} />
+        <ToolbarBtn icon={Unlock}      label={groupBusy?.kind === "unlock"   ? `Unlocking ${groupBusy.done}/${groupBusy.total}…`  : "Group Unlock"}       color="text-violet-600"  bg="hover:bg-violet-50"  disabled={!!groupBusy} spin={groupBusy?.kind === "unlock"}   onClick={groupUnlock} />
+        <ToolbarBtn icon={ShieldCheck} label={groupBusy?.kind === "validate" ? `Validating ${groupBusy.done}/${groupBusy.total}…` : "Group Validate"}     color="text-amber-600"   bg="hover:bg-amber-50"   disabled={!!groupBusy} spin={groupBusy?.kind === "validate"} onClick={groupValidate} />
+        <ToolbarBtn icon={Trash2}      label={groupBusy?.kind === "delete"   ? `Deleting ${groupBusy.done}/${groupBusy.total}…`   : "Group Delete Trips"} color="text-rose-600"    bg="hover:bg-rose-50"    disabled={!!groupBusy} spin={groupBusy?.kind === "delete"}   onClick={groupDelete} />
+
         {/* Status pill */}
         <div className="ml-auto flex items-center gap-2">
           {loading && (
