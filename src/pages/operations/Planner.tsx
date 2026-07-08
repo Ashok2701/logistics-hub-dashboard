@@ -1969,9 +1969,10 @@ export default function Planner() {
             totalObject: { stopResults },
           });
 
-          // Persist optimisation results
+          // Persist optimisation results — response includes Optimised status,
+          // per-stop arrivalTime/departureTime/serviceTime/waitingTime, totals.
           const { optimiseTrip } = await import("@/lib/tripApi");
-          await optimiseTrip(tripResp.tripId!, {
+          const optResp = await optimiseTrip(tripResp.tripId!, {
             orderMode: "auto", startTime, endTime,
             travelTime: travelHHMM, totalTime: travelHHMM,
             totalDistance: totalDistKm, uomDistance: "km",
@@ -1979,7 +1980,29 @@ export default function Planner() {
             stopResults,
           });
 
-          setTrips(prev => [...prev, tripFromApi(tripResp)]);
+          // Merge stopResults into the persisted stops so the local trip carries
+          // arrivalTime, departureTime, seq etc. even if the API response omits them.
+          const byDoc = new Map(stopResults.map((r) => [r.docNum, r]));
+          const created = tripFromApi(optResp);
+          created.stops = created.stops.map((s) => {
+            const r = byDoc.get((s as any).docNum ?? s.txn);
+            return r ? {
+              ...s,
+              seq: r.seq,
+              arrivalDate: r.arrivalDate, arrivalTime: r.arrivalTime,
+              departureDate: r.departureDate, departureTime: r.departureTime,
+              fromPrevDistance: r.fromPrevDistance,
+              fromPrevTravelTime: r.fromPrevTravelTime,
+              serviceTime: r.serviceTime, waitingTime: r.waitingTime,
+            } : s;
+          }).sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+          created.status = "Optimised";
+          created.optiStatus = "Optimised";
+          created.distanceKm = Number(totalDistKm) || created.distanceKm;
+          created.startTime = startTime;
+          created.endTime = endTime;
+
+          setTrips(prev => [...prev, created]);
           createdCount++;
         } catch(e) {
           console.error("Failed to create trip for vehicle", vehCode, e);
