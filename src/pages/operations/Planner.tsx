@@ -1462,27 +1462,35 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                   </tr>
                 </thead>
                 <tbody>
-                  {trip.stops.map((s, i) => (
+                  {trip.stops.map((s, i) => {
+                    const arr = s.arrivalDate || s.arrivalTime ? `${s.arrivalDate ?? depDate} ${s.arrivalTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 12:41`);
+                    const dep = s.departureDate || s.departureTime ? `${s.departureDate ?? depDate} ${s.departureTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 13:26`);
+                    const svc = s.serviceTime ?? (isOpen ? "—" : "00:30");
+                    const fpd = s.fromPrevDistance ?? (isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`);
+                    const fpt = s.fromPrevTravelTime ?? (isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`);
+                    const wait = s.waitingTime ?? (isOpen ? "—" : "00:15");
+                    return (
                     <tr key={s.id} className={cn("border-b border-border/20 hover:bg-muted/30", i % 2 === 1 && "bg-muted/10")}>
-                      <td className="px-2 py-1.5 font-mono font-bold text-center">{i + 1}</td>
-                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{s.txn}</td>
+                      <td className="px-2 py-1.5 font-mono font-bold text-center">{s.seq ?? i + 1}</td>
+                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{s.docNum ?? s.txn}</td>
                       <td className="px-2 py-1.5 text-muted-foreground">—</td>
                       <td className="px-2 py-1.5 font-mono">{trip.departSite}</td>
                       <td className="px-2 py-1.5">
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800">Scheduled</span>
                       </td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{depDate} 12:41</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{depDate} 13:26</td>
-                      <td className="px-2 py-1.5 font-mono">00:30</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{arr}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{dep}</td>
+                      <td className="px-2 py-1.5 font-mono">{svc}</td>
                       <td className="px-2 py-1.5 text-muted-foreground truncate max-w-[100px]">{s.address}</td>
                       <td className="px-2 py-1.5 font-mono">{s.bpcode}</td>
                       <td className="px-2 py-1.5 font-medium truncate max-w-[100px]">{s.client}</td>
                       <td className="px-2 py-1.5">{s.city}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{isOpen ? "—" : "00:15"}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{fpd}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{fpt}</td>
+                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{wait}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {trip.stops.length === 0 && (
                     <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No stops on this trip</td></tr>
                   )}
