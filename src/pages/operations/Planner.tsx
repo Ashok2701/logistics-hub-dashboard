@@ -1242,17 +1242,17 @@ function ActiveTourPanel({
                       cost: "",
                     });
 
-                    // Persist to backend if tripId available
-                    if (activeTripId) {
+                    // Persist to backend if tripCode available
+                    if (activeTripCode) {
                       const { optimiseTrip } = await import("@/lib/tripApi");
-                      await optimiseTrip(activeTripId, {
+                      await optimiseTrip(activeTripCode, {
                         orderMode: optOrder, startTime: optStartTime, endTime,
                         travelTime: travelHHMM, totalTime: travelHHMM,
                         totalDistance: totalDistKm, uomDistance: "km",
                         totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
                         stopResults,
                       });
-                      onTripOptimised?.(activeTripId, stopResults, { distanceKm: Number(totalDistKm), travelTime: travelHHMM, endTime });
+                      if (activeTripId != null) onTripOptimised?.(activeTripId, stopResults, { distanceKm: Number(totalDistKm), travelTime: travelHHMM, endTime });
                     }
 
                     toast({ title: "Optimisation complete ✓",
@@ -1984,7 +1984,7 @@ export default function Planner() {
           // Persist optimisation results — response includes Optimised status,
           // per-stop arrivalTime/departureTime/serviceTime/waitingTime, totals.
           const { optimiseTrip } = await import("@/lib/tripApi");
-          const optResp = await optimiseTrip(tripResp.tripId!, {
+          const optResp = await optimiseTrip(tripResp.tripCode, {
             orderMode: "auto", startTime, endTime,
             travelTime: travelHHMM, totalTime: travelHHMM,
             totalDistance: totalDistKm, uomDistance: "km",
@@ -2359,7 +2359,7 @@ export default function Planner() {
     if (trip.tripId == null || !trip.tripCode) return;
     try {
       const payload = buildTripPayload(vehicle, driver, stops, { tripCode: trip.tripCode });
-      const resp = await tripApi.updateTrip(trip.tripId, payload);
+      const resp = await tripApi.updateTrip(trip.tripCode, payload);
       setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
       if (successMsg) toast({ title: successMsg, description: trip.tripCode });
       // refresh baseline for stop-sync detection
@@ -2450,7 +2450,7 @@ export default function Planner() {
 
 
   async function setTripStatus(trip: Trip, optiStatus: OptiStatus, lockFlag: number) {
-    if (trip.tripId == null) {
+    if (trip.tripId == null || !trip.tripCode) {
       // Local-only trip (not yet persisted) — update UI optimistically
       setTrips((prev) => prev.map((t) => t.id === trip.id
         ? { ...t, status: optiStatus === "Optimised" ? "Optimised" : optiStatus, locked: lockFlag === 1, optiStatus, lockFlag }
@@ -2458,9 +2458,11 @@ export default function Planner() {
       return;
     }
     try {
-      const resp = await tripApi.updateTripStatus(trip.tripId, {
-        optiStatus, lockFlag, notes: "", userCode: "SYSTEM",
-      });
+      let resp;
+      if (optiStatus === "Locked")         resp = await tripApi.lockTrip(trip.tripCode);
+      else if (optiStatus === "Validated") resp = await tripApi.validateTrip(trip.tripCode);
+      else if (optiStatus === "Open" && lockFlag === 0) resp = await tripApi.unlockTrip(trip.tripCode);
+      else resp = await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
       setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
       toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
     } catch (e: any) {
@@ -2483,9 +2485,9 @@ export default function Planner() {
 
   async function performDeleteTrip(id: string) {
     const t = trips.find((x) => x.id === id);
-    if (t?.tripId != null) {
+    if (t?.tripCode) {
       try {
-        await tripApi.deleteTrip(t.tripId);
+        await tripApi.deleteTrip(t.tripCode);
       } catch (e: any) {
         toast({ title: "Delete failed", description: e?.message ?? "Unknown error", variant: "destructive" });
         return;
@@ -2532,24 +2534,41 @@ export default function Planner() {
     successLabel: string,
   ) {
     setGroupBusy({ kind, done: 0, total: eligible.length });
-    let ok = 0;
-    for (let i = 0; i < eligible.length; i++) {
-      const t = eligible[i];
-      try {
-        if (t.tripId != null) {
-          const resp = await tripApi.updateTripStatus(t.tripId, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
-          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
-        } else {
-          setTrips((prev) => prev.map((x) => x.id === t.id
-            ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
-            : x));
+    const persisted = eligible.filter(t => !!t.tripCode);
+    const localOnly = eligible.filter(t => !t.tripCode);
+
+    // Optimistically flip local-only trips
+    if (localOnly.length) {
+      setTrips((prev) => prev.map((x) => localOnly.some(t => t.id === x.id)
+        ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
+        : x));
+    }
+
+    let ok = localOnly.length;
+    try {
+      if (persisted.length) {
+        const codes = persisted.map(t => t.tripCode!);
+        const action = kind === "lock" ? tripApi.lockTripsGroup
+                     : kind === "unlock" ? tripApi.unlockTripsGroup
+                     : tripApi.validateTripsGroup;
+        await action(codes);
+        // Refresh each persisted trip
+        for (let i = 0; i < persisted.length; i++) {
+          const t = persisted[i];
+          try {
+            const resp = await tripApi.getTripByCode(t.tripCode!);
+            setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+          } catch {
+            setTrips((prev) => prev.map((x) => x.id === t.id
+              ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
+              : x));
+          }
+          ok++;
+          setGroupBusy({ kind, done: ok, total: eligible.length });
         }
-        ok++;
-      } catch (e: any) {
-        setVroomError({ title: `${successLabel} failed`, detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "Unknown error"}` });
-        break;
       }
-      setGroupBusy({ kind, done: i + 1, total: eligible.length });
+    } catch (e: any) {
+      setVroomError({ title: `${successLabel} failed`, detail: e?.message ?? "Unknown error" });
     }
     setGroupBusy(null);
     if (ok > 0) toast({ title: `${ok} trip(s) ${successLabel}` });
@@ -2611,7 +2630,7 @@ export default function Planner() {
         for (let i = 0; i < eligible.length; i++) {
           const t = eligible[i];
           try {
-            if (t.tripId != null) await tripApi.deleteTrip(t.tripId);
+            if (t.tripCode) await tripApi.deleteTrip(t.tripCode);
             setTrips((prev) => prev.filter((x) => x.id !== t.id));
             setSelectedTripIds((prev) => { const n = new Set(prev); n.delete(t.id); return n; });
             if (selectedTripId === t.id) { setSelectedTripId(null); clearDraft(); }
@@ -2686,8 +2705,8 @@ export default function Planner() {
           serviceTime: secToHHMM(st.service),
           waitingTime: secToHHMM(st.waiting_time ?? 0),
         }));
-        if (t.tripId != null) {
-          const resp = await tripApi.optimiseTrip(t.tripId, {
+        if (t.tripCode) {
+          const resp = await tripApi.optimiseTrip(t.tripCode, {
             orderMode: "auto", startTime: "07:30", endTime,
             travelTime: travelHHMM, totalTime: travelHHMM,
             totalDistance: totalDistKm, uomDistance: "km",
@@ -3235,9 +3254,9 @@ export default function Planner() {
                                 className="flex items-center justify-center w-9 h-9 rounded-lg border border-input bg-white text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 shadow-sm"
                                 onClick={async (e) => {
                                   e.stopPropagation();
-                                  if (t.tripId != null) {
+                                  if (t.tripCode) {
                                     try {
-                                      const resp = await tripApi.getTripById(t.tripId);
+                                      const resp = await tripApi.getTripByCode(t.tripCode);
                                       setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
                                     } catch (err: any) {
                                       toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
@@ -3428,9 +3447,9 @@ export default function Planner() {
                                               waitingTime: secToHHMM(st.waiting_time ?? 0),
                                             }));
 
-                                            if (t.tripId != null) {
+                                            if (t.tripCode) {
                                               const { optimiseTrip } = await import("@/lib/tripApi");
-                                              const resp = await optimiseTrip(t.tripId, {
+                                              const resp = await optimiseTrip(t.tripCode, {
                                                 orderMode: optOrder, startTime: optTime, endTime,
                                                 travelTime: travelHHMM, totalTime: travelHHMM,
                                                 totalDistance: totalDistKm, uomDistance: "km",

@@ -217,67 +217,104 @@ export async function loadTrips(site: string, date: string): Promise<TripRecord[
   return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : Array.isArray(data?.trips) ? data.trips : [];
 }
 
-export async function getTripById(id: number | string): Promise<TripRecord> {
-  const res = await fetch(`${BASE}/trips/${id}`, { headers: authHeaders() });
+export async function getTripByCode(tripCode: string): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}`, { headers: authHeaders() });
   return handle<TripRecord>(res);
 }
+// Back-compat alias (old callers used getTripById with any identifier)
+export const getTripById = getTripByCode;
 
-export async function updateTripStatus(id: number | string, payload: TripStatusPayload): Promise<TripRecord> {
-  const res = await fetch(`${BASE}/trips/${id}/status`, {
+export async function updateTripStatus(tripCode: string, payload: TripStatusPayload): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/status`, {
     method: "PATCH", headers: authHeaders(), body: JSON.stringify(payload),
   });
   return handle<TripRecord>(res);
 }
 
-export async function optimiseTrip(id: number | string, payload: OptimisePayload): Promise<TripRecord> {
-  const res = await fetch(`${BASE}/trips/${id}/optimise`, {
+export async function optimiseTrip(tripCode: string, payload: OptimisePayload): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/optimise`, {
     method: "PATCH", headers: authHeaders(), body: JSON.stringify(payload),
   });
   return handle<TripRecord>(res);
 }
 
-export async function deleteTrip(id: number | string): Promise<void> {
-  const res = await fetch(`${BASE}/trips/${id}`, {
+export async function deleteTrip(tripCode: string): Promise<void> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}`, {
     method: "DELETE", headers: authHeaders(),
   });
   await handle<void>(res);
 }
 
-// Partial update — used when re-assigning vehicle or driver from the planner.
-export async function updateTrip(id: number | string, payload: Partial<CreateTripPayload>): Promise<TripRecord> {
-  const res = await fetch(`${BASE}/trips/${id}`, {
-    method: "PATCH", headers: authHeaders(), body: JSON.stringify(payload),
+// Full update — PUT /api/v1/trips/{tripCode}
+export async function updateTrip(tripCode: string, payload: Partial<CreateTripPayload>): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}`, {
+    method: "PUT", headers: authHeaders(), body: JSON.stringify(payload),
   });
   return handle<TripRecord>(res);
 }
+
+// ── X3 lock / validate / unlock (single) ───────────────────────────
+export async function lockTrip(tripCode: string): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/lock`, {
+    method: "POST", headers: authHeaders(),
+  });
+  return handle<TripRecord>(res);
+}
+
+export async function validateTrip(tripCode: string): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/validate`, {
+    method: "POST", headers: authHeaders(),
+  });
+  return handle<TripRecord>(res);
+}
+
+export async function unlockTrip(tripCode: string): Promise<TripRecord> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/unlock`, {
+    method: "POST", headers: authHeaders(),
+  });
+  return handle<TripRecord>(res);
+}
+
+// ── X3 lock / validate / unlock (group) ────────────────────────────
+export interface GroupActionResult {
+  tripCode: string;
+  success: boolean;
+  message?: string;
+}
+
+async function groupAction(action: "lock" | "validate" | "unlock", tripCodes: string[]): Promise<GroupActionResult[] | any> {
+  const res = await fetch(`${BASE}/trips/group/${action}`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify(tripCodes),
+  });
+  return handle<any>(res);
+}
+
+export const lockTripsGroup     = (codes: string[]) => groupAction("lock", codes);
+export const validateTripsGroup = (codes: string[]) => groupAction("validate", codes);
+export const unlockTripsGroup   = (codes: string[]) => groupAction("unlock", codes);
 
 // Namespaced object kept for backward compatibility with existing imports.
 export const tripApi = {
   createTrip,
   loadTrips,
   getTripById,
+  getTripByCode,
   updateTripStatus,
-  optimiseTrip: (id: number | string, payloadOrOrderMode: OptimisePayload | string, startTime?: string): Promise<TripRecord> => {
+  optimiseTrip: (tripCode: string, payloadOrOrderMode: OptimisePayload | string, startTime?: string): Promise<TripRecord> => {
     if (typeof payloadOrOrderMode === "string") {
-      // Legacy call signature: optimiseTrip(id, orderMode, startTime)
       const payload: OptimisePayload = {
         orderMode: payloadOrOrderMode,
         startTime: startTime ?? "",
-        endTime: "",
-        travelTime: "",
-        totalTime: "",
-        totalDistance: "",
-        uomDistance: "mi",
-        totalCost: "",
-        distanceCost: "",
-        fixedCost: "",
-        serviceCost: "",
+        endTime: "", travelTime: "", totalTime: "", totalDistance: "",
+        uomDistance: "mi", totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
         stopResults: [],
       };
-      return optimiseTrip(id, payload);
+      return optimiseTrip(tripCode, payload);
     }
-    return optimiseTrip(id, payloadOrOrderMode);
+    return optimiseTrip(tripCode, payloadOrOrderMode);
   },
   deleteTrip,
   updateTrip,
+  lockTrip, validateTrip, unlockTrip,
+  lockTripsGroup, validateTripsGroup, unlockTripsGroup,
 };
