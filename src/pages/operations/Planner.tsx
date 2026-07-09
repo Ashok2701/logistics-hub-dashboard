@@ -2534,24 +2534,41 @@ export default function Planner() {
     successLabel: string,
   ) {
     setGroupBusy({ kind, done: 0, total: eligible.length });
-    let ok = 0;
-    for (let i = 0; i < eligible.length; i++) {
-      const t = eligible[i];
-      try {
-        if (t.tripId != null) {
-          const resp = await tripApi.updateTripStatus(t.tripId, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
-          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
-        } else {
-          setTrips((prev) => prev.map((x) => x.id === t.id
-            ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
-            : x));
+    const persisted = eligible.filter(t => !!t.tripCode);
+    const localOnly = eligible.filter(t => !t.tripCode);
+
+    // Optimistically flip local-only trips
+    if (localOnly.length) {
+      setTrips((prev) => prev.map((x) => localOnly.some(t => t.id === x.id)
+        ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
+        : x));
+    }
+
+    let ok = localOnly.length;
+    try {
+      if (persisted.length) {
+        const codes = persisted.map(t => t.tripCode!);
+        const action = kind === "lock" ? tripApi.lockTripsGroup
+                     : kind === "unlock" ? tripApi.unlockTripsGroup
+                     : tripApi.validateTripsGroup;
+        await action(codes);
+        // Refresh each persisted trip
+        for (let i = 0; i < persisted.length; i++) {
+          const t = persisted[i];
+          try {
+            const resp = await tripApi.getTripByCode(t.tripCode!);
+            setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+          } catch {
+            setTrips((prev) => prev.map((x) => x.id === t.id
+              ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
+              : x));
+          }
+          ok++;
+          setGroupBusy({ kind, done: ok, total: eligible.length });
         }
-        ok++;
-      } catch (e: any) {
-        setVroomError({ title: `${successLabel} failed`, detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "Unknown error"}` });
-        break;
       }
-      setGroupBusy({ kind, done: i + 1, total: eligible.length });
+    } catch (e: any) {
+      setVroomError({ title: `${successLabel} failed`, detail: e?.message ?? "Unknown error" });
     }
     setGroupBusy(null);
     if (ok > 0) toast({ title: `${ok} trip(s) ${successLabel}` });
