@@ -2359,7 +2359,7 @@ export default function Planner() {
     if (trip.tripId == null || !trip.tripCode) return;
     try {
       const payload = buildTripPayload(vehicle, driver, stops, { tripCode: trip.tripCode });
-      const resp = await tripApi.updateTrip(trip.tripId, payload);
+      const resp = await tripApi.updateTrip(trip.tripCode, payload);
       setTrips((prev) => prev.map((x) => x.id === trip.id ? tripFromApi(resp, x) : x));
       if (successMsg) toast({ title: successMsg, description: trip.tripCode });
       // refresh baseline for stop-sync detection
