@@ -1387,17 +1387,17 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
 
         {/* ── Full-page header (gradient) ── */}
         <div
-          className="relative px-5 py-3 sticky top-0 z-10 shadow-lg border-b border-white/10"
+          className="relative px-5 py-3 sticky top-0 z-10 shadow-md border-b border-slate-900/10"
           style={{
             background:
-              "linear-gradient(135deg, #ff6b35 0%, #f7931e 35%, #e84393 70%, #6c5ce7 100%)",
+              "linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
           }}
         >
           <div className="flex items-center justify-between">
             {/* Back button */}
             <button
               onClick={onBack}
-              className="flex items-center gap-1.5 text-[12px] font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-md transition-all"
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-white/85 hover:text-white bg-white/10 hover:bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-md transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
               Back to Planner
@@ -1405,23 +1405,24 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
 
             {/* Centred title */}
             <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none">
-              <h2 className="text-base font-bold text-white tracking-tight drop-shadow-sm">Route Management</h2>
-              <p className="text-[11px] text-white/80 font-mono">{trip.id}</p>
+              <h2 className="text-base font-bold text-white tracking-tight">Route Management</h2>
+              <p className="text-[11px] text-white/70 font-mono">{trip.id}</p>
             </div>
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-white/95 text-orange-600 shadow-sm">
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
                 {trip.status.toUpperCase()}
               </span>
               <Button
                 size="sm"
-                className="h-8 text-[11px] gap-1.5 bg-white text-orange-600 hover:bg-white/95 border-0 font-semibold shadow-md"
+                className="h-8 text-[11px] gap-1.5 bg-sky-500 text-white hover:bg-sky-400 border-0 font-semibold shadow-md"
               >
                 <Truck className="w-3.5 h-3.5" /> Load to Truck
               </Button>
             </div>
           </div>
+
 
           {/* ── Workflow Timeline ── */}
           {(() => {
@@ -1443,18 +1444,18 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                       <React.Fragment key={s.key}>
                         <button
                           className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap shadow-sm",
-                            isDone && "bg-white text-emerald-600 hover:shadow-md",
-                            isActive && !isDone && "bg-white/95 text-purple-700 ring-2 ring-white/60 hover:shadow-md",
-                            !isDone && !isActive && "bg-white/15 text-white/70 hover:bg-white/25 backdrop-blur-sm",
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap",
+                            isDone && "bg-white text-emerald-700 shadow-sm",
+                            isActive && !isDone && "bg-white text-sky-700 ring-2 ring-sky-300/60 shadow-sm",
+                            !isDone && !isActive && "bg-white/10 text-white/60 hover:bg-white/15 backdrop-blur-sm",
                           )}
                         >
                           <span
                             className={cn(
                               "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
                               isDone && "bg-emerald-500 text-white",
-                              isActive && !isDone && "bg-purple-600 text-white",
-                              !isDone && !isActive && "bg-white/20 text-white",
+                              isActive && !isDone && "bg-sky-500 text-white",
+                              !isDone && !isActive && "bg-white/15 text-white/70",
                             )}
                           >
                             {isDone ? <CheckCheck className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
@@ -1462,13 +1463,14 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                           {s.label}
                         </button>
                         {i < steps.length - 1 && (
-                          <div className="flex-1 max-w-[80px] h-[2px] mx-1 rounded-full bg-white/20 overflow-hidden">
+                          <div className="flex-1 max-w-[80px] h-[2px] mx-1 rounded-full bg-white/15 overflow-hidden">
                             <div
-                              className="h-full bg-white transition-all"
+                              className="h-full bg-emerald-400 transition-all"
                               style={{ width: steps[i].done ? "100%" : "0%" }}
                             />
                           </div>
                         )}
+
                       </React.Fragment>
                     );
                   })}
@@ -1482,8 +1484,8 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
 
           {/* ── Route info card ── */}
           <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
-              <span className="w-1 h-4 rounded-full bg-gradient-to-b from-orange-500 to-pink-500" />
+            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+              <span className="w-1 h-4 rounded-full bg-sky-500" />
               <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Route Information</h3>
             </div>
             <div className="p-4 grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
@@ -1505,22 +1507,23 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
               ].map(({ label, value, highlight }) => (
                 <div key={label}>
                   <p className="text-[9px] text-slate-400 mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
-                  <p className={cn("font-bold", highlight ? "text-orange-600" : "text-slate-800")}>{value}</p>
+                  <p className={cn("font-bold", highlight ? "text-sky-700" : "text-slate-800")}>{value}</p>
                 </div>
               ))}
             </div>
           </section>
 
+
           {/* ── Planning / Actual + Photos ── */}
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
-                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-pink-500 to-purple-500" />
+              <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                <span className="w-1 h-4 rounded-full bg-indigo-500" />
                 <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Schedule</h3>
               </div>
               <div className="p-4 space-y-4">
                 <div>
-                  <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider mb-2">Planning</p>
+                  <p className="text-[10px] font-bold text-sky-700 uppercase tracking-wider mb-2">Planning</p>
                   <div className="grid grid-cols-4 gap-4 text-[11px]">
                     {[
                       { label: "Departure Date", value: depDate },
@@ -1552,27 +1555,28 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
             {/* Vehicle + Driver photos */}
             <div className="flex gap-3 flex-shrink-0">
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
-                <div className="w-16 h-14 rounded-lg bg-gradient-to-br from-orange-50 to-pink-50 border border-orange-100 flex items-center justify-center mb-1.5">
-                  <Truck className="w-8 h-8 text-orange-500/70" />
+                <div className="w-16 h-14 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center mb-1.5">
+                  <Truck className="w-8 h-8 text-sky-600/80" />
                 </div>
                 <p className="text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Vehicle</p>
                 <p className="text-[11px] font-bold text-slate-800">{trip.vehicle.code}</p>
               </div>
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
-                <div className="w-16 h-14 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 flex items-center justify-center mb-1.5">
-                  <Users className="w-8 h-8 text-purple-500/70" />
+                <div className="w-16 h-14 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-1.5">
+                  <Users className="w-8 h-8 text-indigo-600/80" />
                 </div>
                 <p className="text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Driver</p>
                 <p className="text-[11px] font-bold text-slate-800">{trip.driver.id}</p>
               </div>
             </div>
+
           </div>
 
           {/* ── Transactions card ── */}
           <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
+            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-slate-50">
               <div className="flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-orange-500 via-pink-500 to-purple-500" />
+                <span className="w-1 h-4 rounded-full bg-slate-500" />
                 <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Transactions</h3>
               </div>
               <span className="text-[10px] text-slate-500 font-medium">{trip.stops.length} record{trip.stops.length === 1 ? "" : "s"}</span>
@@ -1595,9 +1599,10 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                     const fpt = s.fromPrevTravelTime ?? (isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`);
                     const wait = s.waitingTime ?? (isOpen ? "—" : "00:15");
                     return (
-                    <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-orange-50/30 transition-colors">
+                    <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors">
                       <td className="px-2 py-2 font-mono font-bold text-center text-slate-700">{s.seq ?? i + 1}</td>
-                      <td className="px-2 py-2 font-mono text-orange-600 font-semibold">{(s as any).docNum ?? s.txn}</td>
+                      <td className="px-2 py-2 font-mono text-sky-700 font-semibold">{(s as any).docNum ?? s.txn}</td>
+
                       <td className="px-2 py-2 text-slate-400">—</td>
                       <td className="px-2 py-2 font-mono text-slate-700">{trip.departSite}</td>
                       <td className="px-2 py-2">
@@ -1629,8 +1634,8 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
               {/* Total Drops */}
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50/60">
-                  <span className="w-1 h-4 rounded-full bg-orange-500" />
+                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                  <span className="w-1 h-4 rounded-full bg-sky-500" />
                   <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Drops</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
@@ -1644,8 +1649,8 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
               </div>
               {/* Total Pickups */}
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-pink-50 to-rose-50/60">
-                  <span className="w-1 h-4 rounded-full bg-pink-500" />
+                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                  <span className="w-1 h-4 rounded-full bg-indigo-500" />
                   <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Pickups</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
@@ -1655,12 +1660,13 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                   <div className="flex justify-between"><span className="text-slate-500">Vehicle Avail Volume</span><span className="font-mono text-slate-700">50000 GAL</span></div>
                 </div>
               </div>
-              {/* Totals — sunset gradient tile */}
+              {/* Totals — deep slate tile */}
               <div
-                className="rounded-xl shadow-lg overflow-hidden text-white relative"
-                style={{ background: "linear-gradient(135deg, #ff6b35 0%, #f7931e 30%, #e84393 70%, #6c5ce7 100%)" }}
+                className="rounded-xl shadow-md overflow-hidden text-white relative"
+                style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%)" }}
               >
-                <div className="px-4 py-2.5 border-b border-white/20 flex items-center gap-2">
+                <div className="px-4 py-2.5 border-b border-white/10 flex items-center gap-2">
+
                   <span className="w-1 h-4 rounded-full bg-white/70" />
                   <h4 className="text-[10px] font-bold uppercase tracking-wider">Summary Totals</h4>
                 </div>
