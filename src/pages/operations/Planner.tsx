@@ -1944,11 +1944,11 @@ export default function Planner() {
 
         try {
           const tripResp = await createTrip({
-            site, docDate: date,
+            site: vehObj?.site ?? site, docDate: date,
             driverId, driverName: driverObj?.name ?? driverId,
             vehicleCode: vehCode,
-            depSite: vehObj ? site : site,
-            arrSite: vehObj ? site : site,
+            depSite: vehObj?.site ?? site,
+            arrSite: vehObj?.site ?? site,
             drops, pickups,
             noOfPackages: routeStops.reduce((n, s) => n + (s.qty || 0), 0),
             startTime, endTime,
