@@ -1915,7 +1915,7 @@ export default function Planner() {
       // ── Build selected vehicles ──────────────────────────────
       const selVehicles = apiVehicles.filter(v => agVehSel.has(v.code));
       const vroomVehicles = selVehicles.map((v, i) => {
-        const startSec = hhmmToSec(v.earliestStartTime ?? "07:00");
+        const startSec = hhmmToSec((v as any).earliestStartTime ?? "07:00");
         return {
           id: i + 1,
           description: v.code,
