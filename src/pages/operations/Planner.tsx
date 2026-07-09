@@ -1385,57 +1385,35 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
       <div className="flex-1 overflow-y-auto">
 
-        {/* ── Full-page header (gradient) ── */}
+        {/* ── Minimal header: Back (left) + Workflow steps (right) ── */}
         <div
           className="relative px-5 py-3 sticky top-0 z-10 shadow-md border-b border-slate-900/10"
           style={{
             background:
-              "linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
+              "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%)",
           }}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             {/* Back button */}
             <button
               onClick={onBack}
-              className="flex items-center gap-1.5 text-[12px] font-semibold text-white/85 hover:text-white bg-white/10 hover:bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-md transition-all"
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-primary-foreground/90 hover:text-primary-foreground bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-md transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
               Back to Planner
             </button>
 
-            {/* Centred title */}
-            <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none">
-              <h2 className="text-base font-bold text-white tracking-tight">Route Management</h2>
-              <p className="text-[11px] text-white/70 font-mono">{trip.id}</p>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
-                {trip.status.toUpperCase()}
-              </span>
-              <Button
-                size="sm"
-                className="h-8 text-[11px] gap-1.5 bg-sky-500 text-white hover:bg-sky-400 border-0 font-semibold shadow-md"
-              >
-                <Truck className="w-3.5 h-3.5" /> Load to Truck
-              </Button>
-            </div>
-          </div>
-
-
-          {/* ── Workflow Timeline ── */}
-          {(() => {
-            const steps = [
-              { key: "lvs",    label: "LVS Creation",  icon: RouteIcon, done: true },
-              { key: "load",   label: "Load Truck",    icon: Truck,     done: trip.status === "Validated" || trip.status === "Locked" },
-              { key: "unload", label: "Unload Vehicle",icon: Package,   done: false },
-            ];
-            const activeIdx = steps.findIndex(s => !s.done);
-            const currentIdx = activeIdx === -1 ? steps.length - 1 : activeIdx;
-            return (
-              <div className="mt-3 pt-3 border-t border-white/20">
-                <div className="flex items-center justify-center gap-0 max-w-3xl mx-auto">
+            {/* Workflow steps (right) */}
+            {(() => {
+              const steps = [
+                { key: "lvs",    label: "LVS Creation",  icon: RouteIcon, done: true },
+                { key: "load",   label: "Load Truck",    icon: Truck,     done: trip.status === "Validated" || trip.status === "Locked" },
+                { key: "unload", label: "Unload Vehicle",icon: Package,   done: false },
+              ];
+              const activeIdx = steps.findIndex(s => !s.done);
+              const currentIdx = activeIdx === -1 ? steps.length - 1 : activeIdx;
+              return (
+                <div className="flex items-center gap-1.5">
                   {steps.map((s, i) => {
                     const Icon = s.icon;
                     const isActive = i === currentIdx;
@@ -1444,40 +1422,25 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                       <React.Fragment key={s.key}>
                         <button
                           className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap",
-                            isDone && "bg-white text-emerald-700 shadow-sm",
-                            isActive && !isDone && "bg-white text-sky-700 ring-2 ring-sky-300/60 shadow-sm",
-                            !isDone && !isActive && "bg-white/10 text-white/60 hover:bg-white/15 backdrop-blur-sm",
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap",
+                            isDone && "bg-white text-primary shadow-sm",
+                            isActive && !isDone && "bg-white text-primary ring-2 ring-white/50 shadow-sm",
+                            !isDone && !isActive && "bg-white/10 text-primary-foreground/70 hover:bg-white/20",
                           )}
                         >
-                          <span
-                            className={cn(
-                              "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
-                              isDone && "bg-emerald-500 text-white",
-                              isActive && !isDone && "bg-sky-500 text-white",
-                              !isDone && !isActive && "bg-white/15 text-white/70",
-                            )}
-                          >
-                            {isDone ? <CheckCheck className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
-                          </span>
+                          <Icon className="w-3.5 h-3.5" />
                           {s.label}
                         </button>
                         {i < steps.length - 1 && (
-                          <div className="flex-1 max-w-[80px] h-[2px] mx-1 rounded-full bg-white/15 overflow-hidden">
-                            <div
-                              className="h-full bg-emerald-400 transition-all"
-                              style={{ width: steps[i].done ? "100%" : "0%" }}
-                            />
-                          </div>
+                          <div className="w-6 h-[2px] rounded-full bg-white/25" />
                         )}
-
                       </React.Fragment>
                     );
                   })}
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
+          </div>
         </div>
 
         <div className="p-5 space-y-4 bg-muted/40 min-h-full">
