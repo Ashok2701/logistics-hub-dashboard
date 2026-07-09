@@ -1574,9 +1574,9 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
 
           {/* ── Transactions card ── */}
           <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
+            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-slate-50">
               <div className="flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-orange-500 via-pink-500 to-purple-500" />
+                <span className="w-1 h-4 rounded-full bg-slate-500" />
                 <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Transactions</h3>
               </div>
               <span className="text-[10px] text-slate-500 font-medium">{trip.stops.length} record{trip.stops.length === 1 ? "" : "s"}</span>
@@ -1599,9 +1599,10 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                     const fpt = s.fromPrevTravelTime ?? (isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`);
                     const wait = s.waitingTime ?? (isOpen ? "—" : "00:15");
                     return (
-                    <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-orange-50/30 transition-colors">
+                    <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors">
                       <td className="px-2 py-2 font-mono font-bold text-center text-slate-700">{s.seq ?? i + 1}</td>
-                      <td className="px-2 py-2 font-mono text-orange-600 font-semibold">{(s as any).docNum ?? s.txn}</td>
+                      <td className="px-2 py-2 font-mono text-sky-700 font-semibold">{(s as any).docNum ?? s.txn}</td>
+
                       <td className="px-2 py-2 text-slate-400">—</td>
                       <td className="px-2 py-2 font-mono text-slate-700">{trip.departSite}</td>
                       <td className="px-2 py-2">
