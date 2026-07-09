@@ -298,6 +298,7 @@ export const tripApi = {
   createTrip,
   loadTrips,
   getTripById,
+  getTripByCode,
   updateTripStatus,
   optimiseTrip: (tripCode: string, payloadOrOrderMode: OptimisePayload | string, startTime?: string): Promise<TripRecord> => {
     if (typeof payloadOrOrderMode === "string") {
