@@ -2705,8 +2705,8 @@ export default function Planner() {
           serviceTime: secToHHMM(st.service),
           waitingTime: secToHHMM(st.waiting_time ?? 0),
         }));
-        if (t.tripId != null) {
-          const resp = await tripApi.optimiseTrip(t.tripId, {
+        if (t.tripCode) {
+          const resp = await tripApi.optimiseTrip(t.tripCode, {
             orderMode: "auto", startTime: "07:30", endTime,
             travelTime: travelHHMM, totalTime: travelHHMM,
             totalDistance: totalDistKm, uomDistance: "km",
