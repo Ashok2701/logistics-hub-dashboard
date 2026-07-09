@@ -64,7 +64,7 @@ export default function Vehicles() {
   const [view, setView] = useState<"list" | "form">("list");
   const [rows, setRows] = useState<Vehicle[]>([]);
   const [categories, setCategories] = useState<VehicleCategory[]>([]);
-  const [sites, setSites] = useState<Site[]>([]);
+  const [sites, setSites] = useState<RpSite[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -78,7 +78,7 @@ export default function Vehicles() {
       const [vs, cs, ss] = await Promise.all([
         vehicleApi.list(),
         vehicleCategoryApi.list().catch(() => [] as VehicleCategory[]),
-        siteApi.list().catch(() => [] as Site[]),
+        fetchTmsSites().catch(() => [] as RpSite[]),
       ]);
       setRows(vs || []);
       setCategories(cs || []);
@@ -89,7 +89,7 @@ export default function Vehicles() {
   useEffect(() => { load(); }, []);
 
   const siteMap = useMemo(() => {
-    const m = new Map<string, Site>();
+    const m = new Map<string, RpSite>();
     sites.forEach((s) => m.set(s.siteCode, s));
     return m;
   }, [sites]);
@@ -289,15 +289,15 @@ export default function Vehicles() {
               </div>
             </SectionCard>
 
-            <SectionCard title="Site Assignment" icon={<MapPin className="w-4 h-4" />} accent="from-amber-500 to-orange-500">
+            <SectionCard title="RpSite Assignment" icon={<MapPin className="w-4 h-4" />} accent="from-amber-500 to-orange-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Field label="Home Site" icon={<Building2 className="w-3.5 h-3.5" />}>
+                <Field label="Home RpSite" icon={<Building2 className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.site} onChange={(v) => upd("site", v)} sites={sites} />
                 </Field>
-                <Field label="Departure Site" icon={<LogOut className="w-3.5 h-3.5" />}>
+                <Field label="Departure RpSite" icon={<LogOut className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.departureSite} onChange={(v) => upd("departureSite", v)} sites={sites} />
                 </Field>
-                <Field label="Arrival Site" icon={<LogIn className="w-3.5 h-3.5" />}>
+                <Field label="Arrival RpSite" icon={<LogIn className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.arrivalSite} onChange={(v) => upd("arrivalSite", v)} sites={sites} />
                 </Field>
               </div>
@@ -383,7 +383,7 @@ export default function Vehicles() {
               <SortableTh sortKey="vehicleName" sort={sort}>Name</SortableTh>
               <SortableTh sortKey="vehicleNumber" sort={sort}>Number</SortableTh>
               <SortableTh sortKey="categoryCode" sort={sort}>Category</SortableTh>
-              <SortableTh sortKey="site" sort={sort}>Site</SortableTh>
+              <SortableTh sortKey="site" sort={sort}>RpSite</SortableTh>
               <SortableTh sortKey="brand" sort={sort}>Brand</SortableTh>
               <SortableTh sortKey="model" sort={sort}>Model</SortableTh>
               <SortableTh sortKey="capacityWeight" sort={sort}>Cap Wt</SortableTh>
@@ -466,7 +466,7 @@ function Field({ label, icon, children, className }: { label: string; icon?: Rea
   );
 }
 
-function SiteSelect({ value, onChange, sites }: { value: string; onChange: (v: string) => void; sites: Site[] }) {
+function SiteSelect({ value, onChange, sites }: { value: string; onChange: (v: string) => void; sites: RpSite[] }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} className="form-input">
       <option value="">Select site…</option>
@@ -479,7 +479,7 @@ function SiteSelect({ value, onChange, sites }: { value: string; onChange: (v: s
   );
 }
 
-function SiteChip({ label, site, tone }: { label: string; site: Site | undefined; tone: "amber" | "blue" | "emerald" }) {
+function SiteChip({ label, site, tone }: { label: string; site: RpSite | undefined; tone: "amber" | "blue" | "emerald" }) {
   if (!site) return null;
   const tones = {
     amber: "from-amber-500/10 to-orange-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300",
