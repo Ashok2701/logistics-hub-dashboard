@@ -1860,7 +1860,7 @@ export default function Planner() {
       // ── Build selected vehicles ──────────────────────────────
       const selVehicles = apiVehicles.filter(v => agVehSel.has(v.code));
       const vroomVehicles = selVehicles.map((v, i) => {
-        const startSec = hhmmToSec("07:00");  // RpVehicle has no startTime
+        const startSec = hhmmToSec(v.earliestStartTime ?? "07:00");
         return {
           id: i + 1,
           description: v.code,
@@ -1944,11 +1944,11 @@ export default function Planner() {
 
         try {
           const tripResp = await createTrip({
-            site: vehObj?.site ?? site, docDate: date,
+            site: vehObj?.siteCode ?? site, docDate: date,
             driverId, driverName: driverObj?.name ?? driverId,
             vehicleCode: vehCode,
-            depSite: vehObj?.departureSite ?? vehObj?.site ?? site,
-            arrSite: vehObj?.arrivalSite  ?? vehObj?.site ?? site,
+            depSite: vehObj?.startDepot ?? vehObj?.siteCode ?? site,
+            arrSite: vehObj?.endDepot    ?? vehObj?.siteCode ?? site,
             drops, pickups,
             noOfPackages: routeStops.reduce((n, s) => n + (s.qty || 0), 0),
             startTime, endTime,
