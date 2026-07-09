@@ -53,7 +53,13 @@ export interface RpVehicle {
   model:                string | null;
   vehicleYear:          number | null;
   color:                string | null;
-  site:                 string | null;   // site/facility code
+  site:                 string | null;
+  departureSite:        string | null;
+  arrivalSite:          string | null;
+  imageUrl:             string | null;
+  startTime:            string | null;   // HH:MM e.g. "07:00"
+  maxPallets:           number | null;
+  maxCases:             number | null;
   capacityWeight:       number | null;
   capacityVolume:       number | null;
   volumeUnit:           string | null;
