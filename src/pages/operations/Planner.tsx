@@ -1484,8 +1484,8 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
 
           {/* ── Route info card ── */}
           <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
-              <span className="w-1 h-4 rounded-full bg-gradient-to-b from-orange-500 to-pink-500" />
+            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+              <span className="w-1 h-4 rounded-full bg-sky-500" />
               <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Route Information</h3>
             </div>
             <div className="p-4 grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
@@ -1507,11 +1507,12 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
               ].map(({ label, value, highlight }) => (
                 <div key={label}>
                   <p className="text-[9px] text-slate-400 mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
-                  <p className={cn("font-bold", highlight ? "text-orange-600" : "text-slate-800")}>{value}</p>
+                  <p className={cn("font-bold", highlight ? "text-sky-700" : "text-slate-800")}>{value}</p>
                 </div>
               ))}
             </div>
           </section>
+
 
           {/* ── Planning / Actual + Photos ── */}
           <div className="grid grid-cols-[1fr_auto] gap-4">
