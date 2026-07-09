@@ -2630,7 +2630,7 @@ export default function Planner() {
         for (let i = 0; i < eligible.length; i++) {
           const t = eligible[i];
           try {
-            if (t.tripId != null) await tripApi.deleteTrip(t.tripId);
+            if (t.tripCode) await tripApi.deleteTrip(t.tripCode);
             setTrips((prev) => prev.filter((x) => x.id !== t.id));
             setSelectedTripIds((prev) => { const n = new Set(prev); n.delete(t.id); return n; });
             if (selectedTripId === t.id) { setSelectedTripId(null); clearDraft(); }
