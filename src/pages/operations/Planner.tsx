@@ -1242,17 +1242,17 @@ function ActiveTourPanel({
                       cost: "",
                     });
 
-                    // Persist to backend if tripId available
-                    if (activeTripId) {
+                    // Persist to backend if tripCode available
+                    if (activeTripCode) {
                       const { optimiseTrip } = await import("@/lib/tripApi");
-                      await optimiseTrip(activeTripId, {
+                      await optimiseTrip(activeTripCode, {
                         orderMode: optOrder, startTime: optStartTime, endTime,
                         travelTime: travelHHMM, totalTime: travelHHMM,
                         totalDistance: totalDistKm, uomDistance: "km",
                         totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
                         stopResults,
                       });
-                      onTripOptimised?.(activeTripId, stopResults, { distanceKm: Number(totalDistKm), travelTime: travelHHMM, endTime });
+                      if (activeTripId != null) onTripOptimised?.(activeTripId, stopResults, { distanceKm: Number(totalDistKm), travelTime: travelHHMM, endTime });
                     }
 
                     toast({ title: "Optimisation complete ✓",
