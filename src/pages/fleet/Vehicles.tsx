@@ -11,9 +11,10 @@ import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { cn } from "@/lib/utils";
 import {
-  vehicleApi, vehicleCategoryApi, siteApi,
-  type Vehicle, type VehicleCategory, type Site,
+  vehicleApi, vehicleCategoryApi,
+  type Vehicle, type VehicleCategory,
 } from "@/lib/fleetApi";
+import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
 
 interface FormState {
   vehicleCode: string;
@@ -63,7 +64,7 @@ export default function Vehicles() {
   const [view, setView] = useState<"list" | "form">("list");
   const [rows, setRows] = useState<Vehicle[]>([]);
   const [categories, setCategories] = useState<VehicleCategory[]>([]);
-  const [sites, setSites] = useState<Site[]>([]);
+  const [sites, setSites] = useState<RpSite[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -77,7 +78,7 @@ export default function Vehicles() {
       const [vs, cs, ss] = await Promise.all([
         vehicleApi.list(),
         vehicleCategoryApi.list().catch(() => [] as VehicleCategory[]),
-        siteApi.list().catch(() => [] as Site[]),
+        fetchTmsSites().catch(() => [] as RpSite[]),
       ]);
       setRows(vs || []);
       setCategories(cs || []);
@@ -88,7 +89,7 @@ export default function Vehicles() {
   useEffect(() => { load(); }, []);
 
   const siteMap = useMemo(() => {
-    const m = new Map<string, Site>();
+    const m = new Map<string, RpSite>();
     sites.forEach((s) => m.set(s.siteCode, s));
     return m;
   }, [sites]);
@@ -465,7 +466,7 @@ function Field({ label, icon, children, className }: { label: string; icon?: Rea
   );
 }
 
-function SiteSelect({ value, onChange, sites }: { value: string; onChange: (v: string) => void; sites: Site[] }) {
+function SiteSelect({ value, onChange, sites }: { value: string; onChange: (v: string) => void; sites: RpSite[] }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} className="form-input">
       <option value="">Select site…</option>
@@ -478,7 +479,7 @@ function SiteSelect({ value, onChange, sites }: { value: string; onChange: (v: s
   );
 }
 
-function SiteChip({ label, site, tone }: { label: string; site: Site | undefined; tone: "amber" | "blue" | "emerald" }) {
+function SiteChip({ label, site, tone }: { label: string; site: RpSite | undefined; tone: "amber" | "blue" | "emerald" }) {
   if (!site) return null;
   const tones = {
     amber: "from-amber-500/10 to-orange-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300",
