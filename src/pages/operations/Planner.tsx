@@ -1517,13 +1517,13 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
           {/* ── Planning / Actual + Photos ── */}
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
-                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-pink-500 to-purple-500" />
+              <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                <span className="w-1 h-4 rounded-full bg-indigo-500" />
                 <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Schedule</h3>
               </div>
               <div className="p-4 space-y-4">
                 <div>
-                  <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider mb-2">Planning</p>
+                  <p className="text-[10px] font-bold text-sky-700 uppercase tracking-wider mb-2">Planning</p>
                   <div className="grid grid-cols-4 gap-4 text-[11px]">
                     {[
                       { label: "Departure Date", value: depDate },
@@ -1555,20 +1555,21 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
             {/* Vehicle + Driver photos */}
             <div className="flex gap-3 flex-shrink-0">
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
-                <div className="w-16 h-14 rounded-lg bg-gradient-to-br from-orange-50 to-pink-50 border border-orange-100 flex items-center justify-center mb-1.5">
-                  <Truck className="w-8 h-8 text-orange-500/70" />
+                <div className="w-16 h-14 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center mb-1.5">
+                  <Truck className="w-8 h-8 text-sky-600/80" />
                 </div>
                 <p className="text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Vehicle</p>
                 <p className="text-[11px] font-bold text-slate-800">{trip.vehicle.code}</p>
               </div>
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
-                <div className="w-16 h-14 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 flex items-center justify-center mb-1.5">
-                  <Users className="w-8 h-8 text-purple-500/70" />
+                <div className="w-16 h-14 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-1.5">
+                  <Users className="w-8 h-8 text-indigo-600/80" />
                 </div>
                 <p className="text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Driver</p>
                 <p className="text-[11px] font-bold text-slate-800">{trip.driver.id}</p>
               </div>
             </div>
+
           </div>
 
           {/* ── Transactions card ── */}
