@@ -2485,9 +2485,9 @@ export default function Planner() {
 
   async function performDeleteTrip(id: string) {
     const t = trips.find((x) => x.id === id);
-    if (t?.tripId != null) {
+    if (t?.tripCode) {
       try {
-        await tripApi.deleteTrip(t.tripId);
+        await tripApi.deleteTrip(t.tripCode);
       } catch (e: any) {
         toast({ title: "Delete failed", description: e?.message ?? "Unknown error", variant: "destructive" });
         return;
