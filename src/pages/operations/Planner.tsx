@@ -1444,18 +1444,18 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                       <React.Fragment key={s.key}>
                         <button
                           className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap shadow-sm",
-                            isDone && "bg-white text-emerald-600 hover:shadow-md",
-                            isActive && !isDone && "bg-white/95 text-purple-700 ring-2 ring-white/60 hover:shadow-md",
-                            !isDone && !isActive && "bg-white/15 text-white/70 hover:bg-white/25 backdrop-blur-sm",
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap",
+                            isDone && "bg-white text-emerald-700 shadow-sm",
+                            isActive && !isDone && "bg-white text-sky-700 ring-2 ring-sky-300/60 shadow-sm",
+                            !isDone && !isActive && "bg-white/10 text-white/60 hover:bg-white/15 backdrop-blur-sm",
                           )}
                         >
                           <span
                             className={cn(
                               "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
                               isDone && "bg-emerald-500 text-white",
-                              isActive && !isDone && "bg-purple-600 text-white",
-                              !isDone && !isActive && "bg-white/20 text-white",
+                              isActive && !isDone && "bg-sky-500 text-white",
+                              !isDone && !isActive && "bg-white/15 text-white/70",
                             )}
                           >
                             {isDone ? <CheckCheck className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
@@ -1463,13 +1463,14 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                           {s.label}
                         </button>
                         {i < steps.length - 1 && (
-                          <div className="flex-1 max-w-[80px] h-[2px] mx-1 rounded-full bg-white/20 overflow-hidden">
+                          <div className="flex-1 max-w-[80px] h-[2px] mx-1 rounded-full bg-white/15 overflow-hidden">
                             <div
-                              className="h-full bg-white transition-all"
+                              className="h-full bg-emerald-400 transition-all"
                               style={{ width: steps[i].done ? "100%" : "0%" }}
                             />
                           </div>
                         )}
+
                       </React.Fragment>
                     );
                   })}
