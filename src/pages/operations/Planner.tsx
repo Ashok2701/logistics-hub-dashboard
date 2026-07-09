@@ -1387,17 +1387,17 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
 
         {/* ── Full-page header (gradient) ── */}
         <div
-          className="relative px-5 py-3 sticky top-0 z-10 shadow-lg border-b border-white/10"
+          className="relative px-5 py-3 sticky top-0 z-10 shadow-md border-b border-slate-900/10"
           style={{
             background:
-              "linear-gradient(135deg, #ff6b35 0%, #f7931e 35%, #e84393 70%, #6c5ce7 100%)",
+              "linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
           }}
         >
           <div className="flex items-center justify-between">
             {/* Back button */}
             <button
               onClick={onBack}
-              className="flex items-center gap-1.5 text-[12px] font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-md transition-all"
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-white/85 hover:text-white bg-white/10 hover:bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-md transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
               Back to Planner
@@ -1405,23 +1405,24 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
 
             {/* Centred title */}
             <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none">
-              <h2 className="text-base font-bold text-white tracking-tight drop-shadow-sm">Route Management</h2>
-              <p className="text-[11px] text-white/80 font-mono">{trip.id}</p>
+              <h2 className="text-base font-bold text-white tracking-tight">Route Management</h2>
+              <p className="text-[11px] text-white/70 font-mono">{trip.id}</p>
             </div>
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-white/95 text-orange-600 shadow-sm">
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
                 {trip.status.toUpperCase()}
               </span>
               <Button
                 size="sm"
-                className="h-8 text-[11px] gap-1.5 bg-white text-orange-600 hover:bg-white/95 border-0 font-semibold shadow-md"
+                className="h-8 text-[11px] gap-1.5 bg-sky-500 text-white hover:bg-sky-400 border-0 font-semibold shadow-md"
               >
                 <Truck className="w-3.5 h-3.5" /> Load to Truck
               </Button>
             </div>
           </div>
+
 
           {/* ── Workflow Timeline ── */}
           {(() => {
