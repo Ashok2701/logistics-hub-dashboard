@@ -289,15 +289,15 @@ export default function Vehicles() {
               </div>
             </SectionCard>
 
-            <SectionCard title="RpSite Assignment" icon={<MapPin className="w-4 h-4" />} accent="from-amber-500 to-orange-500">
+            <SectionCard title="Site Assignment" icon={<MapPin className="w-4 h-4" />} accent="from-amber-500 to-orange-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Field label="Home RpSite" icon={<Building2 className="w-3.5 h-3.5" />}>
+                <Field label="Home Site" icon={<Building2 className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.site} onChange={(v) => upd("site", v)} sites={sites} />
                 </Field>
-                <Field label="Departure RpSite" icon={<LogOut className="w-3.5 h-3.5" />}>
+                <Field label="Departure Site" icon={<LogOut className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.departureSite} onChange={(v) => upd("departureSite", v)} sites={sites} />
                 </Field>
-                <Field label="Arrival RpSite" icon={<LogIn className="w-3.5 h-3.5" />}>
+                <Field label="Arrival Site" icon={<LogIn className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.arrivalSite} onChange={(v) => upd("arrivalSite", v)} sites={sites} />
                 </Field>
               </div>
@@ -383,7 +383,7 @@ export default function Vehicles() {
               <SortableTh sortKey="vehicleName" sort={sort}>Name</SortableTh>
               <SortableTh sortKey="vehicleNumber" sort={sort}>Number</SortableTh>
               <SortableTh sortKey="categoryCode" sort={sort}>Category</SortableTh>
-              <SortableTh sortKey="site" sort={sort}>RpSite</SortableTh>
+              <SortableTh sortKey="site" sort={sort}>Site</SortableTh>
               <SortableTh sortKey="brand" sort={sort}>Brand</SortableTh>
               <SortableTh sortKey="model" sort={sort}>Model</SortableTh>
               <SortableTh sortKey="capacityWeight" sort={sort}>Cap Wt</SortableTh>
