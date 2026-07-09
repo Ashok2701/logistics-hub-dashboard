@@ -3254,9 +3254,9 @@ export default function Planner() {
                                 className="flex items-center justify-center w-9 h-9 rounded-lg border border-input bg-white text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 shadow-sm"
                                 onClick={async (e) => {
                                   e.stopPropagation();
-                                  if (t.tripId != null) {
+                                  if (t.tripCode) {
                                     try {
-                                      const resp = await tripApi.getTripById(t.tripId);
+                                      const resp = await tripApi.getTripByCode(t.tripCode);
                                       setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
                                     } catch (err: any) {
                                       toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
