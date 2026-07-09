@@ -10,6 +10,29 @@ import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
 import { fetchDashboard, type DashboardResponse, type KpiMetric } from "@/lib/dashboardApi";
 import { useToast } from "@/hooks/use-toast";
 
+type Preset = "today" | "week" | "month" | "custom";
+
+function startOfWeek(d: Date) {
+  const x = new Date(d);
+  const day = x.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  x.setDate(x.getDate() + diff);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+function rangeForPreset(preset: Preset, custom?: { from?: Date; to?: Date }): { from: Date; to: Date } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (preset === "today") return { from: today, to: today };
+  if (preset === "week") return { from: startOfWeek(today), to: today };
+  if (preset === "month") return { from: startOfMonth(today), to: today };
+  return { from: custom?.from ?? today, to: custom?.to ?? today };
+}
+
+
 type Trend = { value: string; tone: "positive" | "warning" | "neutral" };
 
 const trendTone: Record<Trend["tone"], string> = {
