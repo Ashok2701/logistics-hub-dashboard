@@ -182,29 +182,59 @@ export default function Dashboard() {
           </PopoverContent>
         </Popover>
 
-        {/* Date picker */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="h-10 gap-2">
-              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">{format(date, "EEE, MMM d, yyyy")}</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => d && setDate(d)}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
+        {/* Date preset */}
+        <div className="flex items-center gap-1 bg-secondary/60 rounded-lg p-1">
+          {(["today", "week", "month", "custom"] as Preset[]).map((p) => {
+            const labels: Record<Preset, string> = { today: "Today", week: "This Week", month: "This Month", custom: "Custom Range" };
+            return (
+              <button
+                key={p}
+                onClick={() => setPreset(p)}
+                className={cn(
+                  "px-3 h-8 rounded-md text-xs font-medium transition-colors",
+                  preset === p ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {labels[p]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom range picker */}
+        {preset === "custom" && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 gap-2">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">
+                  {customRange.from && customRange.to
+                    ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d")}`
+                    : "Pick range"}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={{ from: customRange.from, to: customRange.to }}
+                onSelect={(r: any) => setCustomRange({ from: r?.from, to: r?.to })}
+                numberOfMonths={2}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
 
         <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
           {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          <span className="font-mono">{format(date, "yyyy-MM-dd")}</span>
+          <CalendarIcon className="w-3.5 h-3.5" />
+          <span className="font-mono">
+            {format(from, "yyyy-MM-dd")} → {format(to, "yyyy-MM-dd")}
+          </span>
         </div>
+
       </motion.div>
 
       {/* KPI cards */}
