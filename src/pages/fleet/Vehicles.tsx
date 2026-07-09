@@ -519,18 +519,18 @@ function SiteSelect({ value, onChange, sites }: { value: string; onChange: (v: s
   );
 }
 
-function SiteChip({ label, site, tone }: { label: string; site: RpSite | undefined; tone: "amber" | "blue" | "emerald" }) {
+function SiteChip({ label, site, tone }: { label: string; site: RpSite | undefined; tone: "amber" | "pink" | "violet" }) {
   if (!site) return null;
   const tones = {
-    amber: "from-amber-500/10 to-orange-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300",
-    blue: "from-blue-500/10 to-indigo-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300",
-    emerald: "from-emerald-500/10 to-teal-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300",
+    amber: "from-[#ff6b35]/15 to-[#f7931e]/10 border-[#ff6b35]/40 text-[#c2410c] dark:text-[#fdba74]",
+    pink: "from-[#e84393]/15 to-[#ff6b35]/10 border-[#e84393]/40 text-[#be185d] dark:text-[#f9a8d4]",
+    violet: "from-[#6c5ce7]/15 to-[#e84393]/10 border-[#6c5ce7]/40 text-[#5b21b6] dark:text-[#c4b5fd]",
   }[tone];
   return (
-    <div className={cn("rounded-lg border bg-gradient-to-br p-3", tones)}>
-      <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</div>
-      <div className="text-sm font-semibold mt-0.5">{site.siteName}</div>
-      <div className="text-[11px] opacity-70 font-mono">{site.siteCode}</div>
+    <div className={cn("rounded-xl border bg-gradient-to-br p-3.5 shadow-sm", tones)}>
+      <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">{label}</div>
+      <div className="text-sm font-semibold mt-1">{site.siteName}</div>
+      <div className="text-[11px] opacity-70 font-mono mt-0.5">{site.siteCode}</div>
       {site.city && <div className="text-[11px] opacity-70 mt-0.5">{site.city}{site.countryCode ? `, ${site.countryCode}` : ""}</div>}
     </div>
   );
