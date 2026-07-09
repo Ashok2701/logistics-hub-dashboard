@@ -64,7 +64,10 @@ export default function Dashboard() {
 
   const [sites, setSites] = useState<RpSite[]>([]);
   const [selectedSite, setSelectedSite] = useState<string>(ALL_SITES);
-  const [date, setDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
+  const [preset, setPreset] = useState<Preset>("today");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+
+  const { from, to } = useMemo(() => rangeForPreset(preset, customRange), [preset, customRange]);
 
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,19 +79,21 @@ export default function Dashboard() {
       .catch((e) => toast({ title: "Failed to load sites", description: String(e.message ?? e), variant: "destructive" }));
   }, [toast]);
 
-  // Fetch dashboard whenever site / date changes
+  // Fetch dashboard whenever site / date range changes
   useEffect(() => {
-    const dateStr = format(date, "yyyy-MM-dd");
+    const startDate = format(from, "yyyy-MM-dd");
+    const endDate = format(to, "yyyy-MM-dd");
     const siteParam = selectedSite === ALL_SITES ? null : selectedSite;
     setLoading(true);
-    fetchDashboard(siteParam, dateStr)
+    fetchDashboard(siteParam, startDate, endDate)
       .then(setData)
       .catch((e) => {
         setData(null);
         toast({ title: "Failed to load dashboard", description: String(e.message ?? e), variant: "destructive" });
       })
       .finally(() => setLoading(false));
-  }, [selectedSite, date, toast]);
+  }, [selectedSite, from, to, toast]);
+
 
   const siteLabel = useMemo(() => {
     if (selectedSite === ALL_SITES) return "All sites";
