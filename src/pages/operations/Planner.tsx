@@ -1634,8 +1634,8 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
               {/* Total Drops */}
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50/60">
-                  <span className="w-1 h-4 rounded-full bg-orange-500" />
+                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                  <span className="w-1 h-4 rounded-full bg-sky-500" />
                   <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Drops</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
@@ -1649,8 +1649,8 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
               </div>
               {/* Total Pickups */}
               <div className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-pink-50 to-rose-50/60">
-                  <span className="w-1 h-4 rounded-full bg-pink-500" />
+                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                  <span className="w-1 h-4 rounded-full bg-indigo-500" />
                   <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Pickups</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
@@ -1660,12 +1660,13 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                   <div className="flex justify-between"><span className="text-slate-500">Vehicle Avail Volume</span><span className="font-mono text-slate-700">50000 GAL</span></div>
                 </div>
               </div>
-              {/* Totals — sunset gradient tile */}
+              {/* Totals — deep slate tile */}
               <div
-                className="rounded-xl shadow-lg overflow-hidden text-white relative"
-                style={{ background: "linear-gradient(135deg, #ff6b35 0%, #f7931e 30%, #e84393 70%, #6c5ce7 100%)" }}
+                className="rounded-xl shadow-md overflow-hidden text-white relative"
+                style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%)" }}
               >
-                <div className="px-4 py-2.5 border-b border-white/20 flex items-center gap-2">
+                <div className="px-4 py-2.5 border-b border-white/10 flex items-center gap-2">
+
                   <span className="w-1 h-4 rounded-full bg-white/70" />
                   <h4 className="text-[10px] font-bold uppercase tracking-wider">Summary Totals</h4>
                 </div>
