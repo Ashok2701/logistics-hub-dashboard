@@ -48,11 +48,13 @@ export interface DashboardResponse {
   driverHours:     DriverHoursDTO;
 }
 
-/** GET /api/v1/dashboard?site=X&date=YYYY-MM-DD  (site optional = All sites) */
-export function fetchDashboard(site: string | null, date: string): Promise<DashboardResponse> {
+/** GET /api/v1/dashboard?site=X&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD  (site optional = All sites) */
+export function fetchDashboard(site: string | null, startDate: string, endDate?: string): Promise<DashboardResponse> {
   const params = new URLSearchParams();
   if (site) params.set("site", site);
-  if (date) params.set("date", date);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
   const qs = params.toString();
   return request<DashboardResponse>(`/v1/dashboard${qs ? `?${qs}` : ""}`);
 }
+

@@ -10,6 +10,29 @@ import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
 import { fetchDashboard, type DashboardResponse, type KpiMetric } from "@/lib/dashboardApi";
 import { useToast } from "@/hooks/use-toast";
 
+type Preset = "today" | "week" | "month" | "custom";
+
+function startOfWeek(d: Date) {
+  const x = new Date(d);
+  const day = x.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  x.setDate(x.getDate() + diff);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+function rangeForPreset(preset: Preset, custom?: { from?: Date; to?: Date }): { from: Date; to: Date } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (preset === "today") return { from: today, to: today };
+  if (preset === "week") return { from: startOfWeek(today), to: today };
+  if (preset === "month") return { from: startOfMonth(today), to: today };
+  return { from: custom?.from ?? today, to: custom?.to ?? today };
+}
+
+
 type Trend = { value: string; tone: "positive" | "warning" | "neutral" };
 
 const trendTone: Record<Trend["tone"], string> = {
@@ -41,7 +64,10 @@ export default function Dashboard() {
 
   const [sites, setSites] = useState<RpSite[]>([]);
   const [selectedSite, setSelectedSite] = useState<string>(ALL_SITES);
-  const [date, setDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
+  const [preset, setPreset] = useState<Preset>("today");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+
+  const { from, to } = useMemo(() => rangeForPreset(preset, customRange), [preset, customRange]);
 
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,19 +79,21 @@ export default function Dashboard() {
       .catch((e) => toast({ title: "Failed to load sites", description: String(e.message ?? e), variant: "destructive" }));
   }, [toast]);
 
-  // Fetch dashboard whenever site / date changes
+  // Fetch dashboard whenever site / date range changes
   useEffect(() => {
-    const dateStr = format(date, "yyyy-MM-dd");
+    const startDate = format(from, "yyyy-MM-dd");
+    const endDate = format(to, "yyyy-MM-dd");
     const siteParam = selectedSite === ALL_SITES ? null : selectedSite;
     setLoading(true);
-    fetchDashboard(siteParam, dateStr)
+    fetchDashboard(siteParam, startDate, endDate)
       .then(setData)
       .catch((e) => {
         setData(null);
         toast({ title: "Failed to load dashboard", description: String(e.message ?? e), variant: "destructive" });
       })
       .finally(() => setLoading(false));
-  }, [selectedSite, date, toast]);
+  }, [selectedSite, from, to, toast]);
+
 
   const siteLabel = useMemo(() => {
     if (selectedSite === ALL_SITES) return "All sites";
@@ -154,29 +182,59 @@ export default function Dashboard() {
           </PopoverContent>
         </Popover>
 
-        {/* Date picker */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="h-10 gap-2">
-              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">{format(date, "EEE, MMM d, yyyy")}</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => d && setDate(d)}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
+        {/* Date preset */}
+        <div className="flex items-center gap-1 bg-secondary/60 rounded-lg p-1">
+          {(["today", "week", "month", "custom"] as Preset[]).map((p) => {
+            const labels: Record<Preset, string> = { today: "Today", week: "This Week", month: "This Month", custom: "Custom Range" };
+            return (
+              <button
+                key={p}
+                onClick={() => setPreset(p)}
+                className={cn(
+                  "px-3 h-8 rounded-md text-xs font-medium transition-colors",
+                  preset === p ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {labels[p]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom range picker */}
+        {preset === "custom" && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 gap-2">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">
+                  {customRange.from && customRange.to
+                    ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d")}`
+                    : "Pick range"}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={{ from: customRange.from, to: customRange.to }}
+                onSelect={(r: any) => setCustomRange({ from: r?.from, to: r?.to })}
+                numberOfMonths={2}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
 
         <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
           {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          <span className="font-mono">{format(date, "yyyy-MM-dd")}</span>
+          <CalendarIcon className="w-3.5 h-3.5" />
+          <span className="font-mono">
+            {format(from, "yyyy-MM-dd")} → {format(to, "yyyy-MM-dd")}
+          </span>
         </div>
+
       </motion.div>
 
       {/* KPI cards */}
