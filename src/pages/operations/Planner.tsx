@@ -1168,41 +1168,6 @@ function ActiveTourPanel({
               </div>
 
 
-              {/* Stop sequence road */}
-              {stops.length > 0 && (
-                <div>
-                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Stop Sequence</p>
-                  <div className="flex items-center gap-0 rounded-xl border border-gray-100 px-3 py-2.5 overflow-x-auto" style={{ background: "#f8fafc" }}>
-                    {/* Depot start */}
-                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                        style={{ background: "#1e40af", boxShadow: "0 2px 6px rgba(30,64,175,.3)" }}>🏠</div>
-                      <span className="text-[7px] text-gray-400 font-mono">{optStartTime}</span>
-                    </div>
-                    {stops.map((s, i) => (
-                      <div key={s.id} className="flex items-center flex-shrink-0">
-                        <div className="flex-1 h-0.5 w-6" style={{ background: "linear-gradient(to right,#dbeafe,#bfdbfe)" }} />
-                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                            style={{
-                              background: s.type === "DROP" ? "#e11d48" : "#0284c7",
-                              boxShadow: `0 2px 6px ${s.type === "DROP" ? "rgba(225,29,72,.3)" : "rgba(2,132,199,.3)"}`,
-                            }}>{i + 1}</div>
-                          <span className="text-[7px] text-gray-400 uppercase tracking-wide">{s.type}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex items-center flex-shrink-0">
-                      <div className="flex-1 h-0.5 w-6" style={{ background: "linear-gradient(to right,#dbeafe,#bfdbfe)" }} />
-                      <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                          style={{ background: "#1e40af", boxShadow: "0 2px 6px rgba(30,64,175,.3)" }}>🏠</div>
-                        <span className="text-[7px] text-gray-400 font-mono">End</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Run button */}
               <button
