@@ -1478,100 +1478,111 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
           })()}
         </div>
 
-        <div className="p-5 space-y-5">
+        <div className="p-5 space-y-4 bg-slate-50/60 min-h-full">
 
-          {/* ── Route info grid ── */}
-          <section className="rounded-xl border border-border/60 bg-gradient-to-br from-orange-50/50 via-white to-purple-50/40 dark:from-orange-950/10 dark:via-background dark:to-purple-950/10 p-4 shadow-sm">
-            <div className="grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
+          {/* ── Route info card ── */}
+          <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
+              <span className="w-1 h-4 rounded-full bg-gradient-to-b from-orange-500 to-pink-500" />
+              <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Route Information</h3>
+            </div>
+            <div className="p-4 grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
               {[
-                { label: "Route Num",            value: trip.id,                                          accent: "text-orange-600" },
-                { label: "Vehicle Load Stock",   value: `KCC${trip.seq.toString().padStart(6,"0")}XCHG0000001`, accent: "text-amber-600" },
-                { label: "Status",               value: trip.status,                                      accent: "text-pink-600" },
-                { label: "Departure Site",       value: trip.departSite,                                  accent: "text-purple-600" },
-                { label: "Arrival Site",         value: trip.arrivalSite,                                 accent: "text-indigo-600" },
-                { label: "Carrier",              value: trip.vehicle.category || "N/A",                   accent: "text-rose-600" },
-                { label: "Vehicle Class",        value: trip.vehicle.category,                            accent: "text-orange-600" },
-                { label: "Vehicle",              value: trip.vehicle.code,                                accent: "text-amber-600" },
-                { label: "Route Type",           value: "Scheduled",                                      accent: "text-pink-600" },
-                { label: "Driver ID",            value: trip.driver.id,                                   accent: "text-purple-600" },
-                { label: "Driver",               value: trip.driver.name,                                 accent: "text-indigo-600" },
-                { label: "Creation Date",        value: depDate,                                          accent: "text-rose-600" },
-                { label: "Creation Time",        value: depTime,                                          accent: "text-orange-600" },
-                { label: "Trip",                 value: String(trip.seq),                                 accent: "text-amber-600" },
-              ].map(({ label, value, accent }) => (
+                { label: "Route Num",            value: trip.id,                                                highlight: true },
+                { label: "Vehicle Load Stock",   value: `KCC${trip.seq.toString().padStart(6,"0")}XCHG0000001` },
+                { label: "Status",               value: trip.status,                                            highlight: true },
+                { label: "Departure Site",       value: trip.departSite },
+                { label: "Arrival Site",         value: trip.arrivalSite },
+                { label: "Carrier",              value: trip.vehicle.category || "N/A" },
+                { label: "Vehicle Class",        value: trip.vehicle.category },
+                { label: "Vehicle",              value: trip.vehicle.code,                                      highlight: true },
+                { label: "Route Type",           value: "Scheduled" },
+                { label: "Driver ID",            value: trip.driver.id },
+                { label: "Driver",               value: trip.driver.name,                                       highlight: true },
+                { label: "Creation Date",        value: depDate },
+                { label: "Creation Time",        value: depTime },
+                { label: "Trip",                 value: String(trip.seq) },
+              ].map(({ label, value, highlight }) => (
                 <div key={label}>
-                  <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-medium">{label}</p>
-                  <p className={cn("font-bold", accent)}>{value}</p>
+                  <p className="text-[9px] text-slate-400 mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
+                  <p className={cn("font-bold", highlight ? "text-orange-600" : "text-slate-800")}>{value}</p>
                 </div>
               ))}
             </div>
           </section>
 
-          <div className="border-t border-border/40" />
-
           {/* ── Planning / Actual + Photos ── */}
-          <div className="grid grid-cols-[1fr_auto] gap-6">
-            <div className="space-y-4">
-              {/* Planning */}
-              <div>
-                <h3 className="text-[11px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Planning</h3>
-                <div className="grid grid-cols-4 gap-4 text-[11px]">
-                  {[
-                    { label: "Departure Date", value: depDate },
-                    { label: "Departure Time", value: depTime },
-                    { label: "Return Date",    value: depDate },
-                    { label: "Return Time",    value: retTime },
-                  ].map(({ label, value }) => (
-                    <div key={label}>
-                      <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
-                      <p className="font-semibold">{value}</p>
-                    </div>
-                  ))}
+          <div className="grid grid-cols-[1fr_auto] gap-4">
+            <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
+                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-pink-500 to-purple-500" />
+                <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Schedule</h3>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider mb-2">Planning</p>
+                  <div className="grid grid-cols-4 gap-4 text-[11px]">
+                    {[
+                      { label: "Departure Date", value: depDate },
+                      { label: "Departure Time", value: depTime },
+                      { label: "Return Date",    value: depDate },
+                      { label: "Return Time",    value: retTime },
+                    ].map(({ label, value }) => (
+                      <div key={label}>
+                        <p className="text-[10px] text-slate-400 mb-0.5">{label}</p>
+                        <p className="font-semibold text-slate-800">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Actual</p>
+                  <div className="grid grid-cols-4 gap-4 text-[11px]">
+                    {["Departure Date","Departure Time","Return Date","Return Time"].map((label) => (
+                      <div key={label}>
+                        <p className="text-[10px] text-slate-400 mb-0.5">{label}</p>
+                        <p className="text-slate-300">—</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              {/* Actual */}
-              <div>
-                <h3 className="text-[11px] font-semibold text-muted-foreground mb-2 pb-1 border-b border-border/40">Actual</h3>
-                <div className="grid grid-cols-4 gap-4 text-[11px]">
-                  {["Departure Date","Departure Time","Return Date","Return Time"].map((label) => (
-                    <div key={label}>
-                      <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
-                      <p className="text-muted-foreground/40">—</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            </section>
 
             {/* Vehicle + Driver photos */}
             <div className="flex gap-3 flex-shrink-0">
-              <div className="text-center">
-                <div className="w-28 h-20 rounded-lg bg-muted border border-border/60 flex items-center justify-center overflow-hidden">
-                  <Truck className="w-10 h-10 text-muted-foreground/30" />
+              <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
+                <div className="w-16 h-14 rounded-lg bg-gradient-to-br from-orange-50 to-pink-50 border border-orange-100 flex items-center justify-center mb-1.5">
+                  <Truck className="w-8 h-8 text-orange-500/70" />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Vehicle : {trip.vehicle.code}</p>
+                <p className="text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Vehicle</p>
+                <p className="text-[11px] font-bold text-slate-800">{trip.vehicle.code}</p>
               </div>
-              <div className="text-center">
-                <div className="w-28 h-20 rounded-lg bg-muted border border-border/60 flex items-center justify-center overflow-hidden">
-                  <Users className="w-10 h-10 text-muted-foreground/30" />
+              <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
+                <div className="w-16 h-14 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 flex items-center justify-center mb-1.5">
+                  <Users className="w-8 h-8 text-purple-500/70" />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Driver : {trip.driver.id}</p>
+                <p className="text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Driver</p>
+                <p className="text-[11px] font-bold text-slate-800">{trip.driver.id}</p>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-border/40" />
-
-          {/* ── Transactions table ── */}
-          <section>
-            <h3 className="text-[11px] font-semibold text-primary mb-2">Transactions</h3>
-            <div className="rounded-lg border border-border/60 overflow-hidden">
+          {/* ── Transactions card ── */}
+          <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-gradient-to-r from-orange-50 via-pink-50/40 to-purple-50/40">
+              <div className="flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-orange-500 via-pink-500 to-purple-500" />
+                <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Transactions</h3>
+              </div>
+              <span className="text-[10px] text-slate-500 font-medium">{trip.stops.length} record{trip.stops.length === 1 ? "" : "s"}</span>
+            </div>
+            <div className="overflow-x-auto">
               <table className="w-full" style={{ fontSize: "11px" }}>
                 <thead>
-                  <tr style={{ background: "#eff6ff" }}>
+                  <tr className="bg-slate-50 border-b border-slate-200">
                     {["Seq","Document Number","Delivery Number","Site","Status","Arrival Date/Time","Departure Date/Time","Service Time","Address","Client Code","Client","City","From Previous Distance","From Previous Travel","Waiting Time"].map(h => (
-                      <th key={h} className="px-2 py-1.5 text-left text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap border-b"
-                        style={{ color: "#1e40af", borderColor: "#bfdbfe" }}>{h}</th>
+                      <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-slate-500">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1584,73 +1595,83 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
                     const fpt = s.fromPrevTravelTime ?? (isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`);
                     const wait = s.waitingTime ?? (isOpen ? "—" : "00:15");
                     return (
-                    <tr key={s.id} className={cn("border-b border-border/20 hover:bg-muted/30", i % 2 === 1 && "bg-muted/10")}>
-                      <td className="px-2 py-1.5 font-mono font-bold text-center">{s.seq ?? i + 1}</td>
-                      <td className="px-2 py-1.5 font-mono text-primary font-semibold">{(s as any).docNum ?? s.txn}</td>
-                      <td className="px-2 py-1.5 text-muted-foreground">—</td>
-                      <td className="px-2 py-1.5 font-mono">{trip.departSite}</td>
-                      <td className="px-2 py-1.5">
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800">Scheduled</span>
+                    <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-orange-50/30 transition-colors">
+                      <td className="px-2 py-2 font-mono font-bold text-center text-slate-700">{s.seq ?? i + 1}</td>
+                      <td className="px-2 py-2 font-mono text-orange-600 font-semibold">{(s as any).docNum ?? s.txn}</td>
+                      <td className="px-2 py-2 text-slate-400">—</td>
+                      <td className="px-2 py-2 font-mono text-slate-700">{trip.departSite}</td>
+                      <td className="px-2 py-2">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-700">Scheduled</span>
                       </td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{arr}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{dep}</td>
-                      <td className="px-2 py-1.5 font-mono">{svc}</td>
-                      <td className="px-2 py-1.5 text-muted-foreground truncate max-w-[100px]">{s.address}</td>
-                      <td className="px-2 py-1.5 font-mono">{s.bpcode}</td>
-                      <td className="px-2 py-1.5 font-medium truncate max-w-[100px]">{s.client}</td>
-                      <td className="px-2 py-1.5">{s.city}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{fpd}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{fpt}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{wait}</td>
+                      <td className="px-2 py-2 font-mono text-slate-500">{arr}</td>
+                      <td className="px-2 py-2 font-mono text-slate-500">{dep}</td>
+                      <td className="px-2 py-2 font-mono text-slate-700">{svc}</td>
+                      <td className="px-2 py-2 text-slate-500 truncate max-w-[100px]">{s.address}</td>
+                      <td className="px-2 py-2 font-mono text-slate-700">{s.bpcode}</td>
+                      <td className="px-2 py-2 font-medium text-slate-800 truncate max-w-[100px]">{s.client}</td>
+                      <td className="px-2 py-2 text-slate-600">{s.city}</td>
+                      <td className="px-2 py-2 font-mono text-slate-500">{fpd}</td>
+                      <td className="px-2 py-2 font-mono text-slate-500">{fpt}</td>
+                      <td className="px-2 py-2 font-mono text-slate-500">{wait}</td>
                     </tr>
                     );
                   })}
                   {trip.stops.length === 0 && (
-                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No stops on this trip</td></tr>
+                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-slate-400">No stops on this trip</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           </section>
 
-          <div className="border-t border-border/40" />
-
           {/* ── Totals ── */}
           <section>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
               {/* Total Drops */}
-              <div className="rounded-lg border border-border/60 p-3">
-                <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Total Drops</h4>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span className="font-mono font-semibold">{trip.totalWeight.toFixed(2)} LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Mass</span><span className="font-mono">60000.00 LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Mass(%)</span><span className="font-mono">{trip.totalWeight ? ((trip.totalWeight / 60000) * 100).toFixed(2) : "0.00"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Drops Volume</span><span className="font-mono">{trip.totalVol.toFixed(2)} GAL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Volume</span><span className="font-mono">50000 GAL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Vol(%)</span><span className="font-mono">{trip.totalVol ? ((trip.totalVol / 50000) * 100).toFixed(2) : "0.00"}</span></div>
+              <div className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50/60">
+                  <span className="w-1 h-4 rounded-full bg-orange-500" />
+                  <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Drops</h4>
+                </div>
+                <div className="p-4 space-y-1.5">
+                  <div className="flex justify-between"><span className="text-slate-500">Weight</span><span className="font-mono font-semibold text-slate-800">{trip.totalWeight.toFixed(2)} LB</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Vehicle Mass</span><span className="font-mono text-slate-700">60000.00 LB</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Loading Mass(%)</span><span className="font-mono text-slate-700">{trip.totalWeight ? ((trip.totalWeight / 60000) * 100).toFixed(2) : "0.00"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Drops Volume</span><span className="font-mono text-slate-700">{trip.totalVol.toFixed(2)} GAL</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Vehicle Volume</span><span className="font-mono text-slate-700">50000 GAL</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Loading Vol(%)</span><span className="font-mono text-slate-700">{trip.totalVol ? ((trip.totalVol / 50000) * 100).toFixed(2) : "0.00"}</span></div>
                 </div>
               </div>
               {/* Total Pickups */}
-              <div className="rounded-lg border border-border/60 p-3">
-                <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Total Pickups</h4>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Pickup Weight</span><span className="font-mono font-semibold">0 LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Avail Weight</span><span className="font-mono">60000 LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Pickup Volume</span><span className="font-mono">0.00 GAL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Avail Volume</span><span className="font-mono">50000 GAL</span></div>
+              <div className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-gradient-to-r from-pink-50 to-rose-50/60">
+                  <span className="w-1 h-4 rounded-full bg-pink-500" />
+                  <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Pickups</h4>
+                </div>
+                <div className="p-4 space-y-1.5">
+                  <div className="flex justify-between"><span className="text-slate-500">Pickup Weight</span><span className="font-mono font-semibold text-slate-800">0 LB</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Vehicle Avail Weight</span><span className="font-mono text-slate-700">60000 LB</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Pickup Volume</span><span className="font-mono text-slate-700">0.00 GAL</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Vehicle Avail Volume</span><span className="font-mono text-slate-700">50000 GAL</span></div>
                 </div>
               </div>
-              {/* Totals */}
-              <div className="rounded-lg border border-border/60 p-3">
-                <h4 className="text-[10px] font-semibold text-primary mb-2 pb-1 border-b border-border/40">Totals</h4>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold">{isOpen ? "—" : `${totalKm} Miles`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono">{trip.stops.length}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH + 1).padStart(2,"0")}:${String(totalM + 15).padStart(2,"0")} HH:MM`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono">{isOpen ? "—" : `${travelCost} USD`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono">{isOpen ? "—" : `${distCost} USD`}</span></div>
-                  <div className="flex justify-between border-t border-border/40 pt-1 mt-1"><span className="font-semibold">Total Cost</span><span className="font-mono font-bold text-primary">{isOpen ? "—" : `${totalCost} USD`}</span></div>
+              {/* Totals — sunset gradient tile */}
+              <div
+                className="rounded-xl shadow-lg overflow-hidden text-white relative"
+                style={{ background: "linear-gradient(135deg, #ff6b35 0%, #f7931e 30%, #e84393 70%, #6c5ce7 100%)" }}
+              >
+                <div className="px-4 py-2.5 border-b border-white/20 flex items-center gap-2">
+                  <span className="w-1 h-4 rounded-full bg-white/70" />
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider">Summary Totals</h4>
+                </div>
+                <div className="p-4 space-y-1.5">
+                  <div className="flex justify-between"><span className="text-white/80">Total Distance</span><span className="font-mono font-semibold">{isOpen ? "—" : `${totalKm} Miles`}</span></div>
+                  <div className="flex justify-between"><span className="text-white/80">Travel Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM`}</span></div>
+                  <div className="flex justify-between"><span className="text-white/80">Order Count</span><span className="font-mono">{trip.stops.length}</span></div>
+                  <div className="flex justify-between"><span className="text-white/80">Total Time</span><span className="font-mono">{isOpen ? "—" : `${String(totalH + 1).padStart(2,"0")}:${String(totalM + 15).padStart(2,"0")} HH:MM`}</span></div>
+                  <div className="flex justify-between"><span className="text-white/80">Travel Time Cost</span><span className="font-mono">{isOpen ? "—" : `${travelCost} USD`}</span></div>
+                  <div className="flex justify-between"><span className="text-white/80">Distance Cost</span><span className="font-mono">{isOpen ? "—" : `${distCost} USD`}</span></div>
+                  <div className="flex justify-between border-t border-white/25 pt-1.5 mt-1.5"><span className="font-bold">Total Cost</span><span className="font-mono font-black text-base">{isOpen ? "—" : `${totalCost} USD`}</span></div>
                 </div>
               </div>
             </div>
