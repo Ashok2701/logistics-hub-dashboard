@@ -11,9 +11,10 @@ import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { cn } from "@/lib/utils";
 import {
-  vehicleApi, vehicleCategoryApi, siteApi,
-  type Vehicle, type VehicleCategory, type Site,
+  vehicleApi, vehicleCategoryApi,
+  type Vehicle, type VehicleCategory,
 } from "@/lib/fleetApi";
+import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
 
 interface FormState {
   vehicleCode: string;
