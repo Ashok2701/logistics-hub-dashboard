@@ -1385,68 +1385,123 @@ function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => voi
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
       <div className="flex-1 overflow-y-auto">
 
-        {/* ── Full-page header ── */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border/60 sticky top-0 bg-background z-10 shadow-sm">
-          {/* Back button */}
-          <button onClick={onBack}
-            className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors">
-            <ChevronLeft className="w-4 h-4" />
-            Back to Planner
-          </button>
+        {/* ── Full-page header (gradient) ── */}
+        <div
+          className="relative px-5 py-3 sticky top-0 z-10 shadow-lg border-b border-white/10"
+          style={{
+            background:
+              "linear-gradient(135deg, #ff6b35 0%, #f7931e 35%, #e84393 70%, #6c5ce7 100%)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            {/* Back button */}
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-md transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to Planner
+            </button>
 
-          {/* Centred title */}
-          <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none">
-            <h2 className="text-sm font-semibold">Route Management</h2>
-            <p className="text-[10px] text-muted-foreground font-mono">{trip.id}</p>
+            {/* Centred title */}
+            <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none">
+              <h2 className="text-base font-bold text-white tracking-tight drop-shadow-sm">Route Management</h2>
+              <p className="text-[11px] text-white/80 font-mono">{trip.id}</p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-white/95 text-orange-600 shadow-sm">
+                {trip.status.toUpperCase()}
+              </span>
+              <Button
+                size="sm"
+                className="h-8 text-[11px] gap-1.5 bg-white text-orange-600 hover:bg-white/95 border-0 font-semibold shadow-md"
+              >
+                <Truck className="w-3.5 h-3.5" /> Load to Truck
+              </Button>
+            </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-1.5">
-            <span className={cn("text-[10px] px-2 py-0.5 rounded font-bold", statusColor(trip.status))}>
-              {trip.status.toUpperCase()}
-            </span>
-            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
-              <RouteIcon className="w-3 h-3" /> Optimise
-            </Button>
-            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
-              <Lock className="w-3 h-3" /> Lock
-            </Button>
-            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1">
-              <ShieldCheck className="w-3 h-3" /> Validate
-            </Button>
-            <Button size="sm" className="h-7 text-[11px] gap-1 bg-emerald-600 hover:bg-emerald-700 text-white border-0">
-              <Truck className="w-3 h-3" /> Load to Truck
-            </Button>
-            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-rose-600 hover:bg-rose-50">
-              <Trash2 className="w-3 h-3" /> Delete
-            </Button>
-          </div>
+          {/* ── Workflow Timeline ── */}
+          {(() => {
+            const steps = [
+              { key: "lvs",    label: "LVS Creation",  icon: RouteIcon, done: true },
+              { key: "load",   label: "Load Truck",    icon: Truck,     done: trip.status === "Validated" || trip.status === "Locked" },
+              { key: "unload", label: "Unload Vehicle",icon: Package,   done: false },
+            ];
+            const activeIdx = steps.findIndex(s => !s.done);
+            const currentIdx = activeIdx === -1 ? steps.length - 1 : activeIdx;
+            return (
+              <div className="mt-3 pt-3 border-t border-white/20">
+                <div className="flex items-center justify-center gap-0 max-w-3xl mx-auto">
+                  {steps.map((s, i) => {
+                    const Icon = s.icon;
+                    const isActive = i === currentIdx;
+                    const isDone = s.done;
+                    return (
+                      <React.Fragment key={s.key}>
+                        <button
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap shadow-sm",
+                            isDone && "bg-white text-emerald-600 hover:shadow-md",
+                            isActive && !isDone && "bg-white/95 text-purple-700 ring-2 ring-white/60 hover:shadow-md",
+                            !isDone && !isActive && "bg-white/15 text-white/70 hover:bg-white/25 backdrop-blur-sm",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
+                              isDone && "bg-emerald-500 text-white",
+                              isActive && !isDone && "bg-purple-600 text-white",
+                              !isDone && !isActive && "bg-white/20 text-white",
+                            )}
+                          >
+                            {isDone ? <CheckCheck className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
+                          </span>
+                          {s.label}
+                        </button>
+                        {i < steps.length - 1 && (
+                          <div className="flex-1 max-w-[80px] h-[2px] mx-1 rounded-full bg-white/20 overflow-hidden">
+                            <div
+                              className="h-full bg-white transition-all"
+                              style={{ width: steps[i].done ? "100%" : "0%" }}
+                            />
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="p-5 space-y-5">
 
           {/* ── Route info grid ── */}
-          <section>
+          <section className="rounded-xl border border-border/60 bg-gradient-to-br from-orange-50/50 via-white to-purple-50/40 dark:from-orange-950/10 dark:via-background dark:to-purple-950/10 p-4 shadow-sm">
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
               {[
-                { label: "Route Num",            value: trip.id },
-                { label: "Vehicle Load Stock",   value: `KCC${trip.seq.toString().padStart(6,"0")}XCHG0000001` },
-                { label: "Status",               value: trip.status },
-                { label: "Departure Site",        value: trip.departSite },
-                { label: "Arrival Site",          value: trip.arrivalSite },
-                { label: "Carrier",              value: trip.vehicle.category || "N/A" },
-                { label: "Vehicle Class",         value: trip.vehicle.category },
-                { label: "Vehicle",              value: trip.vehicle.code },
-                { label: "Route Type",           value: "Scheduled" },
-                { label: "Driver ID",            value: trip.driver.id },
-                { label: "Driver",               value: trip.driver.name },
-                { label: "Creation Date",        value: depDate },
-                { label: "Creation Time",        value: depTime },
-                { label: "Trip",                 value: String(trip.seq) },
-              ].map(({ label, value }) => (
+                { label: "Route Num",            value: trip.id,                                          accent: "text-orange-600" },
+                { label: "Vehicle Load Stock",   value: `KCC${trip.seq.toString().padStart(6,"0")}XCHG0000001`, accent: "text-amber-600" },
+                { label: "Status",               value: trip.status,                                      accent: "text-pink-600" },
+                { label: "Departure Site",       value: trip.departSite,                                  accent: "text-purple-600" },
+                { label: "Arrival Site",         value: trip.arrivalSite,                                 accent: "text-indigo-600" },
+                { label: "Carrier",              value: trip.vehicle.category || "N/A",                   accent: "text-rose-600" },
+                { label: "Vehicle Class",        value: trip.vehicle.category,                            accent: "text-orange-600" },
+                { label: "Vehicle",              value: trip.vehicle.code,                                accent: "text-amber-600" },
+                { label: "Route Type",           value: "Scheduled",                                      accent: "text-pink-600" },
+                { label: "Driver ID",            value: trip.driver.id,                                   accent: "text-purple-600" },
+                { label: "Driver",               value: trip.driver.name,                                 accent: "text-indigo-600" },
+                { label: "Creation Date",        value: depDate,                                          accent: "text-rose-600" },
+                { label: "Creation Time",        value: depTime,                                          accent: "text-orange-600" },
+                { label: "Trip",                 value: String(trip.seq),                                 accent: "text-amber-600" },
+              ].map(({ label, value, accent }) => (
                 <div key={label}>
-                  <p className="text-[10px] text-muted-foreground mb-0.5 uppercase tracking-wide">{label}</p>
-                  <p className="font-semibold text-primary">{value}</p>
+                  <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-medium">{label}</p>
+                  <p className={cn("font-bold", accent)}>{value}</p>
                 </div>
               ))}
             </div>
