@@ -189,28 +189,45 @@ export default function Vehicles() {
 
   if (view === "form") {
     return (
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="w-full">
-        {/* Colorful hero header */}
-        <div className="relative overflow-hidden rounded-2xl mb-6 border border-border shadow-card">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-indigo-600 to-purple-600" />
-          <div className="absolute inset-0 opacity-20"
-            style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 60%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-          <div className="relative flex items-center justify-between p-5">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full veh-page"
+      >
+        {/* Sunset Blaze hero */}
+        <div className="relative overflow-hidden rounded-2xl mb-6 shadow-elevated">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#ff6b35] via-[#f7931e] to-[#e84393]" />
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#6c5ce7]/40 blur-3xl" />
+          <div className="absolute -bottom-32 left-1/3 w-96 h-96 rounded-full bg-[#ff6b35]/40 blur-3xl" />
+          <div className="absolute inset-0 opacity-[0.12]"
+            style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 1.5px, transparent 1.5px), radial-gradient(circle at 80% 60%, white 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="relative flex items-center justify-between p-6">
             <div className="flex items-center gap-4">
-              <button onClick={() => setView("list")} className="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur flex items-center justify-center text-white transition">
+              <button onClick={() => setView("list")} className="w-11 h-11 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur flex items-center justify-center text-white transition ring-1 ring-white/20">
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white shadow-lg">
-                <Truck className="w-6 h-6" />
+              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-white shadow-lg ring-1 ring-white/30">
+                <Truck className="w-7 h-7" />
               </div>
               <div className="text-white">
-                <h1 className="text-xl font-semibold tracking-tight">{editingCode ? "Update Vehicle" : "New Vehicle"}</h1>
-                <p className="text-xs text-white/80">{editingCode ? `Editing ${editingCode}` : "Register a new fleet vehicle"}</p>
+                <h1 className="veh-display text-2xl font-bold tracking-tight">
+                  {editingCode ? "Update Vehicle" : "New Vehicle"}
+                </h1>
+                <p className="text-sm text-white/85 mt-0.5">
+                  {editingCode ? `Editing ${editingCode}` : "Register a new fleet vehicle"}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setView("list")} className="h-10 px-4 rounded-lg text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur transition">Cancel</button>
-              <button onClick={save} disabled={saving} className="h-10 px-6 rounded-lg text-sm font-semibold bg-white text-primary hover:bg-white/90 shadow-lg flex items-center gap-2 disabled:opacity-60 transition">
+              <button onClick={() => setView("list")} className="h-11 px-5 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur transition ring-1 ring-white/20">
+                Cancel
+              </button>
+              <button
+                onClick={save}
+                disabled={saving}
+                className="h-11 px-6 rounded-xl text-sm font-bold bg-white text-[#e84393] hover:bg-white/95 shadow-xl flex items-center gap-2 disabled:opacity-60 transition"
+              >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingCode ? "Update Vehicle" : "Create Vehicle"}
               </button>
@@ -218,48 +235,11 @@ export default function Vehicles() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-6 w-full">
-          {/* Left: Image + status card */}
-          <div className="space-y-6">
-            <SectionCard title="Vehicle Image" icon={<ImageIcon className="w-4 h-4" />} accent="from-pink-500 to-rose-500">
-              <div className="relative group aspect-[4/3] rounded-xl overflow-hidden border-2 border-dashed border-border bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center">
-                {form.imageUrl ? (
-                  <>
-                    <img src={form.imageUrl} alt="Vehicle" className="w-full h-full object-cover" />
-                    <button onClick={() => upd("imageUrl", "")} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white hover:bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </>
-                ) : (
-                  <div className="text-center text-muted-foreground p-6">
-                    <Truck className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">No image uploaded</p>
-                  </div>
-                )}
-              </div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
-              <button onClick={() => fileRef.current?.click()} className="mt-3 w-full h-10 rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white text-sm font-medium flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition">
-                <Upload className="w-4 h-4" /> {form.imageUrl ? "Replace Image" : "Upload Image"}
-              </button>
-              <p className="text-[11px] text-muted-foreground mt-2 text-center">PNG, JPG up to 2MB</p>
-            </SectionCard>
-
-            <SectionCard title="Status" icon={<Gauge className="w-4 h-4" />} accent="from-emerald-500 to-teal-500">
-              <Field label="Active">
-                <select value={form.active ? "1" : "0"} onChange={(e) => upd("active", e.target.value === "1")} className="form-input">
-                  <option value="1">Active</option>
-                  <option value="0">Inactive</option>
-                </select>
-              </Field>
-              <Field label="Vehicle Status">
-                <input type="number" value={form.vehicleStatus} onChange={(e) => upd("vehicleStatus", Number(e.target.value))} className="form-input" placeholder="1" />
-              </Field>
-            </SectionCard>
-          </div>
-
-          {/* Right: form sections */}
-          <div className="space-y-6">
-            <SectionCard title="Basic Information" icon={<Truck className="w-4 h-4" />} accent="from-blue-500 to-indigo-500">
+        {/* Main split: form (left) + image/status (right) */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 w-full">
+          {/* LEFT — form sections */}
+          <div className="space-y-6 min-w-0">
+            <SectionCard title="Basic Information" icon={<Truck className="w-4 h-4" />} accent="from-[#ff6b35] to-[#f7931e]">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Vehicle Code *">
                   <input value={form.vehicleCode} disabled={!!editingCode}
@@ -280,7 +260,7 @@ export default function Vehicles() {
                     ))}
                   </select>
                 </Field>
-                <Field label="Driver ID">
+                <Field label="Driver ID" icon={<User className="w-3.5 h-3.5" />}>
                   <input value={form.driverId} onChange={(e) => upd("driverId", e.target.value)} className="form-input font-mono" placeholder="DRV001" />
                 </Field>
                 <Field label="Year">
@@ -289,7 +269,7 @@ export default function Vehicles() {
               </div>
             </SectionCard>
 
-            <SectionCard title="Site Assignment" icon={<MapPin className="w-4 h-4" />} accent="from-amber-500 to-orange-500">
+            <SectionCard title="Site Assignment" icon={<MapPin className="w-4 h-4" />} accent="from-[#e84393] to-[#6c5ce7]">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Home Site" icon={<Building2 className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.site} onChange={(v) => upd("site", v)} sites={sites} />
@@ -304,13 +284,18 @@ export default function Vehicles() {
               {(form.site || form.departureSite || form.arrivalSite) && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
                   {form.site && <SiteChip label="Home" site={siteMap.get(form.site)} tone="amber" />}
-                  {form.departureSite && <SiteChip label="Departure" site={siteMap.get(form.departureSite)} tone="blue" />}
-                  {form.arrivalSite && <SiteChip label="Arrival" site={siteMap.get(form.arrivalSite)} tone="emerald" />}
+                  {form.departureSite && <SiteChip label="Departure" site={siteMap.get(form.departureSite)} tone="pink" />}
+                  {form.arrivalSite && <SiteChip label="Arrival" site={siteMap.get(form.arrivalSite)} tone="violet" />}
                 </div>
+              )}
+              {sites.length === 0 && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  No TMS-enabled sites loaded. Enable sites in Site Management to populate this list.
+                </p>
               )}
             </SectionCard>
 
-            <SectionCard title="Specifications" icon={<Palette className="w-4 h-4" />} accent="from-violet-500 to-purple-500">
+            <SectionCard title="Specifications" icon={<Palette className="w-4 h-4" />} accent="from-[#6c5ce7] to-[#e84393]">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Brand">
                   <input value={form.brand} onChange={(e) => upd("brand", e.target.value)} className="form-input" placeholder="Ashok Leyland" />
@@ -324,7 +309,7 @@ export default function Vehicles() {
               </div>
             </SectionCard>
 
-            <SectionCard title="Capacity" icon={<Package className="w-4 h-4" />} accent="from-cyan-500 to-sky-500">
+            <SectionCard title="Capacity" icon={<Package className="w-4 h-4" />} accent="from-[#f7931e] to-[#ff6b35]">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Field label="Capacity Weight">
                   <input type="number" value={form.capacityWeight} onChange={(e) => upd("capacityWeight", Number(e.target.value))} className="form-input" placeholder="15000" />
@@ -341,9 +326,64 @@ export default function Vehicles() {
               </div>
             </SectionCard>
           </div>
+
+          {/* RIGHT — image upload + status (sticky) */}
+          <div className="space-y-6">
+            <div className="xl:sticky xl:top-4 space-y-6">
+              <div className="relative rounded-2xl overflow-hidden shadow-elevated border border-border">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#ff6b35] via-[#e84393] to-[#6c5ce7]" />
+                <div className="relative p-5">
+                  <div className="flex items-center gap-2.5 mb-4 text-white">
+                    <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center ring-1 ring-white/30">
+                      <ImageIcon className="w-4 h-4" />
+                    </div>
+                    <h3 className="veh-display text-sm font-bold tracking-wide uppercase">Vehicle Image</h3>
+                  </div>
+                  <div className="relative group aspect-[4/3] rounded-xl overflow-hidden bg-white/15 backdrop-blur ring-1 ring-white/30 flex items-center justify-center">
+                    {form.imageUrl ? (
+                      <>
+                        <img src={form.imageUrl} alt="Vehicle" className="w-full h-full object-cover" />
+                        <button onClick={() => upd("imageUrl", "")} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white hover:bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-center text-white/90 p-6">
+                        <Truck className="w-14 h-14 mx-auto mb-3 opacity-80" />
+                        <p className="text-xs font-medium">No image uploaded</p>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+                  <button onClick={() => fileRef.current?.click()} className="mt-4 w-full h-11 rounded-xl bg-white text-[#e84393] text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:bg-white/95 transition">
+                    <Upload className="w-4 h-4" /> {form.imageUrl ? "Replace Image" : "Upload Image"}
+                  </button>
+                  <p className="text-[11px] text-white/80 mt-2 text-center">PNG, JPG up to 2MB</p>
+                </div>
+              </div>
+
+              <SectionCard title="Status" icon={<Gauge className="w-4 h-4" />} accent="from-[#f7931e] to-[#e84393]">
+                <Field label="Active">
+                  <select value={form.active ? "1" : "0"} onChange={(e) => upd("active", e.target.value === "1")} className="form-input">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                  </select>
+                </Field>
+                <Field label="Vehicle Status">
+                  <input type="number" value={form.vehicleStatus} onChange={(e) => upd("vehicleStatus", Number(e.target.value))} className="form-input" placeholder="1" />
+                </Field>
+              </SectionCard>
+            </div>
+          </div>
         </div>
 
-        <style>{`.form-input{height:2.5rem;padding:0 0.75rem;border-radius:0.5rem;border:1px solid hsl(var(--border));background:hsl(var(--background));font-size:0.875rem;width:100%;transition:all .15s}.form-input:focus{outline:none;border-color:hsl(var(--primary)/0.5);box-shadow:0 0 0 3px hsl(var(--primary)/0.12)}.form-input:disabled{opacity:0.6;background:hsl(var(--muted))}`}</style>
+        <style>{`
+          .veh-page{font-family:'DM Sans','Inter',system-ui,sans-serif}
+          .veh-display{font-family:'Space Grotesk','DM Sans',system-ui,sans-serif;letter-spacing:-0.01em}
+          .form-input{height:2.625rem;padding:0 0.875rem;border-radius:0.625rem;border:1px solid hsl(var(--border));background:hsl(var(--background));font-size:0.875rem;width:100%;transition:all .15s;font-family:'DM Sans','Inter',sans-serif}
+          .form-input:focus{outline:none;border-color:#ff6b35;box-shadow:0 0 0 3px rgba(255,107,53,0.18)}
+          .form-input:disabled{opacity:0.6;background:hsl(var(--muted))}
+        `}</style>
       </motion.div>
     );
   }
