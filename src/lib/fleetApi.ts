@@ -83,6 +83,10 @@ export interface Vehicle {
   driverId: string;
   active: boolean;
   vehicleStatus: number;
+  site?: string | null;
+  departureSite?: string | null;
+  arrivalSite?: string | null;
+  imageUrl?: string | null;
 }
 
 export const vehicleApi = {
