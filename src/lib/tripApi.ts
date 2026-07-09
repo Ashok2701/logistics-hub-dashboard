@@ -299,26 +299,18 @@ export const tripApi = {
   loadTrips,
   getTripById,
   updateTripStatus,
-  optimiseTrip: (id: number | string, payloadOrOrderMode: OptimisePayload | string, startTime?: string): Promise<TripRecord> => {
+  optimiseTrip: (tripCode: string, payloadOrOrderMode: OptimisePayload | string, startTime?: string): Promise<TripRecord> => {
     if (typeof payloadOrOrderMode === "string") {
-      // Legacy call signature: optimiseTrip(id, orderMode, startTime)
       const payload: OptimisePayload = {
         orderMode: payloadOrOrderMode,
         startTime: startTime ?? "",
-        endTime: "",
-        travelTime: "",
-        totalTime: "",
-        totalDistance: "",
-        uomDistance: "mi",
-        totalCost: "",
-        distanceCost: "",
-        fixedCost: "",
-        serviceCost: "",
+        endTime: "", travelTime: "", totalTime: "", totalDistance: "",
+        uomDistance: "mi", totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
         stopResults: [],
       };
-      return optimiseTrip(id, payload);
+      return optimiseTrip(tripCode, payload);
     }
-    return optimiseTrip(id, payloadOrOrderMode);
+    return optimiseTrip(tripCode, payloadOrOrderMode);
   },
   deleteTrip,
   updateTrip,
