@@ -314,4 +314,6 @@ export const tripApi = {
   },
   deleteTrip,
   updateTrip,
+  lockTrip, validateTrip, unlockTrip,
+  lockTripsGroup, validateTripsGroup, unlockTripsGroup,
 };
