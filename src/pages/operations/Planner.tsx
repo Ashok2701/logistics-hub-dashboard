@@ -3447,9 +3447,9 @@ export default function Planner() {
                                               waitingTime: secToHHMM(st.waiting_time ?? 0),
                                             }));
 
-                                            if (t.tripId != null) {
+                                            if (t.tripCode) {
                                               const { optimiseTrip } = await import("@/lib/tripApi");
-                                              const resp = await optimiseTrip(t.tripId, {
+                                              const resp = await optimiseTrip(t.tripCode, {
                                                 orderMode: optOrder, startTime: optTime, endTime,
                                                 travelTime: travelHHMM, totalTime: travelHHMM,
                                                 totalDistance: totalDistKm, uomDistance: "km",
