@@ -1984,7 +1984,7 @@ export default function Planner() {
           // Persist optimisation results — response includes Optimised status,
           // per-stop arrivalTime/departureTime/serviceTime/waitingTime, totals.
           const { optimiseTrip } = await import("@/lib/tripApi");
-          const optResp = await optimiseTrip(tripResp.tripId!, {
+          const optResp = await optimiseTrip(tripResp.tripCode, {
             orderMode: "auto", startTime, endTime,
             travelTime: travelHHMM, totalTime: travelHHMM,
             totalDistance: totalDistKm, uomDistance: "km",
