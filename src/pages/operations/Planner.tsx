@@ -2450,7 +2450,7 @@ export default function Planner() {
 
 
   async function setTripStatus(trip: Trip, optiStatus: OptiStatus, lockFlag: number) {
-    if (trip.tripId == null) {
+    if (trip.tripId == null || !trip.tripCode) {
       // Local-only trip (not yet persisted) — update UI optimistically
       setTrips((prev) => prev.map((t) => t.id === trip.id
         ? { ...t, status: optiStatus === "Optimised" ? "Optimised" : optiStatus, locked: lockFlag === 1, optiStatus, lockFlag }
@@ -2458,9 +2458,11 @@ export default function Planner() {
       return;
     }
     try {
-      const resp = await tripApi.updateTripStatus(trip.tripId, {
-        optiStatus, lockFlag, notes: "", userCode: "SYSTEM",
-      });
+      let resp;
+      if (optiStatus === "Locked")         resp = await tripApi.lockTrip(trip.tripCode);
+      else if (optiStatus === "Validated") resp = await tripApi.validateTrip(trip.tripCode);
+      else if (optiStatus === "Open" && lockFlag === 0) resp = await tripApi.unlockTrip(trip.tripCode);
+      else resp = await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
       setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
       toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
     } catch (e: any) {
