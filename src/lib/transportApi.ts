@@ -65,4 +65,28 @@ export const transportApi = {
       : [];
     return arr.map(mapApiSite);
   },
+
+  // ── VR (X3 XX10CPLANCHA) header + details ─────────────────
+  getVrHeader: async (vrcode: string): Promise<any | null> => {
+    const data = await request<any>(`/transport/vr?vrcode=${encodeURIComponent(vrcode)}`);
+    if (!data) return null;
+    if (Array.isArray(data)) return data[0] ?? null;
+    if (Array.isArray(data?.data)) return data.data[0] ?? null;
+    if (data?.data && typeof data.data === "object") return data.data;
+    return data;
+  },
+
+  getVrDetails: async (vrcode: string): Promise<any[]> => {
+    const data = await request<any>(`/transport/vrdetails?vrcode=${encodeURIComponent(vrcode)}`);
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.details)
+      ? data.details
+      : Array.isArray(data?.result)
+      ? data.result
+      : [];
+    return arr;
+  },
 };
