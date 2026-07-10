@@ -2846,8 +2846,9 @@ export default function Planner() {
         trip={detailTrip}
         vrHeader={vrHeader}
         vrDetails={vrDetails}
+        vrLoadStock={vrLoadStock}
         vrLoading={vrLoading}
-        onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); }}
+        onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); setVrLoadStock([]); }}
       />
     );
   }
