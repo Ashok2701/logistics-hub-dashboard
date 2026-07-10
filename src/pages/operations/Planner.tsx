@@ -2845,7 +2845,7 @@ export default function Planner() {
     <div className="flex flex-col bg-background" style={{ height: "calc(100vh - 56px)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "12px" }}>
 
       {/* ── TOOLBAR ─ compact single row ─────────────── */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-50 via-blue-50/60 to-indigo-50/60 border-b border-border/60 flex-shrink-0 shadow-sm">
+      <div className="flex items-center gap-4 px-3 py-4 bg-gradient-to-r from-slate-50 via-blue-50/60 to-indigo-50/60 border-b border-border/60 flex-shrink-0 shadow-sm font-black text-xl">
         {/* Site */}
         {sitesLoading
           ? <div className="h-9 flex items-center gap-2 px-3 text-xs text-muted-foreground bg-muted/30 rounded-lg border border-dashed border-border"><Loader2 className="w-4 h-4 animate-spin" /> Loading sites…</div>
@@ -2870,7 +2870,7 @@ export default function Planner() {
             <SelectValue placeholder="Route Codes" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Routes</SelectItem>
+            <SelectItem value="all">All Route Codes</SelectItem>
             {routeCodes.map(rc => (
               <SelectItem key={rc} value={rc}>{rc}</SelectItem>
             ))}
