@@ -1257,6 +1257,7 @@ function ActiveTourPanel({
 
                     toast({ title: "Optimisation complete ✓",
                       description: `${jobSteps.length} stops · ${totalDistKm} km · end ${endTime}` });
+                    setShowOptModal(false);
                   } catch(err) {
                     const msg = err instanceof Error ? err.message : String(err);
                     setOptError({ title: "Optimisation Failed", detail: msg });
