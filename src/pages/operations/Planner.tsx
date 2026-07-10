@@ -1335,7 +1335,7 @@ function ActiveTourPanel({
 // Shown when (i) is clicked on a trip row
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
-function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoading }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoading?: boolean }) {
+function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean }) {
   const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
   const depTime  = "07:30";
   const retTime  = "18:30";
@@ -1523,6 +1523,43 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoading }:
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+
+                {vrLoadStock && vrLoadStock.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      Load / Vehicle Stock
+                    </p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full" style={{ fontSize: "11px" }}>
+                        <thead>
+                          <tr className="bg-muted/50 border-b border-border">
+                            {["Seq","Item","Description","Qty","UoM","Weight","Volume","Lot","Location","Doc","BP"].map(h => (
+                              <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {vrLoadStock.map((s: any, i: number) => (
+                            <tr key={s.id ?? s.itmref ?? i} className="border-b border-border last:border-0 hover:bg-muted/40">
+                              <td className="px-2 py-2 font-mono font-bold text-center">{s.sequence ?? s.seq ?? i + 1}</td>
+                              <td className="px-2 py-2 font-mono text-primary font-semibold">{s.itmref ?? s.itemcode ?? s.item ?? "—"}</td>
+                              <td className="px-2 py-2 text-foreground truncate max-w-[180px]">{s.itmdes ?? s.description ?? s.itemname ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-right">{s.qty ?? s.quantity ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.uom ?? s.unit ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-right">{s.weight ?? s.netweight ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-right">{s.volume ?? s.vol ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.lot ?? s.lotnum ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.location ?? s.loc ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.docnum ?? s.sdhnum ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-foreground">{s.bpcode ?? s.bp ?? "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </>
@@ -1848,9 +1885,10 @@ export default function Planner() {
   // 'planner' = main view | 'detail' = trip detail full screen
   const [view, setView]               = useState<"planner" | "detail">("planner");
   const [detailTripId, setDetailTripId] = useState<string | null>(null);
-  const [vrHeader,  setVrHeader]  = useState<any | null>(null);
-  const [vrDetails, setVrDetails] = useState<any[]>([]);
-  const [vrLoading, setVrLoading] = useState(false);
+  const [vrHeader,    setVrHeader]    = useState<any | null>(null);
+  const [vrDetails,   setVrDetails]   = useState<any[]>([]);
+  const [vrLoadStock, setVrLoadStock] = useState<any[]>([]);
+  const [vrLoading,   setVrLoading]   = useState(false);
 
   // Optimisation slide panel
   const [optTripId,   setOptTripId]   = useState<string | null>(null);
@@ -2845,8 +2883,9 @@ export default function Planner() {
         trip={detailTrip}
         vrHeader={vrHeader}
         vrDetails={vrDetails}
+        vrLoadStock={vrLoadStock}
         vrLoading={vrLoading}
-        onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); }}
+        onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); setVrLoadStock([]); }}
       />
     );
   }
@@ -3390,21 +3429,20 @@ export default function Planner() {
                                       setView("detail");
                                       setVrHeader(null);
                                       setVrDetails([]);
+                                      setVrLoadStock([]);
                                       if (t.tripCode) {
                                         setVrLoading(true);
                                         try {
-                                          const [resp, header, details] = await Promise.all([
-                                            tripApi.getTripByCode(t.tripCode).catch(() => null),
+                                          const [header, details, loadStock] = await Promise.all([
                                             transportApi.getVrHeader(t.tripCode).catch(() => null),
                                             transportApi.getVrDetails(t.tripCode).catch(() => []),
+                                            transportApi.getVrLoadStock(t.tripCode).catch(() => []),
                                           ]);
-                                          if (resp) {
-                                            setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
-                                          }
                                           setVrHeader(header);
                                           setVrDetails(details ?? []);
+                                          setVrLoadStock(loadStock ?? []);
                                         } catch (err: any) {
-                                          toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
+                                          toast({ title: "Failed to load route detail", description: err?.message ?? "Unknown error", variant: "destructive" });
                                         } finally {
                                           setVrLoading(false);
                                         }

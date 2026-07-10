@@ -89,4 +89,18 @@ export const transportApi = {
       : [];
     return arr;
   },
+
+  getVrLoadStock: async (vrcode: string): Promise<any[]> => {
+    const data = await request<any>(`/transport/loadvehstk?vrcode=${encodeURIComponent(vrcode)}`);
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.stock)
+      ? data.stock
+      : Array.isArray(data?.result)
+      ? data.result
+      : [];
+    return arr;
+  },
 };
