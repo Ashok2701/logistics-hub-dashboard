@@ -1359,9 +1359,28 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
   };
 
   // Route Information
-  const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
-  const vlsCode    = dash(stock0?.vcrnum ?? stock0?.xnum ?? stock0?.lvsnum);
-  const statusVal  = dash(hasStock ? pick("dispstat","optimsta","status") : "Locked");
+  // Date formatter → MM-DD-YYYY
+  const fmtDateMDY = (v: any) => {
+    if (v === undefined || v === null || v === "") return "—";
+    const s = String(v);
+    // Try ISO / yyyy-mm-dd prefix
+    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return `${iso[2]}-${iso[3]}-${iso[1]}`;
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const yy = d.getFullYear();
+      return `${mm}-${dd}-${yy}`;
+    }
+    return s;
+  };
+
+  const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.VCRNUM_0 ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
+  // Vehicle Load Stock → VCRNUM_0 from loadstk when it exists
+  const vlsCode    = dash(hasStock ? (stock0?.VCRNUM_0 ?? stock0?.vcrnum ?? stock0?.xnum ?? stock0?.lvsnum) : undefined);
+  // Status → "Validated" when loadstk data exists, otherwise "Locked"
+  const statusVal  = hasStock ? "Validated" : "Locked";
   const depSite    = dash(pick("fcy","depfcy","fcy_0"));
   const arrSite    = dash(pick("arrfcy","fcy","fcy_0"));
   const carrier    = dash(pick("bptnum","carrier"));
@@ -1369,7 +1388,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
   const vehicle    = dash(pick("codeyve","vehicle"));
   const driverId   = dash(pick("driverid","driverId","cod_driver"));
   const driverName = dash(pick("drivername","driverName","driver"));
-  const createDate = dash(pick("datexec","datcre","creationdate"));
+  const createDate = fmtDateMDY(pick("datexec","datcre","creationdate"));
   const createTime = dash(pick("creationtime","timcre","heucre"));
   const tripNum    = dash(pick("xnumpc","trip","seq"));
 
