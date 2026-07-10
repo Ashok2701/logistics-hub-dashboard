@@ -1642,7 +1642,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                 <span className="w-1 h-4 rounded-full bg-primary" />
                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Transactions</h3>
               </div>
-              <span className="text-[10px] text-muted-foreground font-medium">{trip.stops.length} record{trip.stops.length === 1 ? "" : "s"}</span>
+              <span className="text-[10px] text-muted-foreground font-medium">{rows.length} record{rows.length === 1 ? "" : "s"}</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full" style={{ fontSize: "11px" }}>
@@ -1654,38 +1654,45 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   </tr>
                 </thead>
                 <tbody>
-                  {trip.stops.map((s, i) => {
-                    const arr = s.arrivalDate || s.arrivalTime ? `${s.arrivalDate ?? depDate} ${s.arrivalTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 12:41`);
-                    const dep = s.departureDate || s.departureTime ? `${s.departureDate ?? depDate} ${s.departureTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 13:26`);
-                    const svc = s.serviceTime ?? (isOpen ? "—" : "00:30");
-                    const fpd = s.fromPrevDistance ?? (isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`);
-                    const fpt = s.fromPrevTravelTime ?? (isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`);
-                    const wait = s.waitingTime ?? (isOpen ? "—" : "00:15");
+                  {rows.map((r: any, i: number) => {
+                    const seq  = r.sequence ?? r.seq ?? i + 1;
+                    const doc  = r.sdhnum ?? r.docnum ?? r.documentnumber ?? "—";
+                    const del  = r.deliverynumber ?? r.delnum ?? "—";
+                    const site = r.xdocsite ?? r.fcy ?? "—";
+                    const arr  = fmtDT(r.arrivedate ?? r.arrivalDate, r.arrivetime ?? r.arrivalTime);
+                    const dep  = fmtDT(r.departdate ?? r.departureDate, r.departtime ?? r.departureTime);
+                    const svc  = r.servicetime ?? r.serviceTime ?? "—";
+                    const addr = r.address ?? r.bpaadd1 ?? "—";
+                    const bp   = r.bpcode ?? r.bpnum ?? r.bpcnum ?? "—";
+                    const cli  = r.client ?? r.bpcnam ?? r.clientname ?? "—";
+                    const city = r.city ?? r.bpacity ?? "—";
+                    const fpd  = r.fromprevdist ?? r.fromPrevDistance ?? "—";
+                    const fpt  = r.fromprevtra ?? r.fromprevtravel ?? r.fromPrevTravel ?? "—";
+                    const wait = r.waittime ?? r.waitingTime ?? "—";
                     return (
-                    <tr key={s.id} className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
-                      <td className="px-2 py-2 font-mono font-bold text-center text-foreground">{s.seq ?? i + 1}</td>
-                      <td className="px-2 py-2 font-mono text-primary font-semibold">{(s as any).docNum ?? s.txn}</td>
-
-                      <td className="px-2 py-2 text-muted-foreground">—</td>
-                      <td className="px-2 py-2 font-mono text-foreground">{trip.departSite}</td>
+                    <tr key={r.id ?? doc ?? i} className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
+                      <td className="px-2 py-2 font-mono font-bold text-center text-foreground">{seq}</td>
+                      <td className="px-2 py-2 font-mono text-primary font-semibold">{doc}</td>
+                      <td className="px-2 py-2 text-muted-foreground">{del}</td>
+                      <td className="px-2 py-2 font-mono text-foreground">{site}</td>
                       <td className="px-2 py-2">
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]">Scheduled</span>
                       </td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{arr}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{dep}</td>
                       <td className="px-2 py-2 font-mono text-foreground">{svc}</td>
-                      <td className="px-2 py-2 text-muted-foreground truncate max-w-[100px]">{s.address}</td>
-                      <td className="px-2 py-2 font-mono text-foreground">{s.bpcode}</td>
-                      <td className="px-2 py-2 font-medium text-foreground truncate max-w-[100px]">{s.client}</td>
-                      <td className="px-2 py-2 text-muted-foreground">{s.city}</td>
+                      <td className="px-2 py-2 text-muted-foreground truncate max-w-[100px]">{addr}</td>
+                      <td className="px-2 py-2 font-mono text-foreground">{bp}</td>
+                      <td className="px-2 py-2 font-medium text-foreground truncate max-w-[100px]">{cli}</td>
+                      <td className="px-2 py-2 text-muted-foreground">{city}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{fpd}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{fpt}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{wait}</td>
                     </tr>
                     );
                   })}
-                  {trip.stops.length === 0 && (
-                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No stops on this trip</td></tr>
+                  {rows.length === 0 && (
+                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No transactions on this trip</td></tr>
                   )}
                 </tbody>
               </table>
