@@ -7,7 +7,7 @@ import {
   CheckCheck, X, Play, Map as MapIcon, List, GripVertical,
   Loader2, Trash2, Lock, Unlock, RefreshCw, ChevronDown,
   Package, AlertCircle, Info, Eye, Zap, Filter,
-  Wand2, GitMerge, ShieldCheck, ChevronLeft, Warehouse,
+  Wand2, GitMerge, ShieldCheck, ChevronLeft, Warehouse, CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -1372,34 +1372,60 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
 
             {/* Workflow steps (right) */}
             {(() => {
+              // Stage index derived from trip status:
+              //   Locked     → 0 (LVS Create is active)
+              //   Validated  → 1 (LVS Confirm is active; LVS Create is done)
+              //   Loaded     → 2 (Load Truck done; Unload active)
+              //   Unloaded   → 3 (all done)
+              const status = String((trip as any).optiStatus ?? trip.status ?? "").toLowerCase();
+              const stage =
+                status === "unloaded" ? 3 :
+                status === "loaded"   ? 2 :
+                status === "validated"? 1 :
+                status === "locked"   ? 0 : -1;
+
               const steps = [
-                { key: "lvs",    label: "LVS Creation",  icon: RouteIcon, done: true },
-                { key: "load",   label: "Load Truck",    icon: Truck,     done: trip.status === "Validated" || trip.status === "Locked" },
-                { key: "unload", label: "Unload Vehicle",icon: Package,   done: false },
+                { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: () => toast({ title: "LVS Create",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
+                { key: "lvs-confirm", label: "LVS Confirm", icon: CheckCheck,onClick: () => toast({ title: "LVS Confirm", description: `Trip ${trip.tripCode ?? trip.id}` }) },
+                { key: "load",        label: "Load Truck",  icon: Truck,     onClick: () => toast({ title: "Load Truck",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
+                { key: "unload",      label: "Unload Truck",icon: Package,   onClick: () => toast({ title: "Unload Truck",description: `Trip ${trip.tripCode ?? trip.id}` }) },
               ];
-              const activeIdx = steps.findIndex(s => !s.done);
-              const currentIdx = activeIdx === -1 ? steps.length - 1 : activeIdx;
+
               return (
                 <div className="flex items-center gap-1.5">
                   {steps.map((s, i) => {
                     const Icon = s.icon;
-                    const isActive = i === currentIdx;
-                    const isDone = s.done;
+                    const isDone   = stage >= 0 && i < stage;
+                    const isActive = stage >= 0 && i === stage;
+                    const isFuture = !isDone && !isActive;
+                    const disabled = isDone || isFuture;
                     return (
                       <React.Fragment key={s.key}>
                         <button
+                          disabled={disabled}
+                          onClick={disabled ? undefined : s.onClick}
+                          title={
+                            isDone   ? `${s.label} — completed` :
+                            isActive ? s.label :
+                                       `${s.label} — not yet available`
+                          }
                           className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap",
-                            isDone && "bg-white text-primary shadow-sm",
-                            isActive && !isDone && "bg-white text-primary ring-2 ring-white/50 shadow-sm",
-                            !isDone && !isActive && "bg-white/10 text-primary-foreground/70 hover:bg-white/20",
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap border",
+                            isDone   && "bg-emerald-500 text-white border-emerald-400 cursor-not-allowed shadow-sm",
+                            isActive && "bg-white text-primary border-white ring-2 ring-white/60 shadow-sm hover:bg-white/90 cursor-pointer",
+                            isFuture && "bg-white/10 text-primary-foreground/50 border-white/10 cursor-not-allowed opacity-70",
                           )}
                         >
-                          <Icon className="w-3.5 h-3.5" />
+                          {isDone
+                            ? <CheckCircle2 className="w-3.5 h-3.5" />
+                            : <Icon className="w-3.5 h-3.5" />}
                           {s.label}
                         </button>
                         {i < steps.length - 1 && (
-                          <div className="w-6 h-[2px] rounded-full bg-white/25" />
+                          <div className={cn(
+                            "w-6 h-[2px] rounded-full",
+                            i < stage ? "bg-emerald-400" : "bg-white/25"
+                          )} />
                         )}
                       </React.Fragment>
                     );
