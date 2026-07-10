@@ -1513,59 +1513,6 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
             </div>
           </section>
 
-          {/* ── X3 Load / Vehicle Stock (loadvehstk) ── */}
-          <section className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
-              <div className="flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-emerald-500" />
-                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
-                  Load / Vehicle Stock
-                </h3>
-              </div>
-              <span className="text-[10px] text-muted-foreground font-medium">
-                {vrLoading ? "Loading…" : `${vrLoadStock?.length ?? 0} item${(vrLoadStock?.length ?? 0) === 1 ? "" : "s"}`}
-              </span>
-            </div>
-
-            {vrLoading ? (
-              <div className="p-6 flex items-center justify-center text-xs text-muted-foreground">
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fetching load stock…
-              </div>
-            ) : !vrLoadStock || vrLoadStock.length === 0 ? (
-              <div className="p-6 text-center text-xs text-muted-foreground">
-                No load / vehicle stock data for this trip.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full" style={{ fontSize: "11px" }}>
-                  <thead>
-                    <tr className="bg-muted/50 border-b border-border">
-                      {["Seq","Item","Description","Qty","UoM","Weight","Volume","Lot","Location","Doc","BP"].map(h => (
-                        <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vrLoadStock.map((s: any, i: number) => (
-                      <tr key={s.id ?? s.itmref ?? i} className="border-b border-border last:border-0 hover:bg-muted/40">
-                        <td className="px-2 py-2 font-mono font-bold text-center">{s.sequence ?? s.seq ?? i + 1}</td>
-                        <td className="px-2 py-2 font-mono text-primary font-semibold">{s.itmref ?? s.itemcode ?? s.item ?? "—"}</td>
-                        <td className="px-2 py-2 text-foreground truncate max-w-[180px]">{s.itmdes ?? s.description ?? s.itemname ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-right">{s.qty ?? s.quantity ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.uom ?? s.unit ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-right">{s.weight ?? s.netweight ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-right">{s.volume ?? s.vol ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.lot ?? s.lotnum ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.location ?? s.loc ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.docnum ?? s.sdhnum ?? "—"}</td>
-                        <td className="px-2 py-2 font-mono text-foreground">{s.bpcode ?? s.bp ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
 
 
 
