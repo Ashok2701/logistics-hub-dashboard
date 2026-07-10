@@ -1622,7 +1622,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   <Truck className="w-8 h-8 text-primary" />
                 </div>
                 <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wider">Vehicle</p>
-                <p className="text-[11px] font-bold text-foreground">{trip.vehicle.code}</p>
+                <p className="text-[11px] font-bold text-foreground">{vehicle}</p>
               </div>
               <div className="rounded-xl bg-card border border-border shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
                 <div className="w-16 h-14 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-1.5">
