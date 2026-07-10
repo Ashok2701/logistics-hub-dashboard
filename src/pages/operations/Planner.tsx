@@ -1588,7 +1588,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                     {[
                       { label: "Departure Date", value: depDate },
                       { label: "Departure Time", value: depTime },
-                      { label: "Return Date",    value: depDate },
+                      { label: "Return Date",    value: retDate },
                       { label: "Return Time",    value: retTime },
                     ].map(({ label, value }) => (
                       <div key={label}>
