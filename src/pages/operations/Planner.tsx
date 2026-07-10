@@ -1629,7 +1629,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wider">Driver</p>
-                <p className="text-[11px] font-bold text-foreground">{trip.driver.id}</p>
+                <p className="text-[11px] font-bold text-foreground">{driverId}</p>
               </div>
             </div>
 
