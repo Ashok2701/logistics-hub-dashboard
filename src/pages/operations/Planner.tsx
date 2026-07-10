@@ -1336,17 +1336,61 @@ function ActiveTourPanel({
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
 function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean }) {
-  const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
-  const depTime  = "07:30";
-  const retTime  = "18:30";
-  const isOpen   = trip.status === "Open";
-  const totalKm  = isOpen ? 0 : trip.distanceKm;
-  const totalMin = isOpen ? 0 : trip.travelTimeMin;
+  // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
+  const H  = (vrHeader ?? {}) as any;
+  const rows = Array.isArray(vrDetails) ? vrDetails : [];
+  const stock = Array.isArray(vrLoadStock) ? vrLoadStock : [];
+  const stock0: any = stock[0] ?? null;
+  const hasStock = stock.length > 0;
+
+  const pick = (...keys: string[]) => {
+    for (const k of keys) {
+      const v = H[k];
+      if (v !== undefined && v !== null && v !== "") return v;
+    }
+    return undefined;
+  };
+  const dash = (v: any) => (v === undefined || v === null || v === "" ? "—" : String(v));
+  const fmtDT = (d?: any, t?: any) => {
+    const dd = d ? String(d).slice(0, 10) : "";
+    const tt = t ? String(t).slice(0, 5) : "";
+    const s = `${dd} ${tt}`.trim();
+    return s || "—";
+  };
+
+  // Route Information
+  const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
+  const vlsCode    = dash(stock0?.vcrnum ?? stock0?.xnum ?? stock0?.lvsnum);
+  const statusVal  = dash(hasStock ? pick("dispstat","optimsta","status") : "Locked");
+  const depSite    = dash(pick("fcy","depfcy","fcy_0"));
+  const arrSite    = dash(pick("arrfcy","fcy","fcy_0"));
+  const carrier    = dash(pick("bptnum","carrier"));
+  const vehClass   = dash(pick("vehclass","category","xcategory"));
+  const vehicle    = dash(pick("codeyve","vehicle"));
+  const driverId   = dash(pick("driverid","driverId","cod_driver"));
+  const driverName = dash(pick("drivername","driverName","driver"));
+  const createDate = dash(pick("datexec","datcre","creationdate"));
+  const createTime = dash(pick("creationtime","timcre","heucre"));
+  const tripNum    = dash(pick("xnumpc","trip","seq"));
+
+  // Schedule
+  const depDate = String(pick("datexec","datcre","creationdate") ?? "").slice(0, 10) || "—";
+  const depTime = String(pick("heudep","depTime") ?? "").slice(0, 5) || "—";
+  const retDate = String(pick("datret","datexec","creationdate") ?? "").slice(0, 10) || "—";
+  const retTime = String(pick("heuarr","retTime") ?? "").slice(0, 5) || "—";
+
+  // Totals derived from vrDetails
+  const totalKm  = rows.reduce((sum: number, r: any) => sum + (Number(r.fromprevdist ?? r.fromPrevDist ?? 0) || 0), 0);
+  const totalMin = rows.reduce((sum: number, r: any) => {
+    const t = String(r.fromprevtra ?? r.fromprevtravel ?? r.fromPrevTravel ?? "0:0");
+    const [h, m] = t.split(":").map((x: string) => Number(x) || 0);
+    return sum + (h * 60 + m);
+  }, 0);
   const totalH   = Math.floor(totalMin / 60);
   const totalM   = totalMin % 60;
-  const travelCost = isOpen ? 0 : Math.round(totalKm * 0.045);
-  const distCost   = isOpen ? 0 : Math.round(totalKm * 1.5);
-  const totalCost  = isOpen ? 0 : travelCost + distCost;
+  const travelCost = Math.round(totalKm * 0.045);
+  const distCost   = Math.round(totalKm * 1.5);
+  const totalCost  = travelCost + distCost;
 
   return (
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
