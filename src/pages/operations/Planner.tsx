@@ -29,6 +29,7 @@ import { format } from "date-fns";
 import { fetchTmsSites, loadPlannerData, type RpSite, type RpVehicle, type RpDriver, type RpStop } from "@/lib/routePlannerApi";
 import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi";
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
+import { transportApi } from "@/lib/transportApi";
 
 // ═══════════════════════════════════════════════════════
 // TYPES — mapped from RpStop / RpVehicle / RpDriver
