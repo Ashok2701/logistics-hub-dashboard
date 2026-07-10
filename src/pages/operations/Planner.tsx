@@ -3244,7 +3244,21 @@ export default function Planner() {
                               )}
                             </td>
                             <td className="px-2 py-1.5">
-                              <Checkbox checked={sel} onCheckedChange={() => { if (sel) { setSelectedTripId(null); clearDraft(); } else { selectTrip(t); } }} onClick={(e) => e.stopPropagation()} />
+                              <button
+                                type="button"
+                                role="radio"
+                                aria-checked={sel}
+                                onClick={(e) => { e.stopPropagation(); if (sel) { setSelectedTripId(null); clearDraft(); } else { selectTrip(t); } }}
+                                title={sel ? "Selected — showing on map" : "Preview on map"}
+                                className={cn(
+                                  "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                                  sel
+                                    ? "border-primary bg-primary/10 ring-2 ring-primary/25"
+                                    : "border-slate-300 bg-white hover:border-primary hover:bg-primary/5"
+                                )}
+                              >
+                                {sel && <span className="w-2 h-2 rounded-full bg-primary" />}
+                              </button>
                             </td>
                             <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">
                               {t.tripCode ?? t.id.slice(-12)}
