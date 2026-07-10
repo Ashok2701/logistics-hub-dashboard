@@ -1525,6 +1525,43 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                     </table>
                   </div>
                 )}
+
+                {vrLoadStock && vrLoadStock.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      Load / Vehicle Stock
+                    </p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full" style={{ fontSize: "11px" }}>
+                        <thead>
+                          <tr className="bg-muted/50 border-b border-border">
+                            {["Seq","Item","Description","Qty","UoM","Weight","Volume","Lot","Location","Doc","BP"].map(h => (
+                              <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {vrLoadStock.map((s: any, i: number) => (
+                            <tr key={s.id ?? s.itmref ?? i} className="border-b border-border last:border-0 hover:bg-muted/40">
+                              <td className="px-2 py-2 font-mono font-bold text-center">{s.sequence ?? s.seq ?? i + 1}</td>
+                              <td className="px-2 py-2 font-mono text-primary font-semibold">{s.itmref ?? s.itemcode ?? s.item ?? "—"}</td>
+                              <td className="px-2 py-2 text-foreground truncate max-w-[180px]">{s.itmdes ?? s.description ?? s.itemname ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-right">{s.qty ?? s.quantity ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.uom ?? s.unit ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-right">{s.weight ?? s.netweight ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-right">{s.volume ?? s.vol ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.lot ?? s.lotnum ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.location ?? s.loc ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.docnum ?? s.sdhnum ?? "—"}</td>
+                              <td className="px-2 py-2 font-mono text-foreground">{s.bpcode ?? s.bp ?? "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </section>
