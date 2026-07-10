@@ -1848,9 +1848,10 @@ export default function Planner() {
   // 'planner' = main view | 'detail' = trip detail full screen
   const [view, setView]               = useState<"planner" | "detail">("planner");
   const [detailTripId, setDetailTripId] = useState<string | null>(null);
-  const [vrHeader,  setVrHeader]  = useState<any | null>(null);
-  const [vrDetails, setVrDetails] = useState<any[]>([]);
-  const [vrLoading, setVrLoading] = useState(false);
+  const [vrHeader,    setVrHeader]    = useState<any | null>(null);
+  const [vrDetails,   setVrDetails]   = useState<any[]>([]);
+  const [vrLoadStock, setVrLoadStock] = useState<any[]>([]);
+  const [vrLoading,   setVrLoading]   = useState(false);
 
   // Optimisation slide panel
   const [optTripId,   setOptTripId]   = useState<string | null>(null);
