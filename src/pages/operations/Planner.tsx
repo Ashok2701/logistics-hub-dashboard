@@ -1490,20 +1490,20 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
             </div>
             <div className="p-4 grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
               {[
-                { label: "Route Num",            value: trip.id,                                                highlight: true },
-                { label: "Vehicle Load Stock",   value: `KCC${trip.seq.toString().padStart(6,"0")}XCHG0000001` },
-                { label: "Status",               value: trip.status,                                            highlight: true },
-                { label: "Departure Site",       value: trip.departSite },
-                { label: "Arrival Site",         value: trip.arrivalSite },
-                { label: "Carrier",              value: trip.vehicle.category || "N/A" },
-                { label: "Vehicle Class",        value: trip.vehicle.category },
-                { label: "Vehicle",              value: trip.vehicle.code,                                      highlight: true },
+                { label: "Route Num",            value: routeNum,   highlight: true },
+                { label: "Vehicle Load Stock",   value: vlsCode },
+                { label: "Status",               value: statusVal,  highlight: true },
+                { label: "Departure Site",       value: depSite },
+                { label: "Arrival Site",         value: arrSite },
+                { label: "Carrier",              value: carrier },
+                { label: "Vehicle Class",        value: vehClass },
+                { label: "Vehicle",              value: vehicle,    highlight: true },
                 { label: "Route Type",           value: "Scheduled" },
-                { label: "Driver ID",            value: trip.driver.id },
-                { label: "Driver",               value: trip.driver.name,                                       highlight: true },
-                { label: "Creation Date",        value: depDate },
-                { label: "Creation Time",        value: depTime },
-                { label: "Trip",                 value: String(trip.seq) },
+                { label: "Driver ID",            value: driverId },
+                { label: "Driver",               value: driverName, highlight: true },
+                { label: "Creation Date",        value: createDate },
+                { label: "Creation Time",        value: createTime },
+                { label: "Trip",                 value: tripNum },
               ].map(({ label, value, highlight }) => (
                 <div key={label}>
                   <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
