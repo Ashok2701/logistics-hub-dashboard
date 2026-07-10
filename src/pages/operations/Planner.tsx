@@ -1443,128 +1443,60 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
             </div>
           </section>
 
-          {/* ── X3 VR (XX10CPLANCHA / PLANCHD) live data ── */}
+          {/* ── X3 Load / Vehicle Stock (loadvehstk) ── */}
           <section className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
               <div className="flex items-center gap-2">
                 <span className="w-1 h-4 rounded-full bg-emerald-500" />
                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
-                  X3 Route Data — {trip.id}
+                  Load / Vehicle Stock
                 </h3>
               </div>
               <span className="text-[10px] text-muted-foreground font-medium">
-                {vrLoading ? "Loading…" : `${vrDetails?.length ?? 0} stop${(vrDetails?.length ?? 0) === 1 ? "" : "s"}`}
+                {vrLoading ? "Loading…" : `${vrLoadStock?.length ?? 0} item${(vrLoadStock?.length ?? 0) === 1 ? "" : "s"}`}
               </span>
             </div>
 
             {vrLoading ? (
               <div className="p-6 flex items-center justify-center text-xs text-muted-foreground">
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fetching X3 route data…
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fetching load stock…
               </div>
-            ) : !vrHeader && (!vrDetails || vrDetails.length === 0) ? (
+            ) : !vrLoadStock || vrLoadStock.length === 0 ? (
               <div className="p-6 text-center text-xs text-muted-foreground">
-                No X3 route data returned for this trip code.
+                No load / vehicle stock data for this trip.
               </div>
             ) : (
-              <>
-                {vrHeader && (
-                  <div className="p-4 grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px] border-b border-border">
-                    {[
-                      { label: "VR Num (xnumpc)",   value: vrHeader.xnumpc },
-                      { label: "Vehicle (codeyve)", value: vrHeader.codeyve },
-                      { label: "Site (fcy)",        value: vrHeader.fcy },
-                      { label: "Departure (heudep)",value: vrHeader.heudep },
-                      { label: "Arrival (heuarr)",  value: vrHeader.heuarr },
-                      { label: "Opti Status",       value: vrHeader.optimsta },
-                      { label: "Dispatch Status",   value: vrHeader.dispstat },
-                      { label: "Driver",            value: vrHeader.driver ?? vrHeader.drivernam ?? vrHeader.xdriver },
-                      { label: "Doc Date",          value: vrHeader.docdate ?? vrHeader.xdate },
-                      { label: "Total Distance",    value: vrHeader.totdist ?? vrHeader.xtotdist },
-                      { label: "Total Time",        value: vrHeader.tottime ?? vrHeader.xtottime },
-                      { label: "Notes",             value: vrHeader.notes ?? vrHeader.xnotes },
-                    ].map(({ label, value }) => (
-                      <div key={label}>
-                        <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
-                        <p className="font-semibold text-foreground break-all">
-                          {value === undefined || value === null || value === "" ? "—" : String(value)}
-                        </p>
-                      </div>
+              <div className="overflow-x-auto">
+                <table className="w-full" style={{ fontSize: "11px" }}>
+                  <thead>
+                    <tr className="bg-muted/50 border-b border-border">
+                      {["Seq","Item","Description","Qty","UoM","Weight","Volume","Lot","Location","Doc","BP"].map(h => (
+                        <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vrLoadStock.map((s: any, i: number) => (
+                      <tr key={s.id ?? s.itmref ?? i} className="border-b border-border last:border-0 hover:bg-muted/40">
+                        <td className="px-2 py-2 font-mono font-bold text-center">{s.sequence ?? s.seq ?? i + 1}</td>
+                        <td className="px-2 py-2 font-mono text-primary font-semibold">{s.itmref ?? s.itemcode ?? s.item ?? "—"}</td>
+                        <td className="px-2 py-2 text-foreground truncate max-w-[180px]">{s.itmdes ?? s.description ?? s.itemname ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-right">{s.qty ?? s.quantity ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.uom ?? s.unit ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-right">{s.weight ?? s.netweight ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-right">{s.volume ?? s.vol ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.lot ?? s.lotnum ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.location ?? s.loc ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-muted-foreground">{s.docnum ?? s.sdhnum ?? "—"}</td>
+                        <td className="px-2 py-2 font-mono text-foreground">{s.bpcode ?? s.bp ?? "—"}</td>
+                      </tr>
                     ))}
-                  </div>
-                )}
-
-                {vrDetails && vrDetails.length > 0 && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full" style={{ fontSize: "11px" }}>
-                      <thead>
-                        <tr className="bg-muted/50 border-b border-border">
-                          {["Seq","SDH Num","Arrive Date","Arrive Time","Depart Date","Depart Time","From Prev Dist","From Prev Travel","Service","Waiting","BP","Client","City"].map(h => (
-                            <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {vrDetails.map((d: any, i: number) => (
-                          <tr key={d.sdhnum ?? d.docnum ?? i} className="border-b border-border last:border-0 hover:bg-muted/40">
-                            <td className="px-2 py-2 font-mono font-bold text-center">{d.sequence ?? d.seq ?? i + 1}</td>
-                            <td className="px-2 py-2 font-mono text-primary font-semibold">{d.sdhnum ?? d.docnum ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.arrivedate ?? d.arrivaldate ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.arrivetime ?? d.arrivaltime ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.departdate ?? d.departuredate ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.departtime ?? d.departuretime ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.fromprevdist ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.fromprevtravel ?? d.fromprevtraveltime ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.servicetime ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-muted-foreground">{d.waitingtime ?? "—"}</td>
-                            <td className="px-2 py-2 font-mono text-foreground">{d.bpcode ?? d.bp ?? "—"}</td>
-                            <td className="px-2 py-2 text-foreground truncate max-w-[140px]">{d.client ?? d.bpname ?? "—"}</td>
-                            <td className="px-2 py-2 text-muted-foreground">{d.city ?? "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {vrLoadStock && vrLoadStock.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      Load / Vehicle Stock
-                    </p>
-                    <div className="overflow-x-auto">
-                      <table className="w-full" style={{ fontSize: "11px" }}>
-                        <thead>
-                          <tr className="bg-muted/50 border-b border-border">
-                            {["Seq","Item","Description","Qty","UoM","Weight","Volume","Lot","Location","Doc","BP"].map(h => (
-                              <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {vrLoadStock.map((s: any, i: number) => (
-                            <tr key={s.id ?? s.itmref ?? i} className="border-b border-border last:border-0 hover:bg-muted/40">
-                              <td className="px-2 py-2 font-mono font-bold text-center">{s.sequence ?? s.seq ?? i + 1}</td>
-                              <td className="px-2 py-2 font-mono text-primary font-semibold">{s.itmref ?? s.itemcode ?? s.item ?? "—"}</td>
-                              <td className="px-2 py-2 text-foreground truncate max-w-[180px]">{s.itmdes ?? s.description ?? s.itemname ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-right">{s.qty ?? s.quantity ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.uom ?? s.unit ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-right">{s.weight ?? s.netweight ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-right">{s.volume ?? s.vol ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.lot ?? s.lotnum ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.location ?? s.loc ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-muted-foreground">{s.docnum ?? s.sdhnum ?? "—"}</td>
-                              <td className="px-2 py-2 font-mono text-foreground">{s.bpcode ?? s.bp ?? "—"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </>
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
+
 
 
 
