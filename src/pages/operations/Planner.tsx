@@ -1429,7 +1429,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                 status === "locked"   ? 0 : -1;
 
               const steps = [
-                { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: () => toast({ title: "LVS Create",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
+                { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: () => onLvsCreate?.() },
                 { key: "lvs-confirm", label: "LVS Confirm", icon: CheckCheck,onClick: () => toast({ title: "LVS Confirm", description: `Trip ${trip.tripCode ?? trip.id}` }) },
                 { key: "load",        label: "Load Truck",  icon: Truck,     onClick: () => toast({ title: "Load Truck",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
                 { key: "unload",      label: "Unload Truck",icon: Package,   onClick: () => toast({ title: "Unload Truck",description: `Trip ${trip.tripCode ?? trip.id}` }) },
