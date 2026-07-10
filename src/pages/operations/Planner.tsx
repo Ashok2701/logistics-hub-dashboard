@@ -2176,9 +2176,20 @@ export default function Planner() {
       .then((apiTrips) => {
         const mapped = (apiTrips ?? []).map((r) => tripFromApi(r));
         setTrips((prev) => {
-          const localOnly = prev.filter((t) => t.tripId == null);
+          const apiCodes = new Set(mapped.map((t) => t.tripCode).filter(Boolean));
+          // Keep local-only (no tripId) trips, and drop any prev persisted trips
+          // that are also in the API response to avoid duplicates.
+          const localOnly = prev.filter((t) => t.tripId == null && !(t.tripCode && apiCodes.has(t.tripCode)));
           const merged = [...mapped, ...localOnly];
-          return merged.map((t, i) => ({ ...t, seq: i + 1 }));
+          // Final dedupe by tripCode as a safety net.
+          const seen = new Set<string>();
+          const deduped = merged.filter((t) => {
+            const key = t.tripCode ?? t.id;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          return deduped.map((t, i) => ({ ...t, seq: i + 1 }));
         });
       })
       .catch(() => {
