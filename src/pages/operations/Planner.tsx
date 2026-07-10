@@ -3265,25 +3265,38 @@ export default function Planner() {
                               {t.tripCode ?? t.id.slice(-12)}
                             </td>
                             <td className="px-2 py-1.5">
-                              <button
-                                className="flex items-center justify-center w-9 h-9 rounded-lg border border-input bg-white text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 shadow-sm"
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  if (t.tripCode) {
-                                    try {
-                                      const resp = await tripApi.getTripByCode(t.tripCode);
-                                      setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
-                                    } catch (err: any) {
-                                      toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
-                                    }
-                                  }
-                                  setDetailTripId(t.id);
-                                  setView("detail");
-                                }}
-                                title="Route Management Detail"
-                              >
-                                <Info className="w-5 h-5" />
-                              </button>
+                              {(() => {
+                                const s = String(apiStatus ?? t.status).toLowerCase();
+                                const enabled = s === "locked" || s === "validated";
+                                return (
+                                  <button
+                                    disabled={!enabled}
+                                    className={cn(
+                                      "flex items-center justify-center w-9 h-9 rounded-lg border transition-all duration-200 shadow-sm",
+                                      enabled
+                                        ? "border-input bg-white text-sky-600 hover:bg-sky-50 hover:border-sky-200 cursor-pointer"
+                                        : "border-input bg-gray-50 text-gray-300 cursor-not-allowed opacity-60"
+                                    )}
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if (!enabled) return;
+                                      if (t.tripCode) {
+                                        try {
+                                          const resp = await tripApi.getTripByCode(t.tripCode);
+                                          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+                                        } catch (err: any) {
+                                          toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
+                                        }
+                                      }
+                                      setDetailTripId(t.id);
+                                      setView("detail");
+                                    }}
+                                    title={enabled ? "Route Management Detail" : "Available after lock"}
+                                  >
+                                    <Info className="w-5 h-5" />
+                                  </button>
+                                );
+                              })()}
                             </td>
                             <td className="px-2 py-1.5">
                               <span className={cn("text-[9px] px-2 py-0.5 rounded font-bold", statusColor(t.status))}>
