@@ -1335,7 +1335,7 @@ function ActiveTourPanel({
 // Shown when (i) is clicked on a trip row
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
-function RouteManagementDetail({ trip, onBack }: { trip: Trip; onBack: () => void }) {
+function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoading }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoading?: boolean }) {
   const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
   const depTime  = "07:30";
   const retTime  = "18:30";
