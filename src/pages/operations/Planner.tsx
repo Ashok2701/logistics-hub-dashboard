@@ -2743,7 +2743,10 @@ export default function Planner() {
     return (
       <RouteManagementDetail
         trip={detailTrip}
-        onBack={() => { setView("planner"); setDetailTripId(null); }}
+        vrHeader={vrHeader}
+        vrDetails={vrDetails}
+        vrLoading={vrLoading}
+        onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); }}
       />
     );
   }
