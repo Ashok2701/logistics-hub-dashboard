@@ -1709,12 +1709,22 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Drops</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span className="font-mono font-semibold text-foreground">{trip.totalWeight.toFixed(2)} LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Mass</span><span className="font-mono text-foreground">60000.00 LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Mass(%)</span><span className="font-mono text-foreground">{trip.totalWeight ? ((trip.totalWeight / 60000) * 100).toFixed(2) : "0.00"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Drops Volume</span><span className="font-mono text-foreground">{trip.totalVol.toFixed(2)} GAL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Volume</span><span className="font-mono text-foreground">50000 GAL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Vol(%)</span><span className="font-mono text-foreground">{trip.totalVol ? ((trip.totalVol / 50000) * 100).toFixed(2) : "0.00"}</span></div>
+                  {(() => {
+                    const dropWeight = stock.reduce((s: number, x: any) => s + (Number(x.weight ?? x.netweight ?? 0) || 0), 0);
+                    const dropVolume = stock.reduce((s: number, x: any) => s + (Number(x.volume ?? x.vol ?? 0) || 0), 0);
+                    const vehMass = Number(pick("vehmass","vehiclemass") ?? 60000) || 60000;
+                    const vehVol  = Number(pick("vehvol","vehiclevolume") ?? 50000) || 50000;
+                    return (
+                      <>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span className="font-mono font-semibold text-foreground">{dropWeight.toFixed(2)} LB</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Mass</span><span className="font-mono text-foreground">{vehMass.toFixed(2)} LB</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Loading Mass(%)</span><span className="font-mono text-foreground">{dropWeight ? ((dropWeight / vehMass) * 100).toFixed(2) : "0.00"}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Drops Volume</span><span className="font-mono text-foreground">{dropVolume.toFixed(2)} GAL</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Volume</span><span className="font-mono text-foreground">{vehVol} GAL</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Loading Vol(%)</span><span className="font-mono text-foreground">{dropVolume ? ((dropVolume / vehVol) * 100).toFixed(2) : "0.00"}</span></div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
               {/* Total Pickups */}
@@ -1737,13 +1747,13 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Summary Totals</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold text-foreground">{isOpen ? "—" : `${totalKm} Miles`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono text-foreground">{isOpen ? "—" : `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono text-foreground">{trip.stops.length}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono text-foreground">{isOpen ? "—" : `${String(totalH + 1).padStart(2,"0")}:${String(totalM + 15).padStart(2,"0")} HH:MM`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono text-foreground">{isOpen ? "—" : `${travelCost} USD`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono text-foreground">{isOpen ? "—" : `${distCost} USD`}</span></div>
-                  <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-bold text-foreground">Total Cost</span><span className="font-mono font-black text-base text-primary">{isOpen ? "—" : `${totalCost} USD`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold text-foreground">{totalKm ? `${totalKm} Miles` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono text-foreground">{totalMin ? `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono text-foreground">{rows.length}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono text-foreground">{totalMin ? `${String(totalH + 1).padStart(2,"0")}:${String((totalM + 15) % 60).padStart(2,"0")} HH:MM` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono text-foreground">{travelCost ? `${travelCost} USD` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono text-foreground">{distCost ? `${distCost} USD` : "—"}</span></div>
+                  <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-bold text-foreground">Total Cost</span><span className="font-mono font-black text-base text-primary">{totalCost ? `${totalCost} USD` : "—"}</span></div>
                 </div>
               </div>
             </div>
