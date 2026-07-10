@@ -3286,16 +3286,29 @@ export default function Planner() {
                                     onClick={async (e) => {
                                       e.stopPropagation();
                                       if (!enabled) return;
-                                      if (t.tripCode) {
-                                        try {
-                                          const resp = await tripApi.getTripByCode(t.tripCode);
-                                          setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
-                                        } catch (err: any) {
-                                          toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
-                                        }
-                                      }
                                       setDetailTripId(t.id);
                                       setView("detail");
+                                      setVrHeader(null);
+                                      setVrDetails([]);
+                                      if (t.tripCode) {
+                                        setVrLoading(true);
+                                        try {
+                                          const [resp, header, details] = await Promise.all([
+                                            tripApi.getTripByCode(t.tripCode).catch(() => null),
+                                            transportApi.getVrHeader(t.tripCode).catch(() => null),
+                                            transportApi.getVrDetails(t.tripCode).catch(() => []),
+                                          ]);
+                                          if (resp) {
+                                            setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+                                          }
+                                          setVrHeader(header);
+                                          setVrDetails(details ?? []);
+                                        } catch (err: any) {
+                                          toast({ title: "Failed to load trip detail", description: err?.message ?? "Unknown error", variant: "destructive" });
+                                        } finally {
+                                          setVrLoading(false);
+                                        }
+                                      }
                                     }}
                                     title={enabled ? "Route Management Detail" : "Available after lock"}
                                   >
