@@ -2842,6 +2842,39 @@ export default function Planner() {
   const setCurrentSearch = stopTypeTab === "drops" ? setDropSearch : setPickSearch;
   const allCurrentSelected = currentStops.length > 0 && currentStops.every((s) => selectedStopIds.has(s.id));
 
+  // ── Loader / refresher for VR detail data (vrcode, vrdetails, loadstk) ──
+  async function loadVrData(tripCode: string) {
+    setVrLoading(true);
+    try {
+      const [header, details, loadStock] = await Promise.all([
+        transportApi.getVrHeader(tripCode).catch(() => null),
+        transportApi.getVrDetails(tripCode).catch(() => []),
+        transportApi.getVrLoadStock(tripCode).catch(() => []),
+      ]);
+      setVrHeader(header);
+      setVrDetails(details ?? []);
+      setVrLoadStock(loadStock ?? []);
+    } catch (err: any) {
+      toast({ title: "Failed to load route detail", description: err?.message ?? "Unknown error", variant: "destructive" });
+    } finally {
+      setVrLoading(false);
+    }
+  }
+
+  // Called from the detail screen when user clicks "LVS Create":
+  // POST /trips/{code}/validate  →  refresh vrHeader / vrDetails / vrLoadStock
+  async function handleLvsCreateFromDetail(trip: Trip) {
+    if (!trip.tripCode) return;
+    try {
+      const resp = await tripApi.validateTrip(trip.tripCode);
+      setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
+      toast({ title: "LVS Created", description: trip.tripCode });
+      await loadVrData(trip.tripCode);
+    } catch (e: any) {
+      toast({ title: "LVS Create failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    }
+  }
+
   // ── If detail view, render full-screen detail page ─────────
   if (view === "detail" && detailTrip) {
     return (
@@ -2851,10 +2884,12 @@ export default function Planner() {
         vrDetails={vrDetails}
         vrLoadStock={vrLoadStock}
         vrLoading={vrLoading}
+        onLvsCreate={() => handleLvsCreateFromDetail(detailTrip)}
         onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); setVrLoadStock([]); }}
       />
     );
   }
+
 
   return (
     <>
