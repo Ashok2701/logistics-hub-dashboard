@@ -1378,7 +1378,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
 
   const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.VCRNUM_0 ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
   // Vehicle Load Stock → VCRNUM_0 from loadstk when it exists
-  const vlsCode    = dash(hasStock ? (stock0?.VCRNUM_0 ?? stock0?.vcrnum ?? stock0?.xnum ?? stock0?.lvsnum) : undefined);
+  const vlsCode    = dash(hasStock ? (stock0?.vcrnum ?? stock0?.VCRNUM_0 ?? stock0?.xnum ?? stock0?.lvsnum) : undefined);
   // Status → "Validated" when loadstk data exists, otherwise "Locked"
   const statusVal  = hasStock ? "Validated" : "Locked";
   const depSite    = dash(pick("fcy","depfcy","fcy_0"));
