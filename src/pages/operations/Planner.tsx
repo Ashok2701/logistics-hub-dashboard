@@ -1336,17 +1336,61 @@ function ActiveTourPanel({
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
 function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean }) {
-  const depDate  = trip.createdAt.split("T")[0] ?? trip.createdAt;
-  const depTime  = "07:30";
-  const retTime  = "18:30";
-  const isOpen   = trip.status === "Open";
-  const totalKm  = isOpen ? 0 : trip.distanceKm;
-  const totalMin = isOpen ? 0 : trip.travelTimeMin;
+  // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
+  const H  = (vrHeader ?? {}) as any;
+  const rows = Array.isArray(vrDetails) ? vrDetails : [];
+  const stock = Array.isArray(vrLoadStock) ? vrLoadStock : [];
+  const stock0: any = stock[0] ?? null;
+  const hasStock = stock.length > 0;
+
+  const pick = (...keys: string[]) => {
+    for (const k of keys) {
+      const v = H[k];
+      if (v !== undefined && v !== null && v !== "") return v;
+    }
+    return undefined;
+  };
+  const dash = (v: any) => (v === undefined || v === null || v === "" ? "—" : String(v));
+  const fmtDT = (d?: any, t?: any) => {
+    const dd = d ? String(d).slice(0, 10) : "";
+    const tt = t ? String(t).slice(0, 5) : "";
+    const s = `${dd} ${tt}`.trim();
+    return s || "—";
+  };
+
+  // Route Information
+  const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
+  const vlsCode    = dash(stock0?.vcrnum ?? stock0?.xnum ?? stock0?.lvsnum);
+  const statusVal  = dash(hasStock ? pick("dispstat","optimsta","status") : "Locked");
+  const depSite    = dash(pick("fcy","depfcy","fcy_0"));
+  const arrSite    = dash(pick("arrfcy","fcy","fcy_0"));
+  const carrier    = dash(pick("bptnum","carrier"));
+  const vehClass   = dash(pick("vehclass","category","xcategory"));
+  const vehicle    = dash(pick("codeyve","vehicle"));
+  const driverId   = dash(pick("driverid","driverId","cod_driver"));
+  const driverName = dash(pick("drivername","driverName","driver"));
+  const createDate = dash(pick("datexec","datcre","creationdate"));
+  const createTime = dash(pick("creationtime","timcre","heucre"));
+  const tripNum    = dash(pick("xnumpc","trip","seq"));
+
+  // Schedule
+  const depDate = String(pick("datexec","datcre","creationdate") ?? "").slice(0, 10) || "—";
+  const depTime = String(pick("heudep","depTime") ?? "").slice(0, 5) || "—";
+  const retDate = String(pick("datret","datexec","creationdate") ?? "").slice(0, 10) || "—";
+  const retTime = String(pick("heuarr","retTime") ?? "").slice(0, 5) || "—";
+
+  // Totals derived from vrDetails
+  const totalKm  = rows.reduce((sum: number, r: any) => sum + (Number(r.fromprevdist ?? r.fromPrevDist ?? 0) || 0), 0);
+  const totalMin = rows.reduce((sum: number, r: any) => {
+    const t = String(r.fromprevtra ?? r.fromprevtravel ?? r.fromPrevTravel ?? "0:0");
+    const [h, m] = t.split(":").map((x: string) => Number(x) || 0);
+    return sum + (h * 60 + m);
+  }, 0);
   const totalH   = Math.floor(totalMin / 60);
   const totalM   = totalMin % 60;
-  const travelCost = isOpen ? 0 : Math.round(totalKm * 0.045);
-  const distCost   = isOpen ? 0 : Math.round(totalKm * 1.5);
-  const totalCost  = isOpen ? 0 : travelCost + distCost;
+  const travelCost = Math.round(totalKm * 0.045);
+  const distCost   = Math.round(totalKm * 1.5);
+  const totalCost  = travelCost + distCost;
 
   return (
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
@@ -1446,20 +1490,20 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
             </div>
             <div className="p-4 grid grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 text-[11px]">
               {[
-                { label: "Route Num",            value: trip.id,                                                highlight: true },
-                { label: "Vehicle Load Stock",   value: `KCC${trip.seq.toString().padStart(6,"0")}XCHG0000001` },
-                { label: "Status",               value: trip.status,                                            highlight: true },
-                { label: "Departure Site",       value: trip.departSite },
-                { label: "Arrival Site",         value: trip.arrivalSite },
-                { label: "Carrier",              value: trip.vehicle.category || "N/A" },
-                { label: "Vehicle Class",        value: trip.vehicle.category },
-                { label: "Vehicle",              value: trip.vehicle.code,                                      highlight: true },
+                { label: "Route Num",            value: routeNum,   highlight: true },
+                { label: "Vehicle Load Stock",   value: vlsCode },
+                { label: "Status",               value: statusVal,  highlight: true },
+                { label: "Departure Site",       value: depSite },
+                { label: "Arrival Site",         value: arrSite },
+                { label: "Carrier",              value: carrier },
+                { label: "Vehicle Class",        value: vehClass },
+                { label: "Vehicle",              value: vehicle,    highlight: true },
                 { label: "Route Type",           value: "Scheduled" },
-                { label: "Driver ID",            value: trip.driver.id },
-                { label: "Driver",               value: trip.driver.name,                                       highlight: true },
-                { label: "Creation Date",        value: depDate },
-                { label: "Creation Time",        value: depTime },
-                { label: "Trip",                 value: String(trip.seq) },
+                { label: "Driver ID",            value: driverId },
+                { label: "Driver",               value: driverName, highlight: true },
+                { label: "Creation Date",        value: createDate },
+                { label: "Creation Time",        value: createTime },
+                { label: "Trip",                 value: tripNum },
               ].map(({ label, value, highlight }) => (
                 <div key={label}>
                   <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
@@ -1544,7 +1588,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                     {[
                       { label: "Departure Date", value: depDate },
                       { label: "Departure Time", value: depTime },
-                      { label: "Return Date",    value: depDate },
+                      { label: "Return Date",    value: retDate },
                       { label: "Return Time",    value: retTime },
                     ].map(({ label, value }) => (
                       <div key={label}>
@@ -1578,14 +1622,14 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   <Truck className="w-8 h-8 text-primary" />
                 </div>
                 <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wider">Vehicle</p>
-                <p className="text-[11px] font-bold text-foreground">{trip.vehicle.code}</p>
+                <p className="text-[11px] font-bold text-foreground">{vehicle}</p>
               </div>
               <div className="rounded-xl bg-card border border-border shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
                 <div className="w-16 h-14 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-1.5">
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wider">Driver</p>
-                <p className="text-[11px] font-bold text-foreground">{trip.driver.id}</p>
+                <p className="text-[11px] font-bold text-foreground">{driverId}</p>
               </div>
             </div>
 
@@ -1598,7 +1642,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                 <span className="w-1 h-4 rounded-full bg-primary" />
                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Transactions</h3>
               </div>
-              <span className="text-[10px] text-muted-foreground font-medium">{trip.stops.length} record{trip.stops.length === 1 ? "" : "s"}</span>
+              <span className="text-[10px] text-muted-foreground font-medium">{rows.length} record{rows.length === 1 ? "" : "s"}</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full" style={{ fontSize: "11px" }}>
@@ -1610,38 +1654,45 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   </tr>
                 </thead>
                 <tbody>
-                  {trip.stops.map((s, i) => {
-                    const arr = s.arrivalDate || s.arrivalTime ? `${s.arrivalDate ?? depDate} ${s.arrivalTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 12:41`);
-                    const dep = s.departureDate || s.departureTime ? `${s.departureDate ?? depDate} ${s.departureTime ?? ""}`.trim() : (isOpen ? "—" : `${depDate} 13:26`);
-                    const svc = s.serviceTime ?? (isOpen ? "—" : "00:30");
-                    const fpd = s.fromPrevDistance ?? (isOpen ? "—" : `${Math.round(totalKm / Math.max(trip.stops.length, 1))} mi`);
-                    const fpt = s.fromPrevTravelTime ?? (isOpen ? "—" : `${String(Math.floor(totalMin / Math.max(trip.stops.length, 1) / 60)).padStart(2,"0")}:${String(totalMin / Math.max(trip.stops.length, 1) % 60 | 0).padStart(2,"0")}`);
-                    const wait = s.waitingTime ?? (isOpen ? "—" : "00:15");
+                  {rows.map((r: any, i: number) => {
+                    const seq  = r.sequence ?? r.seq ?? i + 1;
+                    const doc  = r.sdhnum ?? r.docnum ?? r.documentnumber ?? "—";
+                    const del  = r.deliverynumber ?? r.delnum ?? "—";
+                    const site = r.xdocsite ?? r.fcy ?? "—";
+                    const arr  = fmtDT(r.arrivedate ?? r.arrivalDate, r.arrivetime ?? r.arrivalTime);
+                    const dep  = fmtDT(r.departdate ?? r.departureDate, r.departtime ?? r.departureTime);
+                    const svc  = r.servicetime ?? r.serviceTime ?? "—";
+                    const addr = r.address ?? r.bpaadd1 ?? "—";
+                    const bp   = r.bpcode ?? r.bpnum ?? r.bpcnum ?? "—";
+                    const cli  = r.client ?? r.bpcnam ?? r.clientname ?? "—";
+                    const city = r.city ?? r.bpacity ?? "—";
+                    const fpd  = r.fromprevdist ?? r.fromPrevDistance ?? "—";
+                    const fpt  = r.fromprevtra ?? r.fromprevtravel ?? r.fromPrevTravel ?? "—";
+                    const wait = r.waittime ?? r.waitingTime ?? "—";
                     return (
-                    <tr key={s.id} className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
-                      <td className="px-2 py-2 font-mono font-bold text-center text-foreground">{s.seq ?? i + 1}</td>
-                      <td className="px-2 py-2 font-mono text-primary font-semibold">{(s as any).docNum ?? s.txn}</td>
-
-                      <td className="px-2 py-2 text-muted-foreground">—</td>
-                      <td className="px-2 py-2 font-mono text-foreground">{trip.departSite}</td>
+                    <tr key={r.id ?? doc ?? i} className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
+                      <td className="px-2 py-2 font-mono font-bold text-center text-foreground">{seq}</td>
+                      <td className="px-2 py-2 font-mono text-primary font-semibold">{doc}</td>
+                      <td className="px-2 py-2 text-muted-foreground">{del}</td>
+                      <td className="px-2 py-2 font-mono text-foreground">{site}</td>
                       <td className="px-2 py-2">
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]">Scheduled</span>
                       </td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{arr}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{dep}</td>
                       <td className="px-2 py-2 font-mono text-foreground">{svc}</td>
-                      <td className="px-2 py-2 text-muted-foreground truncate max-w-[100px]">{s.address}</td>
-                      <td className="px-2 py-2 font-mono text-foreground">{s.bpcode}</td>
-                      <td className="px-2 py-2 font-medium text-foreground truncate max-w-[100px]">{s.client}</td>
-                      <td className="px-2 py-2 text-muted-foreground">{s.city}</td>
+                      <td className="px-2 py-2 text-muted-foreground truncate max-w-[100px]">{addr}</td>
+                      <td className="px-2 py-2 font-mono text-foreground">{bp}</td>
+                      <td className="px-2 py-2 font-medium text-foreground truncate max-w-[100px]">{cli}</td>
+                      <td className="px-2 py-2 text-muted-foreground">{city}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{fpd}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{fpt}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{wait}</td>
                     </tr>
                     );
                   })}
-                  {trip.stops.length === 0 && (
-                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No stops on this trip</td></tr>
+                  {rows.length === 0 && (
+                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No transactions on this trip</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1658,12 +1709,22 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Drops</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span className="font-mono font-semibold text-foreground">{trip.totalWeight.toFixed(2)} LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Mass</span><span className="font-mono text-foreground">60000.00 LB</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Mass(%)</span><span className="font-mono text-foreground">{trip.totalWeight ? ((trip.totalWeight / 60000) * 100).toFixed(2) : "0.00"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Drops Volume</span><span className="font-mono text-foreground">{trip.totalVol.toFixed(2)} GAL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Volume</span><span className="font-mono text-foreground">50000 GAL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Vol(%)</span><span className="font-mono text-foreground">{trip.totalVol ? ((trip.totalVol / 50000) * 100).toFixed(2) : "0.00"}</span></div>
+                  {(() => {
+                    const dropWeight = stock.reduce((s: number, x: any) => s + (Number(x.weight ?? x.netweight ?? 0) || 0), 0);
+                    const dropVolume = stock.reduce((s: number, x: any) => s + (Number(x.volume ?? x.vol ?? 0) || 0), 0);
+                    const vehMass = Number(pick("vehmass","vehiclemass") ?? 60000) || 60000;
+                    const vehVol  = Number(pick("vehvol","vehiclevolume") ?? 50000) || 50000;
+                    return (
+                      <>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span className="font-mono font-semibold text-foreground">{dropWeight.toFixed(2)} LB</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Mass</span><span className="font-mono text-foreground">{vehMass.toFixed(2)} LB</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Loading Mass(%)</span><span className="font-mono text-foreground">{dropWeight ? ((dropWeight / vehMass) * 100).toFixed(2) : "0.00"}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Drops Volume</span><span className="font-mono text-foreground">{dropVolume.toFixed(2)} GAL</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Volume</span><span className="font-mono text-foreground">{vehVol} GAL</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Loading Vol(%)</span><span className="font-mono text-foreground">{dropVolume ? ((dropVolume / vehVol) * 100).toFixed(2) : "0.00"}</span></div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
               {/* Total Pickups */}
@@ -1686,13 +1747,13 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Summary Totals</h4>
                 </div>
                 <div className="p-4 space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold text-foreground">{isOpen ? "—" : `${totalKm} Miles`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono text-foreground">{isOpen ? "—" : `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono text-foreground">{trip.stops.length}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono text-foreground">{isOpen ? "—" : `${String(totalH + 1).padStart(2,"0")}:${String(totalM + 15).padStart(2,"0")} HH:MM`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono text-foreground">{isOpen ? "—" : `${travelCost} USD`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono text-foreground">{isOpen ? "—" : `${distCost} USD`}</span></div>
-                  <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-bold text-foreground">Total Cost</span><span className="font-mono font-black text-base text-primary">{isOpen ? "—" : `${totalCost} USD`}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold text-foreground">{totalKm ? `${totalKm} Miles` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono text-foreground">{totalMin ? `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono text-foreground">{rows.length}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono text-foreground">{totalMin ? `${String(totalH + 1).padStart(2,"0")}:${String((totalM + 15) % 60).padStart(2,"0")} HH:MM` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono text-foreground">{travelCost ? `${travelCost} USD` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono text-foreground">{distCost ? `${distCost} USD` : "—"}</span></div>
+                  <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-bold text-foreground">Total Cost</span><span className="font-mono font-black text-base text-primary">{totalCost ? `${totalCost} USD` : "—"}</span></div>
                 </div>
               </div>
             </div>
