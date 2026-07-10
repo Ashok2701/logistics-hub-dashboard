@@ -1335,7 +1335,7 @@ function ActiveTourPanel({
 // Shown when (i) is clicked on a trip row
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
-function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean }) {
+function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading, onLvsCreate }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean; onLvsCreate?: () => void | Promise<void> }) {
   // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
   const H  = (vrHeader ?? {}) as any;
   const rows = Array.isArray(vrDetails) ? vrDetails : [];
@@ -1429,7 +1429,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                 status === "locked"   ? 0 : -1;
 
               const steps = [
-                { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: () => toast({ title: "LVS Create",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
+                { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: () => onLvsCreate?.() },
                 { key: "lvs-confirm", label: "LVS Confirm", icon: CheckCheck,onClick: () => toast({ title: "LVS Confirm", description: `Trip ${trip.tripCode ?? trip.id}` }) },
                 { key: "load",        label: "Load Truck",  icon: Truck,     onClick: () => toast({ title: "Load Truck",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
                 { key: "unload",      label: "Unload Truck",icon: Package,   onClick: () => toast({ title: "Unload Truck",description: `Trip ${trip.tripCode ?? trip.id}` }) },
@@ -2842,6 +2842,39 @@ export default function Planner() {
   const setCurrentSearch = stopTypeTab === "drops" ? setDropSearch : setPickSearch;
   const allCurrentSelected = currentStops.length > 0 && currentStops.every((s) => selectedStopIds.has(s.id));
 
+  // ── Loader / refresher for VR detail data (vrcode, vrdetails, loadstk) ──
+  async function loadVrData(tripCode: string) {
+    setVrLoading(true);
+    try {
+      const [header, details, loadStock] = await Promise.all([
+        transportApi.getVrHeader(tripCode).catch(() => null),
+        transportApi.getVrDetails(tripCode).catch(() => []),
+        transportApi.getVrLoadStock(tripCode).catch(() => []),
+      ]);
+      setVrHeader(header);
+      setVrDetails(details ?? []);
+      setVrLoadStock(loadStock ?? []);
+    } catch (err: any) {
+      toast({ title: "Failed to load route detail", description: err?.message ?? "Unknown error", variant: "destructive" });
+    } finally {
+      setVrLoading(false);
+    }
+  }
+
+  // Called from the detail screen when user clicks "LVS Create":
+  // POST /trips/{code}/validate  →  refresh vrHeader / vrDetails / vrLoadStock
+  async function handleLvsCreateFromDetail(trip: Trip) {
+    if (!trip.tripCode) return;
+    try {
+      const resp = await tripApi.validateTrip(trip.tripCode);
+      setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
+      toast({ title: "LVS Created", description: trip.tripCode });
+      await loadVrData(trip.tripCode);
+    } catch (e: any) {
+      toast({ title: "LVS Create failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    }
+  }
+
   // ── If detail view, render full-screen detail page ─────────
   if (view === "detail" && detailTrip) {
     return (
@@ -2851,10 +2884,12 @@ export default function Planner() {
         vrDetails={vrDetails}
         vrLoadStock={vrLoadStock}
         vrLoading={vrLoading}
+        onLvsCreate={() => handleLvsCreateFromDetail(detailTrip)}
         onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); setVrLoadStock([]); }}
       />
     );
   }
+
 
   return (
     <>
