@@ -1012,8 +1012,8 @@ function ActiveTourPanel({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)" }}
+          className="fixed inset-0 z-50 flex items-center justify-start pl-8"
+          style={{ background: "rgba(15,23,42,0.35)", backdropFilter: "blur(2px)" }}
           onClick={() => !optRunning && setShowOptModal(false)}
         >
           <motion.div
@@ -1257,6 +1257,7 @@ function ActiveTourPanel({
 
                     toast({ title: "Optimisation complete ✓",
                       description: `${jobSteps.length} stops · ${totalDistKm} km · end ${endTime}` });
+                    setShowOptModal(false);
                   } catch(err) {
                     const msg = err instanceof Error ? err.message : String(err);
                     setOptError({ title: "Optimisation Failed", detail: msg });
