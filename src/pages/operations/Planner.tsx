@@ -1083,10 +1083,6 @@ function ActiveTourPanel({
                 <div><span className="text-muted-foreground">Qty:</span> <span className="font-mono">{selectedStopData.qty}</span></div>
                 <div><span className="text-muted-foreground">Weight:</span> <span className="font-mono">{selectedStopData.netweight}kg</span></div>
                 <div><span className="text-muted-foreground">Vol:</span> <span className="font-mono">{selectedStopData.vol}m³</span></div>
-                <div>
-                  <button onClick={() => { onRemoveStop(selectedStopData.id); setSelectedStop(null); }}
-                    className="text-[9px] text-rose-500 hover:text-rose-700 font-semibold">Remove</button>
-                </div>
               </div>
             </div>
           </motion.div>
@@ -1978,10 +1974,7 @@ export default function Planner() {
   const [vrLoading,   setVrLoading]   = useState(false);
 
   // Optimisation slide panel
-  const [optTripId,   setOptTripId]   = useState<string | null>(null);
-  const [optOrder,    setOptOrder]    = useState<"fixed" | "auto">("fixed");
-  const [optTime,     setOptTime]     = useState("07:30");
-  const [optRunning,  setOptRunning]  = useState(false);
+
   const [tripView, setTripView]             = useState<"map" | "list">("map");
 
   // Confirmation dialog (vehicle/driver reassign etc.)
@@ -2383,7 +2376,7 @@ export default function Planner() {
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
   const detailTrip   = trips.find((t) => t.id === detailTripId)   ?? null;
-  const optTrip      = trips.find((t) => t.id === optTripId)      ?? null;
+
   // site object for depot lat/lng
   const currentSiteObj = sites.find(s => s.siteCode === site) ?? null;
 
@@ -3606,18 +3599,6 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                             <td className="px-2 py-1.5 text-xs font-mono text-center">{t.stops.length}</td>
                             <td className="px-2 py-1.5">
                               <div className="flex items-center gap-1.5">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
-                                  title="Optimise this trip"
-                                  className={cn(
-                                    "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border shadow-sm",
-                                    optTripId === t.id
-                                      ? "bg-amber-500 border-amber-500 text-white shadow-amber-500/30"
-                                      : "bg-white border-input text-amber-600 hover:bg-amber-50 hover:border-amber-200 hover:shadow-amber-500/15"
-                                  )}
-                                >
-                                  <Zap className="w-5 h-5" />
-                                </button>
                                 <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
                                   title={t.locked ? "Unlock" : "Lock"}
                                   className={cn(
@@ -3644,173 +3625,6 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                             </td>
 
 
-                          {/* ── OPTION 3: Inline expand below trip row ── */}
-                          {optTripId === t.id && (
-                            <tr>
-                              <td colSpan={13} className="p-0 border-0">
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="flex items-center gap-4 px-4 py-2.5 border-b border-[#bfdbfe] flex-wrap"
-                                    style={{ background: "linear-gradient(to right, #eff6ff, #f0f9ff)" }}>
-                                    {/* Route info */}
-                                    <div className="flex items-center gap-1.5 text-[10px] flex-shrink-0">
-                                      <span className="font-mono font-bold text-[#1e40af] bg-white border border-[#bfdbfe] px-2 py-0.5 rounded-full">{t.id.slice(-12)}</span>
-                                      <span className="text-muted-foreground">·</span>
-                                      <span className="text-muted-foreground">{t.driver.name}</span>
-                                      <span className="text-muted-foreground">·</span>
-                                      <span className="font-medium">Veh {t.vehicle.code}</span>
-                                      <span className="text-muted-foreground">·</span>
-                                      <span className="text-muted-foreground">{t.stops.length} stop{t.stops.length !== 1 ? "s" : ""}</span>
-                                    </div>
-                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
-                                    {/* Order toggle */}
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Order</span>
-                                      <div className="flex gap-1">
-                                        {(["fixed","auto"] as const).map((mode) => (
-                                          <button key={mode}
-                                            onClick={(e) => { e.stopPropagation(); setOptOrder(mode); }}
-                                            className={cn(
-                                              "px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all border",
-                                              optOrder === mode
-                                                ? "bg-[#1e40af] text-white border-[#1e40af] shadow-sm"
-                                                : "bg-white text-muted-foreground border-border/60 hover:border-[#1e40af] hover:text-[#1e40af]"
-                                            )}>{mode === "fixed" ? "Fixed" : "Auto"}</button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
-                                    {/* Start time */}
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Start</span>
-                                      <input type="time" value={optTime}
-                                        onChange={(e) => { e.stopPropagation(); setOptTime(e.target.value); }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="border border-border/60 bg-white rounded-md px-2 py-1 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                      />
-                                    </div>
-                                    <div className="h-5 w-px bg-blue-200 flex-shrink-0" />
-                                    {/* Stop sequence */}
-                                    {t.stops.length > 0 && (
-                                      <div className="flex items-center gap-1 flex-shrink-0">
-                                        <span className="text-[9px] text-muted-foreground uppercase tracking-wide mr-1">Seq</span>
-                                        {t.stops.map((s, i) => (
-                                          <div key={s.id} className="flex items-center gap-0.5">
-                                            <div className={cn(
-                                              "w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white",
-                                              s.type === "DROP" ? "bg-rose-500" : "bg-sky-500"
-                                            )}>{i + 1}</div>
-                                            {i < t.stops.length - 1 && <div className="w-3 h-px bg-blue-200" />}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {/* Buttons */}
-                                    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-                                      <button onClick={(e) => { e.stopPropagation(); setOptTripId(null); }}
-                                        className="px-3 py-1.5 rounded-md text-[10px] border border-border/60 bg-white text-muted-foreground hover:bg-muted transition-colors">
-                                        Cancel
-                                      </button>
-                                      <button
-                                        disabled={optRunning}
-                                        onClick={async (e) => {
-                                          e.stopPropagation();
-                                          const depLat = currentSiteObj?.latitude  ? Number(currentSiteObj.latitude)  : 0;
-                                          const depLng = currentSiteObj?.longitude ? Number(currentSiteObj.longitude) : 0;
-                                          if (!depLat || !depLng) {
-                                            toast({ title: "Missing site coordinates", variant: "destructive" }); return;
-                                          }
-                                          const tripStops = t.stops;
-                                          const missing = tripStops.filter(s => !s.lat || !s.lng);
-                                          if (missing.length) {
-                                            toast({ title: `${missing.length} stop(s) missing coordinates`, variant: "destructive" }); return;
-                                          }
-                                          setOptRunning(true);
-                                          try {
-                                            const startSec  = hhmmToSec(optTime);
-                                            const capGrams  = Math.round((t.vehicle.capacity ?? 60000) * 1000);
-
-                                            const vroomVehicle = {
-                                              id: 1, description: t.vehicle.code,
-                                              start: [depLng, depLat] as [number,number],
-                                              end:   [depLng, depLat] as [number,number],
-                                              capacity: [capGrams] as [number],
-                                              time_window: [startSec, hhmmToSec("23:59")] as [number,number],
-                                              max_tasks: 999,
-                                            };
-                                            const vroomJobs = tripStops.map((s, i) => ({
-                                              id: i + 1, description: s.txn,
-                                              location: [s.lng, s.lat] as [number,number],
-                                              service: 1800,
-                                              ...(s.type === "DROP"
-                                                ? { delivery: [Math.round((s.netweight||1)*1000)] as [number] }
-                                                : { pickup:   [Math.round((s.netweight||1)*1000)] as [number] }),
-                                              priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
-                                            }));
-
-                                            const result = await callVroom([vroomVehicle], vroomJobs);
-                                            if (!result.routes?.length) throw new Error("VROOM returned no routes");
-
-                                            const route    = result.routes[0];
-                                            const jobSteps = route.steps.filter((st: VroomStep) => st.type === "job");
-                                            const endStep  = route.steps.find((st: VroomStep)  => st.type === "end");
-                                            const endTime  = secToHHMM(endStep ? endStep.arrival : startSec + route.duration);
-                                            const totalDistKm = (route.distance / 1000).toFixed(1);
-                                            const travelHHMM  = secToHHMM(route.duration);
-
-                                            const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
-                                              seq: i + 1, docNum: st.description ?? "",
-                                              arrivalDate: date,   arrivalTime:   secToHHMM(st.arrival),
-                                              departureDate: date, departureTime: secToHHMM(st.arrival + st.service),
-                                              fromPrevDistance:    ((st.distance ?? 0) / 1000).toFixed(1),
-                                              fromPrevTravelTime:  secToHHMM(st.duration),
-                                              serviceTime: secToHHMM(st.service),
-                                              waitingTime: secToHHMM(st.waiting_time ?? 0),
-                                            }));
-
-                                            if (t.tripCode) {
-                                              const { optimiseTrip } = await import("@/lib/tripApi");
-                                              const resp = await optimiseTrip(t.tripCode, {
-                                                orderMode: optOrder, startTime: optTime, endTime,
-                                                travelTime: travelHHMM, totalTime: travelHHMM,
-                                                totalDistance: totalDistKm, uomDistance: "km",
-                                                totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
-                                                stopResults,
-                                              });
-                                              setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
-                                            } else {
-                                              setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" as any } : x));
-                                            }
-                                            toast({ title: "Optimisation complete ✓",
-                                              description: `Trip ${t.tripCode ?? t.id.slice(-12)} · ${totalDistKm} km · end ${endTime}` });
-                                          } catch (err: any) {
-                                            setVroomError({ title: "Optimisation Failed", detail: err?.message ?? "VROOM error. Check that all stops have valid coordinates." });
-                                          } finally {
-                                            setOptRunning(false);
-                                            setOptTripId(null);
-                                          }
-                                        }}
-                                        className={cn(
-                                          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
-                                          optRunning ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                                     : "bg-[#1e40af] hover:bg-[#1d4ed8] text-white shadow-sm"
-                                        )}>
-                                        {optRunning
-                                          ? <><Loader2 className="w-3 h-3 animate-spin" /> Running…</>
-                                          : <><Zap className="w-3 h-3 text-amber-400" /> Optimise</>}
-                                      </button>
-
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              </td>
-                            </tr>
-                          )}
                           </tr>
                         );
                       })}
