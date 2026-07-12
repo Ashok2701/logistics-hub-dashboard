@@ -1083,10 +1083,6 @@ function ActiveTourPanel({
                 <div><span className="text-muted-foreground">Qty:</span> <span className="font-mono">{selectedStopData.qty}</span></div>
                 <div><span className="text-muted-foreground">Weight:</span> <span className="font-mono">{selectedStopData.netweight}kg</span></div>
                 <div><span className="text-muted-foreground">Vol:</span> <span className="font-mono">{selectedStopData.vol}m³</span></div>
-                <div>
-                  <button onClick={() => { onRemoveStop(selectedStopData.id); setSelectedStop(null); }}
-                    className="text-[9px] text-rose-500 hover:text-rose-700 font-semibold">Remove</button>
-                </div>
               </div>
             </div>
           </motion.div>
@@ -3606,18 +3602,6 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                             <td className="px-2 py-1.5 text-xs font-mono text-center">{t.stops.length}</td>
                             <td className="px-2 py-1.5">
                               <div className="flex items-center gap-1.5">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setOptTripId(optTripId === t.id ? null : t.id); }}
-                                  title="Optimise this trip"
-                                  className={cn(
-                                    "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border shadow-sm",
-                                    optTripId === t.id
-                                      ? "bg-amber-500 border-amber-500 text-white shadow-amber-500/30"
-                                      : "bg-white border-input text-amber-600 hover:bg-amber-50 hover:border-amber-200 hover:shadow-amber-500/15"
-                                  )}
-                                >
-                                  <Zap className="w-5 h-5" />
-                                </button>
                                 <button onClick={(e) => { e.stopPropagation(); lockTrip(t.id); }}
                                   title={t.locked ? "Unlock" : "Lock"}
                                   className={cn(
