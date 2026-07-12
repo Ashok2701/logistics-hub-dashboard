@@ -3661,18 +3661,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
             right={
               <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full">
                 <div className="px-4 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2 flex-shrink-0">
-                  <MapIcon className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold">
-                    {selectedTrip
-                      ? <><span className="font-mono text-primary">{selectedTrip.id.slice(-12)}</span><span className="text-muted-foreground font-normal"> · {selectedTrip.stops.length} stops</span></>
-                      : "Route Preview"}
-                  </h3>
-                  {selectedTrip && (
-                    <button onClick={() => deleteTrip(selectedTrip.id)}
-                      className="text-muted-foreground/50 hover:text-destructive p-1 rounded ml-1">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <h3 className="text-sm font-semibold">Route Preview</h3>
                   <div className={cn("flex items-center gap-0.5 border border-border rounded-md p-0.5 ml-auto")}>
                     <button onClick={() => setTripView("map")}
                       className={cn("h-6 px-2 text-xs rounded flex items-center gap-1 transition-colors",
