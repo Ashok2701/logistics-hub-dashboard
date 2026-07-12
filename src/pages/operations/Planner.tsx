@@ -1974,10 +1974,7 @@ export default function Planner() {
   const [vrLoading,   setVrLoading]   = useState(false);
 
   // Optimisation slide panel
-  const [optTripId,   setOptTripId]   = useState<string | null>(null);
-  const [optOrder,    setOptOrder]    = useState<"fixed" | "auto">("fixed");
-  const [optTime,     setOptTime]     = useState("07:30");
-  const [optRunning,  setOptRunning]  = useState(false);
+
   const [tripView, setTripView]             = useState<"map" | "list">("map");
 
   // Confirmation dialog (vehicle/driver reassign etc.)
@@ -2379,7 +2376,7 @@ export default function Planner() {
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
   const detailTrip   = trips.find((t) => t.id === detailTripId)   ?? null;
-  const optTrip      = trips.find((t) => t.id === optTripId)      ?? null;
+
   // site object for depot lat/lng
   const currentSiteObj = sites.find(s => s.siteCode === site) ?? null;
 
