@@ -1613,7 +1613,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                 { label: "Departure Site",       value: depSite },
                 { label: "Arrival Site",         value: arrSite },
                 { label: "Carrier",              value: carrier },
-                { label: "Vehicle Class",        value: vehClass },
+                { label: "Vehicle Category",        value: vehClass },
                 { label: "Vehicle",              value: vehicle,    highlight: true },
                 { label: "Route Type",           value: "Scheduled" },
                 { label: "Driver ID",            value: driverId },
@@ -3708,7 +3708,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       onChange={(e) => setAgVehClass(e.target.value)}
                       className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[180px]"
                     >
-                      <option value="">Vehicle Class</option>
+                      <option value="">Vehicle Category</option>
                       {agVehicleClasses.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
@@ -3748,7 +3748,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                             </th>
                             <th className="px-2 py-2 text-left">Vehicle Code</th>
                             <th className="px-2 py-2 text-left">Vehicle Name</th>
-                            <th className="px-2 py-2 text-left">Vehicle Class</th>
+                            <th className="px-2 py-2 text-left">Vehicle Category</th>
                             <th className="px-2 py-2 text-left">Driver</th>
                           </tr>
                         </thead>
