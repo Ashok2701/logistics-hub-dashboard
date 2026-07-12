@@ -3660,6 +3660,21 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
             }
             right={
               <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full">
+                <div className="px-4 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2 flex-shrink-0">
+                  <h3 className="text-sm font-semibold">Route Preview</h3>
+                  <div className={cn("flex items-center gap-0.5 border border-border rounded-md p-0.5 ml-auto")}>
+                    <button onClick={() => setTripView("map")}
+                      className={cn("h-6 px-2 text-xs rounded flex items-center gap-1 transition-colors",
+                        tripView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
+                      <MapIcon className="w-3 h-3" /> Map
+                    </button>
+                    <button onClick={() => setTripView("list")}
+                      className={cn("h-6 px-2 text-xs rounded flex items-center gap-1 transition-colors",
+                        tripView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
+                      <List className="w-3 h-3" /> List View
+                    </button>
+                  </div>
+                </div>
                 <div className="flex-1 overflow-hidden">
                   {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} onReorder={selectedTrip ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined} />}
                 </div>
