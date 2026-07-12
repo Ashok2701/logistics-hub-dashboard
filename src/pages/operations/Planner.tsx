@@ -30,6 +30,7 @@ import { fetchTmsSites, loadPlannerData, type RpSite, type RpVehicle, type RpDri
 import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi";
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
 import { transportApi } from "@/lib/transportApi";
+import { x3SoapApi } from "@/lib/x3SoapApi";
 
 // ═══════════════════════════════════════════════════════
 // TYPES — mapped from RpStop / RpVehicle / RpDriver
@@ -1433,7 +1434,7 @@ function ActiveTourPanel({
 // Shown when (i) is clicked on a trip row
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
-function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading, onLvsCreate }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean; onLvsCreate?: () => void | Promise<void> }) {
+function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading, onLvsCreate, onLvsConfirm }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean; onLvsCreate?: () => void | Promise<void>; onLvsConfirm?: (lvsNum: string) => void | Promise<void> }) {
   // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
   const H  = (vrHeader ?? {}) as any;
   const rows = Array.isArray(vrDetails) ? vrDetails : [];
@@ -1476,7 +1477,8 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
 
   const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.VCRNUM_0 ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
   // Vehicle Load Stock → VCRNUM_0 from loadstk when it exists
-  const vlsCode    = dash(hasStock ? (stock0?.vcrnum ?? stock0?.VCRNUM_0 ?? stock0?.xnum ?? stock0?.lvsnum) : undefined);
+  const vlsCodeRaw = hasStock ? (stock0?.vcrnum ?? stock0?.VCRNUM_0 ?? stock0?.xnum ?? stock0?.lvsnum) : undefined;
+  const vlsCode    = dash(vlsCodeRaw);
   // Status → "Validated" when loadstk data exists, otherwise "Locked"
   const statusVal  = hasStock ? "Validated" : "Locked";
   const depSite    = dash(pick("fcy","depfcy","fcy_0"));
@@ -1547,7 +1549,13 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
 
               const steps = [
                 { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: () => onLvsCreate?.() },
-                { key: "lvs-confirm", label: "LVS Confirm", icon: CheckCheck,onClick: () => toast({ title: "LVS Confirm", description: `Trip ${trip.tripCode ?? trip.id}` }) },
+                { key: "lvs-confirm", label: "LVS Confirm", icon: CheckCheck,onClick: () => {
+                  if (!vlsCodeRaw) {
+                    toast({ title: "LVS Confirm unavailable", description: "No LVS number found for this trip yet.", variant: "destructive" });
+                    return;
+                  }
+                  onLvsConfirm?.(String(vlsCodeRaw));
+                } },
                 { key: "load",        label: "Load Truck",  icon: Truck,     onClick: () => toast({ title: "Load Truck",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
                 { key: "unload",      label: "Unload Truck",icon: Package,   onClick: () => toast({ title: "Unload Truck",description: `Trip ${trip.tripCode ?? trip.id}` }) },
               ];
@@ -3008,6 +3016,21 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
     }
   }
 
+  // Called from the detail screen when user clicks "LVS Confirm":
+  // POST /api/v1/x3/confirm-lvs (X10CCONBUT via X3SoapService) → refresh vrLoadStock
+  async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
+    try {
+      const resp = await x3SoapApi.confirmLvs(lvsNum);
+      if (resp && (resp as any).error) {
+        throw new Error((resp as any).error);
+      }
+      toast({ title: "LVS Confirmed", description: lvsNum });
+      if (trip.tripCode) await loadVrData(trip.tripCode);
+    } catch (e: any) {
+      toast({ title: "LVS Confirm failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    }
+  }
+
   // ── If detail view, render full-screen detail page ─────────
   if (view === "detail" && detailTrip) {
     return (
@@ -3018,6 +3041,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
         vrLoadStock={vrLoadStock}
         vrLoading={vrLoading}
         onLvsCreate={() => handleLvsCreateFromDetail(detailTrip)}
+        onLvsConfirm={(lvsNum) => handleLvsConfirmFromDetail(detailTrip, lvsNum)}
         onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); setVrLoadStock([]); }}
       />
     );
