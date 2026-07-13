@@ -2729,6 +2729,15 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   function validateTrip(id: string) {
     const t = trips.find((x) => x.id === id);
     if (!t) return;
+    if (!t.locked) {
+      const statusLabel = t.optiStatus === "Optimised" || t.status === "Optimised" ? "Optimised" : "Open";
+      toast({
+        title: "Cannot Validate",
+        description: `Trip is in ${statusLabel} status, can't validate. Lock the trip first to create LVS / validate.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setTripStatus(t, "Validated", 1);
   }
 
