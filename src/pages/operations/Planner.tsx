@@ -2743,6 +2743,17 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
     const t = trips.find((x) => x.id === id);
     if (!t) return;
     const willLock = !t.locked;
+    if (willLock) {
+      const isOptimised = t.optiStatus === "Optimised" || t.status === "Optimised" || t.status === "Optimized";
+      if (!isOptimised) {
+        toast({
+          title: "Cannot Lock",
+          description: "Trip is in Open status, can't lock. Optimise the trip first before locking.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setTripStatus(t, willLock ? "Locked" : "Open", willLock ? 1 : 0);
   }
 
@@ -3522,7 +3533,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="Open">Open</SelectItem>
-                      <SelectItem value="Optimized">Optimized</SelectItem>
+                      <SelectItem value="Optimised">Optimised</SelectItem>
                       <SelectItem value="Locked">Locked</SelectItem>
                       <SelectItem value="Confirmed">Confirmed</SelectItem>
                     </SelectContent>
