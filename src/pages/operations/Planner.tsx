@@ -2756,6 +2756,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       else if (optiStatus === "Open" && lockFlag === 0) resp = await tripApi.unlockTrip(trip.tripCode);
       else resp = await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
       setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
+      setSelectedTripIds((prev) => { if (!prev.has(trip.id)) return prev; const n = new Set(prev); n.delete(trip.id); return n; });
       toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
     } catch (e: any) {
       toast({ title: "Status update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
