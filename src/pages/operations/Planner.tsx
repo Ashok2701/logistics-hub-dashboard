@@ -704,6 +704,7 @@ type ActiveTourPanelProps = {
   onClear: () => void;
   onConfirm: () => void;
   selectedTripStatus?: string | null;
+  tripLocked?: boolean;
   // Trip-level identity
   tripDepSite?: string | null;
   tripArrSite?: string | null;
@@ -734,6 +735,7 @@ function ActiveTourPanel({
   dropZoneActive, onDragOver, onDragLeave, onDrop, onDriverDrop,
   onClearVehicle, onClearDriver, onRemoveStop, onClear, onConfirm,
   selectedTripStatus,
+  tripLocked = false,
   tripDepSite = null, tripArrSite = null, tripDistanceKm = null, tripStartTime = null, tripEndTime = null,
   siteLat = 0, siteLng = 0, activeTripId = null, activeTripCode = null, planDate = "",
   onTripOptimised,
@@ -829,7 +831,8 @@ function ActiveTourPanel({
                 {showConfirm && (
                   <Button size="sm"
                     className="h-7 text-[9px] gap-1 bg-emerald-500 hover:bg-emerald-400 text-white border-0 px-2.5 rounded-lg shadow-sm disabled:opacity-50"
-                    disabled={!canConfirm}
+                    disabled={!canConfirm || tripLocked}
+                    title={tripLocked ? "Trip is locked — unlock to confirm" : !canConfirm ? "Assign vehicle, driver and at least one stop" : "Confirm"}
                     onClick={onConfirm}>
                     <CheckCheck className="w-4 h-4" /> Confirm
                   </Button>
@@ -838,6 +841,8 @@ function ActiveTourPanel({
                   <Button size="sm"
                     className="h-7 text-[9px] gap-1 px-2.5 border-0 rounded-lg shadow-sm"
                     style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#0f172a" }}
+                    disabled={tripLocked}
+                    title={tripLocked ? "Trip is locked — unlock to optimise" : "Optimise"}
                     onClick={() => {
                       if (selectedTripStatus === "Open") setShowOptConfirm(true);
                       else setShowOptModal(true);
@@ -3484,6 +3489,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
               onConfirm: async () => { await confirmTrip(); },
             })}
             selectedTripStatus={selectedTrip?.optiStatus ?? (selectedTrip?.status as string | undefined) ?? null}
+            tripLocked={selectedTrip?.locked ?? false}
             tripDepSite={selectedTrip?.departSite ?? null}
             tripArrSite={selectedTrip?.arrivalSite ?? null}
             tripDistanceKm={selectedTrip?.distanceKm ?? null}
