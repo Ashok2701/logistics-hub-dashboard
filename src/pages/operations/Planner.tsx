@@ -704,6 +704,7 @@ type ActiveTourPanelProps = {
   onClear: () => void;
   onConfirm: () => void;
   selectedTripStatus?: string | null;
+  tripLocked?: boolean;
   // Trip-level identity
   tripDepSite?: string | null;
   tripArrSite?: string | null;
