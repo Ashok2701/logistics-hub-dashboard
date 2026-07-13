@@ -2396,11 +2396,14 @@ export default function Planner() {
     return Array.from(new Set(codes)).sort();
   }, [allStops]);
 
-  const filteredTrips = useMemo(() =>
-    trips.filter((t) =>
-      (statusFilter === "all" || t.status === statusFilter) &&
-      (!tripSearch || `${t.id} ${t.routeCode} ${t.vehicle.code} ${t.driver.name}`.toLowerCase().includes(tripSearch.toLowerCase()))
-    ), [trips, statusFilter, tripSearch]);
+  const filteredTrips = useMemo(() => {
+    const norm = (s: any) => (s === "Optimized" ? "Optimised" : s);
+    const q = tripSearch.toLowerCase();
+    return trips.filter((t) =>
+      (statusFilter === "all" || norm(t.status) === norm(statusFilter) || norm((t as any).optiStatus) === norm(statusFilter)) &&
+      (!q || `${t.id} ${t.routeCode ?? ""} ${t.vehicle?.code ?? ""} ${t.driver?.name ?? ""} ${(t as any).tripCode ?? ""}`.toLowerCase().includes(q))
+    );
+  }, [trips, statusFilter, tripSearch]);
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
   const detailTrip   = trips.find((t) => t.id === detailTripId)   ?? null;
