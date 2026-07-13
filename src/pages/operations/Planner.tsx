@@ -2240,7 +2240,6 @@ export default function Planner() {
         }
       }
 
-      setShowAutoGen(false);
       toast({
         title: `${createdCount} trip(s) generated ✓`,
         description: `${result.unassigned?.length ?? 0} unassigned stops`,
@@ -2249,6 +2248,7 @@ export default function Planner() {
       const msg = err instanceof Error ? err.message : "VROOM error. Check that all stops and site have valid coordinates.";
       setVroomError({ title: "Auto Generation Failed", detail: msg });
     } finally {
+      setShowAutoGen(false);
       setAgSubmitting(false);
     }
   }
