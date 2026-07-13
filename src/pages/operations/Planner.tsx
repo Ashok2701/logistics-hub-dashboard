@@ -2756,6 +2756,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       else if (optiStatus === "Open" && lockFlag === 0) resp = await tripApi.unlockTrip(trip.tripCode);
       else resp = await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
       setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
+      setSelectedTripIds((prev) => { if (!prev.has(trip.id)) return prev; const n = new Set(prev); n.delete(trip.id); return n; });
       toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
     } catch (e: any) {
       toast({ title: "Status update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
@@ -3029,6 +3030,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
         } else {
           setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" as any } : x));
         }
+        setSelectedTripIds((prev) => { if (!prev.has(t.id)) return prev; const n = new Set(prev); n.delete(t.id); return n; });
         ok++;
       } catch (e: any) {
         setVroomError({ title: "Optimisation failed", detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "VROOM error"}` });
@@ -3510,8 +3512,11 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
             tripDistanceKm={selectedTrip?.distanceKm ?? null}
             tripStartTime={selectedTrip?.startTime ?? null}
             tripEndTime={selectedTrip?.endTime ?? null}
-            onTripOptimised={(tripId, stopResults, totals) => setTrips(prev => prev.map(t => {
+            onTripOptimised={(tripId, stopResults, totals) => {
+              let optimisedId: string | null = null;
+              setTrips(prev => prev.map(t => {
               if (t.tripId !== tripId) return t;
+              optimisedId = t.id;
               const byDoc = new Map<string, any>((stopResults ?? []).map((r: any) => [r.docNum, r]));
               const mergedStops = t.stops.map((s) => {
                 const r = byDoc.get(s.txn);
@@ -3522,7 +3527,9 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
               }).sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
               return { ...t, stops: mergedStops, optiStatus: "Optimised" as any,
                 status: "Optimised", distanceKm: totals.distanceKm, endTime: totals.endTime };
-            }))}
+              }));
+              if (optimisedId) setSelectedTripIds((prev) => { if (!prev.has(optimisedId!)) return prev; const n = new Set(prev); n.delete(optimisedId!); return n; });
+            }}
           />
           </div>
 
