@@ -3030,6 +3030,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
         } else {
           setTrips((prev) => prev.map((x) => x.id === t.id ? { ...x, status: "Optimised", optiStatus: "Optimised" as any } : x));
         }
+        setSelectedTripIds((prev) => { if (!prev.has(t.id)) return prev; const n = new Set(prev); n.delete(t.id); return n; });
         ok++;
       } catch (e: any) {
         setVroomError({ title: "Optimisation failed", detail: `Trip ${t.tripCode ?? t.id}: ${e?.message ?? "VROOM error"}` });
