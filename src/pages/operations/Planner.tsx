@@ -3015,6 +3015,15 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   // POST /trips/{code}/validate  →  refresh vrHeader / vrDetails / vrLoadStock
   async function handleLvsCreateFromDetail(trip: Trip) {
     if (!trip.tripCode) return;
+    if (!trip.locked) {
+      const statusLabel = trip.optiStatus === "Optimised" || trip.status === "Optimised" ? "Optimised" : "Open";
+      toast({
+        title: "Cannot Create LVS",
+        description: `Trip is in ${statusLabel} status, can't validate. Lock the trip first to create LVS / validate.`,
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const resp = await tripApi.validateTrip(trip.tripCode);
       setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
