@@ -838,7 +838,10 @@ function ActiveTourPanel({
                   <Button size="sm"
                     className="h-7 text-[9px] gap-1 px-2.5 border-0 rounded-lg shadow-sm"
                     style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#0f172a" }}
-                    onClick={() => setShowOptModal(true)}>
+                    onClick={() => {
+                      if (selectedTripStatus === "Open") setShowOptConfirm(true);
+                      else setShowOptModal(true);
+                    }}>
                     <Zap className="w-4 h-4" /> Optimise
                   </Button>
                 )}
