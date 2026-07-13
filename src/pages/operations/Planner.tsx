@@ -1429,6 +1429,22 @@ function ActiveTourPanel({
         </motion.div>
       )}
     </AnimatePresence>
+    <AlertDialog open={showOptConfirm} onOpenChange={setShowOptConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Optimise Trip?</AlertDialogTitle>
+          <AlertDialogDescription>
+            The trip is currently in <b>Open</b> status. Do you want to optimise it?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>No</AlertDialogCancel>
+          <AlertDialogAction onClick={() => { setShowOptConfirm(false); setShowOptModal(true); }}>
+            Yes
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
