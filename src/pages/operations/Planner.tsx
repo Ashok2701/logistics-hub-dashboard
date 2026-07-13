@@ -2568,6 +2568,21 @@ export default function Planner() {
     if (!draftDriver)  return toast({ title: "Assign a driver",  description: "Drag a driver or click a driver row." });
     if (!draftStopIds.length) return toast({ title: "Add stops", description: "Select drops/pickups and add to trip." });
 
+    // BUG FIX: "Confirm" was always calling createTrip(), even when the
+    // draft was actually an existing, already-persisted trip loaded via
+    // selectTrip() for editing (e.g. adding a stop to a trip you already
+    // confirmed earlier). loadedTripRef is set by selectTrip() whenever
+    // that happens — if it's populated, this is an update, not a new trip.
+    const loaded = loadedTripRef.current;
+    const existingTrip = loaded ? trips.find((t) => t.tripId === loaded.tripId) : undefined;
+
+    if (existingTrip && existingTrip.tripCode) {
+      await pushTripUpdate(existingTrip, draftVehicle, draftDriver, draftStops, "Trip updated");
+      clearDraft();
+      setRefreshKey((k) => k + 1);
+      return;
+    }
+
     const totalWeight = draftStops.reduce((n, s) => n + s.netweight, 0);
     const deliveries  = draftStops.filter((s) => s.type === "DROP").length;
     const pickupCount = draftStops.filter((s) => s.type === "PICKUP").length;
