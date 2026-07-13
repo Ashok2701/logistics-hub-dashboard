@@ -3511,8 +3511,11 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
             tripDistanceKm={selectedTrip?.distanceKm ?? null}
             tripStartTime={selectedTrip?.startTime ?? null}
             tripEndTime={selectedTrip?.endTime ?? null}
-            onTripOptimised={(tripId, stopResults, totals) => setTrips(prev => prev.map(t => {
+            onTripOptimised={(tripId, stopResults, totals) => {
+              let optimisedId: string | null = null;
+              setTrips(prev => prev.map(t => {
               if (t.tripId !== tripId) return t;
+              optimisedId = t.id;
               const byDoc = new Map<string, any>((stopResults ?? []).map((r: any) => [r.docNum, r]));
               const mergedStops = t.stops.map((s) => {
                 const r = byDoc.get(s.txn);
@@ -3523,7 +3526,9 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
               }).sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
               return { ...t, stops: mergedStops, optiStatus: "Optimised" as any,
                 status: "Optimised", distanceKm: totals.distanceKm, endTime: totals.endTime };
-            }))}
+              }));
+              if (optimisedId) setSelectedTripIds((prev) => { if (!prev.has(optimisedId!)) return prev; const n = new Set(prev); n.delete(optimisedId!); return n; });
+            }}
           />
           </div>
 
