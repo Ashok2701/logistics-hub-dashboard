@@ -740,6 +740,7 @@ function ActiveTourPanel({
 }: ActiveTourPanelProps) {
   const [selectedStop,  setSelectedStop]  = useState<number | null>(null);
   const [showOptModal,  setShowOptModal]  = useState(false);
+  const [showOptConfirm, setShowOptConfirm] = useState(false);
   const [optOrder,      setOptOrder]      = useState<"fixed"|"auto">("fixed");
   const [optStartDate,  setOptStartDate]  = useState(() => new Date().toISOString().slice(0, 10));
   const [optStartTime,  setOptStartTime]  = useState("07:30");
@@ -837,7 +838,10 @@ function ActiveTourPanel({
                   <Button size="sm"
                     className="h-7 text-[9px] gap-1 px-2.5 border-0 rounded-lg shadow-sm"
                     style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#0f172a" }}
-                    onClick={() => setShowOptModal(true)}>
+                    onClick={() => {
+                      if (selectedTripStatus === "Open") setShowOptConfirm(true);
+                      else setShowOptModal(true);
+                    }}>
                     <Zap className="w-4 h-4" /> Optimise
                   </Button>
                 )}
@@ -1425,6 +1429,22 @@ function ActiveTourPanel({
         </motion.div>
       )}
     </AnimatePresence>
+    <AlertDialog open={showOptConfirm} onOpenChange={setShowOptConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Optimise Trip?</AlertDialogTitle>
+          <AlertDialogDescription>
+            The trip is currently in <b>Open</b> status. Do you want to optimise it?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>No</AlertDialogCancel>
+          <AlertDialogAction onClick={() => { setShowOptConfirm(false); setShowOptModal(true); }}>
+            Yes
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
@@ -2729,6 +2749,15 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   function validateTrip(id: string) {
     const t = trips.find((x) => x.id === id);
     if (!t) return;
+    if (!t.locked) {
+      const statusLabel = t.optiStatus === "Optimised" || t.status === "Optimised" ? "Optimised" : "Open";
+      toast({
+        title: "Cannot Validate",
+        description: `Trip is in ${statusLabel} status, can't validate. Lock the trip first to create LVS / validate.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setTripStatus(t, "Validated", 1);
   }
 
@@ -3006,6 +3035,15 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   // POST /trips/{code}/validate  →  refresh vrHeader / vrDetails / vrLoadStock
   async function handleLvsCreateFromDetail(trip: Trip) {
     if (!trip.tripCode) return;
+    if (!trip.locked) {
+      const statusLabel = trip.optiStatus === "Optimised" || trip.status === "Optimised" ? "Optimised" : "Open";
+      toast({
+        title: "Cannot Create LVS",
+        description: `Trip is in ${statusLabel} status, can't validate. Lock the trip first to create LVS / validate.`,
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const resp = await tripApi.validateTrip(trip.tripCode);
       setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
