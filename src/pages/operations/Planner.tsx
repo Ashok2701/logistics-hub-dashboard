@@ -2396,11 +2396,14 @@ export default function Planner() {
     return Array.from(new Set(codes)).sort();
   }, [allStops]);
 
-  const filteredTrips = useMemo(() =>
-    trips.filter((t) =>
-      (statusFilter === "all" || t.status === statusFilter) &&
-      (!tripSearch || `${t.id} ${t.routeCode} ${t.vehicle.code} ${t.driver.name}`.toLowerCase().includes(tripSearch.toLowerCase()))
-    ), [trips, statusFilter, tripSearch]);
+  const filteredTrips = useMemo(() => {
+    const norm = (s: any) => (s === "Optimized" ? "Optimised" : s);
+    const q = tripSearch.toLowerCase();
+    return trips.filter((t) =>
+      (statusFilter === "all" || norm(t.status) === norm(statusFilter) || norm((t as any).optiStatus) === norm(statusFilter)) &&
+      (!q || `${t.id} ${t.routeCode ?? ""} ${t.vehicle?.code ?? ""} ${t.driver?.name ?? ""} ${(t as any).tripCode ?? ""}`.toLowerCase().includes(q))
+    );
+  }, [trips, statusFilter, tripSearch]);
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId) ?? null;
   const detailTrip   = trips.find((t) => t.id === detailTripId)   ?? null;
@@ -2743,6 +2746,17 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
     const t = trips.find((x) => x.id === id);
     if (!t) return;
     const willLock = !t.locked;
+    if (willLock) {
+      const isOptimised = t.optiStatus === "Optimised" || t.status === "Optimised" || t.status === "Optimized";
+      if (!isOptimised) {
+        toast({
+          title: "Cannot Lock",
+          description: "Trip is in Open status, can't lock. Optimise the trip first before locking.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setTripStatus(t, willLock ? "Locked" : "Open", willLock ? 1 : 0);
   }
 
@@ -3522,7 +3536,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="Open">Open</SelectItem>
-                      <SelectItem value="Optimized">Optimized</SelectItem>
+                      <SelectItem value="Optimised">Optimised</SelectItem>
                       <SelectItem value="Locked">Locked</SelectItem>
                       <SelectItem value="Confirmed">Confirmed</SelectItem>
                     </SelectContent>
