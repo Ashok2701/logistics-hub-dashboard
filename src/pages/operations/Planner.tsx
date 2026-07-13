@@ -3489,6 +3489,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
               onConfirm: async () => { await confirmTrip(); },
             })}
             selectedTripStatus={selectedTrip?.optiStatus ?? (selectedTrip?.status as string | undefined) ?? null}
+            tripLocked={selectedTrip?.locked ?? false}
             tripDepSite={selectedTrip?.departSite ?? null}
             tripArrSite={selectedTrip?.arrivalSite ?? null}
             tripDistanceKm={selectedTrip?.distanceKm ?? null}
