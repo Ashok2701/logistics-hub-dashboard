@@ -90,15 +90,32 @@ export interface Vehicle {
 }
 
 export const vehicleApi = {
-  list: () => request<Vehicle[]>("/vehicles"),
-  get: (code: string) => request<Vehicle>(`/vehicles/${code}`),
+  // BUG FIX: the backend's VehicleDTO field is "image", not "imageUrl" —
+  // sending {imageUrl: "..."} over the wire meant Jackson silently
+  // ignored it (default ignore-unknown-properties behavior), so the PUT
+  // returned 200 OK but vehicle_image was never actually updated.
+  // Translating at this boundary keeps "imageUrl" as the name used
+  // throughout the rest of the app (Vehicles.tsx, etc.) unchanged.
+  list: () => request<any[]>("/vehicles").then((list) => list.map(fromWireVehicle)),
+  get: (code: string) => request<any>(`/vehicles/${code}`).then(fromWireVehicle),
   create: (b: Partial<Vehicle>) =>
-    request<Vehicle>("/vehicles", { method: "POST", body: JSON.stringify(b) }),
+    request<any>("/vehicles", { method: "POST", body: JSON.stringify(toWireVehicle(b)) }).then(fromWireVehicle),
   update: (code: string, b: Partial<Vehicle>) =>
-    request<Vehicle>(`/vehicles/${code}`, { method: "PUT", body: JSON.stringify(b) }),
+    request<any>(`/vehicles/${code}`, { method: "PUT", body: JSON.stringify(toWireVehicle(b)) }).then(fromWireVehicle),
   remove: (code: string) =>
     request<void>(`/vehicles/${code}`, { method: "DELETE" }),
 };
+
+function toWireVehicle(b: Partial<Vehicle>): Record<string, unknown> {
+  const { imageUrl, ...rest } = b as Record<string, unknown> & { imageUrl?: string | null };
+  return imageUrl !== undefined ? { ...rest, image: imageUrl } : rest;
+}
+
+function fromWireVehicle(v: any): Vehicle {
+  if (!v) return v;
+  const { image, ...rest } = v;
+  return { ...rest, imageUrl: image ?? null };
+}
 
 export interface Driver {
   driverId: string;
