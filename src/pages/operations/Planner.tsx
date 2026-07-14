@@ -3827,6 +3827,10 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* ─── LEFT: Vehicles / Drivers ─── */}
                 <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                  <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
+                    <span>Selected Vehicles: <b className="text-slate-900">{agVehSel.size}</b></span>
+                    <span>Selected Drivers: <b className="text-slate-900">{agDrvSel.size}</b></span>
+                  </div>
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
                     <h3 className="text-sm font-semibold text-slate-800">Vehicles</h3>
                     {agTab === "vehicles" && (
@@ -3840,6 +3844,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       </select>
                     )}
                   </div>
+
 
                   <div className="px-4 pt-3 flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 flex-wrap">
