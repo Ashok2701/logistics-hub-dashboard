@@ -2041,6 +2041,7 @@ export default function Planner() {
   const [agStartDate, setAgStartDate]   = useState<string>(date);
   const [agEndDate, setAgEndDate]       = useState<string>(date);
   const [agVehSearch, setAgVehSearch]   = useState("");
+  const [agExcludeScheduled, setAgExcludeScheduled] = useState(false);
   const [agDocSearch, setAgDocSearch]   = useState("");
   const [agSubmitting, setAgSubmitting] = useState(false);
   const [vroomError, setVroomError] = useState<{ title: string; detail: string } | null>(null);
@@ -2052,6 +2053,7 @@ export default function Planner() {
     setAgStartDate(date); setAgEndDate(date);
     setAgVehSearch(""); setAgDocSearch("");
     setAgTab("vehicles"); setAgDocTab("deliveries");
+    setAgExcludeScheduled(false);
     setShowAutoGen(true);
   }, [date]);
 
@@ -2059,11 +2061,16 @@ export default function Planner() {
     () => Array.from(new Set(apiVehicles.map(v => v.category).filter(Boolean))).sort(),
     [apiVehicles]
   );
+  const agPlannedVehicleCodes = useMemo(
+    () => new Set(trips.map(t => t.vehicle?.code).filter(Boolean) as string[]),
+    [trips]
+  );
   const agFilteredVehicles = useMemo(() =>
     apiVehicles.filter(v =>
       (!agVehClass || v.category === agVehClass) &&
+      (!agExcludeScheduled || !agPlannedVehicleCodes.has(v.code)) &&
       (!agVehSearch || `${v.code} ${v.vehicleNo} ${v.category} ${v.driverName}`.toLowerCase().includes(agVehSearch.toLowerCase()))
-    ), [apiVehicles, agVehClass, agVehSearch]);
+    ), [apiVehicles, agVehClass, agVehSearch, agExcludeScheduled, agPlannedVehicleCodes]);
   const agFilteredDrivers = useMemo(() =>
     apiDrivers.filter(d =>
       !agVehSearch || `${d.id} ${d.name} ${d.license}`.toLowerCase().includes(agVehSearch.toLowerCase())
@@ -3796,28 +3803,42 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                 <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
                     <h3 className="text-sm font-semibold text-slate-800">Vehicles</h3>
-                    <select
-                      value={agVehClass}
-                      onChange={(e) => setAgVehClass(e.target.value)}
-                      className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[180px]"
-                    >
-                      <option value="">Vehicle Category</option>
-                      {agVehicleClasses.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    {agTab === "vehicles" && (
+                      <select
+                        value={agVehClass}
+                        onChange={(e) => setAgVehClass(e.target.value)}
+                        className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[180px]"
+                      >
+                        <option value="">Vehicle Category</option>
+                        {agVehicleClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    )}
                   </div>
 
-                  <div className="px-4 pt-3 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5">
-                      <button
-                        onClick={() => setAgTab("vehicles")}
-                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
-                          agTab === "vehicles" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
-                      >Vehicles</button>
-                      <button
-                        onClick={() => setAgTab("drivers")}
-                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
-                          agTab === "drivers" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
-                      >Drivers</button>
+                  <div className="px-4 pt-3 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5">
+                        <button
+                          onClick={() => setAgTab("vehicles")}
+                          className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                            agTab === "vehicles" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                        >Vehicles</button>
+                        <button
+                          onClick={() => setAgTab("drivers")}
+                          className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                            agTab === "drivers" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                        >Drivers</button>
+                      </div>
+                      {agTab === "vehicles" && (
+                        <label className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={agExcludeScheduled}
+                            onChange={(e) => setAgExcludeScheduled(e.target.checked)}
+                          />
+                          Exclude Scheduled vehicles?
+                        </label>
+                      )}
                     </div>
                     <input
                       placeholder="Search..."
@@ -3826,6 +3847,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       className="h-8 px-3 text-xs rounded border border-slate-300 bg-white w-[200px]"
                     />
                   </div>
+
 
                   <div className="px-4 py-3 max-h-[42vh] overflow-auto">
                     {agTab === "vehicles" ? (
@@ -3843,10 +3865,13 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                             <th className="px-2 py-2 text-left">Vehicle Name</th>
                             <th className="px-2 py-2 text-left">Vehicle Category</th>
                             <th className="px-2 py-2 text-left">Driver</th>
+                            <th className="px-2 py-2 text-left">Status</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {agFilteredVehicles.map(v => (
+                          {agFilteredVehicles.map(v => {
+                            const planned = agPlannedVehicleCodes.has(v.code);
+                            return (
                             <tr key={v.code} className="border-b border-slate-100 hover:bg-slate-50">
                               <td className="px-2 py-1.5">
                                 <input type="checkbox" checked={agVehSel.has(v.code)} onChange={() => agToggle(agVehSel, setAgVehSel, v.code)} />
@@ -3855,11 +3880,21 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                               <td className="px-2 py-1.5">{v.vehicleNo}</td>
                               <td className="px-2 py-1.5">{v.category}</td>
                               <td className="px-2 py-1.5">{v.driverName || "—"}</td>
+                              <td className="px-2 py-1.5">
+                                <span className={cn(
+                                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium",
+                                  planned ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                                )}>
+                                  <span className={cn("w-1.5 h-1.5 rounded-full", planned ? "bg-amber-500" : "bg-emerald-500")} />
+                                  {planned ? "Planned" : "Not Planned"}
+                                </span>
+                              </td>
                             </tr>
-                          ))}
+                          );})}
                           {agFilteredVehicles.length === 0 && (
-                            <tr><td colSpan={5} className="px-2 py-6 text-center text-slate-400">No vehicles</td></tr>
+                            <tr><td colSpan={6} className="px-2 py-6 text-center text-slate-400">No vehicles</td></tr>
                           )}
+
                         </tbody>
                       </table>
                     ) : (
