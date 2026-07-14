@@ -2053,6 +2053,7 @@ export default function Planner() {
     setAgStartDate(date); setAgEndDate(date);
     setAgVehSearch(""); setAgDocSearch("");
     setAgTab("vehicles"); setAgDocTab("deliveries");
+    setAgExcludeScheduled(false);
     setShowAutoGen(true);
   }, [date]);
 
