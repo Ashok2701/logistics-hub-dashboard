@@ -2041,6 +2041,7 @@ export default function Planner() {
   const [agStartDate, setAgStartDate]   = useState<string>(date);
   const [agEndDate, setAgEndDate]       = useState<string>(date);
   const [agVehSearch, setAgVehSearch]   = useState("");
+  const [agExcludeScheduled, setAgExcludeScheduled] = useState(false);
   const [agDocSearch, setAgDocSearch]   = useState("");
   const [agSubmitting, setAgSubmitting] = useState(false);
   const [vroomError, setVroomError] = useState<{ title: string; detail: string } | null>(null);
