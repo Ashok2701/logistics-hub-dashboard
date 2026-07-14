@@ -2422,9 +2422,9 @@ export default function Planner() {
     trips: trips.length,
     assignedDocs: trips.reduce((n, t) => n + t.stops.length, 0),
     unassignedDocs: availableStops.length,
-    totalDeliveryQty: drops.reduce((n, s) => n + s.qty, 0),
-    totalPickupQty: pickups.reduce((n, s) => n + s.qty, 0),
-  }), [vehicles, trips, availableStops, drops, pickups]);
+    totalDeliveryQty: allStops.reduce((n, s) => s.type === "DROP"   ? n + (Number(s.qty) || 0) : n, 0),
+    totalPickupQty:   allStops.reduce((n, s) => s.type === "PICKUP" ? n + (Number(s.qty) || 0) : n, 0),
+  }), [vehicles, trips, availableStops, allStops]);
 
   // ── Draft actions ──────────────────────────────────────
   const addStopsToDraft = useCallback((ids: string[]) => {
