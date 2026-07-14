@@ -3865,10 +3865,13 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                             <th className="px-2 py-2 text-left">Vehicle Name</th>
                             <th className="px-2 py-2 text-left">Vehicle Category</th>
                             <th className="px-2 py-2 text-left">Driver</th>
+                            <th className="px-2 py-2 text-left">Status</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {agFilteredVehicles.map(v => (
+                          {agFilteredVehicles.map(v => {
+                            const planned = agPlannedVehicleCodes.has(v.code);
+                            return (
                             <tr key={v.code} className="border-b border-slate-100 hover:bg-slate-50">
                               <td className="px-2 py-1.5">
                                 <input type="checkbox" checked={agVehSel.has(v.code)} onChange={() => agToggle(agVehSel, setAgVehSel, v.code)} />
@@ -3877,11 +3880,21 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                               <td className="px-2 py-1.5">{v.vehicleNo}</td>
                               <td className="px-2 py-1.5">{v.category}</td>
                               <td className="px-2 py-1.5">{v.driverName || "—"}</td>
+                              <td className="px-2 py-1.5">
+                                <span className={cn(
+                                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium",
+                                  planned ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                                )}>
+                                  <span className={cn("w-1.5 h-1.5 rounded-full", planned ? "bg-amber-500" : "bg-emerald-500")} />
+                                  {planned ? "Planned" : "Not Planned"}
+                                </span>
+                              </td>
                             </tr>
-                          ))}
+                          );})}
                           {agFilteredVehicles.length === 0 && (
-                            <tr><td colSpan={5} className="px-2 py-6 text-center text-slate-400">No vehicles</td></tr>
+                            <tr><td colSpan={6} className="px-2 py-6 text-center text-slate-400">No vehicles</td></tr>
                           )}
+
                         </tbody>
                       </table>
                     ) : (
