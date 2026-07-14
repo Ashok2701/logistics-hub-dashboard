@@ -947,7 +947,13 @@ function ActiveTourPanel({
               <div className="w-2 h-2 rounded-full border-2 border-border bg-card flex-shrink-0" />
             </div>
           ) : (
-            <div className="flex items-center w-full overflow-x-auto py-1" style={{ scrollbarWidth: "none" }}>
+            <div
+              className="flex items-center w-full overflow-x-auto py-1 pb-3"
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "#cbd5e1 transparent",
+              }}
+            >
               <div className="flex items-center min-w-full">
                 {/* Departure site node */}
                 <div className="flex items-center flex-shrink-0">
