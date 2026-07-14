@@ -3162,7 +3162,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
         {/* Refresh */}
         <ToolbarBtn icon={RefreshCw} label="Refresh" spin={loading}
           disabled={loading || !site} color="text-muted-foreground"
-          onClick={() => setRefreshKey((k) => k + 1)} />
+          onClick={() => { setRefreshKey((k) => k + 1); setSelectedTripIds(new Set()); }} />
 
         <div className="h-5 w-px bg-border/50 mx-0.5" />
 
