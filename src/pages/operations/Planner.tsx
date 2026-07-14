@@ -2091,8 +2091,10 @@ export default function Planner() {
     );
   }, [allStops, agDocTab, agRouteCode, agDocSearch, agUsedStopIds, draftStopIds]);
 
+  const agDateInvalid = !!(agStartDate && agEndDate && agStartDate > agEndDate);
   const agCanSubmit =
-    agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1;
+    agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1 && !agDateInvalid;
+
 
   function agToggle(set: Set<string>, setter: (s: Set<string>) => void, id: string) {
     const next = new Set(set);
@@ -3825,6 +3827,10 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* ─── LEFT: Vehicles / Drivers ─── */}
                 <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                  <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
+                    <span>Selected Vehicles: <b className="text-slate-900">{agVehSel.size}</b></span>
+                    <span>Selected Drivers: <b className="text-slate-900">{agDrvSel.size}</b></span>
+                  </div>
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
                     <h3 className="text-sm font-semibold text-slate-800">Vehicles</h3>
                     {agTab === "vehicles" && (
@@ -3838,6 +3844,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       </select>
                     )}
                   </div>
+
 
                   <div className="px-4 pt-3 flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 flex-wrap">
@@ -3957,26 +3964,26 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       </table>
                     )}
                   </div>
-                  <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
-                    <span>Selected Vehicles: <b className="text-slate-900">{agVehSel.size}</b></span>
-                    <span>Selected Drivers: <b className="text-slate-900">{agDrvSel.size}</b></span>
-                  </div>
                 </div>
 
                 {/* ─── RIGHT: Documents ─── */}
                 <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                  <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
+                    <span>Selected Drops: <b className="text-slate-900">{agDropSel.size}</b></span>
+                    <span>Selected Pickups: <b className="text-slate-900">{agPickSel.size}</b></span>
+                  </div>
                   <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-200 flex-wrap">
                     <h3 className="text-sm font-semibold text-slate-800">Documents</h3>
                     <div className="flex items-end gap-2">
                       <div>
                         <label className="block text-[10px] text-slate-500 mb-0.5">Start Date</label>
-                        <input type="date" value={agStartDate} onChange={(e) => setAgStartDate(e.target.value)}
-                          className="h-8 px-2 text-xs rounded border border-slate-300 bg-white" />
+                        <input type="date" value={agStartDate} max={agEndDate || undefined} onChange={(e) => setAgStartDate(e.target.value)}
+                          className={cn("h-8 px-2 text-xs rounded border bg-white", agDateInvalid ? "border-red-500" : "border-slate-300")} />
                       </div>
                       <div>
                         <label className="block text-[10px] text-slate-500 mb-0.5">End Date</label>
-                        <input type="date" value={agEndDate} onChange={(e) => setAgEndDate(e.target.value)}
-                          className="h-8 px-2 text-xs rounded border border-slate-300 bg-white" />
+                        <input type="date" value={agEndDate} min={agStartDate || undefined} onChange={(e) => setAgEndDate(e.target.value)}
+                          className={cn("h-8 px-2 text-xs rounded border bg-white", agDateInvalid ? "border-red-500" : "border-slate-300")} />
                       </div>
                       <select value={agRouteCode} onChange={(e) => setAgRouteCode(e.target.value)}
                         className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[140px]">
@@ -3984,7 +3991,11 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                         {routeCodes.map(rc => <option key={rc} value={rc}>{rc}</option>)}
                       </select>
                     </div>
+                    {agDateInvalid && (
+                      <div className="w-full text-[11px] text-red-600">Start Date cannot be after End Date.</div>
+                    )}
                   </div>
+
 
                   <div className="px-4 pt-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5">
@@ -4054,10 +4065,6 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                         )}
                       </tbody>
                     </table>
-                  </div>
-                  <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
-                    <span>Selected Drops: <b className="text-slate-900">{agDropSel.size}</b></span>
-                    <span>Selected Pickups: <b className="text-slate-900">{agPickSel.size}</b></span>
                   </div>
                 </div>
               </div>
