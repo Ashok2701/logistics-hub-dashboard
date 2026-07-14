@@ -3964,10 +3964,6 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       </table>
                     )}
                   </div>
-                  <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
-                    <span>Selected Vehicles: <b className="text-slate-900">{agVehSel.size}</b></span>
-                    <span>Selected Drivers: <b className="text-slate-900">{agDrvSel.size}</b></span>
-                  </div>
                 </div>
 
                 {/* ─── RIGHT: Documents ─── */}
