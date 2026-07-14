@@ -4065,10 +4065,6 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       </tbody>
                     </table>
                   </div>
-                  <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600 flex justify-between">
-                    <span>Selected Drops: <b className="text-slate-900">{agDropSel.size}</b></span>
-                    <span>Selected Pickups: <b className="text-slate-900">{agPickSel.size}</b></span>
-                  </div>
                 </div>
               </div>
             </div>
