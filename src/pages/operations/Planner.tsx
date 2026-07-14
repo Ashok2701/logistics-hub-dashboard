@@ -2061,11 +2061,16 @@ export default function Planner() {
     () => Array.from(new Set(apiVehicles.map(v => v.category).filter(Boolean))).sort(),
     [apiVehicles]
   );
+  const agPlannedVehicleCodes = useMemo(
+    () => new Set(trips.map(t => t.vehicle?.code).filter(Boolean) as string[]),
+    [trips]
+  );
   const agFilteredVehicles = useMemo(() =>
     apiVehicles.filter(v =>
       (!agVehClass || v.category === agVehClass) &&
+      (!agExcludeScheduled || !agPlannedVehicleCodes.has(v.code)) &&
       (!agVehSearch || `${v.code} ${v.vehicleNo} ${v.category} ${v.driverName}`.toLowerCase().includes(agVehSearch.toLowerCase()))
-    ), [apiVehicles, agVehClass, agVehSearch]);
+    ), [apiVehicles, agVehClass, agVehSearch, agExcludeScheduled, agPlannedVehicleCodes]);
   const agFilteredDrivers = useMemo(() =>
     apiDrivers.filter(d =>
       !agVehSearch || `${d.id} ${d.name} ${d.license}`.toLowerCase().includes(agVehSearch.toLowerCase())
