@@ -2091,8 +2091,10 @@ export default function Planner() {
     );
   }, [allStops, agDocTab, agRouteCode, agDocSearch, agUsedStopIds, draftStopIds]);
 
+  const agDateInvalid = !!(agStartDate && agEndDate && agStartDate > agEndDate);
   const agCanSubmit =
-    agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1;
+    agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1 && !agDateInvalid;
+
 
   function agToggle(set: Set<string>, setter: (s: Set<string>) => void, id: string) {
     const next = new Set(set);
