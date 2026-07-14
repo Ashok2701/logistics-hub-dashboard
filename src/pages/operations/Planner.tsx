@@ -2681,9 +2681,24 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
 }
 
   // Reassign vehicle/driver on a persisted trip — with confirmation + backend sync.
+  // Only allowed when trip is in Open or Optimised status.
+  function canEditTrip(trip: Trip | undefined): boolean {
+    if (!trip) return true;
+    const s = String((trip as any).optiStatus ?? trip.status ?? "").toLowerCase();
+    return s === "open" || s === "optimised" || s === "optimized" || s === "";
+  }
+
   async function reassignVehicle(v: Vehicle | null) {
     const trip = trips.find((x) => x.id === selectedTripId);
     if (!trip || trip.tripId == null) { setDraftVehicle(v); return; }
+    if (!canEditTrip(trip)) {
+      toast({
+        title: "Cannot change vehicle",
+        description: `Trip ${trip.tripCode ?? trip.id} is ${(trip as any).optiStatus ?? trip.status}. Unlock the trip to make changes.`,
+        variant: "destructive",
+      });
+      return;
+    }
     if (!v) {
       setDraftVehicle(null);
       setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, vehicle: v ?? x.vehicle } : x));
@@ -2705,6 +2720,14 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   async function reassignDriver(d: Driver | null) {
     const trip = trips.find((x) => x.id === selectedTripId);
     if (!trip || trip.tripId == null) { setDraftDriver(d); return; }
+    if (!canEditTrip(trip)) {
+      toast({
+        title: "Cannot change driver",
+        description: `Trip ${trip.tripCode ?? trip.id} is ${(trip as any).optiStatus ?? trip.status}. Unlock the trip to make changes.`,
+        variant: "destructive",
+      });
+      return;
+    }
     if (!d) {
       setDraftDriver(null);
       setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, driver: d ?? x.driver } : x));
@@ -2722,6 +2745,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       },
     });
   }
+
 
   // Auto-sync stop add/remove on a selected persisted trip (debounced).
   useEffect(() => {
