@@ -3803,28 +3803,42 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                 <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
                     <h3 className="text-sm font-semibold text-slate-800">Vehicles</h3>
-                    <select
-                      value={agVehClass}
-                      onChange={(e) => setAgVehClass(e.target.value)}
-                      className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[180px]"
-                    >
-                      <option value="">Vehicle Category</option>
-                      {agVehicleClasses.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    {agTab === "vehicles" && (
+                      <select
+                        value={agVehClass}
+                        onChange={(e) => setAgVehClass(e.target.value)}
+                        className="h-8 px-2 text-xs rounded border border-slate-300 bg-white min-w-[180px]"
+                      >
+                        <option value="">Vehicle Category</option>
+                        {agVehicleClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    )}
                   </div>
 
-                  <div className="px-4 pt-3 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5">
-                      <button
-                        onClick={() => setAgTab("vehicles")}
-                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
-                          agTab === "vehicles" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
-                      >Vehicles</button>
-                      <button
-                        onClick={() => setAgTab("drivers")}
-                        className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
-                          agTab === "drivers" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
-                      >Drivers</button>
+                  <div className="px-4 pt-3 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5">
+                        <button
+                          onClick={() => setAgTab("vehicles")}
+                          className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                            agTab === "vehicles" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                        >Vehicles</button>
+                        <button
+                          onClick={() => setAgTab("drivers")}
+                          className={cn("px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                            agTab === "drivers" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900")}
+                        >Drivers</button>
+                      </div>
+                      {agTab === "vehicles" && (
+                        <label className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={agExcludeScheduled}
+                            onChange={(e) => setAgExcludeScheduled(e.target.checked)}
+                          />
+                          Exclude Scheduled vehicles?
+                        </label>
+                      )}
                     </div>
                     <input
                       placeholder="Search..."
@@ -3833,6 +3847,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       className="h-8 px-3 text-xs rounded border border-slate-300 bg-white w-[200px]"
                     />
                   </div>
+
 
                   <div className="px-4 py-3 max-h-[42vh] overflow-auto">
                     {agTab === "vehicles" ? (
