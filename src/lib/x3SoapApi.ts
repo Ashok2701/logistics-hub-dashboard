@@ -47,6 +47,10 @@ export const x3SoapApi = {
   confirmLvs: (lvsNum: string) =>
     request<Record<string, any>>(`/x3/confirm-lvs${qs({ lvsNum })}`, { method: "POST" }),
 
+  /** X1CONFIRM — confirm the route/trip itself in X3 (I_XNUMPC = VR number) */
+  confirmRoute: (vrNumber: string) =>
+    request<Record<string, any>>(`/x3/confirm-route${qs({ vrNumber })}`, { method: "POST" }),
+
   /** X1CROUTDET — route/trip detail */
   getRouteDetail: (vrNum: string) =>
     request<Record<string, any>>(`/x3/route-detail${qs({ vrNum })}`),

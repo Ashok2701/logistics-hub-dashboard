@@ -3130,13 +3130,23 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   }
 
   // Called from the detail screen when user clicks "LVS Confirm":
-  // POST /api/v1/x3/confirm-lvs (X10CCONBUT via X3SoapService) → refresh vrLoadStock
+  // 1. POST /api/v1/x3/confirm-lvs    (X10CCONBUT — confirm the LVS itself, by LVS number)
+  // 2. POST /api/v1/x3/confirm-route  (X1CONFIRM  — confirm the route/trip, by VR number)
+  // then refresh vrLoadStock
   async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
     try {
       const resp = await x3SoapApi.confirmLvs(lvsNum);
       if (resp && (resp as any).error) {
         throw new Error((resp as any).error);
       }
+
+      if (trip.tripCode) {
+        const routeResp = await x3SoapApi.confirmRoute(trip.tripCode);
+        if (routeResp && (routeResp as any).error) {
+          throw new Error((routeResp as any).error);
+        }
+      }
+
       toast({ title: "LVS Confirmed", description: lvsNum });
       if (trip.tripCode) await loadVrData(trip.tripCode);
     } catch (e: any) {
