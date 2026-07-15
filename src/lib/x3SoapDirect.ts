@@ -124,4 +124,8 @@ export const x3SoapDirect = {
   /** X1CONFIRM — confirm the route/trip itself in X3 (I_XNUMPC = VR number), called directly from the browser */
   confirmRoute: (vrNumber: string) =>
     callSoap("X1CONFIRM", `<PARAM><FLD NAME="I_XNUMPC" TYPE="Char">${vrNumber}</FLD></PARAM>`),
+
+  /** X10CSTKMTV — Load Truck: move stock onto the vehicle for an LVS (I_XLVSNUM = LVS number) */
+  loadTruck: (lvsNum: string) =>
+    callSoap("X10CSTKMTV", `<PARAM><FLD NAME="I_XLVSNUM" TYPE="Char">${lvsNum}</FLD></PARAM>`),
 };

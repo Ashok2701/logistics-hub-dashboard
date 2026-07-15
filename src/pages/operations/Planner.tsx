@@ -1466,7 +1466,7 @@ function ActiveTourPanel({
 // Shown when (i) is clicked on a trip row
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
-function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading, onLvsCreate, onLvsConfirm }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean; onLvsCreate?: () => void | Promise<void>; onLvsConfirm?: (lvsNum: string) => void | Promise<void> }) {
+function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading, onLvsCreate, onLvsConfirm, onLvsLoadTruck }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean; onLvsCreate?: () => void | Promise<void>; onLvsConfirm?: (lvsNum: string) => void | Promise<void>; onLvsLoadTruck?: (lvsNum: string) => void | Promise<void> }) {
   // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
   const H  = (vrHeader ?? {}) as any;
   const rows = Array.isArray(vrDetails) ? vrDetails : [];
@@ -1588,7 +1588,13 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                   }
                   onLvsConfirm?.(String(vlsCodeRaw));
                 } },
-                { key: "load",        label: "Load Truck",  icon: Truck,     onClick: () => toast({ title: "Load Truck",  description: `Trip ${trip.tripCode ?? trip.id}` }) },
+                { key: "load",        label: "Load Truck",  icon: Truck,     onClick: () => {
+                  if (!vlsCodeRaw) {
+                    toast({ title: "Load Truck unavailable", description: "No LVS number found for this trip yet.", variant: "destructive" });
+                    return;
+                  }
+                  onLvsLoadTruck?.(String(vlsCodeRaw));
+                } },
                 { key: "unload",      label: "Unload Truck",icon: Package,   onClick: () => toast({ title: "Unload Truck",description: `Trip ${trip.tripCode ?? trip.id}` }) },
               ];
 
@@ -3159,6 +3165,24 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
     }
   }
 
+  // Called from the detail screen when user clicks "Load Truck":
+  // X10CSTKMTV (I_XLVSNUM = LVS number) — moves stock onto the vehicle
+  // for this LVS, then refresh vrLoadStock. Same direct-from-browser
+  // pattern as LVS Confirm (see x3SoapDirect.ts).
+  async function handleLoadTruckFromDetail(trip: Trip, lvsNum: string) {
+    try {
+      const resp = await x3SoapDirect.loadTruck(lvsNum);
+      if (resp && (resp as any).error) {
+        throw new Error((resp as any).error);
+      }
+
+      toast({ title: "Truck Loaded", description: lvsNum });
+      if (trip.tripCode) await loadVrData(trip.tripCode);
+    } catch (e: any) {
+      toast({ title: "Load Truck failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    }
+  }
+
   // ── If detail view, render full-screen detail page ─────────
   if (view === "detail" && detailTrip) {
     return (
@@ -3170,6 +3194,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
         vrLoading={vrLoading}
         onLvsCreate={() => handleLvsCreateFromDetail(detailTrip)}
         onLvsConfirm={(lvsNum) => handleLvsConfirmFromDetail(detailTrip, lvsNum)}
+        onLvsLoadTruck={(lvsNum) => handleLoadTruckFromDetail(detailTrip, lvsNum)}
         onBack={() => { setView("planner"); setDetailTripId(null); setVrHeader(null); setVrDetails([]); setVrLoadStock([]); }}
       />
     );
