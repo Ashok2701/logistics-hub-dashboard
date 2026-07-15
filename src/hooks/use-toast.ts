@@ -3,7 +3,12 @@ import * as React from "react";
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+// This only controls how long a toast lingers in state AFTER dismiss()
+// has already been called (covers the exit animation) — it is NOT an
+// auto-dismiss timer by itself. Was 1,000,000ms (~16.6 min), now just
+// enough for the close transition. The actual 5s auto-dismiss trigger
+// is in toast() below.
+const TOAST_REMOVE_DELAY = 300;
 
 type ToasterToast = ToastProps & {
   id: string;
@@ -155,6 +160,12 @@ function toast({ ...props }: Toast) {
       },
     },
   });
+
+  // Explicit auto-dismiss after 5 seconds — not relying on Radix's own
+  // implicit default duration, which isn't configured anywhere in this
+  // app (no `duration` prop is set on ToastProvider/Toast), so it was
+  // effectively never firing in practice.
+  setTimeout(() => dismiss(), 5000);
 
   return {
     id: id,

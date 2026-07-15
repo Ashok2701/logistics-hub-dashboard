@@ -148,6 +148,34 @@ export interface RpStop {
   anyTimeWindow:        boolean | null;
   fromTime:             string | null;
   toTime:               string | null;
+  // product lines — one stop can have multiple; used to compute real
+  // delivery/pickup quantity totals (sum of qtyOrdered), since nbPack
+  // alone isn't reliable for that
+  products:             RpStopProduct[] | null;
+}
+
+export interface RpStopProduct {
+  docNum:        string;
+  lineNum:       number | null;
+  cpyCode:       string | null;
+  itemCode:      string | null;
+  itemDesc1:     string | null;
+  itemDesc2:     string | null;
+  qtyOrdered:    number | null;
+  qtyDelivered:  number | null;
+  stockUnit:     string | null;
+  packUnit:      string | null;
+  netWeight:     number | null;
+  grossWeight:   number | null;
+  volume:        number | null;
+  weightUnit:    string | null;
+  volumeUnit:    string | null;
+  lot:           string | null;
+  serial:        string | null;
+  packNum:       string | null;
+  site:          string | null;
+  lineStatus:    string | null;
+  stopType:      string | null;
 }
 
 export interface RpResponse {

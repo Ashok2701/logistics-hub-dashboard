@@ -26,7 +26,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
-import { fetchTmsSites, loadPlannerData, type RpSite, type RpVehicle, type RpDriver, type RpStop } from "@/lib/routePlannerApi";
+import { fetchTmsSites, loadPlannerData, type RpSite, type RpVehicle, type RpDriver, type RpStop, type RpStopProduct } from "@/lib/routePlannerApi";
 import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi";
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
 import { transportApi } from "@/lib/transportApi";
@@ -65,6 +65,9 @@ type Stop = {
   fromPrevTravelTime?: string;
   serviceTime?: string;
   waitingTime?: string;
+  // Product lines for this stop — used to compute real delivery/pickup
+  // quantity totals (sum of qtyOrdered across all products on the doc)
+  products?: RpStopProduct[] | null;
 };
 
 // ── Mappers: API types → Planner internal types ──────────────
@@ -125,6 +128,7 @@ function mapStop(s: RpStop): Stop {
     lng:         Number(s.longitude ?? 0),
     routeStatus: s.routeStatus && s.routeStatus.trim() ? s.routeStatus : "To Plan",
     routeTagColor: s.routeColor ?? null,
+    products:    s.products ?? null,
   };
 }
 
@@ -2438,14 +2442,27 @@ export default function Planner() {
   // site object for depot lat/lng
   const currentSiteObj = sites.find(s => s.siteCode === site) ?? null;
 
+  // Sum a stop's product-line qtyOrdered values (a stop can have several
+  // product lines on the same document).
+  function sumQtyOrdered(s: Stop): number {
+    return (s.products ?? []).reduce((pn, p) => pn + (Number(p.qtyOrdered) || 0), 0);
+  }
+
   // KPIs
   const kpis = useMemo(() => ({
     vehicles: vehicles.length,
     trips: trips.length,
     assignedDocs: trips.reduce((n, t) => n + t.stops.length, 0),
     unassignedDocs: availableStops.length,
-    totalDeliveryQty: allStops.reduce((n, s) => s.type === "DROP"   ? n + (Number(s.qty) || 0) : n, 0),
-    totalPickupQty:   allStops.reduce((n, s) => s.type === "PICKUP" ? n + (Number(s.qty) || 0) : n, 0),
+    // BUG FIX: these used to sum s.qty (nbPack) bucketed by s.type — but
+    // s.type is always "DROP" now (pick tickets are a business-bucket
+    // "Drop" too — see the Drops/Pickups reclassification), so
+    // totalPickupQty was always 0 and totalDeliveryQty was wrong for any
+    // stop where nbPack isn't populated. Bucket by the real doc type
+    // (doctype: "DLV"/"PICK", unaffected by that reclassification) and
+    // sum each document's product-line qtyOrdered instead.
+    totalDeliveryQty: allStops.reduce((n, s) => s.doctype === "DLV"  ? n + sumQtyOrdered(s) : n, 0),
+    totalPickupQty:   allStops.reduce((n, s) => s.doctype === "PICK" ? n + sumQtyOrdered(s) : n, 0),
   }), [vehicles, trips, availableStops, allStops]);
 
   // ── Draft actions ──────────────────────────────────────
@@ -2796,12 +2813,17 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       return;
     }
     try {
-      let resp;
-      if (optiStatus === "Locked")         resp = await tripApi.lockTrip(trip.tripCode);
-      else if (optiStatus === "Validated") resp = await tripApi.validateTrip(trip.tripCode);
-      else if (optiStatus === "Open" && lockFlag === 0) resp = await tripApi.unlockTrip(trip.tripCode);
-      else resp = await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
-      setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
+      if (optiStatus === "Locked")         await tripApi.lockTrip(trip.tripCode);
+      else if (optiStatus === "Validated") await tripApi.validateTrip(trip.tripCode);
+      else if (optiStatus === "Open" && lockFlag === 0) await tripApi.unlockTrip(trip.tripCode);
+      else await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
+
+      // BUG FIX: previously patched local state straight from this call's
+      // own response (tripFromApi(resp, t)) — that response shape doesn't
+      // carry the same fields as the full trip-list DTO, so status showed
+      // as "undefined" right after lock/unlock. Refetch the trip list
+      // properly instead, same path used on page load / manual refresh.
+      setRefreshKey((k) => k + 1);
       setSelectedTripIds((prev) => { if (!prev.has(trip.id)) return prev; const n = new Set(prev); n.delete(trip.id); return n; });
       toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
     } catch (e: any) {
@@ -2824,7 +2846,15 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
         return;
       }
     }
-    setTripStatus(t, willLock ? "Locked" : "Open", willLock ? 1 : 0);
+    setConfirmDialog({
+      open: true,
+      title: willLock ? "Lock this trip?" : "Unlock this trip?",
+      description: willLock
+        ? `Locking trip ${t.tripCode ?? t.id} will push its plan to X3 and prevent further edits until unlocked.`
+        : `Unlocking trip ${t.tripCode ?? t.id} will remove its plan from X3 and allow edits again.`,
+      confirmLabel: willLock ? "Yes, lock" : "Yes, unlock",
+      onConfirm: () => setTripStatus(t, willLock ? "Locked" : "Open", willLock ? 1 : 0),
+    });
   }
 
   function validateTrip(id: string) {
@@ -2839,7 +2869,13 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       });
       return;
     }
-    setTripStatus(t, "Validated", 1);
+    setConfirmDialog({
+      open: true,
+      title: "Validate this trip?",
+      description: `Validating trip ${t.tripCode ?? t.id} will confirm its LVS documents in X3. This can't be easily undone.`,
+      confirmLabel: "Yes, validate",
+      onConfirm: () => setTripStatus(t, "Validated", 1),
+    });
   }
 
   async function performDeleteTrip(id: string) {
@@ -2930,6 +2966,10 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       setVroomError({ title: `${successLabel} failed`, detail: e?.message ?? "Unknown error" });
     }
     setGroupBusy(null);
+    // Same fix as setTripStatus(): guarantee a consistent final state via
+    // a full trips-list refetch, rather than relying solely on each
+    // per-trip getTripByCode() response shape.
+    if (persisted.length) setRefreshKey((k) => k + 1);
     if (ok > 0) toast({ title: `${ok} trip(s) ${successLabel}` });
   }
 
@@ -2952,7 +2992,13 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
     if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
     const eligible = selected.filter(t => t.locked);
     if (!eligible.length) { setVroomError({ title: "No Trips to Unlock", detail: "No selected trips are currently locked." }); return; }
-    await runGroupStatus("unlock", eligible, "Open", 0, "unlocked");
+    setConfirmDialog({
+      open: true,
+      title: "Unlock trips",
+      description: `Unlock ${eligible.length} trip(s)? This will remove their plan from X3 and allow edits again.`,
+      confirmLabel: "Yes, unlock",
+      onConfirm: () => runGroupStatus("unlock", eligible, "Open", 0, "unlocked"),
+    });
   }
 
   async function groupValidate() {
