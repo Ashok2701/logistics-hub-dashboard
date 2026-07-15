@@ -31,6 +31,7 @@ import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi"
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
 import { transportApi } from "@/lib/transportApi";
 import { x3SoapApi } from "@/lib/x3SoapApi";
+import { x3SoapDirect } from "@/lib/x3SoapDirect";
 
 // ═══════════════════════════════════════════════════════
 // TYPES — mapped from RpStop / RpVehicle / RpDriver
@@ -3130,18 +3131,23 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   }
 
   // Called from the detail screen when user clicks "LVS Confirm":
-  // 1. POST /api/v1/x3/confirm-lvs    (X10CCONBUT — confirm the LVS itself, by LVS number)
-  // 2. POST /api/v1/x3/confirm-route  (X1CONFIRM  — confirm the route/trip, by VR number)
+  // 1. X10CCONBUT — confirm the LVS itself, by LVS number
+  // 2. X1CONFIRM  — confirm the route/trip, by VR number
   // then refresh vrLoadStock
+  //
+  // Calls the X3 SOAP endpoint DIRECTLY from the browser (x3SoapDirect),
+  // same pattern as CBTTL's service.js — not through the backend proxy
+  // (x3SoapApi), which was hitting an HTTP 405 from the server's network
+  // path. See x3SoapDirect.ts for the CORS/credential-exposure tradeoff.
   async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
     try {
-      const resp = await x3SoapApi.confirmLvs(lvsNum);
+      const resp = await x3SoapDirect.confirmLvs(lvsNum);
       if (resp && (resp as any).error) {
         throw new Error((resp as any).error);
       }
 
       if (trip.tripCode) {
-        const routeResp = await x3SoapApi.confirmRoute(trip.tripCode);
+        const routeResp = await x3SoapDirect.confirmRoute(trip.tripCode);
         if (routeResp && (routeResp as any).error) {
           throw new Error((routeResp as any).error);
         }
