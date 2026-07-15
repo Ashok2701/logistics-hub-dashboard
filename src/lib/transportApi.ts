@@ -92,15 +92,20 @@ export const transportApi = {
 
   getVrLoadStock: async (vrcode: string): Promise<any[]> => {
     const data = await request<any>(`/transport/loadvehstk?vrcode=${encodeURIComponent(vrcode)}`);
-    const arr = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.data)
-      ? data.data
-      : Array.isArray(data?.stock)
-      ? data.stock
-      : Array.isArray(data?.result)
-      ? data.result
-      : [];
-    return arr;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.stock)) return data.stock;
+    if (Array.isArray(data?.result)) return data.result;
+    // Backend may return a single object for one stock row — normalise to array
+    if (data && typeof data === "object") {
+      const hasFields =
+        data.vcrnum !== undefined ||
+        data.VCRNUM_0 !== undefined ||
+        data.xvrsel !== undefined ||
+        data.xnum !== undefined ||
+        data.lvsnum !== undefined;
+      if (hasFields) return [data];
+    }
+    return [];
   },
 };
