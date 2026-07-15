@@ -3131,30 +3131,29 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   }
 
   // Called from the detail screen when user clicks "LVS Confirm":
-  // 1. X10CCONBUT — confirm the LVS itself, by LVS number
-  // 2. X1CONFIRM  — confirm the route/trip, by VR number
-  // then refresh vrLoadStock
+  // X1CONFIRM (I_XNUMPC = trip code / VR number), then refresh vrLoadStock.
+  //
+  // Only calls X1CONFIRM now — X10CCONBUT (LVS-number-based confirm) was
+  // dropped per instruction, since X1CONFIRM is the service the button
+  // should actually invoke.
   //
   // Calls the X3 SOAP endpoint DIRECTLY from the browser (x3SoapDirect),
   // same pattern as CBTTL's service.js — not through the backend proxy
   // (x3SoapApi), which was hitting an HTTP 405 from the server's network
   // path. See x3SoapDirect.ts for the CORS/credential-exposure tradeoff.
   async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
+    if (!trip.tripCode) {
+      toast({ title: "LVS Confirm failed", description: "No trip code found for this trip.", variant: "destructive" });
+      return;
+    }
     try {
-      const resp = await x3SoapDirect.confirmLvs(lvsNum);
+      const resp = await x3SoapDirect.confirmRoute(trip.tripCode);
       if (resp && (resp as any).error) {
         throw new Error((resp as any).error);
       }
 
-      if (trip.tripCode) {
-        const routeResp = await x3SoapDirect.confirmRoute(trip.tripCode);
-        if (routeResp && (routeResp as any).error) {
-          throw new Error((routeResp as any).error);
-        }
-      }
-
       toast({ title: "LVS Confirmed", description: lvsNum });
-      if (trip.tripCode) await loadVrData(trip.tripCode);
+      await loadVrData(trip.tripCode);
     } catch (e: any) {
       toast({ title: "LVS Confirm failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     }
