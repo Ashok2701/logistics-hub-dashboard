@@ -2325,6 +2325,7 @@ export default function Planner() {
     setApiVehicles([]); setApiDrivers([]); setAllStops([]);
     setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
     setSelectedStopIds(new Set());
+    setSelectedTripId(null);
 
     loadPlannerData(site, date)
       .then((data) => {
@@ -3691,6 +3692,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                       <SelectItem value="Open">Open</SelectItem>
                       <SelectItem value="Optimised">Optimised</SelectItem>
                       <SelectItem value="Locked">Locked</SelectItem>
+                      <SelectItem value="Validated">Validated</SelectItem>
                       <SelectItem value="Confirmed">Confirmed</SelectItem>
                     </SelectContent>
                   </Select>
