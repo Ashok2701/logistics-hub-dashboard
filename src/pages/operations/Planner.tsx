@@ -2325,6 +2325,7 @@ export default function Planner() {
     setApiVehicles([]); setApiDrivers([]); setAllStops([]);
     setDraftVehicle(null); setDraftDriver(null); setDraftStopIds([]);
     setSelectedStopIds(new Set());
+    setSelectedTripId(null);
 
     loadPlannerData(site, date)
       .then((data) => {
