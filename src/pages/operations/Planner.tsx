@@ -1493,9 +1493,12 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
   };
   const dash = (v: any) => (v === undefined || v === null || v === "" ? "—" : String(v));
   const fmtDT = (d?: any, t?: any) => {
-    const dd = d ? String(d).slice(0, 10) : "";
+    // Uses fmtDateMDY (defined below) for the date part so this matches
+    // the MM-DD-yyyy format used everywhere else on this page — was
+    // previously just slicing the raw yyyy-mm-dd ISO string.
+    const dd = d ? fmtDateMDY(d) : "";
     const tt = t ? String(t).slice(0, 5) : "";
-    const s = `${dd} ${tt}`.trim();
+    const s = [dd === "—" ? "" : dd, tt].filter(Boolean).join(" ");
     return s || "—";
   };
 
@@ -1536,9 +1539,9 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
   const tripNum    = dash(pick("xroutnbr","xroutnbr","xroutnbr"));
 
   // Schedule
-  const depDate = String(pick("datexec","datcre","creationdate") ?? "").slice(0, 10) || "—";
+  const depDate = fmtDateMDY(pick("datexec","datcre","creationdate"));
   const depTime = String(pick("heudep","depTime") ?? "").slice(0, 5) || "—";
-  const retDate = String(pick("datret","datexec","creationdate") ?? "").slice(0, 10) || "—";
+  const retDate = fmtDateMDY(pick("datret","datexec","creationdate"));
   const retTime = String(pick("heuarr","retTime") ?? "").slice(0, 5) || "—";
 
   // Totals derived from vrDetails
