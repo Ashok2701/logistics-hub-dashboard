@@ -1511,8 +1511,9 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
     return s;
   };
 
-  const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.VCRNUM_0 ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
+  //const routeNum   = dash(hasStock ? (stock0.vcrnum ?? stock0.VCRNUM_0 ?? stock0.vrcode ?? pick("xnumpc","vcrnum")) : pick("xnumpc","vcrnum"));
   // Vehicle Load Stock → VCRNUM_0 from loadstk when it exists
+  const routeNum = dash(pick("xnumpc","trip","seq"));
   const vlsCodeRaw = hasStock ? (stock0?.vcrnum ?? stock0?.VCRNUM_0 ?? stock0?.xnum ?? stock0?.lvsnum) : undefined;
   const vlsCode    = dash(vlsCodeRaw);
   // Status → "Validated" when loadstk data exists, otherwise "Locked"
@@ -1526,7 +1527,7 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
   const driverName = dash(pick("drivername","driverName","driver"));
   const createDate = fmtDateMDY(pick("datexec","datcre","creationdate"));
   const createTime = dash(pick("creationtime","timcre","heucre"));
-  const tripNum    = dash(pick("xnumpc","trip","seq"));
+  const tripNum    = dash(pick("xroutnbr","xroutnbr","xroutnbr"));
 
   // Schedule
   const depDate = String(pick("datexec","datcre","creationdate") ?? "").slice(0, 10) || "—";
