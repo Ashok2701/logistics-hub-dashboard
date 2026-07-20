@@ -632,6 +632,25 @@ export default function Planner() {
     loadedTripRef.current = null;
   }
 
+  // Mirrors addStopsToDraft's guard — a document can't be removed from a
+  // trip that's already locked or validated either, same as it can't be
+  // added to one. This was previously wired straight to setDraftStopIds
+  // with no guard at all.
+  const removeStopFromDraft = useCallback((id: string) => {
+    const loaded = loadedTripRef.current;
+    if (loaded) {
+      const t = trips.find((x) => x.tripId === loaded.tripId);
+      if (t && (t.locked || t.status === "Validated" || t.tmsValidated)) {
+        setVroomError({
+          title: "Cannot Remove Document",
+          detail: `Trip ${t.tripCode ?? t.id} is ${t.status}. Unlock it first to remove stops.`,
+        });
+        return;
+      }
+    }
+    setDraftStopIds((prev) => prev.filter((x) => x !== id));
+  }, [trips]);
+
   function addSelectedStopsToDraft() {
     const count = selectedStopIds.size;
     const added = addStopsToDraft(Array.from(selectedStopIds));
@@ -926,6 +945,17 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   function lockTrip(id: string) {
     const t = trips.find((x) => x.id === id);
     if (!t) return;
+    // Rule: once Validated, lock/unlock is no longer allowed at all —
+    // Validated is past the point where the plan can be reopened from
+    // here (would need to go through Non-Validate/unwind on the X3 side
+    // first, which isn't wired up as a Planner action).
+    if (t.status === "Validated" || t.tmsValidated) {
+      setVroomError({
+        title: "Cannot Change Lock State",
+        detail: `Trip ${t.tripCode ?? t.id} is Validated. Lock/unlock is no longer available once a trip has been validated.`,
+      });
+      return;
+    }
     const willLock = !t.locked;
     if (willLock) {
       const isOptimised = t.optiStatus === "Optimised" || t.status === "Optimised" || t.status === "Optimized";
@@ -988,6 +1018,16 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   function deleteTrip(id: string) {
     const t = trips.find((x) => x.id === id);
     if (!t) return;
+    // Rule: can't delete a trip once it's locked (or validated, which
+    // implies locked) — has to be unlocked first, same as add/remove
+    // documents.
+    if (t.locked || t.status === "Validated" || t.tmsValidated) {
+      setVroomError({
+        title: "Cannot Delete Trip",
+        detail: `Trip ${t.tripCode ?? t.id} is ${t.status}. Unlock it first before deleting.`,
+      });
+      return;
+    }
     setConfirmDialog({
       open: true,
       title: "Delete Trip",
@@ -1712,7 +1752,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
             }}
             onClearVehicle={() => reassignVehicle(null)}
             onClearDriver={() => reassignDriver(null)}
-            onRemoveStop={(id) => setDraftStopIds((prev) => prev.filter((x) => x !== id))}
+            onRemoveStop={removeStopFromDraft}
             onClear={clearDraft}
             onConfirm={() => setConfirmDialog({
               open: true,
