@@ -534,20 +534,26 @@ export default function Planner() {
   }), [vehicles, trips, availableStops, allStops]);
 
   // ── Draft actions ──────────────────────────────────────
-  const addStopsToDraft = useCallback((ids: string[]) => {
+  const addStopsToDraft = useCallback((ids: string[]): boolean => {
     // Guard: don't allow adding documents to a trip that's already
     // locked or validated — this used to go straight through, silently
     // adding stops to a trip that's supposed to be frozen at that point.
+    //
+    // Also returns whether the add actually happened, so callers (e.g.
+    // addSelectedStopsToDraft) don't show a false "added" success
+    // message when this guard blocked it — that was happening before:
+    // this function would return early with an error, but the caller
+    // showed its own unconditional "N stop(s) added" toast right after
+    // regardless of what actually happened.
     const loaded = loadedTripRef.current;
     if (loaded) {
       const t = trips.find((x) => x.tripId === loaded.tripId);
       if (t && (t.locked || t.status === "Validated")) {
-        toast({
-          title: "Cannot add documents",
-          description: `Trip ${t.tripCode ?? t.id} is ${t.status}. Unlock it first to add more stops.`,
-          variant: "destructive",
+        setVroomError({
+          title: "Cannot Add Documents",
+          detail: `Trip ${t.tripCode ?? t.id} is ${t.status}. Unlock it first to add more stops.`,
         });
-        return;
+        return false;
       }
     }
     setDraftStopIds((prev) => {
@@ -556,6 +562,7 @@ export default function Planner() {
       return next;
     });
     setAllStops((prev) => prev.map((s) => ids.includes(s.id) ? { ...s, routeStatus: "Planned" } : s));
+    return true;
   }, [trips]);
 
   const toggleSelectedStop = useCallback((id: string) => {
@@ -626,9 +633,11 @@ export default function Planner() {
   }
 
   function addSelectedStopsToDraft() {
-    addStopsToDraft(Array.from(selectedStopIds));
+    const count = selectedStopIds.size;
+    const added = addStopsToDraft(Array.from(selectedStopIds));
+    if (!added) return; // addStopsToDraft already showed the blocking reason
     setSelectedStopIds(new Set());
-    toast({ title: `${selectedStopIds.size} stop(s) added to active trip` });
+    toast({ title: `${count} stop(s) added to active trip` });
   }
 
   // Build the FULL trip payload — used for both create and update.
