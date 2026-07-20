@@ -3439,7 +3439,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                   <table className="w-full" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
-                        {["Vehicle Code","Vehicle No","Category","Depart Site","Start"].map((h) => (
+                        {["Vehicle Code","Vehicle No","Category","Depart Site", "Arrival Site","Start"].map((h) => (
                           <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                         ))}
                       </tr>
@@ -3464,7 +3464,8 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                             </td>
                             <td className="px-2 py-1 font-mono text-muted-foreground">{v.vehicleNo}</td>
                             <td className="px-2 py-1">{v.category}</td>
-                            <td className="px-2 py-1 font-mono text-muted-foreground">{v.departureSite}</td>
+                            <td className="px-2 py-1 font-mono ">{v.departureSite}</td>
+                            <td className="px-2 py-1 font-mono text-muted-foreground">{v.arrivalSite}</td>
                             <td className="px-2 py-1 text-muted-foreground">{v.startTime}</td>
                           </tr>
 
