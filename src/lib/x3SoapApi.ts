@@ -51,6 +51,10 @@ export const x3SoapApi = {
   confirmRoute: (vrNumber: string) =>
     request<Record<string, any>>(`/x3/confirm-route${qs({ vrNumber })}`, { method: "POST" }),
 
+  /** X10CSTKMTV — Load Truck: move stock onto the vehicle for an LVS (I_XLVSNUM = LVS number) */
+  loadTruck: (lvsNum: string) =>
+    request<Record<string, any>>(`/x3/load-truck${qs({ lvsNum })}`, { method: "POST" }),
+
   /** X1CROUTDET — route/trip detail */
   getRouteDetail: (vrNum: string) =>
     request<Record<string, any>>(`/x3/route-detail${qs({ vrNum })}`),

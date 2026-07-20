@@ -3187,21 +3187,25 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   // Called from the detail screen when user clicks "LVS Confirm":
   // X1CONFIRM (I_XNUMPC = trip code / VR number), then refresh vrLoadStock.
   //
-  // Only calls X1CONFIRM now — X10CCONBUT (LVS-number-based confirm) was
-  // dropped per instruction, since X1CONFIRM is the service the button
-  // should actually invoke.
-  //
-  // Calls the X3 SOAP endpoint DIRECTLY from the browser (x3SoapDirect),
-  // same pattern as CBTTL's service.js — not through the backend proxy
-  // (x3SoapApi), which was hitting an HTTP 405 from the server's network
-  // path. See x3SoapDirect.ts for the CORS/credential-exposure tradeoff.
+  // Switched BACK to the backend proxy (x3SoapApi) — the direct-browser
+  // approach (x3SoapDirect) hit a CORS error even after enabling
+  // access-control-allow-origin: "*" on the Syracuse server, because our
+  // request needs a CORS preflight (Authorization header + custom
+  // SOAPAction header aren't "simple request" safelisted), and that
+  // OPTIONS preflight carries no Authorization header by design — if
+  // Syracuse's auth middleware requires auth on every request including
+  // OPTIONS, the preflight itself gets rejected before the "*" CORS
+  // headers are ever applied. That's a server-side X3/Syracuse fix, not
+  // something fixable from either of our codebases. Backend-to-backend
+  // calls aren't subject to CORS at all, so the proxy sidesteps this
+  // entirely.
   async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
     if (!trip.tripCode) {
       toast({ title: "LVS Confirm failed", description: "No trip code found for this trip.", variant: "destructive" });
       return;
     }
     try {
-      const resp = await x3SoapDirect.confirmRoute(trip.tripCode);
+      const resp = await x3SoapApi.confirmRoute(trip.tripCode);
       if (resp && (resp as any).error) {
         throw new Error((resp as any).error);
       }
@@ -3215,11 +3219,11 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
 
   // Called from the detail screen when user clicks "Load Truck":
   // X10CSTKMTV (I_XLVSNUM = LVS number) — moves stock onto the vehicle
-  // for this LVS, then refresh vrLoadStock. Same direct-from-browser
-  // pattern as LVS Confirm (see x3SoapDirect.ts).
+  // for this LVS, then refresh vrLoadStock. Same backend-proxy switch as
+  // LVS Confirm above, same CORS reasoning.
   async function handleLoadTruckFromDetail(trip: Trip, lvsNum: string) {
     try {
-      const resp = await x3SoapDirect.loadTruck(lvsNum);
+      const resp = await x3SoapApi.loadTruck(lvsNum);
       if (resp && (resp as any).error) {
         throw new Error((resp as any).error);
       }
