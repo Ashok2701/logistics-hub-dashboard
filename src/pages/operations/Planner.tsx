@@ -1471,6 +1471,12 @@ function ActiveTourPanel({
 // Back button returns to planner without reloading data
 // ═══════════════════════════════════════════════════════
 function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock, vrLoading, onLvsCreate, onLvsConfirm, onLvsLoadTruck }: { trip: Trip; onBack: () => void; vrHeader?: any; vrDetails?: any[]; vrLoadStock?: any[]; vrLoading?: boolean; onLvsCreate?: () => void | Promise<void>; onLvsConfirm?: (lvsNum: string) => void | Promise<void>; onLvsLoadTruck?: (lvsNum: string) => void | Promise<void> }) {
+  // Tracks which action button (if any) currently has a backend call in
+  // flight — shows a spinner + disables the button so clicking it gives
+  // immediate visible feedback instead of a blank-feeling wait while the
+  // SOAP call is out.
+  const [actionBusy, setActionBusy] = useState<string | null>(null);
+
   // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
   const H  = (vrHeader ?? {}) as any;
   const rows = Array.isArray(vrDetails) ? vrDetails : [];
@@ -1585,20 +1591,25 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                 status === "locked"   ? 0 : -1;
 
               const steps = [
-                { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: () => onLvsCreate?.() },
-                { key: "lvs-confirm", label: "LVS Confirm", icon: CheckCheck,onClick: () => {
+                { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: async () => {
+                  setActionBusy("lvs-create");
+                  try { await onLvsCreate?.(); } finally { setActionBusy(null); }
+                } },
+                { key: "lvs-confirm", label: "LVS Confirm", icon: CheckCheck,onClick: async () => {
                   if (!vlsCodeRaw) {
                     toast({ title: "LVS Confirm unavailable", description: "No LVS number found for this trip yet.", variant: "destructive" });
                     return;
                   }
-                  onLvsConfirm?.(String(vlsCodeRaw));
+                  setActionBusy("lvs-confirm");
+                  try { await onLvsConfirm?.(String(vlsCodeRaw)); } finally { setActionBusy(null); }
                 } },
-                { key: "load",        label: "Load Truck",  icon: Truck,     onClick: () => {
+                { key: "load",        label: "Load Truck",  icon: Truck,     onClick: async () => {
                   if (!vlsCodeRaw) {
                     toast({ title: "Load Truck unavailable", description: "No LVS number found for this trip yet.", variant: "destructive" });
                     return;
                   }
-                  onLvsLoadTruck?.(String(vlsCodeRaw));
+                  setActionBusy("load");
+                  try { await onLvsLoadTruck?.(String(vlsCodeRaw)); } finally { setActionBusy(null); }
                 } },
                 { key: "unload",      label: "Unload Truck",icon: Package,   onClick: () => toast({ title: "Unload Truck",description: `Trip ${trip.tripCode ?? trip.id}` }) },
               ];
@@ -1610,13 +1621,15 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                     const isDone   = stage >= 0 && i < stage;
                     const isActive = stage >= 0 && i === stage;
                     const isFuture = !isDone && !isActive;
-                    const disabled = isDone || isFuture;
+                    const isBusy   = actionBusy === s.key;
+                    const disabled = isDone || isFuture || (!!actionBusy && !isBusy);
                     return (
                       <React.Fragment key={s.key}>
                         <button
                           disabled={disabled}
                           onClick={disabled ? undefined : s.onClick}
                           title={
+                            isBusy   ? `${s.label} — working…` :
                             isDone   ? `${s.label} — completed` :
                             isActive ? s.label :
                                        `${s.label} — not yet available`
@@ -1624,14 +1637,17 @@ function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoadStock,
                           className={cn(
                             "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap border",
                             isDone   && "bg-emerald-500 text-white border-emerald-400 cursor-not-allowed shadow-sm",
-                            isActive && "bg-white text-primary border-white ring-2 ring-white/60 shadow-sm hover:bg-white/90 cursor-pointer",
+                            isActive && !isBusy && "bg-white text-primary border-white ring-2 ring-white/60 shadow-sm hover:bg-white/90 cursor-pointer",
+                            isBusy   && "bg-white text-primary border-white ring-2 ring-white/60 shadow-sm cursor-wait opacity-90",
                             isFuture && "bg-white/10 text-primary-foreground/50 border-white/10 cursor-not-allowed opacity-70",
                           )}
                         >
-                          {isDone
+                          {isBusy
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : isDone
                             ? <CheckCircle2 className="w-3.5 h-3.5" />
                             : <Icon className="w-3.5 h-3.5" />}
-                          {s.label}
+                          {isBusy ? "Working…" : s.label}
                         </button>
                         {i < steps.length - 1 && (
                           <div className={cn(
@@ -2456,26 +2472,42 @@ export default function Planner() {
     trips: trips.length,
     assignedDocs: trips.reduce((n, t) => n + t.stops.length, 0),
     unassignedDocs: availableStops.length,
-    // BUG FIX: these used to sum s.qty (nbPack) bucketed by s.type — but
-    // s.type is always "DROP" now (pick tickets are a business-bucket
-    // "Drop" too — see the Drops/Pickups reclassification), so
-    // totalPickupQty was always 0 and totalDeliveryQty was wrong for any
-    // stop where nbPack isn't populated. Bucket by the real doc type
-    // (doctype: "DLV"/"PICK", unaffected by that reclassification) and
-    // sum each document's product-line qtyOrdered instead.
-    totalDeliveryQty: allStops.reduce((n, s) => s.doctype === "DLV"  ? n + sumQtyOrdered(s) : n, 0),
-    totalPickupQty:   allStops.reduce((n, s) => s.doctype === "PICK" ? n + sumQtyOrdered(s) : n, 0),
+    // These sum each stop's product-line qtyOrdered. Bucketed by s.type
+    // ("DROP"/"PICKUP" — the same business-bucket field the Deliveries/
+    // Pickups panel counts use), NOT doctype ("DLV"/"PICK") — a previous
+    // attempt bucketed by doctype, which showed a nonzero Pickup Qty even
+    // when the Pickups panel itself showed 0 items (pick tickets are a
+    // business-bucket "Drop", so they were being counted as pickups here
+    // while sitting in the Deliveries panel — inconsistent with what's
+    // on screen). Now both numbers match their respective panel exactly.
+    totalDeliveryQty: allStops.reduce((n, s) => s.type === "DROP"   ? n + sumQtyOrdered(s) : n, 0),
+    totalPickupQty:   allStops.reduce((n, s) => s.type === "PICKUP" ? n + sumQtyOrdered(s) : n, 0),
   }), [vehicles, trips, availableStops, allStops]);
 
   // ── Draft actions ──────────────────────────────────────
   const addStopsToDraft = useCallback((ids: string[]) => {
+    // Guard: don't allow adding documents to a trip that's already
+    // locked or validated — this used to go straight through, silently
+    // adding stops to a trip that's supposed to be frozen at that point.
+    const loaded = loadedTripRef.current;
+    if (loaded) {
+      const t = trips.find((x) => x.tripId === loaded.tripId);
+      if (t && (t.locked || t.status === "Validated")) {
+        toast({
+          title: "Cannot add documents",
+          description: `Trip ${t.tripCode ?? t.id} is ${t.status}. Unlock it first to add more stops.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setDraftStopIds((prev) => {
       const next = [...prev];
       ids.forEach((id) => { if (!next.includes(id)) next.push(id); });
       return next;
     });
     setAllStops((prev) => prev.map((s) => ids.includes(s.id) ? { ...s, routeStatus: "Planned" } : s));
-  }, []);
+  }, [trips]);
 
   const toggleSelectedStop = useCallback((id: string) => {
     setSelectedStopIds((prev) => {
@@ -3293,7 +3325,19 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
         {/* Refresh */}
         <ToolbarBtn icon={RefreshCw} label="Refresh" spin={loading}
           disabled={loading || !site} color="text-muted-foreground"
-          onClick={() => { setRefreshKey((k) => k + 1); setSelectedTripIds(new Set()); }} />
+          onClick={() => {
+            // BUG FIX: refresh used to only bump refreshKey + clear the
+            // trips-list checkbox selection — the "Active Trip" draft
+            // panel (selected vehicle/driver/stops) and the selected-trip
+            // radio state stayed stale. That stale loadedTripRef is also
+            // what caused the "confirm reassignment" prompt to fire
+            // unexpectedly on a plain vehicle/driver drag afterward (it
+            // still thought an existing trip was loaded).
+            setRefreshKey((k) => k + 1);
+            setSelectedTripIds(new Set());
+            setSelectedTripId(null);
+            clearDraft();
+          }} />
 
         <div className="h-5 w-px bg-border/50 mx-0.5" />
 
@@ -3312,19 +3356,6 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                 <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
               </div>
               Loading…
-            </div>
-          )}
-          {!loading && loaded && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold border border-emerald-200 shadow-sm">
-              <div className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center">
-                <CheckCheck className="w-4 h-4 text-emerald-600" />
-              </div>
-              <span>{site}</span><span className="opacity-60">·</span><span>{date}</span>
-              {loadStats && (
-                <span className="opacity-80 font-normal ml-1">
-                  · {loadStats.vehicles}V · {loadStats.drivers}D · {loadStats.drops}↓ · {loadStats.pickups}↑
-                </span>
-              )}
             </div>
           )}
         </div>
@@ -3563,12 +3594,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                 <table className="w-full min-w-[600px]" style={{ fontSize: "11px" }}>
                   <thead className="bg-muted/40 sticky top-0 z-10">
                     <tr>
-                      <th className="px-2 py-1 border-b w-7" style={{ background:"#eff6ff", borderColor:"#bfdbfe" }}>
-                        <Checkbox
-                          checked={allCurrentSelected}
-                          onCheckedChange={() => toggleAllStops(currentStops)}
-                        />
-                      </th>
+                      <th className="px-2 py-1 border-b w-7" style={{ background:"#eff6ff", borderColor:"#bfdbfe" }} />
                       {["Transaction No","Type","Priority","Client Code","Route Code","Postal City","Qty","Weight",""].map((h) => (
                         <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                       ))}
