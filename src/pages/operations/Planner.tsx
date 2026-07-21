@@ -1317,25 +1317,21 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   // Called from the detail screen when user clicks "LVS Confirm":
   // X1CONFIRM (I_XNUMPC = trip code / VR number), then refresh vrLoadStock.
   //
-  // Switched BACK to the backend proxy (x3SoapApi) — the direct-browser
-  // approach (x3SoapDirect) hit a CORS error even after enabling
-  // access-control-allow-origin: "*" on the Syracuse server, because our
-  // request needs a CORS preflight (Authorization header + custom
-  // SOAPAction header aren't "simple request" safelisted), and that
-  // OPTIONS preflight carries no Authorization header by design — if
-  // Syracuse's auth middleware requires auth on every request including
-  // OPTIONS, the preflight itself gets rejected before the "*" CORS
-  // headers are ever applied. That's a server-side X3/Syracuse fix, not
-  // something fixable from either of our codebases. Backend-to-backend
-  // calls aren't subject to CORS at all, so the proxy sidesteps this
-  // entirely.
+  // Retrying the direct-browser call (x3SoapDirect) per explicit request —
+  // this previously hit a CORS error even after enabling
+  // access-control-allow-origin: "*" on the Syracuse server (see
+  // x3SoapDirect.ts for the CORS-preflight/credential-exposure tradeoff
+  // notes). If this still fails with a CORS or network error, the
+  // backend-proxy version (x3SoapApi.confirmRoute) is the fallback that's
+  // confirmed to at least reach the SOAP endpoint without a browser
+  // cross-origin restriction — swap the one line below back if needed.
   async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
     if (!trip.tripCode) {
       toast({ title: "LVS Confirm failed", description: "No trip code found for this trip.", variant: "destructive" });
       return;
     }
     try {
-      const resp = await x3SoapApi.confirmRoute(trip.tripCode);
+      const resp = await x3SoapDirect.confirmRoute(trip.tripCode);
       if (resp && (resp as any).error) {
         throw new Error((resp as any).error);
       }
