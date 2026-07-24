@@ -2025,7 +2025,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       {showAutoGen && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[1200] bg-black/50 flex items-center justify-center p-4"
           onClick={() => !agSubmitting && setShowAutoGen(false)}
         >
           <motion.div
@@ -2347,7 +2347,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
 
     {/* ── VROOM Error Popup (inline Zap + Auto Generate) ── */}
     {vroomError && (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center"
+      <div className="fixed inset-0 z-[1200] flex items-center justify-center"
         style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)" }}
         onClick={() => setVroomError(null)}>
         <motion.div

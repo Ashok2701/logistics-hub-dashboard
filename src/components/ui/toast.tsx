@@ -14,7 +14,9 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col p-4 sm:right-0 sm:top-0 sm:bottom-auto sm:flex-col md:max-w-[420px]",
+      // Bumped from z-[100] — still below Leaflet's z-index:1000 map
+      // controls, same issue as alert-dialog.tsx/dialog.tsx.
+      "fixed top-0 z-[1200] flex max-h-screen w-full flex-col p-4 sm:right-0 sm:top-0 sm:bottom-auto sm:flex-col md:max-w-[420px]",
       className,
     )}
     {...props}
