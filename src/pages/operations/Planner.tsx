@@ -929,11 +929,23 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       else if (optiStatus === "Open" && lockFlag === 0) await tripApi.unlockTrip(trip.tripCode);
       else await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
 
-      // BUG FIX: previously patched local state straight from this call's
-      // own response (tripFromApi(resp, t)) — that response shape doesn't
-      // carry the same fields as the full trip-list DTO, so status showed
-      // as "undefined" right after lock/unlock. Refetch the trip list
-      // properly instead, same path used on page load / manual refresh.
+      // BUG FIX: this used to rely solely on the refreshKey refetch below
+      // to update the row's displayed status — but that's an async fetch
+      // racing against however long the backend takes to make the write
+      // durable/queryable. In that window (or if the fetch is just plain
+      // slow), the trips list still holds this trip's PRE-action snapshot,
+      // and if the backend's list endpoint returns a null/unexpected
+      // optiStatus for a fraction of a second right after the write, the
+      // row renders "UNDEFINED" until a manual page refresh papers over
+      // it later. We already know deterministically what the new status
+      // is — it's literally what we just requested — so patch it into
+      // local state immediately rather than waiting on a round trip.
+      setTrips((prev) => prev.map((t) => t.id === trip.id
+        ? { ...t, status: optiStatus, optiStatus, locked: lockFlag === 1, lockFlag }
+        : t));
+
+      // Still refetch afterward for full consistency (dates/times/other
+      // server-computed fields this optimistic patch doesn't know about).
       setRefreshKey((k) => k + 1);
       setSelectedTripIds((prev) => { if (!prev.has(trip.id)) return prev; const n = new Set(prev); n.delete(trip.id); return n; });
       toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
@@ -1084,7 +1096,15 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
           const t = persisted[i];
           try {
             const resp = await tripApi.getTripByCode(t.tripCode!);
-            setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
+            // Same fix as setTripStatus()/handleLvsCreateFromDetail: the
+            // getTripByCode call right after the group action can race
+            // the backend making that write queryable, returning a
+            // still-stale status. Merge the known-correct values (exactly
+            // what we just requested) over whatever this fetch returned,
+            // rather than trusting it outright.
+            setTrips((prev) => prev.map((x) => x.id === t.id
+              ? { ...tripFromApi(resp, x), status: optiStatus, optiStatus, locked: lockFlag === 1, lockFlag }
+              : x));
           } catch {
             setTrips((prev) => prev.map((x) => x.id === t.id
               ? { ...x, optiStatus, lockFlag, locked: lockFlag === 1, status: optiStatus as any }
@@ -1306,16 +1326,15 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
     }
     try {
       await tripApi.validateTrip(trip.tripCode);
-      // BUG FIX: this used to patch local state straight from this call's
-      // own response (tripFromApi(resp, t)) — same class of bug as
-      // setTripStatus() had for lock/unlock/validate. If that response's
-      // optiStatus doesn't land as exactly "Validated", RouteManagementDetail's
-      // stage computation (keyed on trip.status/optiStatus) falls through
-      // to -1, which renders every action button as disabled — matching
-      // "LVS Create succeeds but all buttons go gray until I go back and
-      // come in again" (a fresh navigation re-fetches the real trip list,
-      // masking the bug). Refetch properly instead, same path used
-      // elsewhere for this exact problem.
+      // Same fix as setTripStatus(): patch the known new status
+      // immediately (deterministic — it's exactly what we just
+      // requested) instead of relying solely on the refetch below, which
+      // can race the backend making the write queryable and show
+      // "undefined"/disabled buttons for a window until a manual refresh
+      // papers over it.
+      setTrips((prev) => prev.map((t) => t.id === trip.id
+        ? { ...t, status: "Validated", optiStatus: "Validated" }
+        : t));
       setRefreshKey((k) => k + 1);
       toast({ title: "LVS Created", description: trip.tripCode });
       await loadVrData(trip.tripCode);
