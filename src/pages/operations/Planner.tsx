@@ -1305,8 +1305,18 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       return;
     }
     try {
-      const resp = await tripApi.validateTrip(trip.tripCode);
-      setTrips((prev) => prev.map((t) => t.id === trip.id ? tripFromApi(resp, t) : t));
+      await tripApi.validateTrip(trip.tripCode);
+      // BUG FIX: this used to patch local state straight from this call's
+      // own response (tripFromApi(resp, t)) — same class of bug as
+      // setTripStatus() had for lock/unlock/validate. If that response's
+      // optiStatus doesn't land as exactly "Validated", RouteManagementDetail's
+      // stage computation (keyed on trip.status/optiStatus) falls through
+      // to -1, which renders every action button as disabled — matching
+      // "LVS Create succeeds but all buttons go gray until I go back and
+      // come in again" (a fresh navigation re-fetches the real trip list,
+      // masking the bug). Refetch properly instead, same path used
+      // elsewhere for this exact problem.
+      setRefreshKey((k) => k + 1);
       toast({ title: "LVS Created", description: trip.tripCode });
       await loadVrData(trip.tripCode);
     } catch (e: any) {
