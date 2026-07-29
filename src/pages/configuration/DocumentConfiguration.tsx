@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
@@ -34,20 +35,29 @@ const emptyRow = (id: string): DocRow => ({
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const toggle = () => setOpen((o) => !o);
+
   return (
     <div className="relative">
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={toggle}
         className="flex items-center gap-2 h-9 px-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
       >
         <span className="w-5 h-5 rounded-md border border-border/60" style={{ backgroundColor: value }} />
         <span className="text-xs font-mono text-muted-foreground">{value}</span>
       </button>
-      {open && (
+      {open && btnRef.current && createPortal (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute z-50 top-full mt-1 left-0 bg-card border border-border rounded-xl shadow-elevated p-3 w-56">
+          <div className="fixed z-50 top-full mt-1 left-0 bg-card border border-border rounded-xl shadow-elevated p-3 w-56"
+                      style={{
+              top: btnRef.current.getBoundingClientRect().bottom + 4,
+              left: btnRef.current.getBoundingClientRect().left,
+            }}>
             <div className="grid grid-cols-6 gap-1.5 mb-2">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -74,7 +84,8 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
               />
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

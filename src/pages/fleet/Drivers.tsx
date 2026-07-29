@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -9,6 +9,7 @@ import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { cn } from "@/lib/utils";
 import { driverApi, type Driver } from "@/lib/fleetApi";
+import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js";
 
 type FormState = Driver;
 
@@ -40,6 +41,8 @@ export default function Drivers() {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+
+  const emailInputRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
@@ -99,6 +102,31 @@ export default function Drivers() {
   const save = async () => {
     if (!form.driverId.trim()) { toast.error("Driver ID required"); return; }
     if (!form.driverName.trim()) { toast.error("Driver name required"); return; }
+    // mobile number validation: must be 10 digits and valid Indian mobile number
+      let normalizedMobile = "";
+  if (form.mobileNo.trim()) {
+    const parsedMobile = parsePhoneNumberFromString(form.mobileNo.trim());
+    if (!parsedMobile || !parsedMobile.isValid()) {
+      toast.error("Enter a valid mobile number (include country code, e.g. +91...)");
+      return;
+    }
+    normalizedMobile = parsedMobile.number; // clean E.164 format, e.g. "+919866906675"
+  }
+  // email validation: must be valid email address
+      if (emailInputRef.current && !emailInputRef.current.checkValidity()) {
+    toast.error("Enter a valid email address");
+    emailInputRef.current.reportValidity();
+    return;
+  }
+  // license date validation: issue date must be before expiry date
+    if (form.licenseIssueDate && form.licenseExpiryDate) {
+    const issueDate = new Date(form.licenseIssueDate);
+    const expiryDate = new Date(form.licenseExpiryDate);
+    if (expiryDate < issueDate) {
+      toast.error("License expiry date cannot be before the issue date");
+      return;
+    }
+  }
     setSaving(true);
     try {
       const body: Driver = {
@@ -106,7 +134,7 @@ export default function Drivers() {
         driverId: form.driverId.trim().toUpperCase(),
         driverName: form.driverName.trim(),
         employeeCode: form.employeeCode.trim().toUpperCase(),
-        mobileNo: form.mobileNo.trim(),
+        mobileNo: normalizedMobile,
         email: form.email.trim(),
         licenseNumber: form.licenseNumber.trim().toUpperCase(),
         licenseType: Number(form.licenseType) || 0,
@@ -163,11 +191,11 @@ export default function Drivers() {
                 className="form-input font-mono" placeholder="EMP001" />
             </Field>
             <Field label="Mobile No">
-              <input value={form.mobileNo} onChange={(e) => upd("mobileNo", e.target.value)}
-                className="form-input font-mono" placeholder="9999999999" />
+              <input value={form.mobileNo} inputMode="tel" onChange={(e) => upd("mobileNo", e.target.value)}
+                className="form-input font-mono" placeholder="+91 9876543210" />
             </Field>
             <Field label="Email">
-              <input type="email" value={form.email} onChange={(e) => upd("email", e.target.value)}
+              <input ref={emailInputRef} type="email" value={form.email} onChange={(e) => upd("email", e.target.value)}
                 className="form-input" placeholder="john@test.com" />
             </Field>
             <Field label="License Number">

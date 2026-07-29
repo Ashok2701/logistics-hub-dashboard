@@ -62,6 +62,7 @@ export default function UserTypesPage() {
           userTypeCode: draft.userTypeCode.trim(),
           userTypeName: draft.userTypeName.trim(),
           requiresSiteMapping: draft.requiresSiteMapping,
+          active: draft.active,
         });
         toast.success("User type created");
       } else {

@@ -39,8 +39,10 @@ const emptyAddr: AddrForm = {
   latitude: "", longitude: "",
 };
 
+// const isTmsActive = (c: Customer) =>
+//   c.latitude != null || c.longitude != null || !!c.serviceTime || !!c.waitingTime;
 const isTmsActive = (c: Customer) =>
-  c.latitude != null || c.longitude != null || !!c.serviceTime || !!c.waitingTime;
+  c.active === true;
 
 const addrLabel = (a: CustomerAddress) =>
   a.addressDescription ?? a.description ?? a.city ?? a.addressCode;
