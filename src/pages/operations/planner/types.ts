@@ -47,8 +47,8 @@ export function mapVehicle(v: RpVehicle): Vehicle {
   return {
     code:         v.vehicleCode,
     vehicleNo:    v.vehicleNumber ?? v.vehicleCode,
-    departureSite: "",
-    arrivalSite:  "",
+    departureSite: v.departureSite ?? "",
+    arrivalSite:  v.arrivalSite ?? "",
     driverName:   v.driverId ?? "",
     category:     v.categoryCode ?? "",
     capacity:     Number(v.capacityWeight ?? 0),

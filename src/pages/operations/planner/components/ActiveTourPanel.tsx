@@ -457,7 +457,7 @@ export function ActiveTourPanel({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 flex items-center justify-start pl-8"
+          className="fixed inset-0 z-[1200] flex items-center justify-start pl-8"
           style={{ background: "rgba(15,23,42,0.35)", backdropFilter: "blur(2px)" }}
           onClick={() => !optRunning && setShowOptModal(false)}
         >
@@ -468,7 +468,7 @@ export function ActiveTourPanel({
             transition={{ duration: 0.18, ease: "easeOut" }}
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-2xl shadow-2xl overflow-hidden"
-            style={{ width: 340, fontFamily: "Inter, system-ui, sans-serif" }}
+            style={{ width: 400, fontFamily: "Inter, system-ui, sans-serif" }}
           >
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100"
@@ -500,7 +500,7 @@ export function ActiveTourPanel({
                   <div className="grid grid-cols-3 divide-x divide-gray-100">
                     <div className="px-3 py-2">
                       <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Trip No</p>
-                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 truncate">{activeTripCode ?? (vehicle ? `DRAFT-${vehicle.code}` : "DRAFT")}</p>
+                      <p className="text-[12px] font-bold text-gray-800 font-mono mt-0.5 break-words">{activeTripCode ?? (vehicle ? `DRAFT-${vehicle.code}` : "DRAFT")}</p>
                     </div>
                     <div className="px-3 py-2">
                       <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Vehicle</p>
@@ -508,7 +508,7 @@ export function ActiveTourPanel({
                     </div>
                     <div className="px-3 py-2">
                       <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold">Driver</p>
-                      <p className="text-[12px] font-bold text-indigo-700 mt-0.5 truncate">{driver?.name ?? "—"}</p>
+                      <p className="text-[12px] font-bold text-indigo-700 mt-0.5 break-words">{driver?.name ?? "—"}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100">
@@ -731,7 +731,7 @@ export function ActiveTourPanel({
       {optError && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-center justify-center"
+          className="fixed inset-0 z-[1300] flex items-center justify-center"
           style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)" }}
           onClick={() => setOptError(null)}
         >

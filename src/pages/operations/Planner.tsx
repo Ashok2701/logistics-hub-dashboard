@@ -814,6 +814,14 @@ export default function Planner() {
 //   }
 // }
 function reorderTripStops(trip: Trip, newStops: Stop[]) {
+  if (!canEditTrip(trip)) {
+    toast({
+      title: "Cannot reorder stops",
+      description: `Trip ${trip.tripCode ?? trip.id} is ${(trip as any).optiStatus ?? trip.status}. Unlock the trip to make changes.`,
+      variant: "destructive",
+    });
+    return;
+  }
   const wasOptimised = trip.optiStatus === "Optimised";
   setTrips((prev) => prev.map((t) => (t.id === trip.id
     ? { ...t, stops: newStops, ...(wasOptimised ? { optiStatus: "Open" as any, status: "Open" as any } : {}) }
@@ -1139,19 +1147,35 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
     });
   }
 
-  async function groupUnlock() {
-    const selected = trips.filter(t => selectedTripIds.has(t.id));
-    if (!selected.length) { setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." }); return; }
-    const eligible = selected.filter(t => t.locked);
-    if (!eligible.length) { setVroomError({ title: "No Trips to Unlock", detail: "No selected trips are currently locked." }); return; }
-    setConfirmDialog({
-      open: true,
-      title: "Unlock trips",
-      description: `Unlock ${eligible.length} trip(s)? This will remove their plan from X3 and allow edits again.`,
-      confirmLabel: "Yes, unlock",
-      onConfirm: () => runGroupStatus("unlock", eligible, "Open", 0, "unlocked"),
-    });
+async function groupUnlock() {
+  const selected = trips.filter(t => selectedTripIds.has(t.id));
+  if (!selected.length) {
+    setVroomError({ title: "No Trips Selected", detail: "Please select at least one trip using the checkboxes in the trips table." });
+    return;
   }
+
+  const isValidated = (t: Trip) => t.status === "Validated" || t.tmsValidated;
+  const eligible = selected.filter(t => t.locked && !isValidated(t));
+
+  if (!eligible.length) {
+    const allValidated = selected.every(isValidated);
+    setVroomError({
+      title: "No Trips to Unlock",
+      detail: allValidated
+        ? "All selected trips are validated."
+        : "No selected trips are currently locked.",
+    });
+    return;
+  }
+
+  setConfirmDialog({
+    open: true,
+    title: "Unlock trips",
+    description: `Unlock ${eligible.length} trip(s)? This will remove their plan from X3 and allow edits again.`,
+    confirmLabel: "Yes, unlock",
+    onConfirm: () => runGroupStatus("unlock", eligible, "Open", 0, "unlocked"),
+  });
+}
 
   async function groupValidate() {
     const selected = trips.filter(t => selectedTripIds.has(t.id));
@@ -1562,7 +1586,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                   <table className="w-full" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
-                        {["Vehicle Code","Vehicle No","Category","Depart Site", "Arrival Site","Start"].map((h) => (
+                        {["Vehicle Code","Vehicle No","Category","Departure Site", "Arrival Site","Start"].map((h) => (
                           <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                         ))}
                       </tr>
@@ -2038,7 +2062,7 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} onReorder={selectedTrip ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined} />}
+                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} onReorder={selectedTrip && canEditTrip(selectedTrip) ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined}/>}
                 </div>
               </div>
             }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Truck, Users, CheckCheck, ChevronLeft, Loader2, Package,
   Route as RouteIcon, CheckCircle2,
@@ -17,6 +17,7 @@ export function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoa
   // immediate visible feedback instead of a blank-feeling wait while the
   // SOAP call is out.
   const [actionBusy, setActionBusy] = useState<string | null>(null);
+  const [vehicleImgError, setVehicleImgError] = useState(false);
 
   // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
   const H  = (vrHeader ?? {}) as any;
@@ -73,6 +74,8 @@ export function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoa
   const carrier    = dash(pick("bptnum","carrier"));
   const vehClass   = dash(pick("vehclass","category","xcategory"));
   const vehicle    = dash(pick("codeyve","vehicle"));
+  const vehicleImageUrl = pick("vehicleImage");
+const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== "" && !vehicleImgError;
   const driverId   = dash(pick("driverid","driverId","cod_driver"));
   const driverName = dash(pick("drivername","driverName","driver"));
   const createDate = fmtDateMDY(pick("datexec","datcre","creationdate"));
@@ -97,6 +100,10 @@ export function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoa
   const travelCost = Math.round(totalKm * 0.045);
   const distCost   = Math.round(totalKm * 1.5);
   const totalCost  = travelCost + distCost;
+
+  useEffect(() => {
+  setVehicleImgError(false);
+}, [H]);
 
   return (
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
@@ -292,13 +299,22 @@ export function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoa
 
             {/* Vehicle + Driver photos */}
             <div className="flex gap-3 flex-shrink-0">
-              <div className="rounded-xl bg-card border border-border shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
-                <div className="w-16 h-14 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-1.5">
-                  <Truck className="w-8 h-8 text-primary" />
-                </div>
-                <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wider">Vehicle</p>
-                <p className="text-[11px] font-bold text-foreground">{vehicle}</p>
-              </div>
+<div className="rounded-xl bg-card border border-border shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
+  <div className="w-16 h-14 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-1.5 overflow-hidden">
+    {hasVehicleImage ? (
+      <img
+        src={String(vehicleImageUrl)}
+        alt="Vehicle"
+        className="w-full h-full object-cover"
+        onError={() => setVehicleImgError(true)}
+      />
+    ) : (
+      <Truck className="w-8 h-8 text-primary" />
+    )}
+  </div>
+  <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wider">Vehicle</p>
+  <p className="text-[11px] font-bold text-foreground">{vehicle}</p>
+</div>
               <div className="rounded-xl bg-card border border-border shadow-sm p-3 text-center flex flex-col items-center justify-center min-w-[7.5rem]">
                 <div className="w-16 h-14 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-1.5">
                   <Users className="w-8 h-8 text-primary" />
@@ -385,7 +401,7 @@ export function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoa
                 </div>
                 <div className="p-4 space-y-1.5">
                   {(() => {
-                    const dropWeight = stock.reduce((s: number, x: any) => s + (Number(x.weight ?? x.netweight ?? 0) || 0), 0);
+                    const dropWeight = stock.reduce((s: number, x: any) => s + (Number(x.xcapacities ?? x.xcapacities ?? 0) || 0), 0);
                     const dropVolume = stock.reduce((s: number, x: any) => s + (Number(x.volume ?? x.vol ?? 0) || 0), 0);
                     const vehMass = Number(pick("vehmass","vehiclemass") ?? 60000) || 60000;
                     const vehVol  = Number(pick("vehvol","vehiclevolume") ?? 50000) || 50000;

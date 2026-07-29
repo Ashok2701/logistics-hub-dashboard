@@ -1,5 +1,6 @@
 import React from "react";
-import { Map as MapIcon } from "lucide-react";
+import { Map as MapIcon, Maximize2, Minimize2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { RpSite } from "@/lib/routePlannerApi";
 import type { Trip } from "../types";
 
@@ -7,14 +8,41 @@ import type { Trip } from "../types";
 // MAP VIEW
 // ═══════════════════════════════════════════════════════
 export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; site?: RpSite | null; sites?: RpSite[] }) {
+  const wrapperRef = React.useRef<HTMLDivElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<any>(null);
   const layerRef = React.useRef<any>(null);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
 
   // No trip → fall back to single-site preview
   const showTrip = !!trip;
   const fallbackLat = site && site.latitude != null ? Number(site.latitude) : null;
   const fallbackLng = site && site.longitude != null ? Number(site.longitude) : null;
+  const hasContent = showTrip || (fallbackLat != null && fallbackLng != null && !(fallbackLat === 0 && fallbackLng === 0));
+
+  // ── Fullscreen toggle ────────────────────────────────
+  const toggleFullscreen = React.useCallback(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const onFsChange = () => {
+      const active = document.fullscreenElement === wrapperRef.current;
+      setIsFullscreen(active);
+      // Leaflet caches container size — force it to remeasure after the
+      // fullscreen layout change, otherwise the map renders cut off /
+      // mis-centered until the next pan/zoom.
+      setTimeout(() => { mapRef.current?.invalidateSize(); }, 120);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -55,7 +83,6 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
       };
 
       if (showTrip && trip) {
-        // Departure & arrival sites
         const depSite = sites.find(s => s.siteCode === trip.departSite);
         const arrSite = sites.find(s => s.siteCode === trip.arrivalSite);
         const addSite = (s: RpSite | undefined, label: string, color: string) => {
@@ -68,7 +95,6 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
         addSite(depSite, "DEP", "#10b981");
         if (arrSite && arrSite.siteCode !== depSite?.siteCode) addSite(arrSite, "ARR", "#f59e0b");
 
-        // Stops
         const stopPts: [number, number][] = [];
         trip.stops.forEach((s, i) => {
           const lat = Number(s.lat), lng = Number(s.lng);
@@ -80,7 +106,6 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
           pts.push([lat, lng]);
         });
 
-        // Route polyline: dep → stops → arr
         const linePts: [number, number][] = [];
         if (depSite?.latitude != null && depSite?.longitude != null) linePts.push([Number(depSite.latitude), Number(depSite.longitude)]);
         linePts.push(...stopPts);
@@ -100,6 +125,10 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
       } else {
         map.setView([0, 0], 2);
       }
+
+      // Kick a resize in case the container mounted at a stale size
+      // (e.g. right after a fullscreen toggle).
+      setTimeout(() => map.invalidateSize(), 0);
     })();
     return () => { cancelled = true; };
   }, [trip?.id, trip?.stops, site?.siteCode, sites, fallbackLat, fallbackLng, showTrip]);
@@ -108,9 +137,20 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
     return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
   }, []);
 
-  if (!showTrip && (fallbackLat == null || fallbackLng == null || (fallbackLat === 0 && fallbackLng === 0))) {
+  const fullscreenBtn = (
+    <button
+      onClick={toggleFullscreen}
+      title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+      className="absolute top-3 right-3 z-[500] w-9 h-9 rounded-lg bg-white/95 backdrop-blur border border-border/60 shadow-md flex items-center justify-center hover:bg-white transition-colors"
+    >
+      {isFullscreen ? <Minimize2 className="w-4 h-4 text-slate-700" /> : <Maximize2 className="w-4 h-4 text-slate-700" />}
+    </button>
+  );
+
+  if (!hasContent) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]">
+      <div ref={wrapperRef} className={cn("relative flex-1 flex items-center justify-center bg-slate-50/50 min-h-[320px]", isFullscreen && "bg-white")}>
+        {fullscreenBtn}
         <div className="text-center">
           <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Select a trip or site to preview on the map</p>
@@ -120,8 +160,9 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
   }
 
   return (
-    <div className="relative flex-1 min-h-[320px] bg-slate-50 overflow-hidden">
+    <div ref={wrapperRef} className={cn("relative flex-1 min-h-[320px] bg-slate-50 overflow-hidden", isFullscreen && "bg-white")}>
       <div ref={containerRef} className="absolute inset-0" />
+      {fullscreenBtn}
       {showTrip && trip && (
         <div className="absolute bottom-3 left-3 z-[400] bg-white/90 backdrop-blur rounded-lg border border-border/60 px-3 py-2 text-xs flex items-center gap-4 pointer-events-none">
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: "#10b981" }} /> Dep</span>
