@@ -56,6 +56,14 @@ export interface VehicleCategory {
   skillNumber: number;
 }
 
+export interface BulkRowResult {
+  rowIndex: number;
+  success: boolean;
+  isUpdate: boolean;
+  key: string | null;
+  error: string | null;
+}
+
 export const vehicleCategoryApi = {
   list: () => request<VehicleCategory[]>("/vehicle-category"),
   get: (code: string) => request<VehicleCategory>(`/vehicle-category/${code}`),
@@ -65,6 +73,9 @@ export const vehicleCategoryApi = {
     request<VehicleCategory>(`/vehicle-category/${code}`, { method: "PUT", body: JSON.stringify(b) }),
   remove: (code: string) =>
     request<void>(`/vehicle-category/${code}`, { method: "DELETE" }),
+  /** Bulk create-or-update — used by the Bulk Activity import page. */
+  bulkCreateOrUpdate: (rows: Partial<VehicleCategory>[]) =>
+    request<BulkRowResult[]>("/vehicle-category/bulk", { method: "POST", body: JSON.stringify(rows) }),
 };
 
 export interface Vehicle {
@@ -104,6 +115,9 @@ export const vehicleApi = {
     request<any>(`/vehicles/${code}`, { method: "PUT", body: JSON.stringify(toWireVehicle(b)) }).then(fromWireVehicle),
   remove: (code: string) =>
     request<void>(`/vehicles/${code}`, { method: "DELETE" }),
+  /** Bulk create-or-update — used by the Bulk Activity import page. */
+  bulkCreateOrUpdate: (rows: Partial<Vehicle>[]) =>
+    request<BulkRowResult[]>("/vehicles/bulk", { method: "POST", body: JSON.stringify(rows.map(toWireVehicle)) }),
 };
 
 function toWireVehicle(b: Partial<Vehicle>): Record<string, unknown> {
@@ -146,6 +160,9 @@ export const driverApi = {
     request<Driver>(`/drivers/${id}`, { method: "PUT", body: JSON.stringify(b) }),
   remove: (id: string) =>
     request<void>(`/drivers/${id}`, { method: "DELETE" }),
+  /** Bulk create-or-update — used by the Bulk Activity import page. */
+  bulkCreateOrUpdate: (rows: Partial<Driver>[]) =>
+    request<BulkRowResult[]>("/drivers/bulk", { method: "POST", body: JSON.stringify(rows) }),
 };
 
 export interface VehicleDriverAssignment {

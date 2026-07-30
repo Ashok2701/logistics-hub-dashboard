@@ -5,7 +5,7 @@
 // (src/pages/fleet/BulkActivity.tsx), so both stay in sync automatically.
 import {
   vehicleApi, vehicleCategoryApi, driverApi,
-  type Vehicle, type VehicleCategory, type Driver,
+  type Vehicle, type VehicleCategory, type Driver, type BulkRowResult,
 } from "@/lib/fleetApi";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import type { BulkImportColumn, ParsedRowResult } from "@/components/shared/BulkImportDialog";
@@ -14,7 +14,15 @@ export interface BulkImportConfig<T> {
   entityLabel: string;
   columns: BulkImportColumn[];
   parseRow: (raw: Record<string, string>) => ParsedRowResult<T>;
+  /** Existing per-row path — calls create() or update() one row at a time.
+   *  Still here and still used by default; nothing about how it works today
+   *  has changed. */
   importRow: (row: Partial<T>, isUpdate: boolean) => Promise<void>;
+  /** New: sends the whole batch of valid rows to the backend's /bulk
+   *  endpoint in a single request, returning one result per row in the
+   *  same order. Optional — BulkImportPanel uses this when provided
+   *  (fewer round trips), and falls back to importRow otherwise. */
+  bulkImport?: (rows: Partial<T>[]) => Promise<BulkRowResult[]>;
   templateFilename: string;
 }
 
@@ -98,6 +106,7 @@ export function vehicleImportConfig(
       if (isUpdate) await vehicleApi.update(row.vehicleCode!, row);
       else await vehicleApi.create(row);
     },
+    bulkImport: (rows) => vehicleApi.bulkCreateOrUpdate(rows),
   };
 }
 
@@ -168,6 +177,7 @@ export function driverImportConfig(existingDrivers: Driver[]): BulkImportConfig<
       if (isUpdate) await driverApi.update(row.driverId!, row);
       else await driverApi.create(row);
     },
+    bulkImport: (rows) => driverApi.bulkCreateOrUpdate(rows),
   };
 }
 
@@ -234,5 +244,6 @@ export function vehicleCategoryImportConfig(existingCategories: VehicleCategory[
       if (isUpdate) await vehicleCategoryApi.update(row.categoryCode!, row);
       else await vehicleCategoryApi.create(row);
     },
+    bulkImport: (rows) => vehicleCategoryApi.bulkCreateOrUpdate(rows),
   };
 }

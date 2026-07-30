@@ -27,7 +27,15 @@ export interface BulkImportPanelProps<T> {
   entityLabel: string;
   columns: BulkImportColumn[];
   parseRow: (raw: Record<string, string>, rowIndex: number) => ParsedRowResult<T>;
+  /** Existing per-row path — unchanged, still the default behavior when
+   *  bulkImport isn't provided (or as the fallback if it is but something
+   *  about the batch call itself fails). */
   importRow: (row: Partial<T>, isUpdate: boolean) => Promise<void>;
+  /** Optional: send the whole batch of valid rows to a single backend
+   *  /bulk endpoint instead of one request per row. When provided, this
+   *  is used instead of looping importRow; when omitted, behavior is
+   *  exactly what it was before — importRow is called once per row. */
+  bulkImport?: (rows: Partial<T>[]) => Promise<{ rowIndex: number; success: boolean; isUpdate: boolean; error: string | null }[]>;
   onImported: () => void;
   templateFilename: string;
   hideHeader?: boolean;
@@ -51,7 +59,7 @@ type PreviewRow<T> = ParsedRowResult<T> & {
  * modal (BulkImportDialog, below - the per-entity-page "Bulk Import" button).
  */
 export function BulkImportPanel<T>({
-  entityLabel, columns, parseRow, importRow, onImported, templateFilename, hideHeader,
+  entityLabel, columns, parseRow, importRow, bulkImport, onImported, templateFilename, hideHeader,
 }: BulkImportPanelProps<T>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -137,6 +145,35 @@ export function BulkImportPanel<T>({
     if (!toImport.length) return;
     setImporting(true);
     setProgress({ done: 0, total: toImport.length });
+
+    // Preferred path: one request for the whole batch, when the caller
+    // provides it. Falls back to the original per-row loop below if
+    // bulkImport isn't configured for this entity, or if the batch call
+    // itself throws (e.g. endpoint not reachable) — same per-row behavior
+    // as always in that case.
+    if (bulkImport) {
+      toImport.forEach((row) => {
+        setRows((prev) => prev.map((r) => r.rowIndex === row.rowIndex ? { ...r, status: "importing" } : r));
+      });
+      try {
+        const results = await bulkImport(toImport.map((r) => r.data as Partial<T>));
+        results.forEach((res, i) => {
+          const row = toImport[i];
+          if (!row) return;
+          setRows((prev) => prev.map((r) => r.rowIndex === row.rowIndex
+            ? { ...r, status: res.success ? "success" : "failed", importError: res.error ?? undefined }
+            : r));
+        });
+        setProgress({ done: toImport.length, total: toImport.length });
+        setImporting(false);
+        onImported();
+        return;
+      } catch (e: any) {
+        // Batch call itself failed (not a per-row failure) — fall through
+        // to the per-row loop below instead of leaving everything stuck
+        // on "importing".
+      }
+    }
 
     for (const row of toImport) {
       setRows((prev) => prev.map((r) => r.rowIndex === row.rowIndex ? { ...r, status: "importing" } : r));
