@@ -1803,13 +1803,21 @@ async function groupUnlock() {
             onClearDriver={() => reassignDriver(null)}
             onRemoveStop={removeStopFromDraft}
             onClear={clearDraft}
-            onConfirm={() => setConfirmDialog({
-              open: true,
-              title: "Generate trip?",
-              description: "Are you sure you want to generate this trip?",
-              confirmLabel: "Yes",
-              onConfirm: async () => { await confirmTrip(); },
-            })}
+onConfirm={() => {
+  const loaded = loadedTripRef.current;
+  const existingTrip = loaded ? trips.find((t) => t.tripId === loaded.tripId) : undefined;
+  const isUpdate = !!(existingTrip && existingTrip.tripCode);
+
+  setConfirmDialog({
+    open: true,
+    title: isUpdate ? "Update trip?" : "Generate trip?",
+    description: isUpdate
+      ? `Are you sure you want to update this trip?`
+      : "Are you sure you want to generate this trip?",
+    confirmLabel: "Yes",
+    onConfirm: async () => { await confirmTrip(); },
+  });
+}}
             selectedTripStatus={selectedTrip?.optiStatus ?? (selectedTrip?.status as string | undefined) ?? null}
             tripLocked={selectedTrip?.locked ?? false}
             tripDepSite={selectedTrip?.departSite ?? null}

@@ -35,7 +35,7 @@ export function AppHeader() {
 
 
   return (
-    <header className="h-[56px] bg-gradient-header backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 flex-shrink-0 sticky top-0 z-40 shadow-[0_1px_3px_rgb(0_0_0/0.1)] border-b border-white/10">
+    <header className="h-[60px] bg-gradient-header backdrop-blur-xl flex items-center justify-between px-6 lg:px-8 flex-shrink-0 sticky top-0 z-40 shadow-[0_1px_3px_rgb(0_0_0/0.1)] border-b border-white/10">
       <div />
 
       <div className="flex items-center gap-1">

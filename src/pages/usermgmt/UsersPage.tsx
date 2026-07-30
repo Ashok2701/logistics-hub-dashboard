@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,7 @@ import {
   type UserRecord, type Role, type UserType,
 } from "@/lib/userMgmtApi";
 import { transportApi, type ApiSite } from "@/lib/transportApi";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 interface FormState {
   username: string;
@@ -82,6 +83,8 @@ export default function UsersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
+  const emailInputRef = useRef(null);
+
   const load = async () => {
     setLoading(true);
     try { setRows(await usersApi.list()); }
@@ -148,6 +151,22 @@ export default function UsersPage() {
     if (!form.userTypeId) { toast.error("User type required"); return; }
     if (requiresSites && !form.roleId) { toast.error("Role required"); return; }
     if (requiresSites && form.sites.length === 0) { toast.error("Select at least one site"); return; }
+        // mobile number validation: must be 10 digits and valid Indian mobile number
+          let normalizedMobile = "";
+      if (form.mobileNo.trim()) {
+        const parsedMobile = parsePhoneNumberFromString(form.mobileNo.trim());
+        if (!parsedMobile || !parsedMobile.isValid()) {
+          toast.error("Enter a valid mobile number (include country code, e.g. +91...)");
+          return;
+        }
+        normalizedMobile = parsedMobile.number; // clean E.164 format, e.g. "+919866906675"
+      }
+        // email validation: must be valid email address
+            if (emailInputRef.current && !emailInputRef.current.checkValidity()) {
+          toast.error("Enter a valid email address");
+          emailInputRef.current.reportValidity();
+          return;
+        }
     setSaving(true);
     try {
       let resolvedRoleId = form.roleId;
@@ -160,7 +179,7 @@ export default function UsersPage() {
         username: form.username.trim(),
         fullName: form.fullName.trim(),
         email: form.email.trim(),
-        mobileNo: form.mobileNo.trim(),
+        mobileNo: normalizedMobile,
         roleId: resolvedRoleId,
         userTypeId: form.userTypeId,
         sites: requiresSites ? form.sites : [],
@@ -214,12 +233,12 @@ export default function UsersPage() {
                 className="form-input" placeholder="John Doe" />
             </Field>
             <Field label="Email">
-              <input type="email" value={form.email} onChange={(e) => upd("email", e.target.value)}
-                className="form-input" placeholder="john@example.com" />
+              <input ref={emailInputRef} type="email" value={form.email} onChange={(e) => upd("email", e.target.value)}
+                className="form-input" placeholder="john@test.com" />
             </Field>
             <Field label="Mobile Number">
-              <input value={form.mobileNo} onChange={(e) => upd("mobileNo", e.target.value)}
-                className="form-input" placeholder="9999999999" />
+              <input value={form.mobileNo} inputMode="tel" onChange={(e) => upd("mobileNo", e.target.value)}
+                className="form-input" placeholder="+91 9876543210" />
             </Field>
             <Field label="User Type *">
               <select value={form.userTypeId} onChange={(e) => { upd("userTypeId", e.target.value); upd("sites", []); upd("roleId", ""); }} className="form-input">

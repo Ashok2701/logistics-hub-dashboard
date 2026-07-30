@@ -95,9 +95,9 @@ export default function Login() {
                 <label htmlFor="password" className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Password
                 </label>
-                <button type="button" className="text-xs font-semibold text-blue-600 hover:text-blue-700">
+                {/* <button type="button" className="text-xs font-semibold text-blue-600 hover:text-blue-700">
                   Forgot password?
-                </button>
+                </button> */}
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -147,7 +147,7 @@ export default function Login() {
 
           <div className="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
             <span>v1.0.0</span>
-            <span className="italic">Precision in Motion</span>
+            <span>©{new Date().getFullYear()} TBS. All rights reserved.</span>
           </div>
         </motion.div>
       </div>
