@@ -16,6 +16,7 @@ import Drivers from "@/pages/fleet/Drivers";
 import Trailers from "@/pages/fleet/Trailers";
 import VehicleDriverAssignment from "@/pages/fleet/VehicleDriverAssignment";
 import VehicleTrailerAssignment from "@/pages/fleet/VehicleTrailerAssignment";
+import BulkActivity from "@/pages/fleet/BulkActivity";
 import Planner from "@/pages/operations/Planner";           // ← NEW
 import RoutePlanner from "@/pages/operations/RoutePlanner";
 import LiveTracking from "@/pages/operations/LiveTracking";
@@ -66,6 +67,7 @@ function AppRoutes() {
         <Route path="fleet/trailers"       element={<Trailers />} />
         <Route path="fleet/vehicle-driver" element={<VehicleDriverAssignment />} />
         <Route path="fleet/vehicle-trailer"element={<VehicleTrailerAssignment />} />
+        <Route path="fleet/bulk-activity"  element={<BulkActivity />} />
         {/* Inside Operations */}
         <Route path="operations/planner"       element={<Planner />} />   {/* ← NEW */}
         <Route path="operations/route-planner" element={<RoutePlanner />} />

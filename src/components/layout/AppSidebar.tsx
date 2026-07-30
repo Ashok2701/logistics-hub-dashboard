@@ -7,7 +7,7 @@ import {
   Link as LinkIcon, Navigation, Radar, BarChart3, Settings,
   RefreshCw, Shield, Building2, UserCircle, Package, FileText, Calendar,
   ChevronDown, ChevronLeft, ChevronRight, Route, UserCog, KeyRound, LayoutGrid,
-  ClipboardList,
+  ClipboardList, Upload,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ const menuItems: MenuItem[] = [
       { label: "Vehicles",            icon: Truck,   path: "/fleet/vehicles" },
       { label: "Drivers",             icon: Users,   path: "/fleet/drivers" },
       { label: "Vehicle-Driver",      icon: LinkIcon,path: "/fleet/vehicle-driver" },
+      { label: "Bulk Activity",       icon: Upload,  path: "/fleet/bulk-activity" },
     ],
   },
   {

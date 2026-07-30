@@ -15,6 +15,8 @@ import {
   type Vehicle, type VehicleCategory,
 } from "@/lib/fleetApi";
 import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
+import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
+import { vehicleImportConfig } from "@/lib/bulkImportConfigs";
 
 interface FormState {
   vehicleCode: string;
@@ -71,6 +73,7 @@ export default function Vehicles() {
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -93,6 +96,8 @@ export default function Vehicles() {
     sites.forEach((s) => m.set(s.siteCode, s));
     return m;
   }, [sites]);
+
+  const bulkConfig = useMemo(() => vehicleImportConfig(rows, categories), [rows, categories]);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
@@ -398,6 +403,9 @@ export default function Vehicles() {
             <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
               <RefreshCw className="w-4 h-4" />
             </button>
+            <button onClick={() => setShowBulkImport(true)} className="h-9 px-4 rounded-lg bg-card border border-border text-sm font-medium flex items-center gap-2 shadow-sm hover:border-primary/40 hover:text-primary transition-all">
+              <Upload className="w-4 h-4" /> Bulk Import
+            </button>
             <button onClick={openAdd} className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary to-indigo-600 text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md transition-all">
               <Plus className="w-4 h-4" /> Add Vehicle
             </button>
@@ -479,6 +487,13 @@ export default function Vehicles() {
           </tbody>
         </table>
       </div>
+
+      <BulkImportDialog<Vehicle>
+        open={showBulkImport}
+        onOpenChange={setShowBulkImport}
+        {...bulkConfig}
+        onImported={load}
+      />
     </div>
   );
 }

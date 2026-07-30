@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
-  Plus, Search, RefreshCw, Edit, Trash2, FolderOpen, Loader2, ArrowLeft,
+  Plus, Search, RefreshCw, Edit, Trash2, FolderOpen, Loader2, ArrowLeft, Upload,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
@@ -10,6 +10,8 @@ import { useSortable } from "@/hooks/useSortable";
 import { cn } from "@/lib/utils";
 import { driverApi, type Driver } from "@/lib/fleetApi";
 import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js";
+import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
+import { driverImportConfig } from "@/lib/bulkImportConfigs";
 
 type FormState = Driver;
 
@@ -41,6 +43,7 @@ export default function Drivers() {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   const emailInputRef = useRef(null);
 
@@ -53,6 +56,8 @@ export default function Drivers() {
     finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
+
+  const bulkConfig = useMemo(() => driverImportConfig(rows), [rows]);
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
@@ -271,6 +276,9 @@ export default function Drivers() {
             <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
               <RefreshCw className="w-4 h-4" />
             </button>
+            <button onClick={() => setShowBulkImport(true)} className="h-9 px-4 rounded-lg bg-card border border-border text-sm font-medium flex items-center gap-2 shadow-sm hover:border-primary/40 hover:text-primary transition-all">
+              <Upload className="w-4 h-4" /> Bulk Import
+            </button>
             <button onClick={openAdd} className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all">
               <Plus className="w-4 h-4" /> Add Driver
             </button>
@@ -338,6 +346,13 @@ export default function Drivers() {
           </tbody>
         </table>
       </div>
+
+      <BulkImportDialog<Driver>
+        open={showBulkImport}
+        onOpenChange={setShowBulkImport}
+        {...bulkConfig}
+        onImported={load}
+      />
     </div>
   );
 }
