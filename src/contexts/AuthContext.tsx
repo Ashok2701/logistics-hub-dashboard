@@ -1,33 +1,38 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { usersApi, rolesApi, modulesApi, roleModulesApi } from "@/lib/userMgmtApi";
 
 const API_BASE = "https://tmssolutions.tema-systems.com:8040/api/v1";
 
-export interface UserPermissions {
-  fleetmgmtflg?: boolean;
-  routeplannerflg?: boolean;
-  schedulerflg?: boolean;
-  mapviewrpflg?: boolean;
-  calendarrpflg?: boolean;
-  screportsflg?: boolean;
-  usermgmtflg?: boolean;
-  addPicktcktflg?: boolean;
-  removePicktcktflg?: boolean;
-  [key: string]: boolean | undefined;
+// ── Unified auth: single table for everything ──────────────────────
+// Login now goes through /api/v1/auth/login (XRAuthService/XRAuthController
+// on the backend), which authenticates against the SAME xr_users table
+// used by the Users/Roles/Modules/User Types management pages (and their
+// role -> module assignments) — replacing the old /api/v1/user/login,
+// which checked a completely separate, disconnected legacy user table.
+// A user created via the Users page can now actually log in, and the
+// role's assigned modules come back directly in the login response
+// (no separate lookup needed), which is what drives the sidebar filter.
+
+export interface PermissionEntry {
+  moduleCode: string;
+  moduleName: string;
+  menuPath: string | null;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 export interface AuthUser {
   username: string;
-  xusrname?: string;
-  role: string;
+  fullName?: string;
+  role: string;        // role NAME (e.g. "Admin") — display only, same as before
+  userType?: string;
+  sites?: string[];
   accessToken?: string;
-  xact?: boolean;
-  permissions?: UserPermissions;
-  /** menuPath values (from Modules) the user's role is assigned, per
-   *  RoleModulesPage — drives which sidebar sections/items are shown.
-   *  null = couldn't be resolved (e.g. no matching Users record, or the
-   *  RBAC tables aren't populated yet) -> sidebar falls back to showing
-   *  everything rather than locking the user out entirely. */
+  permissions: PermissionEntry[];
+  /** menuPath values the user's role has view access to — drives which
+   *  sidebar sections/items are shown. Derived directly from
+   *  `permissions` above (canView === true), no extra round trip. */
   accessibleMenuPaths: string[] | null;
 }
 
@@ -56,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let res: Response;
     try {
-      res = await fetch(`${API_BASE}/user/login`, {
+      res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ username, password }),
@@ -66,6 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!res.ok) {
+      // XRAuthServiceImpl throws for "User not found" / "Password is
+      // wrong" / "User is inactive" — surfaced here as a proper HTTP 400
+      // with a message, unlike the old system which could return 200
+      // with xact:false for the same cases.
       let msg = `Login failed (${res.status})`;
       try {
         const err = await res.json();
@@ -75,74 +84,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const data = await res.json();
-
-    if (!data.accessToken || data.xact === false) {
+    if (!data.accessToken) {
       throw new Error(data.message || "Invalid credentials");
     }
 
-    const {
-      accessToken,
-      xusrname,
-      xact,
-      username: uname,
-      ...flags
-    } = data;
-
-    const permissions: UserPermissions = {};
-    Object.keys(flags).forEach((k) => {
-      if (k.endsWith("flg")) permissions[k] = !!flags[k];
-    });
+    const permissions: PermissionEntry[] = Array.isArray(data.permissions) ? data.permissions : [];
+    const accessibleMenuPaths = permissions
+      .filter((p) => p.canView && p.menuPath)
+      .map((p) => p.menuPath as string);
 
     const userData: AuthUser = {
-      username: uname || username,
-      xusrname,
-      role: permissions.usermgmtflg ? "admin" : "user",
-      accessToken,
-      xact,
+      username: data.username || username,
+      fullName: data.fullName,
+      role: data.role || "user",
+      userType: data.userType,
+      sites: Array.isArray(data.sites) ? data.sites : [],
+      accessToken: data.accessToken,
       permissions,
-      accessibleMenuPaths: null,
+      accessibleMenuPaths,
     };
 
     localStorage.setItem("vanguard-user", JSON.stringify(userData));
-    localStorage.setItem("vanguard-token", accessToken);
+    localStorage.setItem("vanguard-token", data.accessToken);
     setUser(userData);
-
-    // Resolve role -> assigned modules for sidebar filtering. Deliberately
-    // NOT awaited here — login() returns as soon as the existing flow
-    // above finishes, exactly like it always did, so this can't slow down
-    // or otherwise change existing login behavior/timing. It updates
-    // accessibleMenuPaths asynchronously once it resolves (or leaves it
-    // null on any failure — new Users record doesn't exist for this login
-    // yet, RBAC tables not populated, etc. — and the sidebar falls back
-    // to showing everything rather than locking someone out because the
-    // new RBAC system isn't fully wired up for their account yet).
-    resolveAccessibleMenuPaths(uname || username, userData).catch(() => {});
-  };
-
-  async function resolveAccessibleMenuPaths(loginUsername: string, userData: AuthUser) {
-    try {
-      const users = await usersApi.list();
-      const matched = users.find(
-        (u) => u.username?.toLowerCase() === loginUsername.toLowerCase(),
-      );
-      const roleId = matched?.roleId;
-      if (roleId) {
-        const [perms, modules] = await Promise.all([
-          roleModulesApi.get(roleId),
-          modulesApi.list(),
-        ]);
-        const activeModuleIds = new Set(perms.filter((p) => p.canView).map((p) => p.moduleId));
-        const menuPaths = modules
-          .filter((m) => m.active && activeModuleIds.has(m.moduleId) && m.menuPath)
-          .map((m) => m.menuPath);
-        const resolved: AuthUser = { ...userData, accessibleMenuPaths: menuPaths };
-        localStorage.setItem("vanguard-user", JSON.stringify(resolved));
-        setUser(resolved);
-      }
-    } catch {
-      // Leave accessibleMenuPaths null — sidebar shows everything. Not
-      // fatal to login either way.
-    }
   };
 
   const logout = () => {

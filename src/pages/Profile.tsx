@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { User, UserCircle, Shield, Check, Mail, ArrowLeft } from "lucide-react";
+import { User, UserCircle, Shield, Check, Mail, ArrowLeft, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Profile() {
@@ -9,9 +9,9 @@ export default function Profile() {
 
   if (!user) return null;
 
-  const enabledPermissions = user.permissions
-    ? Object.entries(user.permissions).filter(([, v]) => v).map(([k]) => k)
-    : [];
+  // Modules the user's role can view — from the new unified login
+  // response, replacing the old flat xxxflg permission object.
+  const viewableModules = (user.permissions ?? []).filter((p) => p.canView);
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl mx-auto">
@@ -44,27 +44,22 @@ export default function Profile() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Account Details</p>
             <div className="grid sm:grid-cols-2 gap-3">
               <DetailRow icon={Mail} label="Username" value={user.username} />
-              {user.xusrname && <DetailRow icon={UserCircle} label="Display Name" value={user.xusrname} />}
+              {user.fullName && <DetailRow icon={UserCircle} label="Full Name" value={user.fullName} />}
               <DetailRow icon={Shield} label="Role" value={user.role} capitalize />
-              <div className="flex items-center justify-between py-2.5 px-3 rounded-lg border border-border">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Check className="w-4 h-4" />
-                  <span className="text-xs font-medium">Status</span>
-                </div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${user.xact !== false ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                  {user.xact !== false ? "Active" : "Inactive"}
-                </span>
-              </div>
+              {user.userType && <DetailRow icon={Shield} label="User Type" value={user.userType} capitalize />}
+              {user.sites && user.sites.length > 0 && (
+                <DetailRow icon={MapPin} label="Sites" value={user.sites.join(", ")} />
+              )}
             </div>
           </div>
 
-          {enabledPermissions.length > 0 && (
+          {viewableModules.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Permissions</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Modules</p>
               <div className="flex flex-wrap gap-1.5">
-                {enabledPermissions.map((p) => (
-                  <span key={p} className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-primary/10 text-primary">
-                    {p.replace(/flg$/, "")}
+                {viewableModules.map((m) => (
+                  <span key={m.moduleCode} className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-primary/10 text-primary">
+                    {m.moduleName}
                   </span>
                 ))}
               </div>
@@ -87,3 +82,4 @@ function DetailRow({ icon: Icon, label, value, capitalize }: { icon: any; label:
     </div>
   );
 }
+
