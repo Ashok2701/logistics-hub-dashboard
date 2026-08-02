@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,7 +36,7 @@ const menuItems: MenuItem[] = [
     children: [
       { label: "Roles",        icon: Shield,      path: "/user-management/roles" },
       { label: "Modules",      icon: LayoutGrid,  path: "/user-management/modules" },
-      { label: "Role-Modules", icon: KeyRound,    path: "/user-management/role-modules" },
+      { label: "Assign Modules to Roles", icon: KeyRound,    path: "/user-management/role-modules" },
       { label: "User Types",   icon: UserCog,     path: "/user-management/user-types" },
       { label: "Users",        icon: Users,       path: "/user-management/users" },
     ],
@@ -80,6 +80,32 @@ export function AppSidebar() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["Inside Operations"]);
   const location = useLocation();
   const { user } = useAuth();
+
+  // Filter the sidebar to only what the logged-in user's role has been
+  // assigned modules for (via Assign Modules to Roles), matching each
+  // module's menuPath against these items' path. Dashboard always stays
+  // visible. If accessibleMenuPaths couldn't be resolved at login (null —
+  // e.g. no matching Users record yet, or the RBAC tables aren't
+  // populated), falls back to showing everything rather than locking
+  // someone out because the new system isn't fully set up for their
+  // account.
+  const visibleMenuItems = useMemo(() => {
+    const allowed = user?.accessibleMenuPaths;
+    if (allowed == null) return menuItems;
+    const allowedSet = new Set(allowed);
+    return menuItems
+      .map((item) => {
+        if (item.path) {
+          return item.path === "/" || allowedSet.has(item.path) ? item : null;
+        }
+        if (item.children) {
+          const children = item.children.filter((c) => allowedSet.has(c.path));
+          return children.length ? { ...item, children } : null;
+        }
+        return item;
+      })
+      .filter((item): item is MenuItem => item != null);
+  }, [user?.accessibleMenuPaths]);
 
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) =>
@@ -131,7 +157,7 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 px-2">
-        {menuItems.map((item, idx) => (
+        {visibleMenuItems.map((item, idx) => (
           <div key={item.label} className={idx > 0 ? "mt-0.5" : ""}>
             {item.path ? (
               <Link

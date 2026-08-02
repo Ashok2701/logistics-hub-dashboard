@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { usersApi, rolesApi, modulesApi, roleModulesApi } from "@/lib/userMgmtApi";
 
 const API_BASE = "https://tmssolutions.tema-systems.com:8040/api/v1";
 
@@ -22,6 +23,12 @@ export interface AuthUser {
   accessToken?: string;
   xact?: boolean;
   permissions?: UserPermissions;
+  /** menuPath values (from Modules) the user's role is assigned, per
+   *  RoleModulesPage — drives which sidebar sections/items are shown.
+   *  null = couldn't be resolved (e.g. no matching Users record, or the
+   *  RBAC tables aren't populated yet) -> sidebar falls back to showing
+   *  everything rather than locking the user out entirely. */
+  accessibleMenuPaths: string[] | null;
 }
 
 interface AuthContextType {
@@ -93,11 +100,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken,
       xact,
       permissions,
+      accessibleMenuPaths: null,
     };
 
     localStorage.setItem("vanguard-user", JSON.stringify(userData));
     localStorage.setItem("vanguard-token", accessToken);
     setUser(userData);
+
+    // Resolve role -> assigned modules for sidebar filtering. Deliberately
+    // NOT awaited here — login() returns as soon as the existing flow
+    // above finishes, exactly like it always did, so this can't slow down
+    // or otherwise change existing login behavior/timing. It updates
+    // accessibleMenuPaths asynchronously once it resolves (or leaves it
+    // null on any failure — new Users record doesn't exist for this login
+    // yet, RBAC tables not populated, etc. — and the sidebar falls back
+    // to showing everything rather than locking someone out because the
+    // new RBAC system isn't fully wired up for their account yet).
+    resolveAccessibleMenuPaths(uname || username, userData).catch(() => {});
+  };
+
+  async function resolveAccessibleMenuPaths(loginUsername: string, userData: AuthUser) {
+    try {
+      const users = await usersApi.list();
+      const matched = users.find(
+        (u) => u.username?.toLowerCase() === loginUsername.toLowerCase(),
+      );
+      const roleId = matched?.roleId;
+      if (roleId) {
+        const [perms, modules] = await Promise.all([
+          roleModulesApi.get(roleId),
+          modulesApi.list(),
+        ]);
+        const activeModuleIds = new Set(perms.filter((p) => p.canView).map((p) => p.moduleId));
+        const menuPaths = modules
+          .filter((m) => m.active && activeModuleIds.has(m.moduleId) && m.menuPath)
+          .map((m) => m.menuPath);
+        const resolved: AuthUser = { ...userData, accessibleMenuPaths: menuPaths };
+        localStorage.setItem("vanguard-user", JSON.stringify(resolved));
+        setUser(resolved);
+      }
+    } catch {
+      // Leave accessibleMenuPaths null — sidebar shows everything. Not
+      // fatal to login either way.
+    }
   };
 
   const logout = () => {

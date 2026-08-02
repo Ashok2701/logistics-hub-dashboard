@@ -861,8 +861,18 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
       description: `Reassign vehicle of trip ${trip.tripCode ?? trip.id} to ${v.code} (${v.vehicleNo}). The active tour will be updated and saved.`,
       confirmLabel: "Yes, change",
       onConfirm: async () => {
+        // Rule: changing the vehicle on an already-Optimised trip
+        // invalidates the optimisation — timings, weight, and volume were
+        // all computed for the PREVIOUS vehicle's capacity/route, so the
+        // trip goes back to Open and needs to be re-optimised. Same
+        // pattern already used for stop reordering (reorderTripStops,
+        // above) — the trip goes back to Open there too, for the same
+        // reason (route changed).
+        const wasOptimised = trip.optiStatus === "Optimised";
         setDraftVehicle(v);
-        setTrips((prev) => prev.map((x) => x.id === trip.id ? { ...x, vehicle: v } : x));
+        setTrips((prev) => prev.map((x) => x.id === trip.id
+          ? { ...x, vehicle: v, ...(wasOptimised ? { optiStatus: "Open" as any, status: "Open" as any } : {}) }
+          : x));
         await pushTripUpdate(trip, v, trip.driver, trip.stops, "Vehicle updated");
       },
     });
@@ -2097,10 +2107,18 @@ onConfirm={() => {
             style={{ fontFamily: "Inter, system-ui, sans-serif" }}
           >
             {/* Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-blue-600 text-white">
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-blue-600 text-white flex items-center justify-between gap-4">
               <h2 className="text-base font-semibold tracking-tight">
                 Auto Trip Generation : Please select Vehicles, Drivers and Documents
               </h2>
+              <button
+                onClick={() => !agSubmitting && setShowAutoGen(false)}
+                disabled={agSubmitting}
+                className="flex-shrink-0 rounded-md p-1 text-white/80 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Body */}

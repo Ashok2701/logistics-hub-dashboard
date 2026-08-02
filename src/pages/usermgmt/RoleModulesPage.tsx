@@ -8,13 +8,13 @@ import {
   type Role, type ModuleItem, type RolePermission,
 } from "@/lib/userMgmtApi";
 
-type PermKey = "canView" | "canCreate" | "canEdit" | "canDelete";
-const PERMS: { key: PermKey; label: string }[] = [
-  { key: "canView", label: "View" },
-  { key: "canCreate", label: "Create" },
-  { key: "canEdit", label: "Edit" },
-  { key: "canDelete", label: "Delete" },
-];
+// Renamed from "Role Permissions" -> "Assign Modules to Roles", and
+// simplified from 4 separate View/Create/Edit/Delete checkboxes down to
+// a single "Active" toggle per module, per instruction. The underlying
+// RolePermission shape (canView/canCreate/canEdit/canDelete) is left
+// alone for backend compatibility — toggling "Active" just sets all
+// four to the same value together, so the module is either fully
+// assigned to the role or not at all.
 
 export default function RoleModulesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -59,16 +59,25 @@ export default function RoleModulesPage() {
 
   useEffect(() => { if (selectedRole && modules.length) loadPerms(selectedRole); }, [selectedRole, modules.length]);
 
-  const toggle = (moduleId: string, key: PermKey) =>
-    setPerms((p) => ({ ...p, [moduleId]: { ...p[moduleId], [key]: !p[moduleId][key] } }));
+  // Single "Active" toggle per module — sets all four underlying
+  // permission flags together instead of exposing them individually.
+  const isActive = (moduleId: string) => {
+    const p = perms[moduleId];
+    return !!p && p.canView && p.canCreate && p.canEdit && p.canDelete;
+  };
 
-  const toggleAllForModule = (moduleId: string, value: boolean) =>
-    setPerms((p) => ({ ...p, [moduleId]: { ...p[moduleId], canView: value, canCreate: value, canEdit: value, canDelete: value } }));
+  const toggleActive = (moduleId: string, value: boolean) =>
+    setPerms((p) => ({
+      ...p,
+      [moduleId]: { ...p[moduleId], canView: value, canCreate: value, canEdit: value, canDelete: value },
+    }));
 
-  const toggleColumn = (key: PermKey, value: boolean) =>
+  const toggleAllActive = (value: boolean) =>
     setPerms((p) => {
       const next = { ...p };
-      Object.keys(next).forEach((k) => { next[k] = { ...next[k], [key]: value }; });
+      Object.keys(next).forEach((k) => {
+        next[k] = { ...next[k], canView: value, canCreate: value, canEdit: value, canDelete: value };
+      });
       return next;
     });
 
@@ -81,7 +90,7 @@ export default function RoleModulesPage() {
         canView: p.canView, canCreate: p.canCreate, canEdit: p.canEdit, canDelete: p.canDelete,
       }));
       await roleModulesApi.save(selectedRole, body);
-      toast.success("Permissions saved");
+      toast.success("Modules saved for role");
     } catch (e: any) { toast.error(e.message || "Save failed"); }
     finally { setSaving(false); }
   };
@@ -91,16 +100,18 @@ export default function RoleModulesPage() {
     [modules]
   );
 
+  const allActive = orderedModules.length > 0 && orderedModules.every((m) => isActive(m.moduleId));
+
   return (
     <div>
       <PageHeader
-        title="Role Permissions"
-        subtitle="Assign module-level access for each role"
+        title="Assign Modules to Roles"
+        subtitle="Choose which modules each role can access"
         actions={
           <button onClick={save} disabled={!selectedRole || saving}
             className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Permissions
+            Save
           </button>
         }
       />
@@ -129,7 +140,7 @@ export default function RoleModulesPage() {
         {!selectedRole ? (
           <div className="py-16 text-center">
             <Shield className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">Select a role to configure permissions</p>
+            <p className="text-sm text-muted-foreground">Select a role to assign modules</p>
           </div>
         ) : loading ? (
           <div className="py-16 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></div>
@@ -138,51 +149,37 @@ export default function RoleModulesPage() {
             <thead>
               <tr>
                 <th>Module</th>
-                {PERMS.map((p) => (
-                  <th key={p.key} className="w-28 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <span>{p.label}</span>
-                      <label className="inline-flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer">
-                        <input type="checkbox"
-                          checked={orderedModules.length > 0 && orderedModules.every((m) => perms[m.moduleId]?.[p.key])}
-                          onChange={(e) => toggleColumn(p.key, e.target.checked)}
-                          className="w-3 h-3 accent-primary" />
-                        all
-                      </label>
-                    </div>
-                  </th>
-                ))}
-                <th className="w-24 text-center">All</th>
+                <th className="w-28 text-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <span>Active</span>
+                    <label className="inline-flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer">
+                      <input type="checkbox"
+                        checked={allActive}
+                        onChange={(e) => toggleAllActive(e.target.checked)}
+                        className="w-3 h-3 accent-primary" />
+                      all
+                    </label>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
               {orderedModules.length === 0 ? (
-                <tr><td colSpan={PERMS.length + 2} className="text-center py-12 text-sm text-muted-foreground">No modules configured</td></tr>
-              ) : orderedModules.map((m) => {
-                const p = perms[m.moduleId];
-                if (!p) return null;
-                const all = p.canView && p.canCreate && p.canEdit && p.canDelete;
-                return (
-                  <tr key={m.moduleId}>
-                    <td>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-foreground">{m.moduleName}</span>
-                        <span className="text-[11px] text-muted-foreground font-mono">{m.moduleCode}</span>
-                      </div>
-                    </td>
-                    {PERMS.map((perm) => (
-                      <td key={perm.key} className="text-center">
-                        <input type="checkbox" checked={!!p[perm.key]} onChange={() => toggle(m.moduleId, perm.key)}
-                          className="w-4 h-4 accent-primary cursor-pointer" />
-                      </td>
-                    ))}
-                    <td className="text-center">
-                      <input type="checkbox" checked={all} onChange={(e) => toggleAllForModule(m.moduleId, e.target.checked)}
-                        className="w-4 h-4 accent-primary cursor-pointer" />
-                    </td>
-                  </tr>
-                );
-              })}
+                <tr><td colSpan={2} className="text-center py-12 text-sm text-muted-foreground">No modules configured</td></tr>
+              ) : orderedModules.map((m) => (
+                <tr key={m.moduleId}>
+                  <td>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-foreground">{m.moduleName}</span>
+                      <span className="text-[11px] text-muted-foreground font-mono">{m.moduleCode}</span>
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    <input type="checkbox" checked={isActive(m.moduleId)} onChange={(e) => toggleActive(m.moduleId, e.target.checked)}
+                      className="w-4 h-4 accent-primary cursor-pointer" />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
