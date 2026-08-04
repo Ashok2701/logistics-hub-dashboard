@@ -81,6 +81,13 @@ export function AppSidebar() {
   const location = useLocation();
   const { user } = useAuth();
 
+  // Admin always sees every module — bypasses the RBAC filter entirely
+  // rather than depending on someone keeping every module checked for
+  // the admin role in "Assign Modules to Roles" (which would silently
+  // lose coverage every time a new module gets added unless someone
+  // remembers to also assign it to admin).
+  const isAdmin = (user?.role ?? "").toLowerCase().includes("admin");
+
   // Filter the sidebar to only what the logged-in user's role has been
   // assigned modules for (via Assign Modules to Roles), matching each
   // module's menuPath against these items' path. Dashboard always stays
@@ -90,6 +97,7 @@ export function AppSidebar() {
   // someone out because the new system isn't fully set up for their
   // account.
   const visibleMenuItems = useMemo(() => {
+    if (isAdmin) return menuItems;
     const allowed = user?.accessibleMenuPaths;
     if (allowed == null) return menuItems;
     const allowedSet = new Set(allowed);
@@ -105,7 +113,7 @@ export function AppSidebar() {
         return item;
       })
       .filter((item): item is MenuItem => item != null);
-  }, [user?.accessibleMenuPaths]);
+  }, [isAdmin, user?.accessibleMenuPaths]);
 
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) =>
