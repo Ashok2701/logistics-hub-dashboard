@@ -23,6 +23,7 @@ export type Stop = {
   address: string; city: string; postalCity: string; site: string;
   priority: "NORMAL" | "URGENT" | "LOW"; routeCode: string;
   qty: number; netweight: number; vol: number;
+  weightUnit: string | null;   // KG | LB, from the source document — not hardcoded
   dlvyStatus: "open" | "Allocated" | "8";
   lat: number; lng: number;
   routeStatus: string;             // "To Plan" | "Planned" | …
@@ -95,6 +96,7 @@ export function mapStop(s: RpStop): Stop {
     qty:         Number(s.nbPack ?? 0),
     netweight:   Number(s.netWeight ?? 0),
     vol:         Number(s.volume ?? 0),
+    weightUnit:  s.weightUnit ?? null,
     dlvyStatus:  s.routeStatus === "Allocated" ? "Allocated" : "open",
     lat:         Number(s.latitude ?? 0),
     lng:         Number(s.longitude ?? 0),
@@ -102,6 +104,19 @@ export function mapStop(s: RpStop): Stop {
     routeTagColor: s.routeColor ?? null,
     products:    s.products ?? null,
   };
+}
+
+// Real quantity for display — nbPack (Stop.qty) is frequently 0/unreliable
+// at the document-header level (same issue the Delivery Qty/Pickup Qty
+// KPI cards hit), so this sums each product line's qtyOrdered instead,
+// falling back to Stop.qty only when there's no product-line data to sum
+// (e.g. products haven't loaded yet).
+export function stopQty(stop: Stop): number {
+  if (stop.products && stop.products.length) {
+    const sum = stop.products.reduce((n, p) => n + (Number(p.qtyOrdered) || 0), 0);
+    if (sum > 0) return sum;
+  }
+  return stop.qty;
 }
 
 // ═══════════════════════════════════════════════════════

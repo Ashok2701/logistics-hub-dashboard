@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { GripVertical, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { type Trip, type Stop, priorityColor } from "../types";
+import { type Trip, type Stop, priorityColor, stopQty } from "../types";
 
 // ═══════════════════════════════════════════════════════
 // STOP LIST VIEW (for selected trip)
@@ -117,8 +117,8 @@ export function TripStopListView({
                   </td>
                 </>
               )}
-              <td className="px-2.5 py-1.5 font-mono">{s.qty}</td>
-              <td className="px-2.5 py-1.5 font-mono">{s.netweight} kg</td>
+              <td className="px-2.5 py-1.5 font-mono">{stopQty(s)} UN</td>
+              <td className="px-2.5 py-1.5 font-mono">{s.netweight} {s.weightUnit || "KG"}</td>
             </tr>
           ))}
         </tbody>

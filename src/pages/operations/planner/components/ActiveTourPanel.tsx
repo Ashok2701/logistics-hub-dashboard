@@ -13,7 +13,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi";
 import { tripApi } from "@/lib/tripApi";
-import { type Vehicle, type Driver, type Stop, type Trip } from "../types";
+import { type Vehicle, type Driver, type Stop, type Trip, stopQty } from "../types";
 
 // ═══════════════════════════════════════════════════════
 // ACTIVE TOUR PANEL — new design per wireframe:
@@ -92,7 +92,8 @@ export function ActiveTourPanel({
 
   const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
   const totalVol    = stops.reduce((n, s) => n + s.vol, 0);
-  const totalQty    = stops.reduce((n, s) => n + s.qty, 0);
+  const totalQty    = stops.reduce((n, s) => n + stopQty(s), 0);
+  const weightUnit  = stops.find((s) => s.weightUnit)?.weightUnit || "KG";
   const dropCount   = stops.filter((s) => s.type === "DROP").length;
   const pickCount   = stops.filter((s) => s.type === "PICKUP").length;
   const travelMins  = stops.length * 18;
@@ -240,9 +241,9 @@ export function ActiveTourPanel({
             { label: "Stops",     value: String(stops.length) },
             { label: "Drops",     value: String(dropCount) },
             { label: "Pickups",   value: String(pickCount) },
-            { label: "Weight",    value: totalWeight ? `${totalWeight}kg` : "—" },
+            { label: "Weight",    value: totalWeight ? `${totalWeight}${weightUnit}` : "—" },
             { label: "Volume",    value: totalVol    ? `${totalVol}m³`    : "—" },
-            { label: "Qty",       value: totalQty    ? String(totalQty)   : "—" },
+            { label: "Qty",       value: totalQty    ? `${totalQty} UN`   : "—" },
             { label: "Travel",    value: travelStr },
             ...(selectedTripStatus && selectedTripStatus !== "Open" && tripDistanceKm != null
               ? [{ label: "Distance", value: `${Number(tripDistanceKm).toFixed(1)} km` }]
@@ -426,8 +427,8 @@ export function ActiveTourPanel({
                 </div>
                 <div><span className="text-muted-foreground">Address:</span> <span>{selectedStopData.address}</span></div>
                 <div><span className="text-muted-foreground">Postal:</span> <span>{selectedStopData.postalCity}</span></div>
-                <div><span className="text-muted-foreground">Qty:</span> <span className="font-mono">{selectedStopData.qty}</span></div>
-                <div><span className="text-muted-foreground">Weight:</span> <span className="font-mono">{selectedStopData.netweight}kg</span></div>
+                <div><span className="text-muted-foreground">Qty:</span> <span className="font-mono">{stopQty(selectedStopData)} UN</span></div>
+                <div><span className="text-muted-foreground">Weight:</span> <span className="font-mono">{selectedStopData.netweight}{selectedStopData.weightUnit || "KG"}</span></div>
                 <div><span className="text-muted-foreground">Vol:</span> <span className="font-mono">{selectedStopData.vol}m³</span></div>
               </div>
             </div>
