@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { fetchTmsSites, loadPlannerData, type RpSite, type RpVehicle, type RpDriver, type RpStop, type RpStopProduct } from "@/lib/routePlannerApi";
+import { vehicleDriverAssignmentApi, type VehicleDriverAssignment } from "@/lib/fleetApi";
 import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi";
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
 import { transportApi } from "@/lib/transportApi";
@@ -59,6 +60,10 @@ export default function Planner() {
   const [apiVehicles, setApiVehicles] = useState<Vehicle[]>([]);
   const [apiDrivers,  setApiDrivers]  = useState<Driver[]>([]);
   const [allStops,    setAllStops]    = useState<Stop[]>([]);
+  // Vehicle-Driver Assignment records (Fleet > Vehicle-Driver) — used to
+  // show/auto-apply which driver is assigned to a vehicle for the
+  // currently selected date.
+  const [vehicleAssignments, setVehicleAssignments] = useState<VehicleDriverAssignment[]>([]);
 
   // ── Search strings ────────────────────────────────────
   const [vehSearch, setVehSearch]   = useState("");
@@ -414,6 +419,14 @@ export default function Planner() {
       })
       .finally(() => setLoading(false));
 
+    // Vehicle-Driver Assignment records — best-effort, independent of the
+    // main planner load above. Used to show/auto-apply the assigned
+    // driver for each vehicle on the selected date; if this fails, the
+    // planner still works exactly as before, just without that feature.
+    vehicleDriverAssignmentApi.list()
+      .then((data) => setVehicleAssignments(data ?? []))
+      .catch(() => setVehicleAssignments([]));
+
     // Load existing trips for the selected site + date from backend.
     // Replace persisted trips with API response; preserve any local-only (unsaved) trips.
     tripApi.loadTrips(site, date)
@@ -444,6 +457,21 @@ export default function Planner() {
 
   // ── Derived datasets ───────────────────────────────────
   const usedStopIds = useMemo(() => new Set(trips.flatMap((t) => t.stops.map((s) => s.id))), [trips]);
+
+  // Vehicle -> driver assigned to it (Fleet > Vehicle-Driver) for the
+  // currently selected planner date, if any. Only considers active
+  // assignments whose [startDate, endDate] window includes `date`.
+  const assignedDriverByVehicle = useMemo(() => {
+    const map = new Map<string, VehicleDriverAssignment>();
+    if (!date) return map;
+    for (const a of vehicleAssignments) {
+      if (!a.active) continue;
+      if (a.startDate && a.startDate > date) continue;
+      if (a.endDate && a.endDate < date) continue;
+      map.set(a.vehicleCode, a);
+    }
+    return map;
+  }, [vehicleAssignments, date]);
 
   const vehicles = useMemo(() =>
     apiVehicles.filter((v) =>
@@ -612,13 +640,44 @@ export default function Planner() {
 
     if (vehicleCode) {
       const v = apiVehicles.find((x) => x.code === vehicleCode);
-      if (v) setDraftVehicle(v);
+      if (v) {
+        setDraftVehicle(v);
+        // Vehicle-Driver Assignment: if this vehicle has an assigned
+        // driver for the current date and no driver has been manually
+        // dropped in this same action, auto-apply that driver too —
+        // matching the assignment shown in the vehicle list's Assigned
+        // Driver column.
+        if (!driverId) {
+          const assignment = assignedDriverByVehicle.get(vehicleCode);
+          if (assignment) {
+            const assignedDriver = apiDrivers.find((x) => x.id === assignment.driverId);
+            if (assignedDriver && assignedDriver.status === "Available") setDraftDriver(assignedDriver);
+          }
+        }
+      }
     }
     if (driverId) {
       const d = apiDrivers.find((x) => x.id === driverId);
       if (d) {
         if (d.status !== "Available") { toast({ title: "Driver unavailable", description: `${d.name} is on a trip.` }); return; }
-        setDraftDriver(d);
+
+        // If the vehicle in play (just dropped, or already on the draft)
+        // has a DIFFERENT driver assigned to it via Vehicle-Driver
+        // Assignment, confirm before overriding that assignment with
+        // this manual pick.
+        const activeVehicleCode = vehicleCode || draftVehicle?.code;
+        const assignment = activeVehicleCode ? assignedDriverByVehicle.get(activeVehicleCode) : undefined;
+        if (assignment && assignment.driverId !== d.id) {
+          setConfirmDialog({
+            open: true,
+            title: "Replace assigned driver?",
+            description: `${assignment.driverName} is already assigned to this vehicle for this period. Replace with ${d.name}?`,
+            confirmLabel: "Yes, replace",
+            onConfirm: () => setDraftDriver(d),
+          });
+        } else {
+          setDraftDriver(d);
+        }
       }
     }
     if (stopIdsRaw) {
@@ -876,7 +935,21 @@ function handleDeleteStopFromListView(trip: Trip, docNum: string) {
 
   async function reassignVehicle(v: Vehicle | null) {
     const trip = trips.find((x) => x.id === selectedTripId);
-    if (!trip || trip.tripId == null) { setDraftVehicle(v); return; }
+    if (!trip || trip.tripId == null) {
+      setDraftVehicle(v);
+      // Same auto-assign as drag-drop (onActivePanelDrop) — only for a
+      // fresh/local draft, not a persisted trip (that path below already
+      // has its own confirm-and-push flow; changing driver there isn't
+      // part of this action).
+      if (v) {
+        const assignment = assignedDriverByVehicle.get(v.code);
+        if (assignment) {
+          const assignedDriver = apiDrivers.find((x) => x.id === assignment.driverId);
+          if (assignedDriver && assignedDriver.status === "Available") setDraftDriver(assignedDriver);
+        }
+      }
+      return;
+    }
     if (!canEditTrip(trip)) {
       toast({
         title: "Cannot change vehicle",
@@ -1631,7 +1704,7 @@ async function groupUnlock() {
                   <table className="w-full" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/40 sticky top-0 z-10">
                       <tr>
-                        {["Vehicle Code","Vehicle No","Category","Departure Site", "Arrival Site","Start"].map((h) => (
+                        {["Vehicle Code","Vehicle No","Category","Departure Site", "Arrival Site","Start","Assigned Driver"].map((h) => (
                           <th key={h} className="px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border-b" style={{ background:"#eff6ff", color:"#1e40af", borderColor:"#bfdbfe" }}>{h}</th>
                         ))}
                       </tr>
@@ -1659,12 +1732,19 @@ async function groupUnlock() {
                             <td className="px-2 py-1 font-mono ">{v.departureSite}</td>
                             <td className="px-2 py-1 font-mono text-muted-foreground">{v.arrivalSite}</td>
                             <td className="px-2 py-1 text-muted-foreground">{v.startTime}</td>
+                            <td className="px-2 py-1">
+                              {assignedDriverByVehicle.get(v.code)
+                                ? <span className="text-[10px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded" title={`Assigned ${assignedDriverByVehicle.get(v.code)!.startDate} to ${assignedDriverByVehicle.get(v.code)!.endDate || "…"}`}>
+                                    {assignedDriverByVehicle.get(v.code)!.driverName}
+                                  </span>
+                                : <span className="text-muted-foreground/50">—</span>}
+                            </td>
                           </tr>
 
                                                   );
                       })}
                       {vehicles.length === 0 && (
-                        <tr><td colSpan={5} className="px-3 py-4 text-center text-xs text-muted-foreground">No vehicles for this site</td></tr>
+                        <tr><td colSpan={7} className="px-3 py-4 text-center text-xs text-muted-foreground">No vehicles for this site</td></tr>
                       )}
                     </tbody>
                   </table>
