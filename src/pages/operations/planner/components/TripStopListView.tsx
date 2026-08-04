@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { GripVertical, Lock } from "lucide-react";
+import { GripVertical, Lock, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Trip, type Stop, priorityColor, stopQty } from "../types";
 
@@ -10,10 +10,14 @@ export function TripStopListView({
   trip,
   locked = false,
   onReorder,
+  onDeleteStop,
 }: {
   trip: Trip | null;
   locked?: boolean;
   onReorder?: (newStops: Stop[]) => void;
+  /** Remove a single drop/pickup from the trip — parent handles the
+   *  confirmation prompt and the actual trip-status/persist logic. */
+  onDeleteStop?: (docNum: string) => void;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
@@ -34,8 +38,8 @@ export function TripStopListView({
 
   const isOptimised = trip.stops.some((s) => s.arrivalTime || s.departureTime);
   const headers = isOptimised
-    ? ["", "Seq","Type","Txn","Client","City","Arrival","Departure","Service","Waiting","Dist (km)","Qty","Weight"]
-    : ["", "Seq","Type","Txn","Client","Address","City","Route","Priority","Qty","Weight"];
+    ? ["", "Seq","Type","Txn","Client","City","Arrival","Departure","Service","Waiting","Dist (km)","Qty","Weight","Actions"]
+    : ["", "Seq","Type","Txn","Client","Address","City","Route","Priority","Qty","Weight","Actions"];
 
   function handleDrop(i: number) {
     if (!canReorder || dragIndex === null || dragIndex === i) {
@@ -119,6 +123,21 @@ export function TripStopListView({
               )}
               <td className="px-2.5 py-1.5 font-mono">{stopQty(s)} UN</td>
               <td className="px-2.5 py-1.5 font-mono">{s.netweight} {s.weightUnit || "KG"}</td>
+              <td className="px-2.5 py-1.5">
+                {onDeleteStop && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); if (!locked) onDeleteStop(s.id); }}
+                    disabled={locked}
+                    title={locked ? "Trip is locked — unlock it to remove stops" : "Remove this stop"}
+                    className={cn(
+                      "p-1 rounded transition-colors",
+                      locked ? "text-muted-foreground/30 cursor-not-allowed" : "text-destructive hover:bg-destructive/10"
+                    )}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

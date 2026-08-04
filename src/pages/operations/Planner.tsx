@@ -831,6 +831,41 @@ function reorderTripStops(trip: Trip, newStops: Stop[]) {
   }
 }
 
+// Delete a single drop/pickup from a trip via the List View — only
+// allowed when the trip is Open or Optimised (same rule as reordering);
+// asks for confirmation, then removes the stop, pushes the update, and
+// unconditionally brings the trip back to Open (removing a stop
+// invalidates whatever plan/optimisation was there, same reasoning as
+// vehicle reassignment and stop reordering above).
+function handleDeleteStopFromListView(trip: Trip, docNum: string) {
+  if (!canEditTrip(trip)) {
+    setVroomError({
+      title: "Cannot Remove Stop",
+      detail: `Trip ${trip.tripCode ?? trip.id} is ${(trip as any).optiStatus ?? trip.status}. Unlock it first to remove stops.`,
+    });
+    return;
+  }
+  const stop = trip.stops.find((s) => s.id === docNum);
+  setConfirmDialog({
+    open: true,
+    title: "Remove this stop?",
+    description: `Remove ${stop?.type === "PICKUP" ? "pickup" : "drop"} ${docNum}${stop?.client ? ` (${stop.client})` : ""} from trip ${trip.tripCode ?? trip.id}?`,
+    confirmLabel: "Yes, remove",
+    onConfirm: async () => {
+      const newStops = trip.stops.filter((s) => s.id !== docNum);
+      setTrips((prev) => prev.map((t) => (t.id === trip.id
+        ? { ...t, stops: newStops, optiStatus: "Open" as any, status: "Open" as any }
+        : t)));
+      // Free the stop back up in the Deliveries/Pickups panel so it can
+      // be added to another trip.
+      setAllStops((prev) => prev.map((s) => (s.id === docNum ? { ...s, routeStatus: "To Plan" } : s)));
+      if (trip.tripId != null && trip.tripCode) {
+        await pushTripUpdate(trip, trip.vehicle, trip.driver, newStops, "Stop removed");
+      }
+    },
+  });
+}
+
   // Reassign vehicle/driver on a persisted trip — with confirmation + backend sync.
   // Only allowed when trip is in Open or Optimised status.
   function canEditTrip(trip: Trip | undefined): boolean {
@@ -2080,7 +2115,7 @@ onConfirm={() => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} onReorder={selectedTrip && canEditTrip(selectedTrip) ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined}/>}
+                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} locked={selectedTrip ? !canEditTrip(selectedTrip) : false} onReorder={selectedTrip && canEditTrip(selectedTrip) ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined} onDeleteStop={selectedTrip ? (docNum) => handleDeleteStopFromListView(selectedTrip, docNum) : undefined} />}
                 </div>
               </div>
             }

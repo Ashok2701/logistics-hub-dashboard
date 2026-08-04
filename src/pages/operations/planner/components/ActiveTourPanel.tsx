@@ -241,9 +241,9 @@ export function ActiveTourPanel({
             { label: "Stops",     value: String(stops.length) },
             { label: "Drops",     value: String(dropCount) },
             { label: "Pickups",   value: String(pickCount) },
-            { label: "Weight",    value: totalWeight ? `${totalWeight}${weightUnit}` : "—" },
-            { label: "Volume",    value: totalVol    ? `${totalVol}m³`    : "—" },
-            { label: "Qty",       value: totalQty    ? `${totalQty} UN`   : "—" },
+            { label: "Weight",    value: `${totalWeight || 0}${weightUnit}` },
+            { label: "Volume",    value: `${totalVol || 0}m³` },
+            { label: "Qty",       value: `${totalQty || 0} UN` },
             { label: "Travel",    value: travelStr },
             ...(selectedTripStatus && selectedTripStatus !== "Open" && tripDistanceKm != null
               ? [{ label: "Distance", value: `${Number(tripDistanceKm).toFixed(1)} km` }]
