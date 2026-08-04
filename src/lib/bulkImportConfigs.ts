@@ -127,6 +127,51 @@ const DRIVER_IMPORT_COLUMNS: BulkImportColumn[] = [
   { key: "active",            label: "Active (true/false)",  example: "true" },
 ];
 
+// Backend LocalDate fields (Driver.licenseIssueDate/licenseExpiryDate)
+// require strict ISO yyyy-MM-dd — Jackson's default LocalDate
+// deserialization rejects anything else with a generic 400 "Failed to
+// read request" (HttpMessageNotReadableException), which is exactly
+// what surfaced when a spreadsheet-typed date like "1/15/2024" (Excel's
+// typical US-locale display format, not what the template's example
+// row showed) got sent through unchanged. Normalizes any of: already
+// ISO, M/D/YYYY or MM/DD/YYYY, an Excel date serial number (xlsx.js can
+// return raw serials depending on cell formatting), or anything else
+// JS's Date can parse.
+function normalizeDate(raw: string): { value: string | null; error: string | null } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { value: null, error: null };
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return { value: trimmed, error: null };
+
+  const usMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (usMatch) {
+    const [, m, d, y] = usMatch;
+    return { value: `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`, error: null };
+  }
+
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    const serial = Number(trimmed);
+    const epoch = Date.UTC(1899, 11, 30); // Excel's date epoch
+    const d = new Date(epoch + serial * 86400000);
+    if (!Number.isNaN(d.getTime())) {
+      return {
+        value: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`,
+        error: null,
+      };
+    }
+  }
+
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    return {
+      value: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`,
+      error: null,
+    };
+  }
+
+  return { value: null, error: `"${raw}" is not a recognizable date — use YYYY-MM-DD (e.g. 2024-01-15)` };
+}
+
 export function driverImportConfig(existingDrivers: Driver[]): BulkImportConfig<Driver> {
   return {
     entityLabel: "Drivers",
@@ -154,6 +199,11 @@ export function driverImportConfig(existingDrivers: Driver[]): BulkImportConfig<
       if (maxHrDayRaw && Number.isNaN(maxHrDay)) errors.push("Max Hours Per Day must be a number");
       if (maxHrWkRaw && Number.isNaN(maxHrWk)) errors.push("Max Hours Per Week must be a number");
 
+      const issueDateResult = normalizeDate(get("License Issue Date"));
+      const expiryDateResult = normalizeDate(get("License Expiry Date"));
+      if (issueDateResult.error) errors.push(`License Issue Date: ${issueDateResult.error}`);
+      if (expiryDateResult.error) errors.push(`License Expiry Date: ${expiryDateResult.error}`);
+
       if (errors.length) return { data: null, errors };
 
       const activeRaw = get("Active (true/false)").toLowerCase();
@@ -164,8 +214,8 @@ export function driverImportConfig(existingDrivers: Driver[]): BulkImportConfig<
         employeeCode: get("Employee Code"),
         mobileNo, email: get("Email"),
         licenseNumber: get("License Number"),
-        licenseType, licenseIssueDate: get("License Issue Date"),
-        licenseExpiryDate: get("License Expiry Date"),
+        licenseType, licenseIssueDate: issueDateResult.value ?? undefined,
+        licenseExpiryDate: expiryDateResult.value ?? undefined,
         issuedBy: get("Issued By"),
         maxHoursPerDay: maxHrDay, maxHoursPerWeek: maxHrWk,
         driverStatus: 1, allowAllVehicles: true, longHaulDriver: false, notes: "",
