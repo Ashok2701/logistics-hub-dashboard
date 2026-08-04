@@ -142,7 +142,7 @@ export function driverImportConfig(existingDrivers: Driver[]): BulkImportConfig<
       if (!driverName) errors.push("Driver Name is required");
 
       const mobileNo = get("Mobile No");
-      if (mobileNo && !isValidPhoneNumber(mobileNo)) errors.push("Mobile No is not a valid phone number");
+      if (mobileNo && !isValidPhoneNumber(mobileNo)) errors.push('Mobile No must include a country code with a leading "+" (e.g. +18681234567) — plain digits without it can\'t be validated');
 
       const licenseTypeRaw = get("License Type");
       const maxHrDayRaw = get("Max Hours Per Day");

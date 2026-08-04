@@ -263,15 +263,41 @@ export function BulkImportPanel<T>({
             )}
           </div>
 
+          {/* Dedicated, always-visible error list — the exact reason(s)
+              each row was skipped, with no need to scroll the table
+              sideways or hover a tooltip to find out why. */}
+          {invalidCount > 0 && (
+            <div className="border border-destructive/30 bg-destructive/5 rounded-lg p-3">
+              <p className="text-xs font-semibold text-destructive mb-2 flex items-center gap-1.5">
+                <XCircle className="w-3.5 h-3.5" /> {invalidCount} row{invalidCount !== 1 ? "s" : ""} will be skipped — fix these and re-upload:
+              </p>
+              <ScrollArea style={{ maxHeight: 160 }}>
+                <ul className="space-y-1.5 pr-2">
+                  {rows.filter((r) => r.errors.length > 0).map((r) => (
+                    <li key={r.rowIndex} className="text-xs">
+                      <span className="font-semibold text-foreground">Row {r.rowIndex + 2}</span>
+                      {r.raw[columns[0]?.label] && (
+                        <span className="text-muted-foreground"> ({columns[0].label}: {r.raw[columns[0].label]})</span>
+                      )}
+                      <ul className="ml-4 mt-0.5 list-disc text-destructive">
+                        {r.errors.map((e, i) => <li key={i}>{e}</li>)}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
+            </div>
+          )}
+
           <ScrollArea className="flex-1 border border-border rounded-lg" style={{ maxHeight: 340 }}>
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/60 backdrop-blur">
                 <tr>
                   <th className="px-2 py-1.5 text-left w-8">#</th>
+                  <th className="px-2 py-1.5 text-left w-48">Status</th>
                   {columns.map((c) => (
                     <th key={c.key} className="px-2 py-1.5 text-left whitespace-nowrap">{c.label}</th>
                   ))}
-                  <th className="px-2 py-1.5 text-left w-40">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -282,21 +308,23 @@ export function BulkImportPanel<T>({
                     r.status === "success" && "bg-emerald-50",
                     r.status === "failed" && "bg-destructive/10",
                   )}>
-                    <td className="px-2 py-1 text-muted-foreground">{r.rowIndex + 2}</td>
-                    {columns.map((c) => (
-                      <td key={c.key} className="px-2 py-1 whitespace-nowrap max-w-[140px] truncate">{r.raw[c.label] ?? ""}</td>
-                    ))}
-                    <td className="px-2 py-1">
+                    <td className="px-2 py-1 text-muted-foreground align-top">{r.rowIndex + 2}</td>
+                    <td className="px-2 py-1 align-top">
                       {r.status === "importing" && <span className="flex items-center gap-1 text-primary"><Loader2 className="w-3 h-3 animate-spin" /> Importing...</span>}
                       {r.status === "success" && <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 className="w-3 h-3" /> Imported</span>}
-                      {r.status === "failed" && <span className="flex items-center gap-1 text-destructive" title={r.importError}><XCircle className="w-3 h-3" /> {r.importError ?? "Failed"}</span>}
+                      {r.status === "failed" && <span className="flex items-center gap-1 text-destructive"><XCircle className="w-3 h-3" /> {r.importError ?? "Failed"}</span>}
                       {r.status === "pending" && r.errors.length > 0 && (
-                        <span className="text-destructive" title={r.errors.join("; ")}>! {r.errors[0]}</span>
+                        <ul className="text-destructive list-disc ml-3">
+                          {r.errors.map((e, i) => <li key={i}>{e}</li>)}
+                        </ul>
                       )}
                       {r.status === "pending" && r.errors.length === 0 && (
                         <span className="text-muted-foreground">{r.isUpdate ? "Will update" : "Will create"}</span>
                       )}
                     </td>
+                    {columns.map((c) => (
+                      <td key={c.key} className="px-2 py-1 whitespace-nowrap max-w-[140px] truncate align-top">{r.raw[c.label] ?? ""}</td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
