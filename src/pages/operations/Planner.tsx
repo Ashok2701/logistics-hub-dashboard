@@ -40,6 +40,7 @@ import {
 import {
   ToolbarBtn, SiteSelect, KpiCard, StopRow, RouteMapView,
   TripStopListView, ActiveTourPanel, RouteManagementDetail, ResizableSplit,
+  ProductDetailsDialog,
 } from "./planner/components";
 
 export default function Planner() {
@@ -118,6 +119,9 @@ export default function Planner() {
 
   // ── Auto Trip Generation modal ────────────────────────
   const [showAutoGen, setShowAutoGen]   = useState(false);
+  // Which stop's product-details popup is open (Document panel / List View
+  // — clicking the underlined document/drop/pickup number).
+  const [productDetailsStop, setProductDetailsStop] = useState<Stop | null>(null);
   const [agTab, setAgTab]               = useState<"vehicles" | "drivers">("vehicles");
   const [agDocTab, setAgDocTab]         = useState<"deliveries" | "pickups">("deliveries");
   const [agVehSel, setAgVehSel]         = useState<Set<string>>(new Set());
@@ -1900,6 +1904,7 @@ async function groupUnlock() {
                             : [s.id];
                           onStopsDragStart(e, ids);
                         }}
+                        onViewProducts={(stop) => setProductDetailsStop(stop)}
                       />
                     ))}
                     {currentStops.length === 0 && (
@@ -2208,7 +2213,7 @@ onConfirm={() => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} locked={selectedTrip ? !canEditTrip(selectedTrip) : false} onReorder={selectedTrip && canEditTrip(selectedTrip) ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined} onDeleteStop={selectedTrip ? (docNum) => handleDeleteStopFromListView(selectedTrip, docNum) : undefined} />}
+                  {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} locked={selectedTrip ? !canEditTrip(selectedTrip) : false} onReorder={selectedTrip && canEditTrip(selectedTrip) ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined} onDeleteStop={selectedTrip ? (docNum) => handleDeleteStopFromListView(selectedTrip, docNum) : undefined} onViewProducts={(stop) => setProductDetailsStop(stop)} />}
                 </div>
               </div>
             }
@@ -2553,6 +2558,12 @@ onConfirm={() => {
     </AlertDialog>
 
     {/* ── VROOM Error Popup (inline Zap + Auto Generate) ── */}
+    <ProductDetailsDialog
+      stop={productDetailsStop}
+      open={!!productDetailsStop}
+      onOpenChange={(open) => { if (!open) setProductDetailsStop(null); }}
+    />
+
     {vroomError && (
       <div className="fixed inset-0 z-[1200] flex items-center justify-center"
         style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)" }}

@@ -11,6 +11,7 @@ export function TripStopListView({
   locked = false,
   onReorder,
   onDeleteStop,
+  onViewProducts,
 }: {
   trip: Trip | null;
   locked?: boolean;
@@ -18,6 +19,8 @@ export function TripStopListView({
   /** Remove a single drop/pickup from the trip — parent handles the
    *  confirmation prompt and the actual trip-status/persist logic. */
   onDeleteStop?: (docNum: string) => void;
+  /** Opens the product-details popup for a stop's document. */
+  onViewProducts?: (stop: Stop) => void;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
@@ -100,7 +103,19 @@ export function TripStopListView({
                 <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold",
                   s.type === "DROP" ? "bg-rose-100 text-rose-700" : "bg-sky-100 text-sky-700")}>{s.type}</span>
               </td>
-              <td className="px-2.5 py-1.5 font-mono text-primary">{s.txn}</td>
+              <td className="px-2.5 py-1.5 font-mono">
+                {onViewProducts ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onViewProducts(s); }}
+                    className="text-primary font-semibold underline decoration-dotted underline-offset-2 hover:text-primary/70"
+                    title="View product details"
+                  >
+                    {s.txn}
+                  </button>
+                ) : (
+                  <span className="text-primary">{s.txn}</span>
+                )}
+              </td>
               <td className="px-2.5 py-1.5 font-medium">{s.client}</td>
               {isOptimised ? (
                 <>

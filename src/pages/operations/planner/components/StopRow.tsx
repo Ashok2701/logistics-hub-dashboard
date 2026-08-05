@@ -8,11 +8,13 @@ import { type Stop, priorityColor, stopQty } from "../types";
 // STOP ROW — used in drops/pickups table
 // ═══════════════════════════════════════════════════════
 export function StopRow({
-  stop, selected, onToggle, onDragStart, dragging, used, index,
+  stop, selected, onToggle, onDragStart, dragging, used, index, onViewProducts,
 }: {
   stop: Stop; selected: boolean; onToggle: () => void;
   onDragStart: (e: DragEvent) => void; dragging: boolean;
   used?: boolean; index?: number;
+  /** Opens the product-details popup for this stop's document. */
+  onViewProducts?: (stop: Stop) => void;
 }) {
   const tagColor = stop.routeTagColor || "#e2e8f0";
   const tagText  = stop.routeTagColor ? "#ffffff" : "#334155";
@@ -39,7 +41,19 @@ export function StopRow({
       <td className="px-1.5 py-0.5" onClick={(e) => e.stopPropagation()}>
         <Checkbox checked={selected} onCheckedChange={onToggle} disabled={used} />
       </td>
-      <td className="px-2 py-1.5 font-mono text-xs text-primary font-semibold whitespace-nowrap">{stop.txn}</td>
+      <td className="px-2 py-1.5 font-mono text-xs whitespace-nowrap">
+        {onViewProducts ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); onViewProducts(stop); }}
+            className="text-primary font-semibold underline decoration-dotted underline-offset-2 hover:text-primary/70"
+            title="View product details"
+          >
+            {stop.txn}
+          </button>
+        ) : (
+          <span className="text-primary font-semibold">{stop.txn}</span>
+        )}
+      </td>
       <td className="px-2 py-1.5 text-xs">
         <span
           className="text-[9px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide"

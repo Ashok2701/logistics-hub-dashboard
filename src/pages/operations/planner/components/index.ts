@@ -8,3 +8,4 @@ export { TripStopListView } from "./TripStopListView";
 export { ActiveTourPanel, type ActiveTourPanelProps } from "./ActiveTourPanel";
 export { RouteManagementDetail } from "./RouteManagementDetail";
 export { ResizableSplit } from "./ResizableSplit";
+export { ProductDetailsDialog } from "./ProductDetailsDialog";
