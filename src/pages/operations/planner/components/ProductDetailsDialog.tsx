@@ -37,13 +37,10 @@ export function ProductDetailsDialog({
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/60 backdrop-blur">
                 <tr>
-                  <th className="px-2 py-1.5 text-left">Item Code</th>
+                  <th className="px-2 py-1.5 text-left">Prod</th>
                   <th className="px-2 py-1.5 text-left">Description</th>
-                  <th className="px-2 py-1.5 text-right">Qty Ordered</th>
-                  <th className="px-2 py-1.5 text-right">Qty Delivered</th>
-                  <th className="px-2 py-1.5 text-left">Unit</th>
-                  <th className="px-2 py-1.5 text-right">Net Weight</th>
-                  <th className="px-2 py-1.5 text-right">Gross Weight</th>
+                  <th className="px-2 py-1.5 text-right">Quantity</th>
+                  <th className="px-2 py-1.5 text-right">Weight</th>
                   <th className="px-2 py-1.5 text-right">Volume</th>
                 </tr>
               </thead>
@@ -55,10 +52,7 @@ export function ProductDetailsDialog({
                       {[p.itemDesc1, p.itemDesc2].filter(Boolean).join(" ") || "—"}
                     </td>
                     <td className="px-2 py-1.5 text-right font-mono">{p.qtyOrdered ?? 0}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{p.qtyDelivered ?? 0}</td>
-                    <td className="px-2 py-1.5 whitespace-nowrap">{p.packUnit || p.stockUnit || "—"}</td>
                     <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{p.netWeight ?? 0} {p.weightUnit || "KG"}</td>
-                    <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{p.grossWeight ?? 0} {p.weightUnit || "KG"}</td>
                     <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">{p.volume ?? 0} {p.volumeUnit || "M3"}</td>
                   </tr>
                 ))}
