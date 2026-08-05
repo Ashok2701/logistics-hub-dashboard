@@ -56,7 +56,17 @@ export function mapVehicle(v: RpVehicle): Vehicle {
     vol:          Number(v.capacityVolume ?? 0),
     maxOrders:    20,
     startTime:    "07:00",
-    site:         "",
+    // BUG FIX: was hardcoded to "" — never actually read from the API.
+    // Auto Trip Generation's payload builder does
+    // `vehObj?.site ?? site` (fall back to the planner's selected site
+    // only if vehObj.site is null/undefined) — but ?? does NOT fall
+    // back on an empty string, so with this always "", every
+    // auto-generated trip was saved with site: "" regardless of which
+    // site was actually selected. That's exactly why the trip_code came
+    // back as "VR--20260702-001" (empty site segment) and why the trip
+    // vanished after a refresh — the trips list is loaded filtered by
+    // the real site code, which a site:"" row can never match.
+    site:         v.site ?? "",
   };
 }
 

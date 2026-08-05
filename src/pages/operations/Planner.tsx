@@ -301,11 +301,16 @@ export default function Planner() {
 
         try {
           const tripResp = await createTrip({
-            site: vehObj?.site ?? site, docDate: date,
+            // Using || rather than ?? here deliberately: an empty
+            // string from vehObj.site/departureSite/arrivalSite should
+            // ALSO fall back to the planner's selected site, not just
+            // null/undefined — see the mapVehicle() fix in types.ts for
+            // the bug this guards against.
+            site: vehObj?.site || site, docDate: date,
             driverId, driverName: driverObj?.name ?? driverId,
             vehicleCode: vehCode,
-            depSite: vehObj?.departureSite ?? vehObj?.site ?? site,
-            arrSite: vehObj?.arrivalSite    ?? vehObj?.site ?? site,
+            depSite: vehObj?.departureSite || vehObj?.site || site,
+            arrSite: vehObj?.arrivalSite    || vehObj?.site || site,
             drops, pickups,
             noOfPackages: routeStops.reduce((n, s) => n + (s.qty || 0), 0),
             startTime, endTime,
