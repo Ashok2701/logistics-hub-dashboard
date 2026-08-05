@@ -918,6 +918,19 @@ function handleDeleteStopFromListView(trip: Trip, docNum: string) {
       // Free the stop back up in the Deliveries/Pickups panel so it can
       // be added to another trip.
       setAllStops((prev) => prev.map((s) => (s.id === docNum ? { ...s, routeStatus: "To Plan" } : s)));
+      // BUG FIX: this trip's stops are ALSO mirrored into the Active
+      // Trip panel's own state (draftStopIds/draftStops) whenever it's
+      // the currently loaded/selected trip there — that's a separate
+      // copy from trips[].stops above. Without updating it here too,
+      // the panel kept showing (and would re-push, via a subsequent
+      // Confirm click) the OLD stop list including the one just
+      // removed — undoing this deletion the moment Confirm was clicked
+      // afterward, exactly as reported.
+      if (loadedTripRef.current?.tripId === trip.tripId) {
+        const newStopIds = newStops.map((s) => s.id);
+        setDraftStopIds(newStopIds);
+        loadedTripRef.current = { tripId: trip.tripId!, stopIds: newStopIds };
+      }
       if (trip.tripId != null && trip.tripCode) {
         await pushTripUpdate(trip, trip.vehicle, trip.driver, newStops, "Stop removed");
       }
