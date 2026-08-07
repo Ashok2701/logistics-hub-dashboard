@@ -125,7 +125,6 @@ const DRIVER_IMPORT_COLUMNS: BulkImportColumn[] = [
   { key: "issuedBy",          label: "Issued By",            example: "Ministry of Transport" },
   { key: "maxHoursPerDay",    label: "Max Hours Per Day",    example: "8" },
   { key: "maxHoursPerWeek",   label: "Max Hours Per Week",   example: "48" },
-  { key: "username",          label: "Username (POD login)", example: "ranjeet.driver3" },
   { key: "password",          label: "Password (POD login)", example: "TempPass123" },
   { key: "active",            label: "Active (true/false)",  example: "true" },
 ];
@@ -222,7 +221,8 @@ export function driverImportConfig(existingDrivers: Driver[]): BulkImportConfig<
         licenseExpiryDate: expiryDateResult.value ?? undefined,
         issuedBy: get("Issued By"),
         maxHoursPerDay: maxHrDay, maxHoursPerWeek: maxHrWk,
-        username: get("Username (POD login)"),
+        // Username always mirrors Driver ID — no separate column needed.
+        username: driverId,
         password: get("Password (POD login)") || undefined,
         driverStatus: 1, allowAllVehicles: true, longHaulDriver: false, notes: "",
         active: activeRaw ? activeRaw === "true" : true,

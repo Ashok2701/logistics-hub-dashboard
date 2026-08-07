@@ -163,6 +163,9 @@ export default function Drivers() {
         issuedBy: form.issuedBy.trim(),
         notes: form.notes.trim(),
       };
+      // Username always mirrors Driver ID — set after the trim/uppercase
+      // above so it matches exactly what driverId actually ends up as.
+      body.username = body.driverId;
       if (editingId) { await driverApi.update(editingId, body); toast.success("Driver updated"); }
       else { await driverApi.create(body); toast.success("Driver created"); }
       setView("list"); await load();
@@ -279,8 +282,8 @@ export default function Drivers() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">POD App Login</p>
             </div>
             <Field label="Username">
-              <input value={form.username} onChange={(e) => upd("username", e.target.value)}
-                className="form-input font-mono" placeholder="driver.username" autoComplete="off" />
+              <input value={form.driverId} disabled readOnly
+                className="form-input font-mono opacity-60" title="Username is always the same as Driver ID" />
             </Field>
             <Field label="Password">
               <input type="password" value={form.password ?? ""} onChange={(e) => upd("password", e.target.value)}
