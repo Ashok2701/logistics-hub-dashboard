@@ -149,6 +149,14 @@ export interface Driver {
   allowAllVehicles: boolean;
   longHaulDriver: boolean;
   notes: string;
+  /** Home site (site_code) — also used for POD app scoping. */
+  site: string;
+  /** POD app login username. */
+  username: string;
+  /** POD app login password. Write-only — never returned by the API
+   *  (GET responses always have this blank/undefined); leave blank on
+   *  update to keep the existing password unchanged. */
+  password?: string;
 }
 
 export const driverApi = {

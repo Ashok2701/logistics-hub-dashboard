@@ -115,6 +115,7 @@ const DRIVER_IMPORT_COLUMNS: BulkImportColumn[] = [
   { key: "driverId",          label: "Driver ID",           required: true, example: "DN072" },
   { key: "driverName",        label: "Driver Name",         required: true, example: "Ranjeet Transport Driver 3" },
   { key: "employeeCode",      label: "Employee Code",       example: "EMP0072" },
+  { key: "site",              label: "Site",                 example: "11001" },
   { key: "mobileNo",          label: "Mobile No",            example: "+18681234567" },
   { key: "email",             label: "Email",                example: "driver@example.com" },
   { key: "licenseNumber",     label: "License Number",       example: "DL123456" },
@@ -124,6 +125,8 @@ const DRIVER_IMPORT_COLUMNS: BulkImportColumn[] = [
   { key: "issuedBy",          label: "Issued By",            example: "Ministry of Transport" },
   { key: "maxHoursPerDay",    label: "Max Hours Per Day",    example: "8" },
   { key: "maxHoursPerWeek",   label: "Max Hours Per Week",   example: "48" },
+  { key: "username",          label: "Username (POD login)", example: "ranjeet.driver3" },
+  { key: "password",          label: "Password (POD login)", example: "TempPass123" },
   { key: "active",            label: "Active (true/false)",  example: "true" },
 ];
 
@@ -212,12 +215,15 @@ export function driverImportConfig(existingDrivers: Driver[]): BulkImportConfig<
       const data: Partial<Driver> = {
         driverId, driverName,
         employeeCode: get("Employee Code"),
+        site: get("Site"),
         mobileNo, email: get("Email"),
         licenseNumber: get("License Number"),
         licenseType, licenseIssueDate: issueDateResult.value ?? undefined,
         licenseExpiryDate: expiryDateResult.value ?? undefined,
         issuedBy: get("Issued By"),
         maxHoursPerDay: maxHrDay, maxHoursPerWeek: maxHrWk,
+        username: get("Username (POD login)"),
+        password: get("Password (POD login)") || undefined,
         driverStatus: 1, allowAllVehicles: true, longHaulDriver: false, notes: "",
         active: activeRaw ? activeRaw === "true" : true,
       };

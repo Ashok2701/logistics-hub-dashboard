@@ -9,6 +9,7 @@ import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { cn } from "@/lib/utils";
 import { driverApi, type Driver } from "@/lib/fleetApi";
+import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
 import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { driverImportConfig } from "@/lib/bulkImportConfigs";
@@ -33,6 +34,9 @@ const emptyForm: FormState = {
   allowAllVehicles: true,
   longHaulDriver: false,
   notes: "",
+  site: "",
+  username: "",
+  password: "",
 };
 
 export default function Drivers() {
@@ -44,13 +48,17 @@ export default function Drivers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [sites, setSites] = useState<RpSite[]>([]);
 
   const emailInputRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
     try {
-      const data = await driverApi.list();
+      const [data] = await Promise.all([
+        driverApi.list(),
+        fetchTmsSites().then(setSites).catch(() => setSites([])),
+      ]);
       setRows(data || []);
     } catch (e: any) { toast.error(e.message || "Failed to load drivers"); }
     finally { setLoading(false); }
@@ -81,6 +89,7 @@ export default function Drivers() {
       driverName: r.driverName ?? "",
       active: r.active ?? true,
       employeeCode: r.employeeCode ?? "",
+      site: r.site ?? "",
       mobileNo: r.mobileNo ?? "",
       email: r.email ?? "",
       licenseNumber: r.licenseNumber ?? "",
@@ -94,6 +103,11 @@ export default function Drivers() {
       allowAllVehicles: r.allowAllVehicles ?? true,
       longHaulDriver: r.longHaulDriver ?? false,
       notes: r.notes ?? "",
+      username: r.username ?? "",
+      // Deliberately blank, not r.password — the API never returns the
+      // password (write-only), so there's nothing to pre-fill. Leaving
+      // this blank on save keeps the existing password unchanged.
+      password: "",
     });
     setView("form");
   };
@@ -195,6 +209,14 @@ export default function Drivers() {
               <input value={form.employeeCode} onChange={(e) => upd("employeeCode", e.target.value.toUpperCase())}
                 className="form-input font-mono" placeholder="EMP001" />
             </Field>
+            <Field label="Site">
+              <select value={form.site} onChange={(e) => upd("site", e.target.value)} className="form-input">
+                <option value="">Select site…</option>
+                {sites.map((s) => (
+                  <option key={s.siteCode} value={s.siteCode}>{s.siteCode} — {s.siteName}</option>
+                ))}
+              </select>
+            </Field>
             <Field label="Mobile No">
               <input value={form.mobileNo} inputMode="tel" onChange={(e) => upd("mobileNo", e.target.value)}
                 className="form-input font-mono" placeholder="+91 9876543210" />
@@ -252,6 +274,18 @@ export default function Drivers() {
                 <option value="1">Active</option>
                 <option value="0">Inactive</option>
               </select>
+            </Field>
+            <div className="md:col-span-3 pt-2 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">POD App Login</p>
+            </div>
+            <Field label="Username">
+              <input value={form.username} onChange={(e) => upd("username", e.target.value)}
+                className="form-input font-mono" placeholder="driver.username" autoComplete="off" />
+            </Field>
+            <Field label="Password">
+              <input type="password" value={form.password ?? ""} onChange={(e) => upd("password", e.target.value)}
+                className="form-input" placeholder={editingId ? "Leave blank to keep existing password" : "Set a password"}
+                autoComplete="new-password" />
             </Field>
             <Field label="Notes" className="md:col-span-3">
               <textarea value={form.notes} onChange={(e) => upd("notes", e.target.value)}
