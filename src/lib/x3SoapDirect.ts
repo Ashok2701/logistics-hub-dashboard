@@ -12,7 +12,7 @@
 // origin than this app, so the browser enforces CORS — this only works
 // if that SOAP server actually allows cross-origin requests.
 
-const SOAP_URL      = "https://tmsx3em.tema-systems.com:8124/soap-wsdl/syracuse/collaboration/syracuse/CAdxWebServiceXmlCC?wsdl";
+const SOAP_URL      = "https://tmsx3em.tema-systems.com:8124/soap-generic/syracuse/collaboration/syracuse/CAdxWebServiceXmlCC?wsdl";
 const SOAP_USERNAME = "TMSWE";
 const SOAP_PASSWORD = "*Tbs@12345123";
 const POOL_ALIAS    = "TMSNEW";
