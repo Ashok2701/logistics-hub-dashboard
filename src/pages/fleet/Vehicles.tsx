@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   Plus, Search, RefreshCw, Edit, Trash2, FolderOpen, Loader2, ArrowLeft,
   Truck, MapPin, User, Palette, Gauge, Package, Upload, X, Image as ImageIcon,
-  Building2, LogIn, LogOut,
+  Building2, LogIn, LogOut, MapPinned,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
@@ -15,6 +15,7 @@ import {
   type Vehicle, type VehicleCategory,
 } from "@/lib/fleetApi";
 import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
+import { x3SoapApi } from "@/lib/x3SoapApi";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { vehicleImportConfig } from "@/lib/bulkImportConfigs";
 
@@ -38,6 +39,7 @@ interface FormState {
   departureSite: string;
   arrivalSite: string;
   imageUrl: string;
+  location: string;
 }
 
 const emptyForm: FormState = {
@@ -60,6 +62,7 @@ const emptyForm: FormState = {
   departureSite: "",
   arrivalSite: "",
   imageUrl: "",
+  location: "",
 };
 
 export default function Vehicles() {
@@ -69,6 +72,7 @@ export default function Vehicles() {
   const [sites, setSites] = useState<RpSite[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fetchingLocation, setFetchingLocation] = useState(false);
   const [search, setSearch] = useState("");
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -137,6 +141,7 @@ export default function Vehicles() {
       departureSite: r.departureSite ?? "",
       arrivalSite: r.arrivalSite ?? "",
       imageUrl: r.imageUrl ?? "",
+      location: r.location ?? "",
     });
     setView("form");
   };
@@ -145,6 +150,33 @@ export default function Vehicles() {
     if (!confirm(`Delete vehicle "${r.vehicleCode}"?`)) return;
     try { await vehicleApi.remove(r.vehicleCode); toast.success("Deleted"); await load(); }
     catch (e: any) { toast.error(e.message || "Delete failed"); }
+  };
+
+  // "Location" button — calls X3's XX10CVTLOC to create/register this
+  // vehicle's location (I_XFCY = site, I_VEHLOC = vehicle code), then
+  // populates the Location field in the form. Nothing is saved to our
+  // own database until the user clicks Update/Create afterward — this
+  // only fetches the value.
+  const handleFetchLocation = async () => {
+    if (!form.vehicleCode.trim()) { toast.error("Vehicle code required first"); return; }
+    if (!form.site) { toast.error("Select a site first"); return; }
+    setFetchingLocation(true);
+    try {
+      const resp = await x3SoapApi.createVehicleLocation(form.site, form.vehicleCode);
+      if (resp && (resp as any).error) throw new Error((resp as any).error);
+      const status = String((resp as any)?.o_xstatus ?? "");
+      const message = (resp as any)?.o_xmess as string | undefined;
+      if (status !== "2") {
+        toast.error(message || "X3 did not confirm the location");
+        return;
+      }
+      setForm((f) => ({ ...f, location: form.vehicleCode }));
+      toast.success(message || "Location fetched — click Update to save it");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to fetch location from X3");
+    } finally {
+      setFetchingLocation(false);
+    }
   };
 
   const save = async () => {
@@ -174,6 +206,7 @@ export default function Vehicles() {
         departureSite: form.departureSite.trim() || null,
         arrivalSite: form.arrivalSite.trim() || null,
         imageUrl: form.imageUrl || null,
+        location: form.location?.trim() || null,
       };
       if (editingCode) { await vehicleApi.update(editingCode, body); toast.success("Vehicle updated"); }
       else { await vehicleApi.create(body); toast.success("Vehicle created"); }
@@ -225,6 +258,15 @@ export default function Vehicles() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={handleFetchLocation}
+                disabled={fetchingLocation || !form.vehicleCode.trim() || !form.site}
+                title={!form.site ? "Select a site first" : !form.vehicleCode.trim() ? "Vehicle code required first" : "Fetch/register this vehicle's location in X3"}
+                className="h-11 px-5 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur transition ring-1 ring-white/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {fetchingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPinned className="w-4 h-4" />}
+                Location
+              </button>
               <button onClick={() => setView("list")} className="h-11 px-5 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur transition ring-1 ring-white/20">
                 Cancel
               </button>
@@ -284,6 +326,15 @@ export default function Vehicles() {
                 </Field>
                 <Field label="Arrival Site" icon={<LogIn className="w-3.5 h-3.5" />}>
                   <SiteSelect value={form.arrivalSite} onChange={(v) => upd("arrivalSite", v)} sites={sites} />
+                </Field>
+                <Field label="Location" icon={<MapPinned className="w-3.5 h-3.5" />}>
+                  <input
+                    value={form.location ?? ""}
+                    readOnly
+                    placeholder="Not fetched yet — click Location above"
+                    className="form-input font-mono opacity-70"
+                    title="Set via the Location button above (X3 XX10CVTLOC), then saved when you click Update"
+                  />
                 </Field>
               </div>
               {(form.site || form.departureSite || form.arrivalSite) && (

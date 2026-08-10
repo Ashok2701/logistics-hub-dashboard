@@ -55,6 +55,12 @@ export const x3SoapApi = {
   loadTruck: (lvsNum: string) =>
     request<Record<string, any>>(`/x3/load-truck${qs({ lvsNum })}`, { method: "POST" }),
 
+  /** XX10CVTLOC — create/register a vehicle's location in X3
+   *  (xfcy = site/facility code, vehLoc = vehicle code). Response
+   *  includes o_xstatus ("2" = success) and o_xmess (message). */
+  createVehicleLocation: (xfcy: string, vehLoc: string) =>
+    request<Record<string, any>>(`/x3/vehicle-location${qs({ xfcy, vehLoc })}`, { method: "POST" }),
+
   /** X1CROUTDET — route/trip detail */
   getRouteDetail: (vrNum: string) =>
     request<Record<string, any>>(`/x3/route-detail${qs({ vrNum })}`),

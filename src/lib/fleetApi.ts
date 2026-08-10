@@ -98,6 +98,9 @@ export interface Vehicle {
   departureSite?: string | null;
   arrivalSite?: string | null;
   imageUrl?: string | null;
+  /** Vehicle's X3 location code — populated via the "Location" button
+   *  (XX10CVTLOC), then saved to our own DB when the form is updated. */
+  location?: string | null;
 }
 
 export const vehicleApi = {
