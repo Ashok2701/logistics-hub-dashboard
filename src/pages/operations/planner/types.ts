@@ -11,7 +11,7 @@ import type { TripResponseDTO, OptiStatus } from "@/lib/tripApi";
 
 export type Vehicle = {
   code: string; vehicleNo: string; departureSite: string; arrivalSite: string;
-  driverName: string; category: string; capacity: number; vol: number;
+  driverName: string; category: string; capacityWeight: number; capacityVolume: number;
   maxOrders: number; startTime: string; site: string;
 };
 
@@ -22,7 +22,7 @@ export type Stop = {
   pairedDoc: string; doctype: string; client: string; bpcode: string;
   address: string; city: string; postalCity: string; site: string;
   priority: "NORMAL" | "URGENT" | "LOW"; routeCode: string;
-  qty: number; netweight: number; vol: number;
+  qty: number; netWeight: number; volume: number;
   weightUnit: string | null;   // KG | LB, from the source document — not hardcoded
   dlvyStatus: "open" | "Allocated" | "8";
   lat: number; lng: number;
@@ -52,8 +52,8 @@ export function mapVehicle(v: RpVehicle): Vehicle {
     arrivalSite:  v.arrivalSite ?? "",
     driverName:   v.driverId ?? "",
     category:     v.categoryCode ?? "",
-    capacity:     Number(v.capacityWeight ?? 0),
-    vol:          Number(v.capacityVolume ?? 0),
+    capacityWeight:     Number(v.capacityWeight ?? 0),
+    capacityVolume:          Number(v.capacityVolume ?? 0),
     maxOrders:    20,
     startTime:    "07:00",
     // BUG FIX: was hardcoded to "" — never actually read from the API.
@@ -104,8 +104,8 @@ export function mapStop(s: RpStop): Stop {
     priority:    priorityFromNum(s.priority),
     routeCode:   s.routeCode ?? "",
     qty:         Number(s.nbPack ?? 0),
-    netweight:   Number(s.netWeight ?? 0),
-    vol:         Number(s.volume ?? 0),
+    netWeight:   Number(s.netWeight ?? 0),
+    volume:         Number(s.volume ?? 0),
     weightUnit:  s.weightUnit ?? null,
     dlvyStatus:  s.routeStatus === "Allocated" ? "Allocated" : "open",
     lat:         Number(s.latitude ?? 0),
@@ -181,7 +181,7 @@ export function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip 
   const vehicle: Vehicle = (r.vehicleObject as unknown as Vehicle) ?? fallback?.vehicle ?? {
     code: r.vehicleCode, vehicleNo: r.vehicleCode, departureSite: r.depSite ?? "",
     arrivalSite: r.arrSite ?? "", driverName: r.driverName, category: "",
-    capacity: 0, vol: 0, maxOrders: 0, startTime: r.startTime, site: r.site,
+    capacityWeight: 0, capacityVolume: 0, maxOrders: 0, startTime: r.startTime, site: r.site,
   };
   const driver: Driver = fallback?.driver ?? {
     id: r.driverId ?? "", name: r.driverName, license: "", status: "On Trip", hoursToday: 0,

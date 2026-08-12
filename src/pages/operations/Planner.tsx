@@ -43,6 +43,38 @@ import {
   ProductDetailsDialog,
 } from "./planner/components";
 
+// ── Capacity checks applied when manually adding stops to the active
+// trip (drag or "Add to Trip") ──────────────────────────────────────
+// Add, remove, or comment out entries here to change which dimensions
+// get validated. Each check independently compares (existing draft
+// total + incoming) against the vehicle's capacity for that dimension.
+// Any that are exceeded get combined into a single confirmation prompt
+// — no extra wiring needed when you add a new one.
+type CapacityCheck = {
+  key: string;
+  label: string;                              // used in the confirmation message, e.g. "weight"
+  unit: string;
+  getVehicleCapacity: (v: Vehicle) => number;
+  getStopAmount: (s: Stop) => number;
+};
+
+const CAPACITY_CHECKS: CapacityCheck[] = [
+  {
+    key: "weight",
+    label: "weight",
+    unit: "kg",
+    getVehicleCapacity: (v) => Number(v.capacityWeight) || 0,
+    getStopAmount: (s) => s.netWeight || 0,
+  },
+  // {
+  //   key: "volume",
+  //   label: "volume",
+  //   unit: "m³",
+  //   getVehicleCapacity: (v) => Number(v.capacityVolume) || 0,
+  //   getStopAmount: (s) => s.volume || 0,
+  // },
+];
+
 export default function Planner() {
   // ── Sites from API ────────────────────────────────────
   const [sites, setSites]           = useState<RpSite[]>([]);
@@ -223,7 +255,7 @@ export default function Planner() {
           description: v.code,
           start: [depLng, depLat] as [number,number],
           end:   [depLng, depLat] as [number,number],
-          capacity: [Math.round(Number(v.capacity ?? 60000) * 1000)] as [number],
+          capacity: [Math.round(Number(v.capacityWeight ?? 60000) * 1000)] as [number],
           time_window: [startSec, hhmmToSec("23:59")] as [number,number],
           max_tasks: 999,
         };
@@ -247,8 +279,8 @@ export default function Planner() {
         location: [s.lng, s.lat] as [number,number],
         service: 1800,
         ...(s.type === "DROP"
-          ? { delivery: [Math.round((s.netweight || 1) * 1000)] as [number] }
-          : { pickup:   [Math.round((s.netweight || 1) * 1000)] as [number] }),
+          ? { delivery: [Math.round((s.netWeight || 1) * 1000)] as [number] }
+          : { pickup:   [Math.round((s.netWeight || 1) * 1000)] as [number] }),
         priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
       }));
 
@@ -285,8 +317,8 @@ export default function Planner() {
 
         const drops   = routeStops.filter(s => s.type === "DROP").length;
         const pickups = routeStops.filter(s => s.type === "PICKUP").length;
-        const totalWt = routeStops.reduce((n, s) => n + (s.netweight || 0), 0);
-        const totalVl = routeStops.reduce((n, s) => n + (s.vol || 0), 0);
+        const totalWt = routeStops.reduce((n, s) => n + (s.netWeight || 0), 0);
+        const totalVl = routeStops.reduce((n, s) => n + (s.volume || 0), 0);
 
         const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
           seq: i + 1,
@@ -317,9 +349,9 @@ export default function Planner() {
             travelTime: travelHHMM, totalTime: travelHHMM,
             totalWeight: String(totalWt.toFixed(2)),
             totalVolume: String(totalVl.toFixed(2)),
-            capacity:    String(vehObj?.capacity ?? 60000),
+            capacity:    String(vehObj?.capacityWeight ?? 60000),
             uomCapacity: "KG", uomVolume: "M3", uomDistance: "km",
-            weightPct: vehObj?.capacity ? totalWt / Number(vehObj.capacity) * 100 : 0,
+            weightPct: vehObj?.capacityWeight ? totalWt / Number(vehObj.capacityWeight) * 100 : 0,
             volumePct: 0,
             totalDistance: totalDistKm,
             totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
@@ -484,7 +516,7 @@ export default function Planner() {
 
   const vehicles = useMemo(() =>
     apiVehicles.filter((v) =>
-      (!vehSearch || `${v.code} ${v.vehicleNo} ${v.category} ${v.departureSite} ${v.arrivalSite} ${v.driverName} ${v.capacity} ${v.vol} ${v.startTime}`.toLowerCase().includes(vehSearch.toLowerCase()))
+      (!vehSearch || `${v.code} ${v.vehicleNo} ${v.category} ${v.departureSite} ${v.arrivalSite} ${v.driverName} ${v.capacityWeight} ${v.capacityVolume} ${v.startTime}`.toLowerCase().includes(vehSearch.toLowerCase()))
     ), [apiVehicles, vehSearch]);
 
   const drivers = useMemo(() =>
@@ -500,14 +532,14 @@ export default function Planner() {
     allStops.filter((s) =>
       s.type === "DROP" &&
       (!toPlanOnly || (!usedStopIds.has(s.id) && !draftStopIds.includes(s.id) && (s.routeStatus === "To Plan" || !s.routeStatus))) &&
-      (!dropSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(dropSearch.toLowerCase()))
+      (!dropSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netWeight} ${s.volume} ${s.dlvyStatus}`.toLowerCase().includes(dropSearch.toLowerCase()))
     ), [allStops, dropSearch, toPlanOnly, usedStopIds, draftStopIds]);
 
   const pickups = useMemo(() =>
     allStops.filter((s) =>
       s.type === "PICKUP" &&
       (!toPlanOnly || (!usedStopIds.has(s.id) && !draftStopIds.includes(s.id) && (s.routeStatus === "To Plan" || !s.routeStatus))) &&
-      (!pickSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netweight} ${s.vol} ${s.dlvyStatus}`.toLowerCase().includes(pickSearch.toLowerCase()))
+      (!pickSearch || `${s.txn} ${s.prepList} ${s.pairedDoc} ${s.doctype} ${s.client} ${s.bpcode} ${s.address} ${s.city} ${s.postalCity} ${s.routeCode} ${s.priority} ${s.qty} ${s.netWeight} ${s.volume} ${s.dlvyStatus}`.toLowerCase().includes(pickSearch.toLowerCase()))
     ), [allStops, pickSearch, toPlanOnly, usedStopIds, draftStopIds]);
 
   const draftStops = useMemo(() => {
@@ -571,17 +603,12 @@ export default function Planner() {
   }), [vehicles, trips, availableStops, allStops]);
 
   // ── Draft actions ──────────────────────────────────────
-  const addStopsToDraft = useCallback((ids: string[]): boolean => {
-    // Guard: don't allow adding documents to a trip that's already
-    // locked or validated — this used to go straight through, silently
-    // adding stops to a trip that's supposed to be frozen at that point.
-    //
-    // Also returns whether the add actually happened, so callers (e.g.
-    // addSelectedStopsToDraft) don't show a false "added" success
-    // message when this guard blocked it — that was happening before:
-    // this function would return early with an error, but the caller
-    // showed its own unconditional "N stop(s) added" toast right after
-    // regardless of what actually happened.
+
+  // Does the actual mutation — locked/validated guard only. Capacity
+  // checking lives in addStopsToDraft below, so both the direct
+  // (under-capacity) path and the "confirmed anyway" path from the
+  // capacity dialog funnel through this same place.
+  const doAddStopsToDraft = useCallback((ids: string[]): boolean => {
     const loaded = loadedTripRef.current;
     if (loaded) {
       const t = trips.find((x) => x.tripId === loaded.tripId);
@@ -601,6 +628,59 @@ export default function Planner() {
     setAllStops((prev) => prev.map((s) => ids.includes(s.id) ? { ...s, routeStatus: "Planned" } : s));
     return true;
   }, [trips]);
+
+  // Public entry point used by both drag-drop (onActivePanelDrop) and the
+  // "Add N to Trip" button (addSelectedStopsToDraft). Runs every entry in
+  // CAPACITY_CHECKS against (existing draft total + incoming) vs the
+  // assigned vehicle's capacity for that dimension; if any are exceeded,
+  // combines them into one confirmation prompt instead of adding silently.
+  //
+  // onAdded fires only once the stops are actually in the draft — either
+  // immediately (all checks pass / no vehicle yet) or after the user
+  // confirms the over-capacity dialog — so callers can safely defer their
+  // success toast / selection-clearing to it instead of assuming a
+  // synchronous add.
+  const addStopsToDraft = useCallback((ids: string[], onAdded?: () => void): boolean => {
+    if (draftVehicle) {
+      const incoming = ids
+        .map((id) => allStops.find((x) => x.id === id))
+        .filter(Boolean) as Stop[];
+
+      const violations = CAPACITY_CHECKS
+        .map((check) => {
+          const capacity = check.getVehicleCapacity(draftVehicle);
+          if (capacity <= 0) return null; // no capacity configured for this dimension — skip
+
+          const existing = draftStopIds.reduce((n, id) => {
+            const s = allStops.find((x) => x.id === id);
+            return n + (s ? check.getStopAmount(s) : 0);
+          }, 0);
+          const adding = incoming.reduce((n, s) => n + check.getStopAmount(s), 0);
+          const total = existing + adding;
+
+          if (total <= capacity) return null;
+          return `${check.label} would reach ${total.toFixed(2)} ${check.unit} (capacity ${capacity.toFixed(2)} ${check.unit})`;
+        })
+        .filter(Boolean) as string[];
+
+      if (violations.length) {
+        setConfirmDialog({
+          open: true,
+          title: "Vehicle Capacity Exceeded",
+          description: `Adding ${ids.length === 1 ? "this document" : `these ${ids.length} documents`} to vehicle ${draftVehicle.code} exceeds its capacity — ${violations.join("; ")}. Do you still want to add it to the trip?`,
+          confirmLabel: "Yes, add anyway",
+          onConfirm: () => {
+            if (doAddStopsToDraft(ids)) onAdded?.();
+          },
+        });
+        return false;
+      }
+    }
+
+    const ok = doAddStopsToDraft(ids);
+    if (ok) onAdded?.();
+    return ok;
+  }, [draftVehicle, draftStopIds, allStops, doAddStopsToDraft]);
 
   const toggleSelectedStop = useCallback((id: string) => {
     setSelectedStopIds((prev) => {
@@ -721,10 +801,11 @@ export default function Planner() {
 
   function addSelectedStopsToDraft() {
     const count = selectedStopIds.size;
-    const added = addStopsToDraft(Array.from(selectedStopIds));
-    if (!added) return; // addStopsToDraft already showed the blocking reason
-    setSelectedStopIds(new Set());
-    toast({ title: `${count} stop(s) added to active trip` });
+    const ids = Array.from(selectedStopIds);
+    addStopsToDraft(ids, () => {
+      setSelectedStopIds(new Set());
+      toast({ title: `${count} stop(s) added to active trip` });
+    });
   }
 
   // Build the FULL trip payload — used for both create and update.
@@ -735,13 +816,13 @@ export default function Planner() {
     stops: Stop[],
     extra?: { tripCode?: string }
   ) {
-    const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
-    const totalVol    = stops.reduce((n, s) => n + s.vol, 0);
+    const totalWeight = stops.reduce((n, s) => n + s.netWeight, 0);
+    const totalVol    = stops.reduce((n, s) => n + s.volume, 0);
     const totalQty    = stops.reduce((n, s) => n + s.qty, 0);
     const deliveries  = stops.filter((s) => s.type === "DROP").length;
     const pickupCount = stops.filter((s) => s.type === "PICKUP").length;
-    const capacity    = Number(vehicle.capacity) || 0;
-    const capVol      = Number(vehicle.vol) || 0;
+    const capacity    = Number(vehicle.capacityWeight) || 0;
+    const capVol      = Number(vehicle.capacityVolume) || 0;
 
     return {
       ...(extra?.tripCode ? { tripCode: extra.tripCode } : {}),
@@ -801,10 +882,10 @@ export default function Planner() {
       return;
     }
 
-    const totalWeight = draftStops.reduce((n, s) => n + s.netweight, 0);
+    const totalWeight = draftStops.reduce((n, s) => n + s.netWeight, 0);
     const deliveries  = draftStops.filter((s) => s.type === "DROP").length;
     const pickupCount = draftStops.filter((s) => s.type === "PICKUP").length;
-    const totalVol    = draftStops.reduce((n, s) => n + s.vol, 0);
+    const totalVol    = draftStops.reduce((n, s) => n + s.volume, 0);
     const totalQty    = draftStops.reduce((n, s) => n + s.qty, 0);
     const distanceKm  = Math.round(40 + draftStops.length * 12 + Math.random() * 30);
     const travelMin   = Math.round(60 + draftStops.length * 18);
@@ -1391,7 +1472,7 @@ async function groupUnlock() {
         const missing = t.stops.filter(s => !s.lat || !s.lng);
         if (missing.length) throw new Error(`${missing.length} stop(s) missing coordinates`);
         const startSec = hhmmToSec("07:30");
-        const capGrams = Math.round((t.vehicle.capacity ?? 60000) * 1000);
+        const capGrams = Math.round((t.vehicle.capacityWeight ?? 60000) * 1000);
         const vroomVehicle = {
           id: 1, description: t.vehicle.code,
           start: [depLng, depLat] as [number, number],
@@ -1405,8 +1486,8 @@ async function groupUnlock() {
           location: [s.lng, s.lat] as [number, number],
           service: 1800,
           ...(s.type === "DROP"
-            ? { delivery: [Math.round((s.netweight || 1) * 1000)] as [number] }
-            : { pickup:   [Math.round((s.netweight || 1) * 1000)] as [number] }),
+            ? { delivery: [Math.round((s.netWeight || 1) * 1000)] as [number] }
+            : { pickup:   [Math.round((s.netWeight || 1) * 1000)] as [number] }),
           priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
         }));
         const result = await callVroom([vroomVehicle], vroomJobs);

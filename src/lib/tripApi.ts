@@ -26,8 +26,8 @@ export interface TripStop {
   routeCode: string;
   priority: string;
   qty: number;
-  netweight: number;
-  vol: number;
+  netWeight: number;
+  volume: number;
   lat: number;
   lng: number;
   // Added by optimisation (initially empty):

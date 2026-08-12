@@ -90,8 +90,8 @@ export function ActiveTourPanel({
   const startLabel = tripStartTime || (hasOptTimes ? "07:30" : "");
   const endLabel = tripEndTime || (hasOptTimes && stops.length ? (stops[stops.length - 1].departureTime || "") : "");
 
-  const totalWeight = stops.reduce((n, s) => n + s.netweight, 0);
-  const totalVol    = stops.reduce((n, s) => n + s.vol, 0);
+  const totalWeight = stops.reduce((n, s) => n + s.netWeight, 0);
+  const totalVol    = stops.reduce((n, s) => n + s.volume, 0);
   const totalQty    = stops.reduce((n, s) => n + stopQty(s), 0);
   const weightUnit  = stops.find((s) => s.weightUnit)?.weightUnit || "KG";
   const dropCount   = stops.filter((s) => s.type === "DROP").length;
@@ -102,7 +102,7 @@ export function ActiveTourPanel({
     ? `${String(Math.floor(travelMins / 60)).padStart(2,"0")}:${String(travelMins % 60).padStart(2,"0")}`
     : "—";
 
-  const capPct = vehicle ? Math.min(100, Math.round((totalWeight / vehicle.capacity) * 100)) : 0;
+  const capPct = vehicle ? Math.min(100, Math.round((totalWeight / vehicle.capacityWeight) * 100)) : 0;
   const capColor = capPct > 90 ? "bg-rose-500" : capPct > 70 ? "bg-amber-500" : "bg-emerald-500";
   const hasAssignment = !!(vehicle || driver || stops.length);
 
@@ -428,8 +428,8 @@ export function ActiveTourPanel({
                 <div><span className="text-muted-foreground">Address:</span> <span>{selectedStopData.address}</span></div>
                 <div><span className="text-muted-foreground">Postal:</span> <span>{selectedStopData.postalCity}</span></div>
                 <div><span className="text-muted-foreground">Qty:</span> <span className="font-mono">{stopQty(selectedStopData)} UN</span></div>
-                <div><span className="text-muted-foreground">Weight:</span> <span className="font-mono">{selectedStopData.netweight}{selectedStopData.weightUnit || "KG"}</span></div>
-                <div><span className="text-muted-foreground">Vol:</span> <span className="font-mono">{selectedStopData.vol}m³</span></div>
+                <div><span className="text-muted-foreground">Weight:</span> <span className="font-mono">{selectedStopData.netWeight}{selectedStopData.weightUnit || "KG"}</span></div>
+                <div><span className="text-muted-foreground">Vol:</span> <span className="font-mono">{selectedStopData.volume}m³</span></div>
               </div>
             </div>
           </motion.div>
@@ -652,8 +652,8 @@ export function ActiveTourPanel({
                       location: [s.lng, s.lat] as [number,number],
                       service: 1800,  // 30 min default
                       ...(s.type === "DROP"
-                        ? { delivery: [Math.round((s.netweight || 1) * 1000)] as [number] }
-                        : { pickup:   [Math.round((s.netweight || 1) * 1000)] as [number] }),
+                        ? { delivery: [Math.round((s.netWeight || 1) * 1000)] as [number] }
+                        : { pickup:   [Math.round((s.netWeight || 1) * 1000)] as [number] }),
                       priority: s.priority === "URGENT" ? 10 : s.priority === "LOW" ? 1 : 5,
                     }));
 

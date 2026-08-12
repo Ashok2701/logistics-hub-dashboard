@@ -69,7 +69,7 @@ export function StopRow({
       <td className="px-2 py-1.5 text-xs text-muted-foreground">{stop.routeCode}</td>
       <td className="px-2 py-1.5 text-xs text-muted-foreground max-w-[100px] truncate">{stop.postalCity}</td>
       <td className="px-2 py-1.5 text-xs font-mono whitespace-nowrap">{stopQty(stop)} UN</td>
-      <td className="px-2 py-1.5 text-xs font-mono whitespace-nowrap">{stop.netweight} {stop.weightUnit || "KG"}</td>
+      <td className="px-2 py-1.5 text-xs font-mono whitespace-nowrap">{stop.netWeight} {stop.weightUnit || "KG"}</td>
       <td className="px-2 py-1.5">
         {!used && <GripVertical className="w-3 h-3 text-muted-foreground/30" />}
       </td>

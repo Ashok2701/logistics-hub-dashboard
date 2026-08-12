@@ -137,7 +137,7 @@ export function TripStopListView({
                 </>
               )}
               <td className="px-2.5 py-1.5 font-mono">{stopQty(s)} UN</td>
-              <td className="px-2.5 py-1.5 font-mono">{s.netweight} {s.weightUnit || "KG"}</td>
+              <td className="px-2.5 py-1.5 font-mono">{s.netWeight} {s.weightUnit || "KG"}</td>
               <td className="px-2.5 py-1.5">
                 {onDeleteStop && (
                   <button
