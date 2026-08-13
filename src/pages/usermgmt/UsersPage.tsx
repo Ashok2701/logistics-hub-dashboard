@@ -146,7 +146,7 @@ export default function UsersPage() {
 
   const save = async () => {
     if (!form.username.trim()) { toast.error("Username required"); return; }
-    if (!editingId && !form.password.trim()) { toast.error("Password required"); return; }
+    // if (!editingId && !form.password.trim()) { toast.error("Password required"); return; }
     if (!form.fullName.trim()) { toast.error("Full name required"); return; }
     if (!form.userTypeId) { toast.error("User type required"); return; }
     if (requiresSites && !form.roleId) { toast.error("Role required"); return; }
@@ -184,8 +184,17 @@ export default function UsersPage() {
         userTypeId: form.userTypeId,
         sites: requiresSites ? form.sites : [],
       };
-      if (editingId) { await usersApi.update(editingId, base); toast.success("User updated"); }
-      else { await usersApi.create({ ...base, password: form.password }); toast.success("User created"); }
+if (editingId) {
+  const updatePayload = { ...base };
+  if (form.password.trim()) {
+    updatePayload.password = form.password.trim();
+  }
+  await usersApi.update(editingId, updatePayload);
+  toast.success("User updated");
+} else {
+  await usersApi.create({ ...base, password: form.password });
+  toast.success("User created");
+}
       setView("list"); await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
     finally { setSaving(false); }
@@ -222,12 +231,16 @@ export default function UsersPage() {
                 disabled={!!editingId}
                 className="form-input" placeholder="john" />
             </Field>
-            {!editingId && (
-              <Field label="Password *">
-                <input type="password" value={form.password} onChange={(e) => upd("password", e.target.value)}
-                  className="form-input" placeholder="••••••" />
-              </Field>
-            )}
+<Field label={editingId ? "Password (leave blank to keep current)" : "Password *"}>
+  <input
+    type="password"
+    value={form.password}
+    onChange={(e) => upd("password", e.target.value)}
+    className="form-input"
+    placeholder={editingId ? "••••••" : "••••••"}
+    autoComplete="new-password"
+  />
+</Field>
             <Field label="Full Name *">
               <input value={form.fullName} onChange={(e) => upd("fullName", e.target.value)}
                 className="form-input" placeholder="John Doe" />
