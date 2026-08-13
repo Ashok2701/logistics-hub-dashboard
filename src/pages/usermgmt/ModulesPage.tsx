@@ -60,6 +60,7 @@ export default function ModulesPage() {
       menuPath: draft.menuPath,
       icon: draft.icon,
       displayOrder: Number(draft.displayOrder) || 0,
+      active: draft.active,
     };
     try {
       if (isNew) { await modulesApi.create(payload); toast.success("Module created"); }
