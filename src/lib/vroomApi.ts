@@ -48,6 +48,7 @@ export interface VroomRoute {
   service: number;           // total service seconds
   distance: number;          // total meters
   cost: number;
+  waiting_time: number;      // total waiting seconds
 }
 
 export interface VroomResponse {

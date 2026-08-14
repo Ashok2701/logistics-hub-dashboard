@@ -8,6 +8,7 @@ import type {
   RpVehicle, RpDriver, RpStop, RpStopProduct,
 } from "@/lib/routePlannerApi";
 import type { TripResponseDTO, OptiStatus } from "@/lib/tripApi";
+import { secToHHMM, hhmmToSec } from "@/lib/vroomApi";
 
 export type Vehicle = {
   code: string; vehicleNo: string; departureSite: string; arrivalSite: string;
@@ -149,6 +150,7 @@ export type Trip = {
   updateDate?: string;
   startTime?: string;
   endTime?: string;
+  totalTime?: number;
 };
 
 // ═══════════════════════════════════════════════════════
@@ -192,7 +194,8 @@ export function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip 
     seq: 0,
     vehicle, driver, stops,
     distanceKm: Number(r.totalDistance) || 0,
-    travelTimeMin: 0,
+    travelTimeMin: hhmmToSec(r.travelTime) || 0,
+    totalTime: hhmmToSec(r.totalTime) || 0,
     totalWeight: Number(r.totalWeight) || 0,
     totalVol: Number(r.totalVolume ?? 0) || 0,
     totalQty: 0,

@@ -89,17 +89,39 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
   const retTime = String(pick("heuarr","retTime") ?? "").slice(0, 5) || "—";
 
   // Totals derived from vrDetails
-  const totalKm  = rows.reduce((sum: number, r: any) => sum + (Number(r.fromprevdist ?? r.fromPrevDist ?? 0) || 0), 0);
-  const totalMin = rows.reduce((sum: number, r: any) => {
-    const t = String(r.fromprevtra ?? r.fromprevtravel ?? r.fromPrevTravel ?? "0:0");
-    const [h, m] = t.split(":").map((x: string) => Number(x) || 0);
-    return sum + (h * 60 + m);
-  }, 0);
+  // const totalKm  = rows.reduce((sum: number, r: any) => sum + (Number(r.fromprevdist ?? r.fromPrevDist ?? 0) || 0), 0);
+  // const totalMin = rows.reduce((sum: number, r: any) => {
+  //   const t = String(r.fromprevtra ?? r.fromprevtravel ?? r.fromPrevTravel ?? "0:0");
+  //   const [h, m] = t.split(":").map((x: string) => Number(x) || 0);
+  //   return sum + (h * 60 + m);
+  // }, 0);
+  // const totalH   = Math.floor(totalMin / 60);
+  // const totalM   = totalMin % 60;
+  // const travelCost = Math.round(totalKm * 0.045);
+  // const distCost   = Math.round(totalKm * 1.5);
+  // const totalCost  = travelCost + distCost;
+
+  // Totals derived from trip (was: rows / vrLoadStock reduces)
+  console.log("RouteManagementDetail: trip", trip);
+  const stops = trip.stops ?? [];
+  const dropStops    = stops.filter((s) => s.type === "DROP");
+  const pickupStops  = stops.filter((s) => s.type !== "DROP");
+
+  const dropWeight   = dropStops.reduce((s, x) => s + (Number(x.netweight) || 0), 0);
+  const dropVolume   = dropStops.reduce((s, x) => s + (Number(x.vol) || 0), 0);
+  const pickupWeight = pickupStops.reduce((s, x) => s + (Number(x.netweight) || 0), 0);
+  const pickupVolume = pickupStops.reduce((s, x) => s + (Number(x.vol) || 0), 0);
+
+  const totalKm  = Number(trip.distanceKm) || 0;
+  const travelMin = Number(trip.travelTimeMin / 60) || 0;
+  const travelH   = Math.floor(travelMin / 60);
+  const travelM   = travelMin % 60;
+  const totalMin = Number(trip.totalTime / 60) || 0;
   const totalH   = Math.floor(totalMin / 60);
   const totalM   = totalMin % 60;
-  const travelCost = Math.round(totalKm * 0.045);
-  const distCost   = Math.round(totalKm * 1.5);
-  const totalCost  = travelCost + distCost;
+  const travelCost = Number(totalKm * 0.045).toFixed(2);
+  const distCost   = Number(totalKm * 1.5).toFixed(2);
+  const totalCost  = (Number(travelCost) + Number(distCost)).toFixed(2);
 
   useEffect(() => {
   setVehicleImgError(false);
@@ -391,9 +413,9 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           </section>
 
           {/* ── Totals ── */}
-          <section>
+          {/* <section>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
-              {/* Total Drops */}
+              Total Drops
               <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                   <span className="w-1 h-4 rounded-full bg-primary" />
@@ -418,7 +440,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                   })()}
                 </div>
               </div>
-              {/* Total Pickups */}
+              Total Pickups
               <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                   <span className="w-1 h-4 rounded-full bg-primary" />
@@ -431,7 +453,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                   <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Avail Volume</span><span className="font-mono text-foreground">50000 GAL</span></div>
                 </div>
               </div>
-              {/* Summary Totals — themed */}
+              Summary Totals — themed
               <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-primary/10">
                   <span className="w-1 h-4 rounded-full bg-primary" />
@@ -442,6 +464,63 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                   <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono text-foreground">{totalMin ? `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM` : "—"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono text-foreground">{rows.length}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono text-foreground">{totalMin ? `${String(totalH + 1).padStart(2,"0")}:${String((totalM + 15) % 60).padStart(2,"0")} HH:MM` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono text-foreground">{travelCost ? `${travelCost} USD` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono text-foreground">{distCost ? `${distCost} USD` : "—"}</span></div>
+                  <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-bold text-foreground">Total Cost</span><span className="font-mono font-black text-base text-primary">{totalCost ? `${totalCost} USD` : "—"}</span></div>
+                </div>
+              </div>
+            </div>
+          </section> */}
+
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
+              {/* Total Drops */}
+              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
+                  <span className="w-1 h-4 rounded-full bg-primary" />
+                  <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Drops</h4>
+                </div>
+                <div className="p-4 space-y-1.5">
+                  {(() => {
+                    const vehMass = Number(trip.vehicle?.capacity) || 60000;
+                    const vehVol  = Number(trip.vehicle?.vol) || 50000;
+                    return (
+                      <>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span className="font-mono font-semibold text-foreground">{dropWeight.toFixed(2)} LB</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Mass</span><span className="font-mono text-foreground">{vehMass.toFixed(2)} LB</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Loading Mass(%)</span><span className="font-mono text-foreground">{dropWeight ? ((dropWeight / vehMass) * 100).toFixed(2) : "0.00"}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Drops Volume</span><span className="font-mono text-foreground">{dropVolume.toFixed(2)} GAL</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Volume</span><span className="font-mono text-foreground">{vehVol} GAL</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Loading Vol(%)</span><span className="font-mono text-foreground">{dropVolume ? ((dropVolume / vehVol) * 100).toFixed(2) : "0.00"}</span></div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+              {/* Total Pickups */}
+              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
+                  <span className="w-1 h-4 rounded-full bg-primary" />
+                  <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Pickups</h4>
+                </div>
+                <div className="p-4 space-y-1.5">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Pickup Weight</span><span className="font-mono font-semibold text-foreground">{pickupWeight.toFixed(2)} LB</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Avail Weight</span><span className="font-mono text-foreground">{(Number(trip.vehicle?.capacity) || 60000).toFixed(2)} LB</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Pickup Volume</span><span className="font-mono text-foreground">{pickupVolume.toFixed(2)} GAL</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Vehicle Avail Volume</span><span className="font-mono text-foreground">{Number(trip.vehicle?.vol) || 50000} GAL</span></div>
+                </div>
+              </div>
+              {/* Summary Totals — themed */}
+              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-primary/10">
+                  <span className="w-1 h-4 rounded-full bg-primary" />
+                  <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Summary Totals</h4>
+                </div>
+                <div className="p-4 space-y-1.5">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-mono font-semibold text-foreground">{totalKm ? `${totalKm} Miles` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Travel Time</span><span className="font-mono text-foreground">{travelMin ? `${String(travelH).padStart(2,"0")}:${String(travelM).padStart(2,"0")} HH:MM` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Order Count</span><span className="font-mono text-foreground">{stops.length}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total Time</span><span className="font-mono text-foreground">{totalMin ? `${String(totalH).padStart(2,"0")}:${String(totalM).padStart(2,"0")} HH:MM` : "—"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Travel Time Cost</span><span className="font-mono text-foreground">{travelCost ? `${travelCost} USD` : "—"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Distance Cost</span><span className="font-mono text-foreground">{distCost ? `${distCost} USD` : "—"}</span></div>
                   <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-bold text-foreground">Total Cost</span><span className="font-mono font-black text-base text-primary">{totalCost ? `${totalCost} USD` : "—"}</span></div>

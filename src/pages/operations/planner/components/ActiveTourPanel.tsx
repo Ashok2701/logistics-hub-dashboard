@@ -650,7 +650,8 @@ export function ActiveTourPanel({
                       id: i + 1,
                       description: s.txn,
                       location: [s.lng, s.lat] as [number,number],
-                      service: 1800,  // 30 min default
+                      // service: Number(s.serviceTime ?? 0),
+                      service: 1800,
                       ...(s.type === "DROP"
                         ? { delivery: [Math.round((s.netWeight || 1) * 1000)] as [number] }
                         : { pickup:   [Math.round((s.netWeight || 1) * 1000)] as [number] }),
@@ -666,6 +667,7 @@ export function ActiveTourPanel({
                     const endTime  = secToHHMM(endStep ? endStep.arrival : startSec + route.duration);
                     const totalDistKm = (route.distance / 1000).toFixed(1);
                     const travelHHMM  = secToHHMM(route.duration);
+                    const totalHHMM = secToHHMM(route.duration + route.service + route.waiting_time);
 
                     const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
                       seq: i + 1,
@@ -693,7 +695,7 @@ export function ActiveTourPanel({
                       const { optimiseTrip } = await import("@/lib/tripApi");
                       await optimiseTrip(activeTripCode, {
                         orderMode: optOrder, startTime: optStartTime, endTime,
-                        travelTime: travelHHMM, totalTime: travelHHMM,
+                        travelTime: travelHHMM, totalTime: totalHHMM,
                         totalDistance: totalDistKm, uomDistance: "km",
                         totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
                         stopResults,
