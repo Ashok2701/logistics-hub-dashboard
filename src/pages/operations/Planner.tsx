@@ -32,7 +32,6 @@ import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi"
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
 import { transportApi } from "@/lib/transportApi";
 import { x3SoapApi } from "@/lib/x3SoapApi";
-import { x3SoapDirect } from "@/lib/x3SoapDirect";
 import {
   type Vehicle, type Driver, type Stop, type TripStatus, type Trip,
   mapVehicle, mapDriver, mapStop, statusColor, tripFromApi,
@@ -1589,33 +1588,52 @@ async function groupUnlock() {
   }
 
   // Called from the detail screen when user clicks "LVS Confirm":
-  // X1CONFIRM (I_XNUMPC = trip code / VR number), then refresh vrLoadStock.
-  //
-  // Retrying the direct-browser call (x3SoapDirect) per explicit request —
-  // this previously hit a CORS error even after enabling
-  // access-control-allow-origin: "*" on the Syracuse server (see
-  // x3SoapDirect.ts for the CORS-preflight/credential-exposure tradeoff
-  // notes). If this still fails with a CORS or network error, the
-  // backend-proxy version (x3SoapApi.confirmRoute) is the fallback that's
-  // confirmed to at least reach the SOAP endpoint without a browser
-  // cross-origin restriction — swap the one line below back if needed.
+  // XX10CRESDH — confirms every document on the trip individually (each
+  // becomes a delivery in X3), replacing the previous per-trip
+  // X1CONFIRM call. Response includes a per-document result array
+  // (grp1: [{ i_xprhnum, o_xstatus, o_xmess }, ...]) — surface a clear
+  // summary rather than a single pass/fail toast, since some documents
+  // can succeed while others fail in the same call.
   async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
     if (!trip.tripCode) {
       toast({ title: "LVS Confirm failed", description: "No trip code found for this trip.", variant: "destructive" });
       return;
     }
+    const docNums = (trip.stops ?? []).map((s) => s.txn || s.id).filter(Boolean);
+    if (docNums.length === 0) {
+      toast({ title: "LVS Confirm failed", description: "No documents found on this trip.", variant: "destructive" });
+      return;
+    }
     try {
-      const resp = await x3SoapDirect.confirmRoute(trip.tripCode);
+      const resp = await x3SoapApi.confirmDeliveries(docNums);
       if (resp && (resp as any).error) {
         throw new Error((resp as any).error);
       }
 
-      toast({ title: "LVS Confirmed", description: lvsNum });
+      const rows: Array<{ i_xprhnum?: string; o_xstatus?: string; o_xmess?: string }> = (resp as any)?.grp1 ?? [];
+      const failed = rows.filter((r) => String(r.o_xstatus) !== "2");
+
+      if (rows.length === 0) {
+        // Fallback: X3 responded but not in the expected table shape —
+        // still treat as success rather than block the user, matching
+        // how other X3 calls here handle an unexpected-but-ok response.
+        toast({ title: "LVS Confirmed", description: lvsNum });
+      } else if (failed.length === 0) {
+        toast({ title: "LVS Confirmed", description: `${rows.length} document${rows.length !== 1 ? "s" : ""} confirmed` });
+      } else {
+        toast({
+          title: `${rows.length - failed.length}/${rows.length} documents confirmed`,
+          description: failed.map((f) => `${f.i_xprhnum}: ${f.o_xmess || "failed"}`).join("; "),
+          variant: "destructive",
+        });
+      }
+
       await loadVrData(trip.tripCode);
     } catch (e: any) {
       toast({ title: "LVS Confirm failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     }
   }
+
 
   // Called from the detail screen when user clicks "Load Truck":
   // X10CSTKMTV (I_XLVSNUM = LVS number) — moves stock onto the vehicle

@@ -51,6 +51,15 @@ export const x3SoapApi = {
   confirmRoute: (vrNumber: string) =>
     request<Record<string, any>>(`/x3/confirm-route${qs({ vrNumber })}`, { method: "POST" }),
 
+  /** XX10CRESDH — LVS Confirm: confirms a batch of documents, each
+   *  creating a delivery in X3. Response includes a "grp1" array with
+   *  one { i_xprhnum, o_xstatus, o_xmess } entry per document. */
+  confirmDeliveries: (docNums: string[]) =>
+    request<Record<string, any>>(`/x3/confirm-deliveries`, {
+      method: "POST",
+      body: JSON.stringify(docNums),
+    }),
+
   /** X10CSTKMTV — Load Truck: move stock onto the vehicle for an LVS (I_XLVSNUM = LVS number) */
   loadTruck: (lvsNum: string) =>
     request<Record<string, any>>(`/x3/load-truck${qs({ lvsNum })}`, { method: "POST" }),
