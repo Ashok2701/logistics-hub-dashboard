@@ -31,7 +31,6 @@ import { vehicleDriverAssignmentApi, type VehicleDriverAssignment } from "@/lib/
 import { callVroom, secToHHMM, hhmmToSec, type VroomStep } from "@/lib/vroomApi";
 import { tripApi, type TripResponseDTO, type OptiStatus } from "@/lib/tripApi";
 import { transportApi } from "@/lib/transportApi";
-import { x3SoapApi } from "@/lib/x3SoapApi";
 import {
   type Vehicle, type Driver, type Stop, type TripStatus, type Trip,
   mapVehicle, mapDriver, mapStop, statusColor, tripFromApi,
@@ -1588,27 +1587,19 @@ async function groupUnlock() {
   }
 
   // Called from the detail screen when user clicks "LVS Confirm":
-  // XX10CRESDH — confirms every document on the trip individually (each
-  // becomes a delivery in X3), replacing the previous per-trip
-  // X1CONFIRM call. Response includes a per-document result array
-  // (grp1: [{ i_xprhnum, o_xstatus, o_xmess }, ...]) — surface a clear
-  // summary rather than a single pass/fail toast, since some documents
-  // can succeed while others fail in the same call.
+  // now goes through the backend's /lvs-confirm endpoint, which calls
+  // X3's XX10CRESDH AND sets xr_lvsheader.confirmed_flag atomically on
+  // success — previously this only called X3 directly and never
+  // touched our own confirmed/load flags at all, so nothing tracked
+  // whether LVS Confirm had actually happened.
   async function handleLvsConfirmFromDetail(trip: Trip, lvsNum: string) {
     if (!trip.tripCode) {
       toast({ title: "LVS Confirm failed", description: "No trip code found for this trip.", variant: "destructive" });
       return;
     }
-    const docNums = (trip.stops ?? []).map((s) => s.txn || s.id).filter(Boolean);
-    if (docNums.length === 0) {
-      toast({ title: "LVS Confirm failed", description: "No documents found on this trip.", variant: "destructive" });
-      return;
-    }
     try {
-      const resp = await x3SoapApi.confirmDeliveries(docNums);
-      if (resp && (resp as any).error) {
-        throw new Error((resp as any).error);
-      }
+      const result = await tripApi.confirmLvsAction(trip.tripCode);
+      const resp = result.x3Response;
 
       const rows: Array<{ i_xprhnum?: string; o_xstatus?: string; o_xmess?: string }> = (resp as any)?.grp1 ?? [];
       const failed = rows.filter((r) => String(r.o_xstatus) !== "2");
@@ -1634,20 +1625,19 @@ async function groupUnlock() {
     }
   }
 
-
-  // Called from the detail screen when user clicks "Load Truck":
-  // X10CSTKMTV (I_XLVSNUM = LVS number) — moves stock onto the vehicle
-  // for this LVS, then refresh vrLoadStock. Same backend-proxy switch as
-  // LVS Confirm above, same CORS reasoning.
+  // Called from the detail screen when user clicks "Load Truck": goes
+  // through the backend's /load-truck endpoint — blocked server-side
+  // with a clear message if LVS Confirm hasn't succeeded yet, then
+  // calls X3's X10CSTKMTV and sets xr_lvsheader.load_flag on success.
   async function handleLoadTruckFromDetail(trip: Trip, lvsNum: string) {
+    if (!trip.tripCode) {
+      toast({ title: "Load Truck failed", description: "No trip code found for this trip.", variant: "destructive" });
+      return;
+    }
     try {
-      const resp = await x3SoapApi.loadTruck(lvsNum);
-      if (resp && (resp as any).error) {
-        throw new Error((resp as any).error);
-      }
-
+      await tripApi.loadTruckAction(trip.tripCode);
       toast({ title: "Truck Loaded", description: lvsNum });
-      if (trip.tripCode) await loadVrData(trip.tripCode);
+      await loadVrData(trip.tripCode);
     } catch (e: any) {
       toast({ title: "Load Truck failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     }

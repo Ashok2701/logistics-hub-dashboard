@@ -275,6 +275,33 @@ export async function unlockTrip(tripCode: string): Promise<TripRecord> {
   return handle<TripRecord>(res);
 }
 
+// LVS Confirm (XX10CRESDH, per-document) — sets xr_lvsheader.confirmed_flag
+// server-side on success. Response shape differs from lock/validate/unlock
+// (no TripRecord — trip status doesn't change here), so not reusing
+// handle<TripRecord>.
+export interface LvsActionResult {
+  message: string;
+  tripCode: string;
+  action: string;
+  x3Response: Record<string, any>;
+}
+
+export async function confirmLvsAction(tripCode: string): Promise<LvsActionResult> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/lvs-confirm`, {
+    method: "POST", headers: authHeaders(),
+  });
+  return handle<LvsActionResult>(res);
+}
+
+// Load Truck (X10CSTKMTV) — blocked server-side unless LVS Confirm has
+// already succeeded; sets xr_lvsheader.load_flag on success.
+export async function loadTruckAction(tripCode: string): Promise<LvsActionResult> {
+  const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/load-truck`, {
+    method: "POST", headers: authHeaders(),
+  });
+  return handle<LvsActionResult>(res);
+}
+
 // ── X3 lock / validate / unlock (group) ────────────────────────────
 export interface GroupActionResult {
   tripCode: string;
@@ -317,4 +344,5 @@ export const tripApi = {
   updateTrip,
   lockTrip, validateTrip, unlockTrip,
   lockTripsGroup, validateTripsGroup, unlockTripsGroup,
+  confirmLvsAction, loadTruckAction,
 };
