@@ -165,7 +165,13 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
               //   Validated, confirmed, loaded → 3 (Unload Truck active)
               const status = String((trip as any).optiStatus ?? trip.status ?? "").toLowerCase();
               const confirmed = stock0?.confirmedFlag === 1 || stock0?.xvalflg === 1;
-              const loaded = stock0?.loadFlag === 1 || stock0?.xloadflg === 1;
+              // Require confirmed AND loaded for stage 3, not loaded
+              // alone — loaded should never be true without confirmed
+              // (the backend blocks Load Truck unless confirmed_flag is
+              // already set), but defends against stale/legacy LVS rows
+              // from before that guard existed showing a misleadingly
+              // "fully done" UI when they're actually inconsistent.
+              const loaded = confirmed && (stock0?.loadFlag === 1 || stock0?.xloadflg === 1);
               const stage =
                 status === "locked" ? 0 :
                 status !== "validated" ? -1 :
