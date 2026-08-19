@@ -214,8 +214,32 @@ export default function Planner() {
   }, [allStops, agDocTab, agRouteCode, agDocSearch, agUsedStopIds, draftStopIds]);
 
   const agDateInvalid = !!(agStartDate && agEndDate && agStartDate > agEndDate);
-  const agCanSubmit =
-    agVehSel.size >= 1 && agDrvSel.size >= 1 && (agDropSel.size + agPickSel.size) >= 1 && !agDateInvalid;
+
+    // Vehicle -> driver assigned to it (Fleet > Vehicle-Driver) for the
+  // currently selected planner date, if any. Only considers active
+  // assignments whose [startDate, endDate] window includes `date`.
+  const assignedDriverByVehicle = useMemo(() => {
+    const map = new Map<string, VehicleDriverAssignment>();
+    if (!date) return map;
+    for (const a of vehicleAssignments) {
+      if (!a.active) continue;
+      if (a.startDate && a.startDate > date) continue;
+      if (a.endDate && a.endDate < date) continue;
+      map.set(a.vehicleCode, a);
+    }
+    return map;
+  }, [vehicleAssignments, date]);
+
+    const agVehiclesNeedingDriver = useMemo(
+  () => Array.from(agVehSel).filter(code => !assignedDriverByVehicle.has(code)),
+  [agVehSel, assignedDriverByVehicle]
+);
+
+const agCanSubmit =
+  agVehSel.size >= 1 &&
+  (agDropSel.size + agPickSel.size) >= 1 &&
+  !agDateInvalid &&
+  agVehiclesNeedingDriver.length <= agDrvSel.size;
 
 
   function agToggle(set: Set<string>, setter: (s: Set<string>) => void, id: string) {
@@ -294,11 +318,24 @@ export default function Planner() {
       const { createTrip } = await import("@/lib/tripApi");
       let createdCount = 0;
 
+      const manualDriverQueue = Array.from(agDrvSel);
+let manualIdx = 0;
+
       for (const route of result.routes) {
         const vehCode  = route.description;
         const vehObj   = selVehicles.find(v => v.code === vehCode);
-        const driverId = [...agDrvSel][0] ?? "";
-        const driverObj = apiDrivers.find(d => d.id === driverId);
+  const assignment = assignedDriverByVehicle.get(vehCode);
+  let driverId: string;
+  let driverObj: Driver | undefined;
+
+  if (assignment) {
+    driverObj = apiDrivers.find(d => d.id === assignment.driverId);
+    driverId  = driverObj?.id ?? assignment.driverId;
+  } else {
+    driverId  = manualDriverQueue[manualIdx] ?? "";
+    driverObj = apiDrivers.find(d => d.id === driverId);
+    manualIdx++;
+  }
 
         const jobSteps = route.steps.filter((st: VroomStep) => st.type === "job");
         if (!jobSteps.length) continue;
@@ -496,21 +533,6 @@ export default function Planner() {
 
   // ── Derived datasets ───────────────────────────────────
   const usedStopIds = useMemo(() => new Set(trips.flatMap((t) => t.stops.map((s) => s.id))), [trips]);
-
-  // Vehicle -> driver assigned to it (Fleet > Vehicle-Driver) for the
-  // currently selected planner date, if any. Only considers active
-  // assignments whose [startDate, endDate] window includes `date`.
-  const assignedDriverByVehicle = useMemo(() => {
-    const map = new Map<string, VehicleDriverAssignment>();
-    if (!date) return map;
-    for (const a of vehicleAssignments) {
-      if (!a.active) continue;
-      if (a.startDate && a.startDate > date) continue;
-      if (a.endDate && a.endDate < date) continue;
-      map.set(a.vehicleCode, a);
-    }
-    return map;
-  }, [vehicleAssignments, date]);
 
   const vehicles = useMemo(() =>
     apiVehicles.filter((v) =>
@@ -2436,7 +2458,13 @@ onConfirm={() => {
                               <td className="px-2 py-1.5 font-mono">{v.code}</td>
                               <td className="px-2 py-1.5">{v.vehicleNo}</td>
                               <td className="px-2 py-1.5">{v.category}</td>
-                              <td className="px-2 py-1.5">{v.driverName || "—"}</td>
+                              <td className="px-2 py-1.5">
+  {assignedDriverByVehicle.get(v.code)
+    ? <span>
+        {assignedDriverByVehicle.get(v.code)!.driverId}
+      </span>
+    : <span>—</span>}
+</td>
                               <td className="px-2 py-1.5">
                                 <span className={cn(
                                   "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium",
