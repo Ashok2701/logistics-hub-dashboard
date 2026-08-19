@@ -242,7 +242,7 @@ export default function DocumentConfiguration() {
             />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{filtered.length} items</p>
+        <p className="text-xs text-muted-foreground">{filtered.length} Items</p>
       </div>
 
       <DataTableShell>

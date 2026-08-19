@@ -231,7 +231,7 @@ export default function VehicleDriverAssignment() {
           <input placeholder="Search assignments…" value={search} onChange={(e) => setSearch(e.target.value)}
             className="w-full h-9 pl-10 pr-4 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 shadow-soft" />
         </div>
-        <p className="text-xs text-muted-foreground">{filtered.length} assignment{filtered.length !== 1 ? "s" : ""}</p>
+        <p className="text-xs text-muted-foreground">{filtered.length} Assignment{filtered.length !== 1 ? "s" : ""}</p>
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-card overflow-x-auto">

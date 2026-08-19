@@ -329,7 +329,7 @@ export default function Drivers() {
           <input placeholder="Search drivers…" value={search} onChange={(e) => setSearch(e.target.value)}
             className="w-full h-9 pl-10 pr-4 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 shadow-soft" />
         </div>
-        <p className="text-xs text-muted-foreground">{filtered.length} driver{filtered.length !== 1 ? "s" : ""}</p>
+        <p className="text-xs text-muted-foreground">{filtered.length} Driver{filtered.length !== 1 ? "s" : ""}</p>
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-card overflow-x-auto">
