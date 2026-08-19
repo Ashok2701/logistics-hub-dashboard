@@ -47,10 +47,6 @@ export const x3SoapApi = {
   confirmLvs: (lvsNum: string) =>
     request<Record<string, any>>(`/x3/confirm-lvs${qs({ lvsNum })}`, { method: "POST" }),
 
-  /** X1CONFIRM — confirm the route/trip itself in X3 (I_XNUMPC = VR number) */
-  confirmRoute: (vrNumber: string) =>
-    request<Record<string, any>>(`/x3/confirm-route${qs({ vrNumber })}`, { method: "POST" }),
-
   /** XX10CRESDH — LVS Confirm: confirms a batch of documents, each
    *  creating a delivery in X3. Response includes a "grp1" array with
    *  one { i_xprhnum, o_xstatus, o_xmess } entry per document. */
