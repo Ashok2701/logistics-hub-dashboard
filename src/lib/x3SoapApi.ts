@@ -56,10 +56,6 @@ export const x3SoapApi = {
       body: JSON.stringify(docNums),
     }),
 
-  /** X10CSTKMTV — Load Truck: move stock onto the vehicle for an LVS (I_XLVSNUM = LVS number) */
-  loadTruck: (lvsNum: string) =>
-    request<Record<string, any>>(`/x3/load-truck${qs({ lvsNum })}`, { method: "POST" }),
-
   /** XX10CVTLOC — create/register a vehicle's location in X3
    *  (xfcy = site/facility code, vehLoc = vehicle code,
    *  xTypeFlg = location type flag, defaults to "1"). Response
