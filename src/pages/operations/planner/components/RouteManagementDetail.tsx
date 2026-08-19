@@ -151,17 +151,27 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
 
             {/* Workflow steps (right) */}
             {(() => {
-              // Stage index derived from trip status:
+              // Stage index derived from trip status AND the LVS record's
+              // own confirmed_flag/load_flag (stock0, from xr_lvsheader
+              // via GET .../loadvehstk) — trip.status alone stays
+              // "Validated" through both LVS Confirm and Load Truck (only
+              // the LVS record's own flags actually track those two
+              // steps), so relying on trip.status alone meant the UI
+              // never advanced past "LVS Confirm active" even after it
+              // had genuinely succeeded and confirmed_flag was set.
               //   Locked     → 0 (LVS Create is active)
-              //   Validated  → 1 (LVS Confirm is active; LVS Create is done)
-              //   Loaded     → 2 (Load Truck done; Unload active)
-              //   Unloaded   → 3 (all done)
+              //   Validated, not confirmed → 1 (LVS Confirm is active)
+              //   Validated, confirmed, not loaded → 2 (Load Truck active)
+              //   Validated, confirmed, loaded → 3 (Unload Truck active)
               const status = String((trip as any).optiStatus ?? trip.status ?? "").toLowerCase();
+              const confirmed = stock0?.confirmedFlag === 1 || stock0?.xvalflg === 1;
+              const loaded = stock0?.loadFlag === 1 || stock0?.xloadflg === 1;
               const stage =
-                status === "unloaded" ? 3 :
-                status === "loaded"   ? 2 :
-                status === "validated"? 1 :
-                status === "locked"   ? 0 : -1;
+                status === "locked" ? 0 :
+                status !== "validated" ? -1 :
+                loaded    ? 3 :
+                confirmed ? 2 :
+                            1;
 
               const steps = [
                 { key: "lvs-create",  label: "LVS Create",  icon: RouteIcon, onClick: async () => {
