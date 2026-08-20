@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Truck, Users, CheckCheck, ChevronLeft, Loader2, Package,
-  Route as RouteIcon, CheckCircle2,
+  Route as RouteIcon, CheckCircle2, Package2, Activity, MapPin, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -126,6 +126,51 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
   useEffect(() => {
   setVehicleImgError(false);
 }, [H]);
+
+  // ── Tab navigation: refs + smooth-scroll, matching the reference screen ──
+  const refRouteInfo   = useRef<HTMLDivElement>(null);
+  const refTimeTrack   = useRef<HTMLDivElement>(null);
+  const refTransactions= useRef<HTMLDivElement>(null);
+  const refVehicleStock= useRef<HTMLDivElement>(null);
+  const refDriverActivity = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState("route-info");
+
+  const tabs = [
+    { key: "route-info",   label: "Route Information",       icon: RouteIcon,  ref: refRouteInfo },
+    { key: "time-track",   label: "Time Tracking",            icon: Clock,      ref: refTimeTrack },
+    { key: "transactions", label: "Document Details",         icon: Package,    ref: refTransactions },
+    { key: "stock",        label: "Vehicle Stock Details",     icon: Package2,   ref: refVehicleStock },
+    { key: "activity",     label: "Driver Activity Monitoring",icon: Activity,   ref: refDriverActivity },
+  ];
+
+  const scrollToTab = (key: string, ref: React.RefObject<HTMLDivElement>) => {
+    setActiveTab(key);
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Vehicle Stock Details — product-level totals across every stop on
+  // this trip, grouped by item code. Built entirely from stop.products
+  // (the same per-stop product data ProductDetailsDialog already uses),
+  // no new backend call needed for the Planned Quantity column.
+  // Delivered/Variance depend on mobile app confirm-arrival/departure
+  // data, which doesn't exist yet — shown as "—" until that's built.
+  const vehicleStockRows = (() => {
+    const byItem = new Map<string, { itemCode: string; description: string; plannedQty: number; pickupDrop: string }>();
+    for (const s of stops) {
+      for (const p of (s as any).products ?? []) {
+        const code = p.itemCode ?? "—";
+        const existing = byItem.get(code);
+        const desc = [p.itemDesc1, p.itemDesc2].filter(Boolean).join(" ") || existing?.description || "—";
+        const qty = Number(p.qtyOrdered) || 0;
+        if (existing) {
+          existing.plannedQty += qty;
+        } else {
+          byItem.set(code, { itemCode: code, description: desc, plannedQty: qty, pickupDrop: s.type === "DROP" ? "Drop" : "Pickup" });
+        }
+      }
+    }
+    return Array.from(byItem.values());
+  })();
 
   return (
     <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
@@ -253,10 +298,33 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           </div>
         </div>
 
+        {/* ── Tab navigation — click to smooth-scroll to that section ── */}
+        <div className="sticky top-[52px] z-10 bg-card border-b border-border px-5 flex items-center gap-1 overflow-x-auto shadow-sm">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = activeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => scrollToTab(t.key, t.ref)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2.5 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-colors",
+                  isActive
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="p-5 space-y-4 bg-muted/40 min-h-full">
 
           {/* ── Route info card ── */}
-          <section className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+          <section ref={refRouteInfo} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
             <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
               <span className="w-1 h-4 rounded-full bg-primary" />
               <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Route Information</h3>
@@ -296,24 +364,24 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
 
 
           {/* ── Planning / Actual + Photos ── */}
-          <div className="grid grid-cols-[1fr_auto] gap-4">
+          <div ref={refTimeTrack} className="grid grid-cols-[1fr_auto] gap-4 scroll-mt-24">
             <section className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
               <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                 <span className="w-1 h-4 rounded-full bg-primary" />
-                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Schedule</h3>
+                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Time Tracking</h3>
               </div>
               <div className="p-4 space-y-4">
                 <div>
                   <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Planning
+                    Scheduled
                   </p>
                   <div className="grid grid-cols-4 gap-4 text-[11px]">
                     {[
-                      { label: "Departure Date", value: depDate },
-                      { label: "Departure Time", value: depTime },
-                      { label: "Return Date",    value: retDate },
-                      { label: "Return Time",    value: retTime },
+                      { label: "Scheduled Departure Date", value: depDate },
+                      { label: "Scheduled Departure Time", value: depTime },
+                      { label: "Scheduled Return Date",    value: retDate },
+                      { label: "Scheduled Return Time",    value: retTime },
                     ].map(({ label, value }) => (
                       <div key={label}>
                         <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
@@ -328,10 +396,10 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                     Actual
                   </p>
                   <div className="grid grid-cols-4 gap-4 text-[11px]">
-                    {["Departure Date","Departure Time","Return Date","Return Time"].map((label) => (
+                    {["Actual Departure Date","Actual Departure Time","Actual Return Date","Actual Return Time"].map((label) => (
                       <div key={label}>
                         <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
-                        <p className="text-muted-foreground/60">—</p>
+                        <p className="text-muted-foreground/60" title="Requires the mobile app's Departure/Checkout service — not recorded yet">—</p>
                       </div>
                     ))}
                   </div>
@@ -369,7 +437,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           </div>
 
           {/* ── Transactions card ── */}
-          <section className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+          <section ref={refTransactions} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
               <div className="flex items-center gap-2">
                 <span className="w-1 h-4 rounded-full bg-primary" />
@@ -427,6 +495,78 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                   {rows.length === 0 && (
                     <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No transactions on this trip</td></tr>
                   )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* ── Vehicle Stock Details ── */}
+          <section ref={refVehicleStock} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
+            <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
+              <div className="flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-primary" />
+                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Vehicle Stock Details</h3>
+              </div>
+              <span className="text-[10px] text-muted-foreground font-medium">{vehicleStockRows.length} product{vehicleStockRows.length === 1 ? "" : "s"}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full" style={{ fontSize: "11px" }}>
+                <thead>
+                  <tr className="bg-muted/50 border-b border-border">
+                    {["Product","Description","Planned Quantity","Delivered Quantity","Variance Quantity","Pick Up/Drop"].map(h => (
+                      <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {vehicleStockRows.map((r, i) => (
+                    <tr key={r.itemCode + i} className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
+                      <td className="px-2 py-2 font-mono text-primary font-semibold">{r.itemCode}</td>
+                      <td className="px-2 py-2 text-foreground truncate max-w-[220px]">{r.description}</td>
+                      <td className="px-2 py-2 font-mono text-right text-foreground">{r.plannedQty}</td>
+                      <td className="px-2 py-2 font-mono text-right text-muted-foreground/60" title="Requires the mobile app's delivery confirmation — not recorded yet">—</td>
+                      <td className="px-2 py-2 font-mono text-right text-muted-foreground/60">—</td>
+                      <td className="px-2 py-2 text-foreground">{r.pickupDrop}</td>
+                    </tr>
+                  ))}
+                  {vehicleStockRows.length === 0 && (
+                    <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No product data on this trip's documents</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* ── Driver Activity Monitoring ── */}
+          <section ref={refDriverActivity} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
+            <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
+              <div className="flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-primary" />
+                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Driver Activity Monitoring</h3>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full" style={{ fontSize: "11px" }}>
+                <thead>
+                  <tr className="bg-muted/50 border-b border-border">
+                    {["VR Status","Delivery No.","Customer","Date","Time","Reasons","Latitude","Longitude"].map(h => (
+                      <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* No data source yet — populated once the mobile app's
+                      check-in / confirm-arrival / departure services
+                      exist and log driver actions with GPS + timestamps. */}
+                  <tr>
+                    <td colSpan={8} className="px-3 py-8 text-center">
+                      <div className="flex flex-col items-center gap-1.5 text-muted-foreground">
+                        <MapPin className="w-5 h-5 opacity-40" />
+                        <span className="text-xs">No driver activity recorded yet</span>
+                        <span className="text-[10px] opacity-70">Populated once the driver checks in from the mobile app</span>
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
