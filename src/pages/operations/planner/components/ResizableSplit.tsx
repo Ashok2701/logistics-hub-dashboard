@@ -45,11 +45,11 @@ export function ResizableSplit({
 
 
   return (
-    <div>
+    <div className="h-full min-h-0">
       {/* Split panels */}
-      <div ref={containerRef} className="flex gap-0 relative" style={{ minHeight: 420 }}>
+      <div ref={containerRef} className="flex gap-0 relative h-full min-h-0 overflow-hidden">
         {/* Left panel */}
-        <div style={{ width: `calc(${leftPct}% - 5px)` }} className="flex-shrink-0 min-w-0">
+        <div style={{ width: `calc(${leftPct}% - 5px)` }} className="flex-shrink-0 min-w-0 min-h-0 h-full overflow-hidden">
           {left}
         </div>
 
@@ -78,7 +78,7 @@ export function ResizableSplit({
         </div>
 
         {/* Right panel */}
-        <div style={{ width: `calc(${100 - leftPct}% - 5px)` }} className="flex-shrink-0 min-w-0">
+        <div style={{ width: `calc(${100 - leftPct}% - 5px)` }} className="flex-shrink-0 min-w-0 min-h-0 h-full overflow-hidden">
           {right}
         </div>
 

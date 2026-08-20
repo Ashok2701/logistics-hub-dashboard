@@ -59,7 +59,7 @@ export function TripStopListView({
   }
 
   return (
-    <div className="flex-1 overflow-auto min-h-[320px]">
+    <div className="h-full min-h-0 overflow-y-auto overflow-x-auto">
             {locked && (
         <div className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-amber-700 bg-amber-50 border-b border-amber-200">
           <Lock className="w-3 h-3" />

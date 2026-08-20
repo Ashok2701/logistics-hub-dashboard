@@ -2106,7 +2106,7 @@ onConfirm={() => {
           </div>
 
           {/* ── TRIPS & MAP ── */}
-          <div style={{ minHeight: "40vh" }}>
+          <div className="h-[45vh] min-h-0 overflow-hidden mt-2.5">
           {/* ── BOTTOM: Resizable Trips | Map split ──────────── */}
           <ResizableSplit
             defaultLeftPct={60}
@@ -2114,12 +2114,12 @@ onConfirm={() => {
             maxPct={80}
             leftLabel={`${filteredTrips.length} trip${filteredTrips.length !== 1 ? "s" : ""}${selectedTripIds.size ? ` (${selectedTripIds.size} selected)` : ""}`}
             left={
-              <div className="flex h-full overflow-hidden rounded-xl border border-border/60 shadow-sm">
+              <div className="flex h-full min-h-0 overflow-hidden rounded-xl border border-border/60 shadow-sm">
 
                 {/* Option 3: inline expand handled per-row below */}
 
                 {/* ── TRIPS TABLE ── */}
-                <div className="bg-card flex flex-col h-full flex-1 overflow-hidden relative">
+                <div className="bg-card flex flex-col h-full min-h-0 flex-1 overflow-hidden relative">
 
 
                 {/* Header */}
@@ -2145,7 +2145,7 @@ onConfirm={() => {
                   <span className="text-xs text-muted-foreground ml-auto">({filteredTrips.length})</span>
                 </div>
                 {/* Table */}
-                <div className="overflow-auto flex-1">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
                   <table className="w-full min-w-[480px]" style={{ fontSize: "11px" }}>
                     <thead className="bg-muted/30 sticky top-0 z-10">
                       <tr>
@@ -2312,7 +2312,7 @@ onConfirm={() => {
               </div>
             }
             right={
-              <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full">
+              <div className="bg-card rounded-xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full min-h-0">
                 <div className="px-4 py-2.5 border-b border-border/60 bg-muted/20 flex items-center gap-2 flex-shrink-0">
                   <h3 className="text-sm font-semibold">Route Preview</h3>
                   <div className={cn("flex items-center gap-0.5 border border-border rounded-md p-0.5 ml-auto")}>
@@ -2328,7 +2328,7 @@ onConfirm={() => {
                     </button>
                   </div>
                 </div>
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-hidden">
                   {tripView === "map" ? <RouteMapView trip={selectedTrip} site={sites.find(s => s.siteCode === site) ?? null} sites={sites} /> : <TripStopListView trip={selectedTrip} locked={selectedTrip ? !canEditTrip(selectedTrip) : false} onReorder={selectedTrip && canEditTrip(selectedTrip) ? (newStops) => reorderTripStops(selectedTrip, newStops) : undefined} onDeleteStop={selectedTrip ? (docNum) => handleDeleteStopFromListView(selectedTrip, docNum) : undefined} onViewProducts={(stop) => setProductDetailsStop(stop)} />}
                 </div>
               </div>
