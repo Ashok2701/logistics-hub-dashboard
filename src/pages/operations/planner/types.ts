@@ -133,7 +133,7 @@ export function stopQty(stop: Stop): number {
 // ═══════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════
-export type TripStatus = "Open" | "Optimized" | "Optimised" | "Locked" | "Confirmed" | "Validated";
+export type TripStatus = "Open" | "Optimized" | "Optimised" | "Locked" | "To Allocate" | "Confirmed" | "Loaded" | "Checked-In" | "Checked-Out" | "Validated";
 export type Trip = {
   id: string; routeCode: string; seq: number;
   vehicle: Vehicle; driver: Driver; stops: Stop[];
@@ -161,14 +161,35 @@ export const priorityColor = (p: Stop["priority"]) =>
   : p === "LOW"    ? "bg-slate-100 text-slate-600 border-slate-200"
   : "bg-green-100 text-green-800 border-green-200";
 
+// Full trip status lifecycle, each with its own distinct color:
+//   Open -> Optimised -> Locked -> To Allocate -> Confirmed -> Loaded
+//   -> Checked-In -> Checked-Out
+// "Validated" kept for backward compatibility — any trip that reached
+// that status before the rename to "To Allocate" still has that exact
+// string stored, and this keeps it displaying sensibly rather than
+// falling through to undefined styling.
 export const statusColor = (s: TripStatus) => ({
-  Open:      "bg-gray-100 text-gray-700",
-  Optimized: "bg-blue-100 text-blue-700",
-  Optimised: "bg-blue-100 text-blue-700",
-  Locked:    "bg-amber-100 text-amber-700",
-  Validated: "bg-green-100 text-green-700",
-  Confirmed: "bg-green-100 text-green-700",
-}[s]);
+  Open:         "bg-gray-100 text-gray-700",
+  Optimized:    "bg-blue-100 text-blue-700",
+  Optimised:    "bg-blue-100 text-blue-700",
+  Locked:       "bg-amber-100 text-amber-700",
+  "To Allocate":"bg-purple-100 text-purple-700",
+  Validated:    "bg-purple-100 text-purple-700",
+  Confirmed:    "bg-cyan-100 text-cyan-700",
+  Loaded:       "bg-green-100 text-green-700",
+  "Checked-In": "bg-indigo-100 text-indigo-700",
+  "Checked-Out":"bg-emerald-100 text-emerald-700",
+}[s] ?? "bg-gray-100 text-gray-700");
+
+// LVS document status — separate lifecycle from trip status, per stop/
+// document: Scheduled (default) -> In Progress (mobile app "Confirm
+// Arrival") -> Delivered (mobile app "Departure").
+export type DocStatus = "Scheduled" | "In Progress" | "Delivered";
+export const docStatusColor = (s: string | null | undefined) => ({
+  Scheduled:    "bg-gray-100 text-gray-700",
+  "In Progress":"bg-amber-100 text-amber-700",
+  Delivered:    "bg-green-100 text-green-700",
+}[s ?? "Scheduled"] ?? "bg-gray-100 text-gray-700");
 
 // Map API optiStatus → internal status
 export function statusFromApi(s: OptiStatus): TripStatus {

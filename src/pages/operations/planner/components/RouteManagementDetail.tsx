@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { type Vehicle, type Driver, type Trip } from "../types";
+import { type Vehicle, type Driver, type Trip, statusColor, docStatusColor } from "../types";
 
 // ═══════════════════════════════════════════════════════
 // ROUTE MANAGEMENT DETAIL — full-screen trip detail page
@@ -68,7 +68,7 @@ export function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoa
   const vlsCodeRaw = hasStock ? (stock0?.vcrnum ?? stock0?.VCRNUM_0 ?? stock0?.xnum ?? stock0?.lvsnum) : undefined;
   const vlsCode    = dash(vlsCodeRaw);
   // Status → "Validated" when loadstk data exists, otherwise "Locked"
-  const statusVal  = hasStock ? "Validated" : "Locked";
+  const statusVal  = String((trip as any).optiStatus ?? trip.status ?? (hasStock ? "To Allocate" : "Locked"));
   const depSite    = dash(pick("fcy","depfcy","fcy_0"));
   const arrSite    = dash(pick("arrfcy","fcy","fcy_0"));
   const carrier    = dash(pick("bptnum","carrier"));
@@ -280,7 +280,11 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
               ].map(({ label, value, highlight }) => (
                 <div key={label}>
                   <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
-                  <p className={cn("font-bold", highlight ? "text-primary" : "text-foreground")}>{value}</p>
+                  {label === "Status" ? (
+                    <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded font-bold", statusColor(value as any))}>{value}</span>
+                  ) : (
+                    <p className={cn("font-bold", highlight ? "text-primary" : "text-foreground")}>{value}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -405,7 +409,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                       <td className="px-2 py-2 text-muted-foreground">{del}</td>
                       <td className="px-2 py-2 font-mono text-foreground">{site}</td>
                       <td className="px-2 py-2">
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]">Scheduled</span>
+                        <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-bold", docStatusColor(r.docStatus ?? r.xdlvstatus))}>{r.docStatus ?? r.xdlvstatus ?? "Scheduled"}</span>
                       </td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{arr}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{dep}</td>
