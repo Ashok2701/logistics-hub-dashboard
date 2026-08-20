@@ -173,12 +173,11 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
   })();
 
   return (
-    <div className="flex flex-col bg-background h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
-      <div className="flex-1 overflow-y-auto">
+    <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
 
         {/* ── Minimal header: Back (left) + Workflow steps (right) ── */}
         <div
-          className="relative px-5 py-3 sticky top-0 z-10 shadow-md border-b border-slate-900/10"
+          className="relative px-5 py-3 sticky top-0 z-10 shadow-md border-b border-slate-900/10 -mx-6 lg:-mx-8 -mt-6 lg:-mt-8"
           style={{
             background:
               "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%)",
@@ -299,7 +298,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
         </div>
 
         {/* ── Tab navigation — click to smooth-scroll to that section ── */}
-        <div className="sticky top-[52px] z-10 bg-card border-b border-border px-5 flex items-center gap-1 overflow-x-auto shadow-sm">
+        <div className="sticky top-[52px] z-10 bg-card border-b border-border px-5 -mx-6 lg:-mx-8 flex items-center gap-1 overflow-x-auto shadow-sm">
           {tabs.map((t) => {
             const Icon = t.icon;
             const isActive = activeTab === t.key;
@@ -324,7 +323,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
         <div className="p-5 space-y-4 bg-muted/40 min-h-full">
 
           {/* ── Route info card ── */}
-          <section ref={refRouteInfo} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
+          <section ref={refRouteInfo} className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden scroll-mt-24">
             <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
               <span className="w-1 h-4 rounded-full bg-primary" />
               <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Route Information</h3>
@@ -365,7 +364,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
 
           {/* ── Planning / Actual + Photos ── */}
           <div ref={refTimeTrack} className="grid grid-cols-[1fr_auto] gap-4 scroll-mt-24">
-            <section className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+            <section className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden">
               <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                 <span className="w-1 h-4 rounded-full bg-primary" />
                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Time Tracking</h3>
@@ -437,7 +436,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           </div>
 
           {/* ── Transactions card ── */}
-          <section ref={refTransactions} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
+          <section ref={refTransactions} className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden scroll-mt-24">
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
               <div className="flex items-center gap-2">
                 <span className="w-1 h-4 rounded-full bg-primary" />
@@ -501,7 +500,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           </section>
 
           {/* ── Vehicle Stock Details ── */}
-          <section ref={refVehicleStock} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
+          <section ref={refVehicleStock} className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden scroll-mt-24">
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
               <div className="flex items-center gap-2">
                 <span className="w-1 h-4 rounded-full bg-primary" />
@@ -538,7 +537,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           </section>
 
           {/* ── Driver Activity Monitoring ── */}
-          <section ref={refDriverActivity} className="rounded-xl bg-card border border-border shadow-sm overflow-hidden scroll-mt-24">
+          <section ref={refDriverActivity} className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden scroll-mt-24">
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 bg-muted/50">
               <div className="flex items-center gap-2">
                 <span className="w-1 h-4 rounded-full bg-primary" />
@@ -576,7 +575,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           {/* <section>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
               Total Drops
-              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+              <div className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                   <span className="w-1 h-4 rounded-full bg-primary" />
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Drops</h4>
@@ -601,7 +600,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                 </div>
               </div>
               Total Pickups
-              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+              <div className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                   <span className="w-1 h-4 rounded-full bg-primary" />
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Pickups</h4>
@@ -614,7 +613,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                 </div>
               </div>
               Summary Totals — themed
-              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+              <div className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-primary/10">
                   <span className="w-1 h-4 rounded-full bg-primary" />
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Summary Totals</h4>
@@ -635,7 +634,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
           <section>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
               {/* Total Drops */}
-              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+              <div className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                   <span className="w-1 h-4 rounded-full bg-primary" />
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Drops</h4>
@@ -658,7 +657,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                 </div>
               </div>
               {/* Total Pickups */}
-              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+              <div className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/50">
                   <span className="w-1 h-4 rounded-full bg-primary" />
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Total Pickups</h4>
@@ -671,7 +670,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                 </div>
               </div>
               {/* Summary Totals — themed */}
-              <div className="rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+              <div className="rounded-xl bg-primary/[0.04] border border-primary/10 shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-primary/10">
                   <span className="w-1 h-4 rounded-full bg-primary" />
                   <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">Summary Totals</h4>
@@ -689,8 +688,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
             </div>
           </section>
 
-        </div>
-      </div>
+    </div>
     </div>
   );
 }
