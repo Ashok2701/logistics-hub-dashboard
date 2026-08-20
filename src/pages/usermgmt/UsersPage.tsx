@@ -109,6 +109,9 @@ export default function UsersPage() {
   );
   const isRoutePlanner = (name?: string) =>
     !!name && name.trim().toLowerCase() === "route planner";
+
+  const isAdmin = selectedUserType?.userTypeName?.trim().toLowerCase() === "admin";
+
   const requiresSites = isRoutePlanner(selectedUserType?.userTypeName);
 
   const filtered = useMemo(() => {
@@ -169,11 +172,21 @@ export default function UsersPage() {
         }
     setSaving(true);
     try {
-      let resolvedRoleId = form.roleId;
-      if (!requiresSites) {
-        const nonRP = roles.find((r) => r.roleName?.trim().toLowerCase() !== "route planner");
-        resolvedRoleId = nonRP?.roleId ?? roles[0]?.roleId ?? "";
-      }
+let resolvedRoleId = form.roleId;
+
+if (isAdmin) {
+  const administratorRole = roles.find(
+    (r) => r.roleName?.trim().toLowerCase() === "administrator"
+  );
+
+  resolvedRoleId = administratorRole?.roleId ?? "";
+} else if (!requiresSites) {
+  const nonRP = roles.find(
+    (r) => r.roleName?.trim().toLowerCase() !== "route planner"
+  );
+
+  resolvedRoleId = nonRP?.roleId ?? roles[0]?.roleId ?? "";
+}
       if (!resolvedRoleId) { toast.error("No role available to assign. Please create a role first."); setSaving(false); return; }
       const base: Record<string, any> = {
         username: form.username.trim(),
@@ -182,7 +195,11 @@ export default function UsersPage() {
         mobileNo: normalizedMobile,
         roleId: resolvedRoleId,
         userTypeId: form.userTypeId,
-        sites: requiresSites ? form.sites : [],
+          sites: isAdmin
+    ? sites.map((s) => s.code)
+    : requiresSites
+      ? form.sites
+      : [],
       };
 if (editingId) {
   const updatePayload = { ...base };
@@ -254,12 +271,38 @@ if (editingId) {
                 className="form-input" placeholder="+91 9876543210" />
             </Field>
             <Field label="User Type *">
-              <select value={form.userTypeId} onChange={(e) => { upd("userTypeId", e.target.value); upd("sites", []); upd("roleId", ""); }} className="form-input">
+              <select value={form.userTypeId} 
+                onChange={(e) => {
+  const userTypeId = e.target.value;
+  const selectedType = userTypes.find(
+    (t) => t.userTypeId === userTypeId
+  );
+
+  const admin =
+    selectedType?.userTypeName?.trim().toLowerCase() === "admin";
+
+  upd("userTypeId", userTypeId);
+
+  if (admin) {
+    const administratorRole = roles.find(
+      (r) => r.roleName?.trim().toLowerCase() === "administrator"
+    );
+
+    upd("roleId", administratorRole?.roleId ?? "");
+
+    // Select all available sites
+    upd("sites", sites.map((s) => s.code));
+  } else {
+    upd("roleId", "");
+    upd("sites", []);
+  }
+}}
+              >
                 <option value="">— Select user type —</option>
                 {userTypes.map((t) => <option key={t.userTypeId} value={t.userTypeId}>{t.userTypeName}</option>)}
               </select>
             </Field>
-            {requiresSites && (
+            {requiresSites && !isAdmin && (
               <Field label="Role *">
                 <select value={form.roleId} onChange={(e) => upd("roleId", e.target.value)} className="form-input">
                   <option value="">— Select role —</option>
@@ -267,7 +310,7 @@ if (editingId) {
                 </select>
               </Field>
             )}
-            {requiresSites && (
+            {requiresSites && !isAdmin && (
               <Field label="Assigned Sites *" className="md:col-span-2">
                 <MultiSiteSelect value={form.sites} onChange={(v) => upd("sites", v)} options={sites} />
                 {form.sites.length > 0 && (
