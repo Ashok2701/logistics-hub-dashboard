@@ -173,7 +173,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
   })();
 
   return (
-    <div className="flex flex-col bg-background min-h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
+    <div className="flex flex-col bg-background h-screen" style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: "11px" }}>
       <div className="flex-1 overflow-y-auto">
 
         {/* ── Minimal header: Back (left) + Workflow steps (right) ── */}
