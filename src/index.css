@@ -355,6 +355,76 @@
     --status-delivered: 142 71% 45%;
     --status-idle: 25 16% 55%;
   }
+
+  /* ========== Charcoal Teal ========== */
+  [data-color-theme="teal"] {
+    --background: 210 20% 98%;
+    --foreground: 210 15% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 15% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 15% 12%;
+
+    --primary: 166 72% 32%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 95%;
+    --secondary-foreground: 210 15% 12%;
+
+    --muted: 210 20% 95%;
+    --muted-foreground: 210 10% 45%;
+
+    --accent: 166 45% 94%;
+    --accent-foreground: 166 72% 20%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 210 16% 90%;
+    --input: 210 16% 90%;
+    --ring: 166 72% 32%;
+
+    --gradient-start: 166 72% 32%;
+    --gradient-end: 166 72% 22%;
+    /* Neutral charcoal, not hue-tinted like the other themes' sidebars —
+       the deliberate point of difference for this theme. */
+    --gradient-sidebar-start: 210 14% 16%;
+    --gradient-sidebar-end: 210 16% 10%;
+    --gradient-header-start: 166 72% 32%;
+    --gradient-header-end: 166 72% 24%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 210 10% 45%;
+    --sidebar-primary: 166 72% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 95%;
+    --sidebar-accent-foreground: 210 15% 12%;
+    --sidebar-border: 210 16% 90%;
+    --sidebar-ring: 166 72% 32%;
+    --sidebar-muted: 210 10% 55%;
+
+    --chart-1: 166 72% 32%;
+    --chart-2: 142 71% 40%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 340 75% 55%;
+
+    --status-active: 166 72% 32%;
+    --status-delayed: 38 92% 50%;
+    --status-delivered: 142 71% 40%;
+    --status-idle: 210 10% 55%;
+  }
 }
 
 @layer base {

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type ColorTheme = "light" | "blue" | "dark" | "emerald" | "orange";
+export type ColorTheme = "light" | "blue" | "dark" | "emerald" | "orange" | "teal";
 
 export const COLOR_THEMES: { id: ColorTheme; label: string; description: string; preview: string }[] = [
   { id: "light", label: "Light", description: "Apple-inspired minimal", preview: "#F5F5F7" },
@@ -8,6 +8,7 @@ export const COLOR_THEMES: { id: ColorTheme; label: string; description: string;
   { id: "dark", label: "Dark Mode", description: "Easy on the eyes", preview: "#38BDF8" },
   { id: "emerald", label: "Emerald Fleet", description: "Nature-inspired", preview: "#059669" },
   { id: "orange", label: "Sunset Orange", description: "Warm & energetic", preview: "#F97316" },
+  { id: "teal", label: "Charcoal Teal", description: "Charcoal sidebar, teal accent", preview: "#0F6E56" },
 ];
 
 const ThemeContext = createContext<{
