@@ -299,7 +299,8 @@ const agCanSubmit =
         id: i + 1,
         description: s.txn,
         location: [s.lng, s.lat] as [number,number],
-        service: Number(s.serviceTime ?? 0),
+        // service: Number(s.serviceTime ?? 0),
+        service: s.serviceTime ? hhmmToSec(s.serviceTime) : 0,
         ...(s.type === "DROP"
           ? { delivery: [Math.round((s.netWeight || 1) * 1000)] as [number] }
           : { pickup:   [Math.round((s.netWeight || 1) * 1000)] as [number] }),
@@ -1504,7 +1505,8 @@ async function groupUnlock() {
         const vroomJobs = t.stops.map((s, idx) => ({
           id: idx + 1, description: s.txn,
           location: [s.lng, s.lat] as [number, number],
-          service: Number(s.serviceTime ?? 0),
+          // service: Number(s.serviceTime ?? 0),
+          service: s.serviceTime ? hhmmToSec(s.serviceTime) : 0,
           ...(s.type === "DROP"
             ? { delivery: [Math.round((s.netWeight || 1) * 1000)] as [number] }
             : { pickup:   [Math.round((s.netWeight || 1) * 1000)] as [number] }),
