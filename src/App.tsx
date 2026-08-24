@@ -34,6 +34,8 @@ import CustomerAddressManagement from "@/pages/configuration/CustomerAddressMana
 import SupplierManagement from "@/pages/configuration/SupplierManagement";
 import ProductManagement from "@/pages/configuration/ProductManagement";
 import DocumentConfiguration from "@/pages/configuration/DocumentConfiguration";
+import LoadBayConfiguration from "@/pages/configuration/LoadBayConfiguration";
+import ReasonConfiguration from "@/pages/configuration/ReasonConfiguration";
 import RoleManagement from "@/pages/configuration/RoleManagement";
 import UserTypesPage from "@/pages/usermgmt/UserTypesPage";
 import RolesPage from "@/pages/usermgmt/RolesPage";
@@ -89,6 +91,8 @@ function AppRoutes() {
         <Route path="config/suppliers"          element={<SupplierManagement />} />
         <Route path="config/products"           element={<ProductManagement />} />
         <Route path="config/documents"          element={<DocumentConfiguration />} />
+        <Route path="config/loadbays"           element={<LoadBayConfiguration />} />
+        <Route path="config/reasons"            element={<ReasonConfiguration />} />
         {/* User management */}
         <Route path="user-management/users"       element={<UsersPage />} />
         <Route path="user-management/roles"       element={<RolesPage />} />

@@ -7,7 +7,7 @@ import {
   Link as LinkIcon, Navigation, Radar, BarChart3, Settings,
   RefreshCw, Shield, Building2, UserCircle, Package, FileText, Calendar,
   ChevronDown, ChevronLeft, ChevronRight, Route, UserCog, KeyRound, LayoutGrid,
-  ClipboardList, Upload,
+  ClipboardList, Upload, Warehouse, ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,8 @@ const menuItems: MenuItem[] = [
       { label: "Customer",       icon: UserCircle, path: "/config/customers" },
       { label: "Product",        icon: Package,    path: "/config/products" },
       { label: "Document Config",icon: FileText,   path: "/config/documents" },
+      { label: "Load Bay",       icon: Warehouse,  path: "/config/loadbays" },
+      { label: "Reason",         icon: ListChecks, path: "/config/reasons" },
     ],
   },
   {
