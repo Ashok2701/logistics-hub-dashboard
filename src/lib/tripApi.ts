@@ -254,11 +254,22 @@ export async function updateTrip(tripCode: string, payload: Partial<CreateTripPa
 }
 
 // ── X3 lock / validate / unlock (single) ───────────────────────────
-export async function lockTrip(tripCode: string): Promise<TripRecord> {
+// Response shape for the Lock action specifically — matches the
+// backend's TripLockController.lock() response exactly. Distinct from
+// TripRecord since Lock doesn't return the full trip, just this.
+export interface LockActionResult {
+  message: string;
+  tripCode: string;
+  action: string;
+  /** PENDING | SYNCED | FAILED — see X3AsyncNotifier on the backend. */
+  x3SyncStatus: "PENDING" | "SYNCED" | "FAILED";
+}
+
+export async function lockTrip(tripCode: string): Promise<LockActionResult> {
   const res = await fetch(`${BASE}/trips/${encodeURIComponent(tripCode)}/lock`, {
     method: "POST", headers: authHeaders(),
   });
-  return handle<TripRecord>(res);
+  return handle<LockActionResult>(res);
 }
 
 export async function validateTrip(tripCode: string): Promise<TripRecord> {

@@ -82,6 +82,11 @@ export default function Planner() {
   const [site, setSite]         = useState("");
   const [date, setDate]         = useState(format(new Date(), "yyyy-MM-dd"));
   const [loading, setLoading]   = useState(false);
+  // Shown as a blocking overlay while a Lock action is in flight — Lock
+  // can now take up to 20s (waiting on the X3 push, see setTripStatus),
+  // and without a clear "this is working" indicator users were clicking
+  // elsewhere assuming the app had frozen.
+  const [lockingInfo, setLockingInfo] = useState<{ tripCode: string } | null>(null);
   const [loaded, setLoaded]     = useState(false);
   const [loadStats, setLoadStats] = useState<{vehicles:number;drivers:number;drops:number;pickups:number}|null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -1176,6 +1181,36 @@ function handleDeleteStopFromListView(trip: Trip, docNum: string) {
 
 
 
+  // After a PENDING Lock response, check back every 4s (up to 2 minutes)
+  // for the durable outcome X3AsyncNotifier eventually writes to
+  // xr_vrheader — surfaces a follow-up toast the moment it resolves,
+  // per "if it is completed we can show Document details are updated."
+  function pollX3SyncStatus(tripCode: string) {
+    const POLL_INTERVAL_MS = 4000;
+    const MAX_ATTEMPTS = 30; // 2 minutes
+    let attempts = 0;
+
+    const tick = async () => {
+      attempts++;
+      try {
+        const header: any = await transportApi.getVrHeader(tripCode);
+        const status = header?.x3SyncStatus;
+        if (status === "SYNCED") {
+          toast({ title: "Document details are updated", description: tripCode });
+          return;
+        }
+        if (status === "FAILED") {
+          toast({ title: "Document details were not updated", description: tripCode, variant: "destructive" });
+          return;
+        }
+      } catch {
+        // Transient fetch failure — just try again next tick.
+      }
+      if (attempts < MAX_ATTEMPTS) setTimeout(tick, POLL_INTERVAL_MS);
+    };
+    setTimeout(tick, POLL_INTERVAL_MS);
+  }
+
   async function setTripStatus(trip: Trip, optiStatus: OptiStatus, lockFlag: number) {
     if (trip.tripId == null || !trip.tripCode) {
       // Local-only trip (not yet persisted) — update UI optimistically
@@ -1185,8 +1220,29 @@ function handleDeleteStopFromListView(trip: Trip, docNum: string) {
       return;
     }
     try {
-      if (optiStatus === "Locked")         await tripApi.lockTrip(trip.tripCode);
-      else if (optiStatus === "Validated") await tripApi.validateTrip(trip.tripCode);
+      if (optiStatus === "Locked") {
+        setLockingInfo({ tripCode: trip.tripCode });
+        let result;
+        try {
+          result = await tripApi.lockTrip(trip.tripCode);
+        } finally {
+          setLockingInfo(null);
+        }
+
+        setTrips((prev) => prev.map((t) => t.id === trip.id
+          ? { ...t, status: optiStatus, optiStatus, locked: lockFlag === 1, lockFlag }
+          : t));
+        setRefreshKey((k) => k + 1);
+        setSelectedTripIds((prev) => { if (!prev.has(trip.id)) return prev; const n = new Set(prev); n.delete(trip.id); return n; });
+
+        const variant = result.x3SyncStatus === "FAILED" ? "destructive" as const : undefined;
+        toast({ title: result.message, description: trip.tripCode, variant });
+
+        if (result.x3SyncStatus === "PENDING") pollX3SyncStatus(trip.tripCode);
+        return;
+      }
+
+      if (optiStatus === "Validated") await tripApi.validateTrip(trip.tripCode);
       else if (optiStatus === "Open" && lockFlag === 0) await tripApi.unlockTrip(trip.tripCode);
       else await tripApi.updateTripStatus(trip.tripCode, { optiStatus, lockFlag, notes: "", userCode: "SYSTEM" });
 
@@ -1211,6 +1267,7 @@ function handleDeleteStopFromListView(trip: Trip, docNum: string) {
       setSelectedTripIds((prev) => { if (!prev.has(trip.id)) return prev; const n = new Set(prev); n.delete(trip.id); return n; });
       toast({ title: `Trip ${optiStatus.toLowerCase()}`, description: trip.tripCode ?? trip.id });
     } catch (e: any) {
+      setLockingInfo(null);
       toast({ title: "Status update failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     }
   }
@@ -2675,6 +2732,20 @@ onConfirm={() => {
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Lock in progress — blocking overlay so it's unmistakable the app
+        is working, not stuck. Lock can now take up to 20s (waiting on
+        the X3 push) instead of returning near-instantly like every
+        other action here. */}
+    {lockingInfo && (
+      <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
+        <div className="bg-card rounded-2xl border border-border shadow-2xl px-8 py-7 flex flex-col items-center gap-3 max-w-sm text-center">
+          <Loader2 className="w-9 h-9 text-primary animate-spin" />
+          <p className="text-sm font-semibold text-foreground">Locking trip {lockingInfo.tripCode}…</p>
+          <p className="text-xs text-muted-foreground">This can take up to 20 seconds while document details sync to X3.</p>
+        </div>
+      </div>
+    )}
 
     {/* Confirmation dialog (vehicle/driver reassign etc.) */}
     <AlertDialog
