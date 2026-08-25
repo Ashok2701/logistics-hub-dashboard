@@ -1049,6 +1049,17 @@ function handleDeleteStopFromListView(trip: Trip, docNum: string) {
   });
 }
 
+  // Full trip status lifecycle, in order: Open -> Optimised -> Locked ->
+  // To Allocate -> Confirmed -> Loaded -> Checked-In -> Checked-Out.
+  // Mirrors the backend's TripLockService.isAtLeastToAllocate() — true
+  // once a trip has an LVS record (from "To Allocate" onward). "Validated"
+  // kept for backward compatibility with any trip that reached that
+  // status before the backend rename to "To Allocate".
+  function isAtLeastToAllocate(status: string | undefined | null): boolean {
+    const s = String(status ?? "");
+    return ["To Allocate", "Validated", "Confirmed", "Loaded", "Checked-In", "Checked-Out"].includes(s);
+  }
+
   // Reassign vehicle/driver on a persisted trip — with confirmation + backend sync.
   // Only allowed when trip is in Open or Optimised status.
   function canEditTrip(trip: Trip | undefined): boolean {
@@ -2225,7 +2236,16 @@ onConfirm={() => {
                             <td className="px-2 py-1.5">
                               {(() => {
                                 const s = String(apiStatus ?? t.status).toLowerCase();
-                                const enabled = s === "locked" || s === "validated";
+                                // Disabled only for the two pre-lock statuses
+                                // (Open/Optimised) — everything from Locked
+                                // onward should be viewable. Was previously
+                                // an allowlist of just "locked"/"validated",
+                                // which silently broke the moment "Validated"
+                                // was renamed to "To Allocate" and never
+                                // recognized Confirmed/Loaded/Checked-In/
+                                // Checked-Out at all.
+                                const disabled = !s || s === "open" || s === "optimised" || s === "optimized";
+                                const enabled = !disabled;
                                 return (
                                   <button
                                     disabled={!enabled}
@@ -2294,11 +2314,11 @@ onConfirm={() => {
                                   title="Validate"
                                   className={cn(
                                     "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border shadow-sm bg-white",
-                                    t.optiStatus === "Validated"
+                                    isAtLeastToAllocate(t.optiStatus)
                                       ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:shadow-emerald-500/15"
                                       : "border-input text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600"
                                   )}>
-                                  <ShieldCheck className={cn("w-5 h-5", t.optiStatus === "Validated" ? "text-emerald-600" : "text-slate-500")} />
+                                  <ShieldCheck className={cn("w-5 h-5", isAtLeastToAllocate(t.optiStatus) ? "text-emerald-600" : "text-slate-500")} />
                                 </button>
                               </div>
                             </td>
