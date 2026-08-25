@@ -261,8 +261,6 @@ export interface LockActionResult {
   message: string;
   tripCode: string;
   action: string;
-  /** PENDING | SYNCED | FAILED — see X3AsyncNotifier on the backend. */
-  x3SyncStatus: "PENDING" | "SYNCED" | "FAILED";
 }
 
 export async function lockTrip(tripCode: string): Promise<LockActionResult> {
