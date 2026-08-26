@@ -1440,7 +1440,7 @@ async function groupUnlock() {
       title: "Validate trips",
       description: `Validate ${eligible.length} trip(s)? This cannot be undone.`,
       confirmLabel: "Yes, validate",
-      onConfirm: () => runGroupStatus("validate", eligible, "Validated", 1, "validated"),
+      onConfirm: () => runGroupStatus("validate", eligible, "To Allocate", 1, "validated"),
     });
   }
 

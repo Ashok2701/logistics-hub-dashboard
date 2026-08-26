@@ -204,11 +204,18 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
               // steps), so relying on trip.status alone meant the UI
               // never advanced past "LVS Confirm active" even after it
               // had genuinely succeeded and confirmed_flag was set.
-              //   Locked     → 0 (LVS Create is active)
-              //   Validated, not confirmed → 1 (LVS Confirm is active)
-              //   Validated, confirmed, not loaded → 2 (Load Truck active)
-              //   Validated, confirmed, loaded → 3 (Unload Truck active)
+              //   Locked         → 0 (LVS Create is active)
+              //   To Allocate, not confirmed → 1 (LVS Confirm is active)
+              //   To Allocate, confirmed, not loaded → 2 (Load Truck active)
+              //   To Allocate, confirmed, loaded → 3 (Unload Truck active)
               const status = String((trip as any).optiStatus ?? trip.status ?? "").toLowerCase();
+              // BUG FIX: this used to check status !== "validated" — a
+              // literal that stopped matching anything the moment
+              // "Validated" was renamed to "To Allocate" on the backend,
+              // collapsing every trip past Locked to stage -1 (every
+              // workflow button shown disabled, exactly as reported).
+              // Now recognizes every status from "to allocate" onward.
+              const isAtLeastToAllocate = ["to allocate", "validated", "confirmed", "loaded", "checked-in", "checked-out"].includes(status);
               const confirmed = stock0?.confirmedFlag === 1 || stock0?.xvalflg === 1;
               // Require confirmed AND loaded for stage 3, not loaded
               // alone — loaded should never be true without confirmed
@@ -219,7 +226,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
               const loaded = confirmed && (stock0?.loadFlag === 1 || stock0?.xloadflg === 1);
               const stage =
                 status === "locked" ? 0 :
-                status !== "validated" ? -1 :
+                !isAtLeastToAllocate ? -1 :
                 loaded    ? 3 :
                 confirmed ? 2 :
                             1;

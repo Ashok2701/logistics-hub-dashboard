@@ -10,7 +10,7 @@ function authHeaders(): Record<string, string> {
   };
 }
 
-export type OptiStatus = "Open" | "Optimised" | "Locked" | "Validated";
+export type OptiStatus = "Open" | "Optimised" | "Locked" | "To Allocate" | "Confirmed" | "Loaded" | "Checked-In" | "Checked-Out" | "Validated";
 
 export interface TripStop {
   id: string;
