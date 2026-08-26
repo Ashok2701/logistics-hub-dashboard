@@ -456,7 +456,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
               <table className="w-full" style={{ fontSize: "11px" }}>
                 <thead>
                   <tr className="bg-muted/50 border-b border-border">
-                    {["Seq","Document Number","Delivery Number","Site","Status","Arrival Date/Time","Departure Date/Time","Service Time","Address","Client Code","Client","City","From Previous Distance","From Previous Travel","Waiting Time"].map(h => (
+                    {["Seq","Document Number","Delivery Number","Site","Status","Arrival Date/Time","Departure Date/Time","Service Time","Address","Client Code","Client","City","Postal Code","From Previous Distance","From Previous Travel","Waiting Time"].map(h => (
                       <th key={h} className="px-2 py-2 text-left text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-muted-foreground">{h}</th>
                     ))}
                   </tr>
@@ -474,6 +474,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                     const bp   = r.bpcode ?? r.bpnum ?? r.bpcnum ?? "—";
                     const cli  = r.client ?? r.bpcnam ?? r.clientname ?? "—";
                     const city = r.city ?? r.bpacity ?? "—";
+                    const postal = r.postalCode ?? r.postalcode ?? r.postcod ?? "—";
                     const fpd  = r.fromprevdist ?? r.fromPrevDistance ?? "—";
                     const fpt  = r.fromprevtra ?? r.fromprevtravel ?? r.fromPrevTravel ?? "—";
                     const wait = r.waittime ?? r.waitingTime ?? "—";
@@ -493,6 +494,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                       <td className="px-2 py-2 font-mono text-foreground">{bp}</td>
                       <td className="px-2 py-2 font-medium text-foreground truncate max-w-[100px]">{cli}</td>
                       <td className="px-2 py-2 text-muted-foreground">{city}</td>
+                      <td className="px-2 py-2 text-muted-foreground">{postal}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{fpd}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{fpt}</td>
                       <td className="px-2 py-2 font-mono text-muted-foreground">{wait}</td>
@@ -500,7 +502,7 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                     );
                   })}
                   {rows.length === 0 && (
-                    <tr><td colSpan={15} className="px-3 py-6 text-center text-xs text-muted-foreground">No transactions on this trip</td></tr>
+                    <tr><td colSpan={16} className="px-3 py-6 text-center text-xs text-muted-foreground">No transactions on this trip</td></tr>
                   )}
                 </tbody>
               </table>
