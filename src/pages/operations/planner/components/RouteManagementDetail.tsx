@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Truck, Users, CheckCheck, ChevronLeft, Loader2, Package,
-  Route as RouteIcon, CheckCircle2, Package2, Activity, MapPin, Clock,
+  Route as RouteIcon, CheckCircle2, Package2, Activity, MapPin, Clock, X, Info, Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { type Vehicle, type Driver, type Trip, statusColor, docStatusColor } from "../types";
+import { vehicleApi } from "@/lib/fleetApi";
+import { x3SoapApi } from "@/lib/x3SoapApi";
 
 // ═══════════════════════════════════════════════════════
 // ROUTE MANAGEMENT DETAIL — full-screen trip detail page
@@ -18,6 +20,17 @@ export function RouteManagementDetail({ trip, onBack, vrHeader, vrDetails, vrLoa
   // SOAP call is out.
   const [actionBusy, setActionBusy] = useState<string | null>(null);
   const [vehicleImgError, setVehicleImgError] = useState(false);
+
+  // Vehicle info/stock popup — opened by clicking the Vehicle field in
+  // Route Information. Two tabs: Vehicle Information (Postgres,
+  // vehicleApi.get) and Stock (X3, XX10CSTOD via x3SoapApi.getVehicleStock).
+  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
+  const [vehicleModalTab, setVehicleModalTab] = useState<"info" | "stock">("info");
+  const [vehicleInfo, setVehicleInfo] = useState<any>(null);
+  const [vehicleInfoLoading, setVehicleInfoLoading] = useState(false);
+  const [vehicleStock, setVehicleStock] = useState<any>(null);
+  const [vehicleStockLoading, setVehicleStockLoading] = useState(false);
+  const [vehicleStockError, setVehicleStockError] = useState<string | null>(null);
 
   // ── All display data is sourced from vrHeader / vrDetails / vrLoadStock ──
   const H  = (vrHeader ?? {}) as any;
@@ -82,6 +95,52 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
   const createDate = fmtDateMDY(pick("datexec","datcre","creationdate"));
   const createTime = dash(pick("creationtime","timcre","heucre"));
   const tripNum    = dash(pick("xroutnbr","xroutnbr","xroutnbr"));
+
+  // Opens the Vehicle Information/Stock popup and fetches the info tab
+  // immediately (fast, Postgres). Stock (X3) is fetched lazily — only
+  // once the user actually switches to that tab — since XX10CSTOD is
+  // an external SOAP call and there's no reason to make it if they
+  // never look at the Stock tab.
+  async function openVehicleModal() {
+    if (!vehicle || vehicle === "—") {
+      toast({ title: "No vehicle assigned to this trip yet", variant: "destructive" });
+      return;
+    }
+    setVehicleModalOpen(true);
+    setVehicleModalTab("info");
+    setVehicleInfoLoading(true);
+    try {
+      const info = await vehicleApi.get(vehicle);
+      setVehicleInfo(info);
+    } catch (e: any) {
+      toast({ title: "Failed to load vehicle information", description: e?.message ?? "Unknown error", variant: "destructive" });
+    } finally {
+      setVehicleInfoLoading(false);
+    }
+  }
+
+  async function loadVehicleStock() {
+    if (vehicleStock || vehicleStockLoading) return; // already loaded/loading — don't refetch on every tab click
+    setVehicleStockLoading(true);
+    setVehicleStockError(null);
+    try {
+      const stock = await x3SoapApi.getVehicleStock(vehicle, depSite);
+      setVehicleStock(stock);
+    } catch (e: any) {
+      setVehicleStockError(e?.message ?? "Failed to load stock");
+    } finally {
+      setVehicleStockLoading(false);
+    }
+  }
+
+  function closeVehicleModal() {
+    setVehicleModalOpen(false);
+    // Reset so re-opening (possibly for a different vehicle, if this
+    // component gets reused) fetches fresh rather than showing stale data.
+    setVehicleInfo(null);
+    setVehicleStock(null);
+    setVehicleStockError(null);
+  }
 
   // Schedule
   const depDate = fmtDateMDY(pick("datexec","datcre","creationdate"));
@@ -357,6 +416,14 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
                   <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
                   {label === "Status" ? (
                     <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded font-bold", statusColor(value as any))}>{value}</span>
+                  ) : label === "Vehicle" && value !== "—" ? (
+                    <button
+                      onClick={openVehicleModal}
+                      className="font-bold text-primary underline decoration-dotted underline-offset-2 hover:decoration-solid transition-all"
+                      title="View vehicle information and stock"
+                    >
+                      {value}
+                    </button>
                   ) : (
                     <p className={cn("font-bold", highlight ? "text-primary" : "text-foreground")}>{value}</p>
                   )}
@@ -697,6 +764,88 @@ const hasVehicleImage = !!vehicleImageUrl && String(vehicleImageUrl).trim() !== 
               </div>
             </div>
           </section>
+
+    {/* ── Vehicle Information / Stock popup ── */}
+    {vehicleModalOpen && (
+      <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-[1px] flex items-center justify-center p-4" onClick={closeVehicleModal}>
+        <div
+          className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/40">
+            <div className="flex items-center gap-2">
+              <Truck className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold text-foreground">{vehicle}</h3>
+            </div>
+            <button onClick={closeVehicleModal} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex border-b border-border px-2">
+            <button
+              onClick={() => setVehicleModalTab("info")}
+              className={cn(
+                "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors",
+                vehicleModalTab === "info" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Info className="w-3.5 h-3.5" /> Vehicle Information
+            </button>
+            <button
+              onClick={() => { setVehicleModalTab("stock"); loadVehicleStock(); }}
+              className={cn(
+                "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors",
+                vehicleModalTab === "stock" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Boxes className="w-3.5 h-3.5" /> Stock
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto flex-1">
+            {vehicleModalTab === "info" ? (
+              vehicleInfoLoading ? (
+                <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>
+              ) : vehicleInfo ? (
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[11px]">
+                  {[
+                    ["Vehicle Name", vehicleInfo.vehicleName],
+                    ["Vehicle Number", vehicleInfo.vehicleNumber],
+                    ["Category", vehicleInfo.categoryDescription ?? vehicleInfo.categoryCode],
+                    ["Brand / Model", [vehicleInfo.brand, vehicleInfo.model].filter(Boolean).join(" / ")],
+                    ["Year", vehicleInfo.vehicleYear],
+                    ["Color", vehicleInfo.color],
+                    ["Chassis Number", vehicleInfo.chassisNumber],
+                    ["Capacity Weight", vehicleInfo.capacityWeight != null ? `${vehicleInfo.capacityWeight} ${vehicleInfo.weightUnit ?? ""}` : null],
+                    ["Capacity Volume", vehicleInfo.capacityVolume != null ? `${vehicleInfo.capacityVolume} ${vehicleInfo.volumeUnit ?? ""}` : null],
+                    ["Site", vehicleInfo.site],
+                    ["Location (X3)", vehicleInfo.location],
+                  ].map(([label, value]) => (
+                    <div key={label as string}>
+                      <p className="text-[9px] text-muted-foreground mb-0.5 uppercase tracking-wider font-semibold">{label}</p>
+                      <p className="font-bold text-foreground">{value || "—"}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-8">No vehicle information available</p>
+              )
+            ) : (
+              vehicleStockLoading ? (
+                <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>
+              ) : vehicleStockError ? (
+                <p className="text-xs text-destructive text-center py-8">{vehicleStockError}</p>
+              ) : vehicleStock ? (
+                <pre className="text-[10px] bg-muted/50 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(vehicleStock, null, 2)}</pre>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-8">No stock data available</p>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    )}
 
     </div>
     </div>

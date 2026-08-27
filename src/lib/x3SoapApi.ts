@@ -63,6 +63,13 @@ export const x3SoapApi = {
   createVehicleLocation: (xfcy: string, vehLoc: string, xTypeFlg: string = "1") =>
     request<Record<string, any>>(`/x3/vehicle-location${qs({ xfcy, vehLoc, xTypeFlg })}`, { method: "POST" }),
 
+  /** XX10CSTOD — products/quantities currently sitting in a vehicle's
+   *  location, per site. Response shape not yet confirmed against a
+   *  real example — the Stock tab renders whatever comes back as a
+   *  raw fallback until that's known. */
+  getVehicleStock: (vehicleCode: string, site: string) =>
+    request<Record<string, any>>(`/x3/vehicle-stock${qs({ vehicleCode, site })}`),
+
   /** X1CROUTDET — route/trip detail */
   getRouteDetail: (vrNum: string) =>
     request<Record<string, any>>(`/x3/route-detail${qs({ vrNum })}`),
