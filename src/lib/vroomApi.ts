@@ -49,6 +49,7 @@ export interface VroomRoute {
   distance: number;          // total meters
   cost: number;
   waiting_time: number;      // total waiting seconds
+  geometry: string;          // encoded polyline
 }
 
 export interface VroomResponse {

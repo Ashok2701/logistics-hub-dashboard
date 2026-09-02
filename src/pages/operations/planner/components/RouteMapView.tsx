@@ -1,5 +1,6 @@
 import React from "react";
 import { Map as MapIcon, Maximize2, Minimize2 } from "lucide-react";
+import polyline from "@mapbox/polyline";
 import { cn } from "@/lib/utils";
 import type { RpSite } from "@/lib/routePlannerApi";
 import type { Trip } from "../types";
@@ -106,16 +107,33 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
           pts.push([lat, lng]);
         });
 
-        const linePts: [number, number][] = [];
-        if (depSite?.latitude != null && depSite?.longitude != null) linePts.push([Number(depSite.latitude), Number(depSite.longitude)]);
-        linePts.push(...stopPts);
-        if (arrSite?.latitude != null && arrSite?.longitude != null) linePts.push([Number(arrSite.latitude), Number(arrSite.longitude)]);
-        if (linePts.length > 1) {
-          L.polyline(linePts, { color: "#6366f1", weight: 3, opacity: 0.7, dashArray: "6 4" }).addTo(group);
+        // ── Route line: prefer the actual road geometry from
+        // geometryEncoded (VROOM's encoded polyline, precision 5) over
+        // the old straight-line-between-stops fallback. ─────────────
+        const geometryEncoded = (trip as any).geometryEncoded as string | undefined;
+        const routeLatLngs: [number, number][] = geometryEncoded
+          ? (polyline.decode(geometryEncoded) as [number, number][])
+          : [];
+
+        let routeLine: any = null;
+        if (routeLatLngs.length > 1) {
+          routeLine = L.polyline(routeLatLngs, { color: "#6366f1", weight: 4, opacity: 0.85 }).addTo(group);
+        } else {
+          // Fallback: no geometry available yet (e.g. trip not optimised) —
+          // keep the old dashed straight-line-between-stops behavior.
+          const linePts: [number, number][] = [];
+          if (depSite?.latitude != null && depSite?.longitude != null) linePts.push([Number(depSite.latitude), Number(depSite.longitude)]);
+          linePts.push(...stopPts);
+          if (arrSite?.latitude != null && arrSite?.longitude != null) linePts.push([Number(arrSite.latitude), Number(arrSite.longitude)]);
+          if (linePts.length > 1) {
+            L.polyline(linePts, { color: "#6366f1", weight: 3, opacity: 0.7, dashArray: "6 4" }).addTo(group);
+          }
         }
 
         if (pts.length > 0) {
-          map.fitBounds(L.latLngBounds(pts as any), { padding: [30, 30], maxZoom: 14 });
+          const bounds = L.latLngBounds(pts as any);
+          if (routeLine) bounds.extend(routeLine.getBounds());
+          map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
         } else {
           map.setView([0, 0], 2);
         }
@@ -131,7 +149,7 @@ export function RouteMapView({ trip, site, sites = [] }: { trip: Trip | null; si
       setTimeout(() => map.invalidateSize(), 0);
     })();
     return () => { cancelled = true; };
-  }, [trip?.id, trip?.stops, site?.siteCode, sites, fallbackLat, fallbackLng, showTrip]);
+  }, [trip?.id, trip?.stops, (trip as any)?.geometryEncoded, site?.siteCode, sites, fallbackLat, fallbackLng, showTrip]);
 
   React.useEffect(() => {
     return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };

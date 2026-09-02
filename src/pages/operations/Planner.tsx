@@ -397,6 +397,7 @@ let manualIdx = 0;
             stopObjects: routeStops as any,
             vehicleObject: (vehObj ?? null) as any,
             totalObject: { stopResults },
+            geometryEncoded: route.geometry ?? "",
           });
 
           // Persist optimisation results — response includes Optimised status,
@@ -408,6 +409,7 @@ let manualIdx = 0;
             totalDistance: totalDistKm, uomDistance: "km",
             totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
             stopResults,
+            geometryEncoded: route.geometry ?? "",
           });
 
           // Merge stopResults into the persisted stops so the local trip carries
@@ -880,6 +882,7 @@ let manualIdx = 0;
       stopObjects: stops as any,
       vehicleObject: vehicle as any,
       totalObject: null as any,
+      geometryEncoded: "",
     };
   }
 
@@ -1547,6 +1550,7 @@ async function groupUnlock() {
             totalDistance: totalDistKm, uomDistance: "km",
             totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
             stopResults,
+            geometryEncoded: route.geometry ?? "",
           });
           setTrips((prev) => prev.map((x) => x.id === t.id ? tripFromApi(resp, x) : x));
         } else {

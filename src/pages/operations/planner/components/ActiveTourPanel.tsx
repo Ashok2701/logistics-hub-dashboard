@@ -668,6 +668,7 @@ export function ActiveTourPanel({
                     const totalDistKm = (route.distance / 1000).toFixed(1);
                     const travelHHMM  = secToHHMM(route.duration);
                     const totalHHMM = secToHHMM(route.duration + route.service + route.waiting_time);
+                    const geometryEncoded = route.geometry ?? "";
 
                     const stopResults = jobSteps.map((st: VroomStep, i: number) => ({
                       seq: i + 1,
@@ -699,6 +700,7 @@ export function ActiveTourPanel({
                         totalDistance: totalDistKm, uomDistance: "km",
                         totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
                         stopResults,
+                        geometryEncoded,
                       });
                       if (activeTripId != null) onTripOptimised?.(activeTripId, stopResults, { distanceKm: Number(totalDistKm), travelTime: travelHHMM, endTime });
                     }

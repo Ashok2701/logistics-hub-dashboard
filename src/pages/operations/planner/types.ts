@@ -151,6 +151,7 @@ export type Trip = {
   startTime?: string;
   endTime?: string;
   totalTime?: number;
+  geometryEncoded?: string;
 };
 
 // ═══════════════════════════════════════════════════════
@@ -228,6 +229,7 @@ export function tripFromApi(r: TripResponseDTO, fallback?: Partial<Trip>): Trip 
     tripId: r.tripId, tripCode: r.tripCode, optiStatus: r.optiStatus,
     lockFlag: r.lockFlag, createDate: r.createDate, updateDate: r.updateDate,
     startTime: r.startTime, endTime: r.endTime,
+    geometryEncoded: r.geometryEncoded,
   };
   // Fallback supplies snapshot defaults; API identifiers must win
   return { ...fallback, ...base };

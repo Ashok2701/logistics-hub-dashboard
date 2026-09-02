@@ -102,6 +102,7 @@ export interface TripRecord {
   userCode: string;
   createDate: string;
   updateDate: string;
+  geometryEncoded: string;
 }
 
 // Backward-compatible alias used elsewhere in the app
@@ -142,6 +143,7 @@ export interface CreateTripPayload {
   stopObjects: TripStop[];
   vehicleObject: TripVehicle;
   totalObject: any;
+  geometryEncoded: string;
 }
 
 export interface TripStatusPayload {
@@ -177,6 +179,7 @@ export interface OptimisePayload {
   fixedCost: string;
   serviceCost: string;
   stopResults: StopOptimisationResult[];
+  geometryEncoded: string;
 }
 
 async function handle<T>(res: Response): Promise<T> {
@@ -344,6 +347,7 @@ export const tripApi = {
         endTime: "", travelTime: "", totalTime: "", totalDistance: "",
         uomDistance: "mi", totalCost: "", distanceCost: "", fixedCost: "", serviceCost: "",
         stopResults: [],
+        geometryEncoded: "",
       };
       return optimiseTrip(tripCode, payload);
     }
