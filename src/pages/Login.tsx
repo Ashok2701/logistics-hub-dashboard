@@ -5,10 +5,21 @@ import { Lock, User, Route, AlertCircle, Eye, EyeOff, ArrowRight } from "lucide-
 import { motion } from "framer-motion";
 import terminalHero from "@/assets/login-tema-hero.jpg";
 
+// "Remember me" was previously declared but never actually used anywhere
+// (bound to the checkbox's `checked` prop and nothing else) - a real bug,
+// not just cosmetic. Scoped narrowly here to remembering the username
+// only, rather than changing how the session token itself is stored:
+// 13 other files (every *Api.ts client) read the token directly from
+// localStorage, so switching that storage mechanism based on this flag
+// would mean touching all 13 just to fix a checkbox - far riskier than
+// the bug itself. Remembering the username is the standard, safe
+// interpretation of this feature.
+const REMEMBERED_USERNAME_KEY = "vanguard-remembered-username";
+
 export default function Login() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() => localStorage.getItem(REMEMBERED_USERNAME_KEY) ?? "");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(() => !!localStorage.getItem(REMEMBERED_USERNAME_KEY));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +32,11 @@ export default function Login() {
     setLoading(true);
     try {
       await login(username, password);
+      if (remember) {
+        localStorage.setItem(REMEMBERED_USERNAME_KEY, username);
+      } else {
+        localStorage.removeItem(REMEMBERED_USERNAME_KEY);
+      }
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Login failed");
