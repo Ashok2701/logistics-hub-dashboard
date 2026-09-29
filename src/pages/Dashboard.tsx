@@ -104,8 +104,11 @@ export default function Dashboard() {
   const kpis = [
     { key: "activeTrips",     label: "Active Trips",     value: data?.activeTrips.value,     icon: Truck,         trend: kpiTrend(data?.activeTrips),     cardBg: "bg-emerald-50 dark:bg-emerald-950/30", cardBorder: "border-emerald-200 dark:border-emerald-800", iconBg: "bg-emerald-100 dark:bg-emerald-900/50", iconColor: "text-emerald-600 dark:text-emerald-400" },
     { key: "vehiclesOnRoad",  label: "Vehicles on Road", value: data?.vehiclesOnRoad.value,  icon: Compass,       trend: kpiTrend(data?.vehiclesOnRoad),  cardBg: "bg-sky-50 dark:bg-sky-950/30",         cardBorder: "border-sky-200 dark:border-sky-800",         iconBg: "bg-sky-100 dark:bg-sky-900/50",         iconColor: "text-sky-600 dark:text-sky-400" },
-    { key: "driversOnDuty",   label: "Drivers on Duty",  value: data?.driversOnDuty.value,   icon: IdCard,        trend: kpiTrend(data?.driversOnDuty),   cardBg: "bg-amber-50 dark:bg-amber-950/30",     cardBorder: "border-amber-200 dark:border-amber-800",     iconBg: "bg-amber-100 dark:bg-amber-900/50",     iconColor: "text-amber-600 dark:text-amber-400" },
-    { key: "deliveriesToday", label: "Deliveries Today", value: data?.deliveriesToday.value, icon: CheckCircle2,  trend: kpiTrend(data?.deliveriesToday), cardBg: "bg-violet-50 dark:bg-violet-950/30",   cardBorder: "border-violet-200 dark:border-violet-800",   iconBg: "bg-violet-100 dark:bg-violet-900/50",   iconColor: "text-violet-600 dark:text-violet-400" },
+    // "vs yesterday" only makes sense for the Today preset — suppressed
+    // entirely for week/month/custom rather than shown misleadingly.
+    { key: "driversOnDuty",   label: "Drivers on Duty",  value: data?.driversOnDuty.value,   icon: IdCard,        trend: preset === "today" ? kpiTrend(data?.driversOnDuty) : { value: "", tone: "neutral" as const },   cardBg: "bg-amber-50 dark:bg-amber-950/30",     cardBorder: "border-amber-200 dark:border-amber-800",     iconBg: "bg-amber-100 dark:bg-amber-900/50",     iconColor: "text-amber-600 dark:text-amber-400" },
+    // "Today" in the label doesn't fit week/month/custom ranges.
+    { key: "deliveriesToday", label: preset === "today" ? "Deliveries Today" : "Deliveries", value: data?.deliveriesToday.value, icon: CheckCircle2,  trend: kpiTrend(data?.deliveriesToday), cardBg: "bg-violet-50 dark:bg-violet-950/30",   cardBorder: "border-violet-200 dark:border-violet-800",   iconBg: "bg-violet-100 dark:bg-violet-900/50",   iconColor: "text-violet-600 dark:text-violet-400" },
   ];
 
   const fs = data?.fleetStatus;
@@ -124,9 +127,9 @@ export default function Dashboard() {
   const dh = data?.driverHours;
   const dhMax = (dh ? dh.safe + dh.caution + dh.alert : 0) || 24;
   const driverHours = [
-    { label: `Under 8h — safe`,   value: dh?.safe    ?? 0, max: dhMax, color: "emerald" },
-    { label: `8–10h — caution`,   value: dh?.caution ?? 0, max: dhMax, color: "amber" },
-    { label: `Over 10h — alert`,  value: dh?.alert   ?? 0, max: dhMax, color: "rose" },
+    { label: `Under 8h — Safe`,   value: dh?.safe    ?? 0, max: dhMax, color: "emerald" },
+    { label: `8–10h — Caution`,   value: dh?.caution ?? 0, max: dhMax, color: "amber" },
+    { label: `Over 10h — Alert`,  value: dh?.alert   ?? 0, max: dhMax, color: "rose" },
   ];
 
   return (
@@ -185,7 +188,7 @@ export default function Dashboard() {
         {/* Date preset */}
         <div className="flex items-center gap-1 bg-secondary/60 rounded-lg p-1">
           {(["today", "week", "month", "custom"] as Preset[]).map((p) => {
-            const labels: Record<Preset, string> = { today: "Today", week: "This Week", month: "This Month", custom: "Custom Range" };
+            const labels: Record<Preset, string> = { today: "Today", week: "This Week", month: "This Month", custom: "Custom Date Range" };
             return (
               <button
                 key={p}
@@ -210,7 +213,7 @@ export default function Dashboard() {
                 <span className="text-sm">
                   {customRange.from && customRange.to
                     ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d")}`
-                    : "Pick range"}
+                    : "Pick Date Range"}
                 </span>
               </Button>
             </PopoverTrigger>
@@ -231,7 +234,7 @@ export default function Dashboard() {
           {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           <CalendarIcon className="w-3.5 h-3.5" />
           <span className="font-mono">
-            {format(from, "yyyy-MM-dd")} → {format(to, "yyyy-MM-dd")}
+            {format(from, "dd/MM/yyyy")} → {format(to, "dd/MM/yyyy")}
           </span>
         </div>
 
@@ -276,11 +279,11 @@ export default function Dashboard() {
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Truck className="w-4 h-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold text-foreground">Fleet Status</h3>
+              <h3 className="text-sm font-semibold text-foreground">Vehicle Status</h3>
             </div>
             {fs && (
               <span className="text-[11px] font-medium text-muted-foreground">
-                {fs.utilisationPct}% utilised
+                {fs.utilisationPct}% utilised ({fs.onRoad ?? 0} of {fs.total ?? 0} Vehicles)
               </span>
             )}
           </div>
@@ -319,7 +322,7 @@ export default function Dashboard() {
         >
           <div className="px-5 py-4 border-b border-border flex items-center gap-2">
             <User className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Driver Hours Today</h3>
+            <h3 className="text-sm font-semibold text-foreground">Driver Availability Hours</h3>
           </div>
           <div className="p-5 space-y-5 flex-1">
             {driverHours.map((s) => {
@@ -340,7 +343,7 @@ export default function Dashboard() {
           </div>
           <div className="px-5 pb-5">
             <p className="text-xs text-muted-foreground">
-              {dh?.subtitle ?? `Max limit: ${dh?.maxHoursPerDay ?? 10}h/day`}
+              {dh?.subtitle ?? `Max Limit: ${dh?.maxHoursPerDay ?? 10}h/day`}
             </p>
           </div>
         </motion.div>
