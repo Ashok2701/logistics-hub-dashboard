@@ -25,6 +25,8 @@ export interface PermissionEntry {
 export interface AuthUser {
   username: string;
   fullName?: string;
+  email?: string;
+  mobileNo?: string;
   role: string;        // role NAME (e.g. "Admin") — display only, same as before
   userType?: string;
   sites?: string[];
@@ -96,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userData: AuthUser = {
       username: data.username || username,
       fullName: data.fullName,
+      email: data.email,
+      mobileNo: data.mobileNo,
       role: data.role || "user",
       userType: data.userType,
       sites: Array.isArray(data.sites) ? data.sites : [],
