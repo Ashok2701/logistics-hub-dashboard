@@ -58,7 +58,7 @@ export default function Login() {
 
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
-            <p className="text-slate-500 mt-2 text-sm">Enter your credentials to access the command center.</p>
+            <p className="text-slate-500 mt-2 text-sm">Sign in to continue.</p>
           </div>
 
           {error && (
@@ -75,7 +75,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="username" className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                Username
+                User name
               </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -145,8 +145,8 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-            <span>v1.0.0</span>
+          <div className="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-900">
+
             <span>©{new Date().getFullYear()} TBS. All rights reserved.</span>
           </div>
         </motion.div>
