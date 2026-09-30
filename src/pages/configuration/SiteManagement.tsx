@@ -6,6 +6,10 @@ import { useSortable } from "@/hooks/useSortable";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -14,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Search, ArrowLeft, MapPin, Pencil, RefreshCw, Loader2, Locate } from "lucide-react";
+import { Search, ArrowLeft, MapPin, Pencil, RefreshCw, Loader2, Locate, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { siteApi, type Site } from "@/lib/fleetApi";
@@ -40,6 +44,8 @@ export default function SiteManagement() {
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [search, setSearch] = useState("");
+  const [confirmSave, setConfirmSave] = useState(false);
+  const [confirmLocate, setConfirmLocate] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Site | null>(null);
@@ -133,7 +139,7 @@ export default function SiteManagement() {
       };
       const updated = await siteApi.update(editing.siteCode, payload);
       setSites((prev) => prev.map((s) => s.siteCode === editing.siteCode ? { ...s, ...updated, ...payload } as Site : s));
-      toast({ title: "Site updated" });
+      toast({ title: "Site data updated successfully" });
       goBack();
     } catch (err: any) {
       toast({ title: "Failed to update site", description: err?.message ?? String(err), variant: "destructive" });
@@ -178,7 +184,7 @@ export default function SiteManagement() {
       }
       const { lat, lon } = data[0];
       setForm((f) => ({ ...f, latitude: String(lat), longitude: String(lon) }));
-      toast({ title: "Coordinates updated", description: `${lat}, ${lon}` });
+      toast({ title: "Coordinates updated Successfully", description: `${lat}, ${lon}` });
     } catch (err: any) {
       toast({ title: "Failed to locate", description: err?.message ?? String(err), variant: "destructive" });
     } finally {
@@ -189,6 +195,7 @@ export default function SiteManagement() {
   // ── Form View ─────────────────────────────────────────────────────
   if (view === "form" && editing) {
     return (
+      <>
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
         {/* Sticky header + tab nav (always visible while scrolling) */}
         <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur border-b border-border">
@@ -204,10 +211,10 @@ export default function SiteManagement() {
             </div>
             <div className="flex items-center gap-3">
               <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150 disabled:opacity-50">Cancel</button>
-              <button onClick={handleLocate} disabled={locating || saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50">
+              <button onClick={() => setConfirmLocate(true)} disabled={locating || saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-primary text-primary hover:bg-primary/10 inline-flex items-center gap-2 disabled:opacity-50">
                 {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Locate className="w-4 h-4" />} Locate
               </button>
-              <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
+              <button onClick={() => setConfirmSave(true)} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}Save
               </button>
             </div>
@@ -357,6 +364,33 @@ export default function SiteManagement() {
 
 
       </motion.div>
+
+      <AlertDialog open={confirmLocate} onOpenChange={setConfirmLocate}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Update Location</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to update the location?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmLocate(false); handleLocate(); }}>Update</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmSave} onOpenChange={setConfirmSave}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Changes</AlertDialogTitle>
+            <AlertDialogDescription>Do you want to proceed with saving the changes?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmSave(false); handleSave(); }}>Save</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </>
     );
   }
 
@@ -369,7 +403,16 @@ export default function SiteManagement() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-          <Input placeholder="Search sites…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm focus-visible:ring-primary/30" />
+          <Input placeholder="Search sites…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 pr-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm focus-visible:ring-primary/30" />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+              title="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="flex flex-col gap-1">
