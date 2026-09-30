@@ -79,7 +79,7 @@ export default function SyncCenter() {
     setBusy(objectCode);
     try {
       await syncApi.sync(objectCode);
-      toast.success(`${objectName} Sync Completed Successfully`);
+      toast.success(`${objectName} data synchronized successfully.`);
       await load();
     } catch (e: any) {
       toast.error(e?.message || `${objectName} sync failed`);
@@ -93,7 +93,7 @@ export default function SyncCenter() {
     setBusy("__all__");
     try {
       await syncApi.syncAll();
-      toast.success("All Sync Completed Successfully");
+      toast.success("All Master Data Synchronizations Completed Successfully.");
       await load();
     } catch (e: any) {
       toast.error(e?.message || "Sync All failed");
@@ -145,11 +145,11 @@ export default function SyncCenter() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <MetricCard title="Total Objects" value={total} icon={Database} index={0} />
-        <MetricCard title="Successful Syncs" value={successCount} icon={CheckCircle2} index={3} />
+        <MetricCard title="Successfully Synced Objects" value={`${successCount}/${total}`} icon={CheckCircle2} index={3} />
         <MetricCard title="Issues" value={failedCount} icon={XCircle} index={7} />
         <MetricCard
           title="Last Sync"
-          value={lastSync ? new Date(lastSync).toLocaleTimeString() : "—"}
+          value={lastSync ? `${new Date(lastSync).toLocaleDateString()} ${new Date(lastSync).toLocaleTimeString()}` : "—"}
           icon={Clock}
           index={1}
         />
@@ -162,9 +162,9 @@ export default function SyncCenter() {
               <SortableTh sortKey="objectName" sort={sort}>Object Name</SortableTh>
               <SortableTh sortKey="x3Count" sort={sort}>X3 Count</SortableTh>
               <SortableTh sortKey="postgresCount" sort={sort}>PostgreSQL Count</SortableTh>
-              <SortableTh sortKey="differenceCount" sort={sort}>Difference</SortableTh>
+              <SortableTh sortKey="differenceCount" sort={sort}>Data Mapping Result</SortableTh>
               <SortableTh sortKey="status" sort={sort}>Status</SortableTh>
-              <SortableTh sortKey="lastSyncTime" sort={sort}>Last Sync Time</SortableTh>
+              <SortableTh sortKey="lastSyncTime" sort={sort}>Last Sync Date and Time</SortableTh>
               <th>Actions</th>
             </tr>
           </thead>
@@ -229,7 +229,7 @@ export default function SyncCenter() {
           <AlertDialogHeader>
             <AlertDialogTitle>Sync All Master Data?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will synchronize all master data from Sage X3. Continue?
+              This will synchronize all master data from Sage X3. Do you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -250,12 +250,12 @@ export default function SyncCenter() {
                 <tr>
                   <th>Started</th>
                   <th>Completed</th>
-                  <th>X3</th>
-                  <th>Before</th>
-                  <th>After</th>
-                  <th>Inserted</th>
-                  <th>Updated</th>
-                  <th>Failed</th>
+                  <th>X3 Count</th>
+                  <th>Count Before Sync</th>
+                  <th>Count After Sync</th>
+                  <th>New Added Count</th>
+                  <th>Updated Count</th>
+                  <th>Failed Count</th>
                   <th>Status</th>
                   <th>Error</th>
                 </tr>
