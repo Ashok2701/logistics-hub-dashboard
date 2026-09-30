@@ -11,7 +11,12 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowLeft, Pencil, RefreshCw, Loader2, Plus, Trash2, MapPin, Locate } from "lucide-react";
+import { Search, ArrowLeft, Pencil, RefreshCw, Loader2, Plus, Trash2, MapPin, Locate, X } from "lucide-react";
+import { format as formatDate } from "date-fns";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -44,6 +49,20 @@ const emptyAddr: AddrForm = {
 const isTmsActive = (c: Customer) =>
   c.active === true;
 
+// Item 35: raw syncedAt timestamps from the backend need a readable
+// display format - "03-Jul-2026 12:05:17 PM" rather than whatever raw
+// ISO/timestamp string the API sends.
+const fmtSyncedAt = (value?: string | null) => {
+  if (!value) return "";
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return formatDate(d, "dd-MMM-yyyy hh:mm:ss a");
+  } catch {
+    return value;
+  }
+};
+
 const addrLabel = (a: CustomerAddress) =>
   a.addressDescription ?? a.description ?? a.city ?? a.addressCode;
 
@@ -64,6 +83,7 @@ export default function CustomerManagement() {
   const [detail, setDetail] = useState<Customer | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [savingInfo, setSavingInfo] = useState(false);
+  const [confirmSaveInfo, setConfirmSaveInfo] = useState(false);
   const [info, setInfo] = useState<InfoForm>(emptyInfo);
   const [tab, setTab] = useState<"info" | "addresses">("info");
 
@@ -72,6 +92,7 @@ export default function CustomerManagement() {
   const [addr, setAddr] = useState<AddrForm>(emptyAddr);
   const [loadingAddr, setLoadingAddr] = useState(false);
   const [savingAddr, setSavingAddr] = useState(false);
+  const [confirmSaveAddr, setConfirmSaveAddr] = useState(false);
   const [locatingAddr, setLocatingAddr] = useState(false);
   const [categories, setCategories] = useState<VehicleCategory[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -138,7 +159,7 @@ export default function CustomerManagement() {
       const updated = await customerApi.update(detail.customerCode, payload);
       setDetail((d) => d ? { ...d, ...updated, ...payload } as Customer : d);
       setItems((p) => p.map((c) => c.customerCode === detail.customerCode ? { ...c, ...payload } as Customer : c));
-      toast({ title: "Customer updated" });
+      toast({ title: "Customer details updated successfully" });
     } catch (err: any) {
       toast({ title: "Failed to update customer", description: err?.message ?? String(err), variant: "destructive" });
     } finally { setSavingInfo(false); }
@@ -227,7 +248,7 @@ export default function CustomerManagement() {
         ...d,
         addresses: (d.addresses ?? []).map((x) => x.addressCode === selectedAddrCode ? { ...x, ...updated, ...payload } : x),
       } : d);
-      toast({ title: "Address updated" });
+      toast({ title: "Address updated Successfully" });
     } catch (err: any) {
       toast({ title: "Failed to save address", description: err?.message ?? String(err), variant: "destructive" });
     } finally { setSavingAddr(false); }
@@ -372,6 +393,7 @@ export default function CustomerManagement() {
     const selectedAddress = addresses.find((a) => a.addressCode === selectedAddrCode) ?? null;
 
     return (
+      <>
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
         {/* Sticky header + tab nav (matches Site pattern) */}
         <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur border-b border-border">
@@ -388,9 +410,9 @@ export default function CustomerManagement() {
             <div className="flex items-center gap-3">
               <button onClick={goBack} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150">Cancel</button>
               {tab === "info" ? (
-                <button onClick={handleSaveInfo} disabled={savingInfo || loadingDetail} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingInfo && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
+                <button onClick={() => setConfirmSaveInfo(true)} disabled={savingInfo || loadingDetail} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingInfo && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
               ) : (
-                <button onClick={handleSaveAddr} disabled={savingAddr || !selectedAddrCode || loadingAddr} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingAddr && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
+                <button onClick={() => setConfirmSaveAddr(true)} disabled={savingAddr || !selectedAddrCode || loadingAddr} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">{savingAddr && <Loader2 className="w-4 h-4 animate-spin" />}Save</button>
               )}
             </div>
           </div>
@@ -430,7 +452,7 @@ export default function CustomerManagement() {
                   <Field label="Country Code"><ReadOnly value={detail.countryCode ?? ""} mono /></Field>
                   <Field label="Currency Code"><ReadOnly value={detail.currencyCode ?? ""} mono /></Field>
                   <Field label="Active"><ReadOnly value={detail.active ? "Yes" : "No"} /></Field>
-                  <Field label="Last Synced"><ReadOnly value={detail.syncedAt ?? ""} /></Field>
+                  <Field label="Last Synced"><ReadOnly value={fmtSyncedAt(detail.syncedAt)} /></Field>
                 </div>
               </Section>
 
@@ -609,6 +631,33 @@ export default function CustomerManagement() {
           )}
         </div>
       </motion.div>
+
+      <AlertDialog open={confirmSaveInfo} onOpenChange={setConfirmSaveInfo}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Changes</AlertDialogTitle>
+            <AlertDialogDescription>Do you want to proceed with saving the changes?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmSaveInfo(false); handleSaveInfo(); }}>Save</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmSaveAddr} onOpenChange={setConfirmSaveAddr}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Changes</AlertDialogTitle>
+            <AlertDialogDescription>Do you want to proceed with saving the changes?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmSaveAddr(false); handleSaveAddr(); }}>Save</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </>
     );
   }
 
@@ -619,7 +668,16 @@ export default function CustomerManagement() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-          <Input placeholder="Search customers…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm" />
+          <Input placeholder="Search customers…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 pr-9 h-9 rounded-lg bg-secondary/50 border-border/50 text-sm" />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+              title="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <div className="flex items-end gap-3 w-full sm:w-auto">
           <div className="flex flex-col gap-1">
@@ -645,13 +703,12 @@ export default function CustomerManagement() {
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
               <SortableTableHead sortKey="customerCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Code</SortableTableHead>
               <SortableTableHead sortKey="customerName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</SortableTableHead>
-              <SortableTableHead sortKey="shortName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Short</SortableTableHead>
               <SortableTableHead sortKey="countryCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Country</SortableTableHead>
               <SortableTableHead sortKey="currencyCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Currency</SortableTableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Active</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Service</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Waiting</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell text-right">Addresses</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell text-right">No. of Addresses</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -668,7 +725,6 @@ export default function CustomerManagement() {
               >
                 <TableCell className="font-medium text-sm font-mono">{c.customerCode}</TableCell>
                 <TableCell className="text-sm">{c.customerName}</TableCell>
-                <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{c.shortName ?? "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{c.countryCode ?? "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground font-mono hidden lg:table-cell">{c.currencyCode ?? "—"}</TableCell>
                 <TableCell><StatusBadge status={c.active ? "Active" : "Inactive"} variant={c.active ? "primary" : "muted"} /></TableCell>
