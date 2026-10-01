@@ -6,6 +6,10 @@ import { PageHeader } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { userTypesApi, type UserType } from "@/lib/userMgmtApi";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const empty = (): UserType => ({
   userTypeId: "",
@@ -22,6 +26,7 @@ export default function UserTypesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<UserType | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<UserType | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -64,7 +69,7 @@ export default function UserTypesPage() {
           requiresSiteMapping: draft.requiresSiteMapping,
           active: draft.active,
         });
-        toast.success("User type created");
+        toast.success("User type created successfully");
       } else {
         await userTypesApi.update(draft.userTypeId, {
           userTypeCode: draft.userTypeCode.trim(),
@@ -72,15 +77,14 @@ export default function UserTypesPage() {
           requiresSiteMapping: draft.requiresSiteMapping,
           active: draft.active,
         });
-        toast.success("User type updated");
+        toast.success("User type updated successfully");
       }
       setEditingId(null); setDraft(null); setIsNew(false);
       await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
   };
   const remove = async (r: UserType) => {
-    if (!confirm(`Delete user type "${r.userTypeName}"?`)) return;
-    try { await userTypesApi.remove(r.userTypeId); toast.success("Deleted"); await load(); }
+    try { await userTypesApi.remove(r.userTypeId); toast.success("User type deleted successfully"); await load(); }
     catch (e: any) { toast.error(e.message || "Delete failed"); }
   };
 
@@ -91,7 +95,7 @@ export default function UserTypesPage() {
     <div>
       <PageHeader
         title="User Types"
-        subtitle="Manage user categories and site-mapping requirements"
+        subtitle="Manage user categories and site assignments."
         actions={
           <>
             <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
@@ -179,7 +183,7 @@ export default function UserTypesPage() {
                       ) : (
                         <>
                           <button onClick={() => startEdit(r)} disabled={editingId !== null} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-primary hover:bg-primary/8 hover:scale-110 transition-all disabled:opacity-30" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => remove(r)} disabled={editingId !== null} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all disabled:opacity-30" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => setConfirmDelete(r)} disabled={editingId !== null} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all disabled:opacity-30" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                         </>
                       )}
                     </div>
@@ -190,6 +194,21 @@ export default function UserTypesPage() {
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User Type</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the user type "{confirmDelete?.userTypeName}"?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmDelete) remove(confirmDelete); setConfirmDelete(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

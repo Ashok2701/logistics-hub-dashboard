@@ -15,6 +15,10 @@ import {
 } from "@/lib/userMgmtApi";
 import { transportApi, type ApiSite } from "@/lib/transportApi";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FormState {
   username: string;
@@ -77,6 +81,7 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [userTypes, setUserTypes] = useState<UserType[]>([]);
   const [sites, setSites] = useState<ApiSite[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<UserRecord | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -107,12 +112,14 @@ export default function UsersPage() {
     () => userTypes.find((t) => t.userTypeId === form.userTypeId),
     [userTypes, form.userTypeId]
   );
-  const isRoutePlanner = (name?: string) =>
-    !!name && name.trim().toLowerCase() === "route planner";
-
   const isAdmin = selectedUserType?.userTypeName?.trim().toLowerCase() === "admin";
 
-  const requiresSites = isRoutePlanner(selectedUserType?.userTypeName);
+  // Item 70 bug fix: this used to hardcode a check against the literal
+  // string "Route Planner", so the site selector never appeared for
+  // any other user type - even ones an admin explicitly configured as
+  // requiring site mapping via the User Types page's own checkbox.
+  // Reads the actual flag instead.
+  const requiresSites = !!selectedUserType?.requiresSiteMapping;
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
@@ -142,8 +149,7 @@ export default function UsersPage() {
   };
 
   const remove = async (u: UserRecord) => {
-    if (!confirm(`Delete user "${u.username}"?`)) return;
-    try { await usersApi.remove(u.userId); toast.success("Deleted"); await load(); }
+    try { await usersApi.remove(u.userId); toast.success("User deleted successfully"); await load(); }
     catch (e: any) { toast.error(e.message || "Delete failed"); }
   };
 
@@ -154,15 +160,21 @@ export default function UsersPage() {
     if (!form.userTypeId) { toast.error("User type required"); return; }
     if (requiresSites && !form.roleId) { toast.error("Role required"); return; }
     if (requiresSites && form.sites.length === 0) { toast.error("Select at least one site"); return; }
-        // mobile number validation: must be 10 digits and valid Indian mobile number
+        // Item 74: relaxed from a strict real-world validity check
+        // (parsePhoneNumberFromString().isValid()) to a basic
+        // digit-count check - the strict version rejected reasonable
+        // test/placeholder values (e.g. "1111111111") at user
+        // creation. Still normalizes via the phone library when it
+        // parses cleanly, but no longer blocks saving if it doesn't.
           let normalizedMobile = "";
       if (form.mobileNo.trim()) {
-        const parsedMobile = parsePhoneNumberFromString(form.mobileNo.trim());
-        if (!parsedMobile || !parsedMobile.isValid()) {
-          toast.error("Enter a valid mobile number (include country code, e.g. +91...)");
+        const digitsOnly = form.mobileNo.trim().replace(/[^\d]/g, "");
+        if (digitsOnly.length < 7) {
+          toast.error("Enter a mobile number with at least 7 digits");
           return;
         }
-        normalizedMobile = parsedMobile.number; // clean E.164 format, e.g. "+919866906675"
+        const parsedMobile = parsePhoneNumberFromString(form.mobileNo.trim());
+        normalizedMobile = parsedMobile?.number ?? form.mobileNo.trim();
       }
         // email validation: must be valid email address
             if (emailInputRef.current && !emailInputRef.current.checkValidity()) {
@@ -207,10 +219,10 @@ if (editingId) {
     updatePayload.password = form.password.trim();
   }
   await usersApi.update(editingId, updatePayload);
-  toast.success("User updated");
+  toast.success("User details updated successfully");
 } else {
   await usersApi.create({ ...base, password: form.password });
-  toast.success("User created");
+  toast.success("User created successfully");
 }
       setView("list"); await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
@@ -337,7 +349,7 @@ if (editingId) {
     <div>
       <PageHeader
         title="Users"
-        subtitle="Manage user accounts and assignments"
+        subtitle="Manage user accounts, roles, and site assignments."
         actions={
           <>
             <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
@@ -408,7 +420,7 @@ if (editingId) {
                 <td>
                   <div className="flex items-center justify-end gap-1">
                     <button onClick={() => openEdit(u)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-primary hover:bg-primary/8 hover:scale-110 transition-all" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => remove(u)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setConfirmDelete(u)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </td>
               </motion.tr>
@@ -416,6 +428,21 @@ if (editingId) {
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the user "{confirmDelete?.username}"?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmDelete) remove(confirmDelete); setConfirmDelete(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

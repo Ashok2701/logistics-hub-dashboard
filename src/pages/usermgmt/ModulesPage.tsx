@@ -63,8 +63,8 @@ export default function ModulesPage() {
       active: draft.active,
     };
     try {
-      if (isNew) { await modulesApi.create(payload); toast.success("Module created"); }
-      else { await modulesApi.update(draft.moduleId, { ...payload, active: draft.active }); toast.success("Module updated"); }
+      if (isNew) { await modulesApi.create(payload); toast.success("Module created successfully"); }
+      else { await modulesApi.update(draft.moduleId, { ...payload, active: draft.active }); toast.success("Module updated successfully"); }
       setEditingId(null); setDraft(null); setIsNew(false); await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
   };
@@ -114,8 +114,10 @@ export default function ModulesPage() {
               <SortableTh sortKey="moduleName" sort={sort}>Name</SortableTh>
               <SortableTh sortKey="menuName" sort={sort}>Menu Name</SortableTh>
               <SortableTh sortKey="menuPath" sort={sort}>Menu Path</SortableTh>
-              <th className="w-24">Icon</th>
-              <SortableTh sortKey="displayOrder" sort={sort} className="w-20">Order</SortableTh>
+              <th className="w-24"><span title="The Lucide icon name shown next to this module in the sidebar (e.g. 'users', 'truck')">Icon</span></th>
+              <SortableTh sortKey="displayOrder" sort={sort} className="w-20">
+                <span title="The module's sort position in the sidebar menu - lower numbers appear higher up">Order</span>
+              </SortableTh>
               <th className="w-24">Active</th>
               <th className="w-28 text-right">Actions</th>
             </tr>

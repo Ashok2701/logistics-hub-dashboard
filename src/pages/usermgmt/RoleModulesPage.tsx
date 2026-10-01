@@ -90,7 +90,7 @@ export default function RoleModulesPage() {
         canView: p.canView, canCreate: p.canCreate, canEdit: p.canEdit, canDelete: p.canDelete,
       }));
       await roleModulesApi.save(selectedRole, body);
-      toast.success("Modules saved for role");
+      toast.success("Module access has been successfully updated for the selected role.");
     } catch (e: any) { toast.error(e.message || "Save failed"); }
     finally { setSaving(false); }
   };
@@ -106,7 +106,7 @@ export default function RoleModulesPage() {
     <div>
       <PageHeader
         title="Assign Modules to Roles"
-        subtitle="Choose which modules each role can access"
+        subtitle="Configure the modules accessible to each user role."
         actions={
           <button onClick={save} disabled={!selectedRole || saving}
             className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">

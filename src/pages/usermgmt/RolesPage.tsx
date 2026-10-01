@@ -6,6 +6,10 @@ import { PageHeader } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { rolesApi, type Role } from "@/lib/userMgmtApi";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const empty = (): Role => ({ roleId: "", roleCode: "", roleName: "", active: true });
 
@@ -16,6 +20,7 @@ export default function RolesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Role | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<Role | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -58,17 +63,16 @@ export default function RolesPage() {
       };
       if (isNew) {
         await rolesApi.create(payload);
-        toast.success("Role created");
+        toast.success("New Role created successfully");
       } else {
         await rolesApi.update(draft.roleId, payload);
-        toast.success("Role updated");
+        toast.success("Modified Role data was saved successfully");
       }
       setEditingId(null); setDraft(null); setIsNew(false); await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
   };
   const remove = async (r: Role) => {
-    if (!confirm(`Delete role "${r.roleName}"?`)) return;
-    try { await rolesApi.remove(r.roleId); toast.success("Deleted"); await load(); }
+    try { await rolesApi.remove(r.roleId); toast.success("Role deleted successfully"); await load(); }
     catch (e: any) { toast.error(e.message || "Delete failed"); }
   };
   const upd = <K extends keyof Role>(k: K, v: Role[K]) => setDraft((d) => (d ? { ...d, [k]: v } : d));
@@ -77,7 +81,7 @@ export default function RolesPage() {
     <div>
       <PageHeader
         title="Roles"
-        subtitle="Define roles assignable to users"
+        subtitle="Define and manage assignable user roles."
         actions={
           <>
             <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
@@ -153,7 +157,7 @@ export default function RolesPage() {
                       ) : (
                         <>
                           <button onClick={() => startEdit(r)} disabled={editingId !== null} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-primary hover:bg-primary/8 hover:scale-110 transition-all disabled:opacity-30" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => remove(r)} disabled={editingId !== null} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all disabled:opacity-30" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => setConfirmDelete(r)} disabled={editingId !== null} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all disabled:opacity-30" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                         </>
                       )}
                     </div>
@@ -164,6 +168,21 @@ export default function RolesPage() {
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Role</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the role "{confirmDelete?.roleName}"?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmDelete) remove(confirmDelete); setConfirmDelete(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
