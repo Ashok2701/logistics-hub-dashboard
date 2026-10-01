@@ -7,6 +7,10 @@ import { Plus, Search, FileText, RefreshCw, Check, X, Edit, Trash2, Loader2 } fr
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { documentConfigApi, type DocumentConfig } from "@/lib/documentConfigApi";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const DOC_OPTIONS = [
   "Sales Order",
@@ -96,6 +100,7 @@ export default function DocumentConfiguration() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [filterDoc, setFilterDoc] = useState<string>("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<DocRow | null>(null);
@@ -168,7 +173,7 @@ export default function DocumentConfiguration() {
           ? prev.map((r) => (r.id === draft.id ? saved : r))
           : prev.map((r) => (r.id === draft.id ? saved : r))
       );
-      toast.success("Saved");
+      toast.success("Document data saved successfully");
       setEditingId(null);
       setDraft(null);
     } catch (e: any) {
@@ -188,10 +193,11 @@ export default function DocumentConfiguration() {
     }
   };
 
-  const refresh = () => {
+  const refresh = async () => {
     setSearch("");
     setFilterDoc("");
-    load();
+    await load();
+    toast.success("Document data refreshed successfully");
   };
 
   const update = <K extends keyof DocRow>(key: K, value: DocRow[K]) =>
@@ -201,7 +207,7 @@ export default function DocumentConfiguration() {
     <div>
       <PageHeader
         title="Document Configuration"
-        subtitle="Configure document templates, labels & colors"
+        subtitle="Customize document templates, labels, and visual styles."
         actions={
           <>
             <button
@@ -252,15 +258,14 @@ export default function DocumentConfiguration() {
               <SortableTh sortKey="document" sort={sort}>Document</SortableTh>
               <SortableTh sortKey="docType" sort={sort}>Doc Type</SortableTh>
               <SortableTh sortKey="labelEng" sort={sort}>Display Name (English)</SortableTh>
-              <SortableTh sortKey="labelFra" sort={sort}>Display Name (French)</SortableTh>
-              <th>Color</th>
+              <th>Doc Type Style</th>
               <th className="w-28 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-12">
+                <td colSpan={5} className="text-center py-12">
                   <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No documents found</p>
                 </td>
@@ -315,17 +320,6 @@ export default function DocumentConfiguration() {
                     </td>
                     <td>
                       {isEditing ? (
-                        <input
-                          value={draft!.labelFra}
-                          onChange={(e) => update("labelFra", e.target.value)}
-                          className="h-9 px-2 rounded-lg border border-border bg-card text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 w-full"
-                        />
-                      ) : (
-                        <span className="text-foreground">{r.labelFra}</span>
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
                         <ColorPicker value={draft!.color} onChange={(v) => update("color", v)} />
                       ) : (
                         <div className="flex items-center gap-2">
@@ -364,7 +358,7 @@ export default function DocumentConfiguration() {
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => deleteRow(r.id)}
+                              onClick={() => setConfirmDeleteId(r.id)}
                               disabled={editingId !== null}
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Delete"
@@ -382,6 +376,19 @@ export default function DocumentConfiguration() {
           </tbody>
         </table>
       </DataTableShell>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => { if (!o) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete the document?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmDeleteId) deleteRow(confirmDeleteId); setConfirmDeleteId(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

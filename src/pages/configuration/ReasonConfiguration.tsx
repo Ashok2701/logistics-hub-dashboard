@@ -6,6 +6,10 @@ import { Plus, Search, ListChecks, RefreshCw, Check, X, Edit, Trash2 } from "luc
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { reasonConfigApi, REASON_TYPES, type Reason, type ReasonType } from "@/lib/reasonConfigApi";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const TEMP_PREFIX = "__new__";
 const isTempId = (id: string) => id.startsWith(TEMP_PREFIX);
@@ -19,6 +23,7 @@ export default function ReasonConfiguration() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Reason | null>(null);
@@ -82,7 +87,7 @@ export default function ReasonConfiguration() {
         ? await reasonConfigApi.create(payload)
         : await reasonConfigApi.update(draft.id, payload);
       setRows((prev) => prev.map((r) => (r.id === draft.id ? saved : r)));
-      toast.success("Saved");
+      toast.success("Reason saved successfully");
       setEditingId(null);
       setDraft(null);
     } catch (e: any) {
@@ -96,7 +101,7 @@ export default function ReasonConfiguration() {
     try {
       await reasonConfigApi.remove(id);
       setRows((prev) => prev.filter((r) => r.id !== id));
-      toast.success("Deleted");
+      toast.success("Reason deleted successfully");
     } catch (e: any) {
       toast.error(e?.message || "Failed to delete");
     }
@@ -111,7 +116,12 @@ export default function ReasonConfiguration() {
     }
   };
 
-  const refresh = () => { setSearch(""); setFilterType(""); load(); };
+  const refresh = async () => {
+    setSearch("");
+    setFilterType("");
+    await load();
+    toast.success("Reasons refreshed successfully");
+  };
 
   const update = <K extends keyof Reason>(key: K, value: Reason[K]) =>
     setDraft((d) => (d ? { ...d, [key]: value } : d));
@@ -120,7 +130,7 @@ export default function ReasonConfiguration() {
     <div>
       <PageHeader
         title="Reason Configuration"
-        subtitle="Configure reasons for Reschedule, Cancel, Skip & Partial Delivery"
+        subtitle="Configure reasons for rescheduling, cancellation, skipping, and partial delivery."
         actions={
           <>
             <button
@@ -157,8 +167,17 @@ export default function ReasonConfiguration() {
               placeholder="Search reason..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-9 pl-10 pr-4 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 shadow-soft transition-all"
+              className="w-full h-9 pl-10 pr-9 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 shadow-soft transition-all"
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
         <p className="text-xs text-muted-foreground">{filtered.length} Reasons</p>
@@ -275,7 +294,7 @@ export default function ReasonConfiguration() {
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => deleteRow(r.id)}
+                              onClick={() => setConfirmDeleteId(r.id)}
                               disabled={editingId !== null}
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Delete"
@@ -293,6 +312,19 @@ export default function ReasonConfiguration() {
           </tbody>
         </table>
       </DataTableShell>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => { if (!o) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Reason</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete this reason?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmDeleteId) deleteRow(confirmDeleteId); setConfirmDeleteId(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

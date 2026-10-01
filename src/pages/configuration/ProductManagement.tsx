@@ -165,9 +165,6 @@ export default function ProductManagement() {
             <section id="section-tms" className="scroll-mt-40">
               <Section title="TMS Configuration">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Field label="Service Time (HH:MM)">
-                    <Input value={form.serviceTime} onChange={(e) => setForm((f) => ({ ...f, serviceTime: e.target.value }))} placeholder="00:05" className="h-9" />
-                  </Field>
                 </div>
               </Section>
             </section>
@@ -210,17 +207,16 @@ export default function ProductManagement() {
               <SortableTableHead sortKey="productCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Code</SortableTableHead>
               <SortableTableHead sortKey="productName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</SortableTableHead>
               <SortableTableHead sortKey="productCategory" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Category</SortableTableHead>
-              <SortableTableHead sortKey="unitOfMeasure" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">UoM</SortableTableHead>
-              <SortableTableHead sortKey="serviceTime" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Service Time</SortableTableHead>
+              <SortableTableHead sortKey="unitOfMeasure" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">UOM</SortableTableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">TMS</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading products…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading products…</TableCell></TableRow>
             ) : sort.sorted.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">No products found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground text-sm">No products found</TableCell></TableRow>
             ) : sort.sorted.map((p, i) => {
               const tms = isTmsActive(p);
               return (
@@ -229,7 +225,6 @@ export default function ProductManagement() {
                   <TableCell className="text-sm">{p.productName}</TableCell>
                   <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{p.productCategory ?? "—"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{p.unitOfMeasure ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{p.serviceTime ?? "—"}</TableCell>
                   <TableCell><StatusBadge status={tms ? "Active" : "Inactive"} variant={tms ? "primary" : "muted"} /></TableCell>
                   <TableCell className="text-right">
                     <button onClick={(e) => { e.stopPropagation(); openEdit(p); }} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"><Pencil className="w-4 h-4" /></button>

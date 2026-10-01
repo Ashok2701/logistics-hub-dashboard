@@ -6,6 +6,10 @@ import { Plus, Search, Warehouse, RefreshCw, Check, X, Edit, Trash2 } from "luci
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { loadBayConfigApi, type LoadBay } from "@/lib/loadBayConfigApi";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const TEMP_PREFIX = "__new__";
 const isTempId = (id: string) => id.startsWith(TEMP_PREFIX);
@@ -17,6 +21,7 @@ export default function LoadBayConfiguration() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<LoadBay | null>(null);
 
@@ -67,6 +72,13 @@ export default function LoadBayConfiguration() {
   const saveEdit = async () => {
     if (!draft) return;
     if (!draft.description.trim()) { toast.error("Description is required"); return; }
+    // Item 53 bug fix: duplicate load bay names were allowed - nothing
+    // checked for an existing row with the same description before
+    // saving. Case-insensitive, excludes the row currently being edited.
+    const dup = rows.some(
+      (r) => r.id !== draft.id && r.description.trim().toLowerCase() === draft.description.trim().toLowerCase()
+    );
+    if (dup) { toast.error("A load bay with this description already exists"); return; }
     setSaving(true);
     try {
       const isNew = isTempId(draft.id);
@@ -75,7 +87,7 @@ export default function LoadBayConfiguration() {
         ? await loadBayConfigApi.create(payload)
         : await loadBayConfigApi.update(draft.id, payload);
       setRows((prev) => prev.map((r) => (r.id === draft.id ? saved : r)));
-      toast.success("Saved");
+      toast.success("Load bay saved successfully");
       setEditingId(null);
       setDraft(null);
     } catch (e: any) {
@@ -89,7 +101,7 @@ export default function LoadBayConfiguration() {
     try {
       await loadBayConfigApi.remove(id);
       setRows((prev) => prev.filter((r) => r.id !== id));
-      toast.success("Deleted");
+      toast.success("Load bay deleted successfully");
     } catch (e: any) {
       toast.error(e?.message || "Failed to delete");
     }
@@ -104,7 +116,11 @@ export default function LoadBayConfiguration() {
     }
   };
 
-  const refresh = () => { setSearch(""); load(); };
+  const refresh = async () => {
+    setSearch("");
+    await load();
+    toast.success("Load bays refreshed successfully");
+  };
 
   const update = <K extends keyof LoadBay>(key: K, value: LoadBay[K]) =>
     setDraft((d) => (d ? { ...d, [key]: value } : d));
@@ -113,7 +129,7 @@ export default function LoadBayConfiguration() {
     <div>
       <PageHeader
         title="Load Bay Configuration"
-        subtitle="Configure loading bays available for driver Check-In"
+        subtitle="Configure loading bay availability for driver check-in."
         actions={
           <>
             <button
@@ -141,8 +157,17 @@ export default function LoadBayConfiguration() {
             placeholder="Search load bay..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-9 pl-10 pr-4 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 shadow-soft transition-all"
+            className="w-full h-9 pl-10 pr-9 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 shadow-soft transition-all"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+              title="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <p className="text-xs text-muted-foreground">{filtered.length} Load Bays</p>
       </div>
@@ -243,7 +268,7 @@ export default function LoadBayConfiguration() {
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => deleteRow(r.id)}
+                              onClick={() => setConfirmDeleteId(r.id)}
                               disabled={editingId !== null}
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Delete"
@@ -261,6 +286,19 @@ export default function LoadBayConfiguration() {
           </tbody>
         </table>
       </DataTableShell>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => { if (!o) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Load Bay</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete the Load Bay?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmDeleteId) deleteRow(confirmDeleteId); setConfirmDeleteId(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
