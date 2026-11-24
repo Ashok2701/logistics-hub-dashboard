@@ -4,6 +4,8 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addM
 import { ChevronLeft, ChevronRight, X, Truck, User, Route, MapPin, Package, Clock, Calendar as CalendarIcon, ChevronDown, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
+import { fetchLiveReport } from "@/lib/reportsApi";
+import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
 
 interface OrderProduct {
   productId: string;
@@ -21,7 +23,7 @@ interface Order {
   customer: string;
   customerName: string;
   type: "DELIVERY" | "PICKUP" | "SHIPMENT PREP" | "ORDER" | "PICK TICKET" | "SALES RETURN";
-  status: "Completed" | "Planned" | "In Progress" | "To Plan";
+  status: "Completed" | "Planned" | "In Progress" | "To Plan" | "Skipped" | "Cancelled";
   date: Date;
   time: string;
   vehicle: string;
@@ -34,85 +36,13 @@ interface Order {
   products: OrderProduct[];
 }
 
-const sampleOrders: Order[] = [
-  {
-    id: "1", orderNumber: "CAT012602SON00210", site: "CAT01", customer: "G819", customerName: "Tullyglass House Hotel Ltd",
-    type: "DELIVERY", status: "Completed", date: new Date(2026, 2, 26), time: "08:30", vehicle: "VH-101", driver: "J. Murphy",
-    routeNumber: "RT-001", origin: "CAT01 Warehouse", destination: "Ballymena",
-    totalPacks: 4, totalWeight: 32,
-    products: [
-      { productId: "11699", description: "Mixing Glasses Starburst 700ml", qty: 6, unit: "EA", weight: 4.2, weightUnit: "KG" },
-      { productId: "11700", description: "Cocktail Shaker Boston 28oz", qty: 4, unit: "EA", weight: 2.8, weightUnit: "KG" },
-      { productId: "22450", description: "Premium Bar Napkins 1000pk", qty: 10, unit: "PK", weight: 5.0, weightUnit: "KG" },
-    ],
-  },
-  {
-    id: "2", orderNumber: "CAT012602SON00211", site: "CAT01", customer: "G819", customerName: "Tullyglass House Hotel Ltd",
-    type: "DELIVERY", status: "Completed", date: new Date(2026, 2, 26), time: "10:00", vehicle: "VH-101", driver: "J. Murphy",
-    routeNumber: "RT-001", origin: "CAT01 Warehouse", destination: "Ballymena",
-    totalPacks: 2, totalWeight: 12,
-    products: [
-      { productId: "33100", description: "Disposable Gloves Medium Box", qty: 20, unit: "BX", weight: 6.0, weightUnit: "KG" },
-    ],
-  },
-  {
-    id: "3", orderNumber: "CAT012602SON00212", site: "CAT01", customer: "H102", customerName: "Belfast Grand Central",
-    type: "SHIPMENT PREP", status: "In Progress", date: new Date(2026, 2, 27), time: "07:00", vehicle: "VH-102", driver: "S. O'Brien",
-    routeNumber: "RT-003", origin: "CAT01 Warehouse", destination: "Belfast",
-    totalPacks: 0, totalWeight: 0,
-    products: [],
-  },
-  {
-    id: "4", orderNumber: "IRE012602SON00050", site: "IRE01", customer: "M201", customerName: "Galway Bay Seafoods",
-    type: "DELIVERY", status: "Completed", date: new Date(2026, 2, 26), time: "05:30", vehicle: "VH-201", driver: "P. Walsh",
-    routeNumber: "RT-010", origin: "IRE01 Warehouse", destination: "Galway",
-    totalPacks: 5, totalWeight: 45,
-    products: [
-      { productId: "55200", description: "Fresh Atlantic Salmon 5kg", qty: 8, unit: "EA", weight: 40.0, weightUnit: "KG" },
-      { productId: "55201", description: "Smoked Mackerel Fillets 1kg", qty: 12, unit: "EA", weight: 12.0, weightUnit: "KG" },
-    ],
-  },
-  {
-    id: "5", orderNumber: "IRE012602SON00051", site: "IRE01", customer: "N330", customerName: "Cork Harbour Foods",
-    type: "DELIVERY", status: "Planned", date: new Date(2026, 2, 28), time: "06:00", vehicle: "VH-202", driver: "R. Byrne",
-    routeNumber: "RT-012", origin: "IRE01 Warehouse", destination: "Cork",
-    totalPacks: 2, totalWeight: 15,
-    products: [
-      { productId: "55300", description: "Prawns Tiger King 2kg", qty: 5, unit: "EA", weight: 10.0, weightUnit: "KG" },
-    ],
-  },
-  {
-    id: "6", orderNumber: "CAT012602SON00215", site: "CAT01", customer: "G819", customerName: "Tullyglass House Hotel Ltd",
-    type: "DELIVERY", status: "Planned", date: new Date(2026, 2, 30), time: "09:00", vehicle: "", driver: "",
-    routeNumber: "RT-005", origin: "CAT01 Warehouse", destination: "Ballymena",
-    totalPacks: 0, totalWeight: 0,
-    products: [
-      { productId: "44100", description: "Glass Polishing Cloth Pack", qty: 15, unit: "PK", weight: 3.0, weightUnit: "KG" },
-    ],
-  },
-  {
-    id: "7", orderNumber: "HYG012602SON00060", site: "HYG01", customer: "K445", customerName: "Hygeia Supplies Ltd",
-    type: "PICKUP", status: "To Plan", date: new Date(2026, 2, 25), time: "14:00", vehicle: "", driver: "",
-    routeNumber: "", origin: "Dublin Depot", destination: "HYG01 Warehouse",
-    totalPacks: 3, totalWeight: 22,
-    products: [
-      { productId: "66100", description: "Industrial Sanitizer 5L", qty: 10, unit: "EA", weight: 50.0, weightUnit: "KG" },
-    ],
-  },
-  {
-    id: "8", orderNumber: "CAT012602SON00220", site: "CAT01", customer: "G819", customerName: "Tullyglass House Hotel Ltd",
-    type: "DELIVERY", status: "Completed", date: new Date(2026, 2, 24), time: "08:00", vehicle: "VH-103", driver: "D. Kelly",
-    routeNumber: "RT-002", origin: "CAT01 Warehouse", destination: "Ballymena",
-    totalPacks: 1, totalWeight: 8,
-    products: [],
-  },
-];
-
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
   Completed: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
   Planned: { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400" },
   "In Progress": { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
   "To Plan": { bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400" },
+  Skipped: { bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-400" },
+  Cancelled: { bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400" },
 };
 
 const typeColor: Record<string, string> = {
@@ -129,9 +59,14 @@ const ORDER_TYPES = ["ORDER", "DELIVERY", "PICK TICKET", "SALES RETURN", "PICKUP
 type ViewMode = "month" | "week" | "day";
 
 export default function CalendarReport() {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 26));
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [sites, setSites] = useState<RpSite[]>([]);
+  const [siteFilter, setSiteFilter] = useState<string>("");   // "" = all sites
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(ORDER_TYPES));
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -200,7 +135,33 @@ export default function CalendarReport() {
     return Array.from({ length: 7 }, (_, i) => addDays(ws, i));
   }, [currentDate]);
 
-  const getOrdersForDate = (date: Date) => sampleOrders.filter((o) => isSameDay(o.date, date) && selectedTypes.has(o.type));
+  // Sites for the filter, read once.
+  useEffect(() => {
+    fetchTmsSites().then(setSites).catch(() => setSites([]));
+  }, []);
+
+  // Load the documents for everything the calendar is showing (the whole month grid), so that
+  // month, week and day views and the Today button always have real data.
+  const rangeStart = format(monthDays[0], "yyyy-MM-dd");
+  const rangeEnd = format(monthDays[monthDays.length - 1], "yyyy-MM-dd");
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    fetchLiveReport<any[]>("calendar", siteFilter || null, rangeStart, rangeEnd)
+      .then((rows) => {
+        if (cancelled) return;
+        setOrders(rows.map((o) => {
+          const [y, m, d] = String(o.date).split("-").map(Number);
+          return { ...o, date: new Date(y, m - 1, d) } as Order;
+        }));
+      })
+      .catch((e) => { if (!cancelled) { setOrders([]); setLoadError(String(e?.message ?? e)); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [rangeStart, rangeEnd, siteFilter]);
+
+  const getOrdersForDate = (date: Date) => orders.filter((o) => isSameDay(o.date, date) && selectedTypes.has(o.type));
 
   const OrderChip = ({ order }: { order: Order }) => {
     const sc = statusConfig[order.status] || statusConfig.Planned;
@@ -254,6 +215,18 @@ export default function CalendarReport() {
               </div>
             )}
           </div>
+          <select
+            value={siteFilter}
+            onChange={(e) => setSiteFilter(e.target.value)}
+            className="px-2 py-1 text-[11px] font-medium border border-border rounded-md bg-background"
+          >
+            <option value="">All Sites</option>
+            {sites.map((st) => (
+              <option key={st.siteCode} value={st.siteCode}>{st.siteCode} — {st.siteName}</option>
+            ))}
+          </select>
+          {loading && <span className="text-[10px] text-muted-foreground">Loading…</span>}
+          {loadError && <span className="text-[10px] text-destructive" title={loadError}>Could not load orders</span>}
         </div>
         <div className="flex items-center gap-2">
           {/* View Mode Toggle */}
@@ -282,7 +255,7 @@ export default function CalendarReport() {
             </button>
           </div>
           <button
-            onClick={() => setCurrentDate(new Date(2026, 2, 26))}
+            onClick={() => setCurrentDate(new Date())}
             className="px-2.5 py-1 text-[11px] font-medium text-primary border border-primary/20 rounded hover:bg-primary/5 transition-colors ml-1"
           >
             Today
@@ -307,7 +280,7 @@ export default function CalendarReport() {
               {monthDays.map((day, i) => {
                 const orders = getOrdersForDate(day);
                 const isCurrentMonth = isSameMonth(day, currentDate);
-                const isToday = isSameDay(day, new Date(2026, 2, 26));
+                const isToday = isSameDay(day, new Date());
                 return (
                   <div
                     key={i}
@@ -351,9 +324,9 @@ export default function CalendarReport() {
           <div className="h-full flex flex-col">
             <div className="grid grid-cols-7 border-b border-border bg-muted/30">
               {weekDays.map((day) => (
-                <div key={day.toISOString()} className={cn("px-2 py-2 text-center border-r border-border", isSameDay(day, new Date(2026, 2, 26)) && "bg-primary/5")}>
+                <div key={day.toISOString()} className={cn("px-2 py-2 text-center border-r border-border", isSameDay(day, new Date()) && "bg-primary/5")}>
                   <div className="text-[10px] font-semibold text-muted-foreground uppercase">{format(day, "EEE")}</div>
-                  <div className={cn("text-lg font-bold", isSameDay(day, new Date(2026, 2, 26)) ? "text-primary" : "text-foreground")}>{format(day, "d")}</div>
+                  <div className={cn("text-lg font-bold", isSameDay(day, new Date()) ? "text-primary" : "text-foreground")}>{format(day, "d")}</div>
                 </div>
               ))}
             </div>
@@ -361,7 +334,7 @@ export default function CalendarReport() {
               {weekDays.map((day) => {
                 const orders = getOrdersForDate(day);
                 return (
-                  <div key={day.toISOString()} className={cn("border-r border-border p-2 space-y-1 overflow-y-auto", isSameDay(day, new Date(2026, 2, 26)) && "bg-primary/3")}>
+                  <div key={day.toISOString()} className={cn("border-r border-border p-2 space-y-1 overflow-y-auto", isSameDay(day, new Date()) && "bg-primary/3")}>
                     {orders.map((o) => {
                       const sc = statusConfig[o.status] || statusConfig.Planned;
                       return (

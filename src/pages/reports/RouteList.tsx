@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { fetchLiveReport } from "@/lib/reportsApi";
+import { fetchTmsSites } from "@/lib/routePlannerApi";
 import { PageHeader, StatusBadge } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
@@ -41,69 +43,15 @@ interface RouteRecord {
   documents: Document[];
 }
 
-const sampleData: RouteRecord[] = [
-  { id: "1", routeCode: "XVR-260318-CAT01-001", vehicle: "GAL015", trip: 1, driverId: "hlinton", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/18/2026", schedDepTime: "07:00", schedRetDate: "03/18/2026", schedRetTime: "07:10", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/19/2026", actDepTime: "09:46", actRetDate: "", actRetTime: "", distanceKm: 0, timeH: 0, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00061", docType: "Picking TKT", arvTime: "07:15", depTime: "07:15", status: "Scheduled" },
-    { sequence: 2, documentNo: "CAT012603PIC00062", docType: "Picking TKT", arvTime: "07:30", depTime: "07:30", status: "Scheduled" },
-  ]},
-  { id: "2", routeCode: "XVR-260313-CAT01-001", vehicle: "GAL023", trip: 1, driverId: "darmstrong", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/13/2026", schedDepTime: "07:00", schedRetDate: "03/13/2026", schedRetTime: "09:06", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "", actDepTime: "", actRetDate: "", actRetTime: "", distanceKm: 94, timeH: 2, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00050", docType: "Picking TKT", arvTime: "07:20", depTime: "07:20", status: "Completed" },
-    { sequence: 2, documentNo: "CAT012603PIC00051", docType: "Picking TKT", arvTime: "07:45", depTime: "07:45", status: "Completed" },
-    { sequence: 3, documentNo: "CAT012603PIC00052", docType: "Picking TKT", arvTime: "08:10", depTime: "08:10", status: "Completed" },
-  ]},
-  { id: "3", routeCode: "XVR-260313-CAT01-002", vehicle: "GAL001", trip: 1, driverId: "pmurray", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/13/2026", schedDepTime: "07:15", schedRetDate: "03/13/2026", schedRetTime: "08:41", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "", actDepTime: "", actRetDate: "", actRetTime: "", distanceKm: 94, timeH: 1, documents: [
-    { sequence: 2, documentNo: "CAT012603PIC00055", docType: "Picking TKT", arvTime: "07:53", depTime: "07:53", status: "Scheduled" },
-    { sequence: 3, documentNo: "CAT012603PIC00056", docType: "Picking TKT", arvTime: "07:53", depTime: "07:53", status: "Scheduled" },
-    { sequence: 4, documentNo: "CAT012603PIC00057", docType: "Picking TKT", arvTime: "07:53", depTime: "07:53", status: "Scheduled" },
-    { sequence: 5, documentNo: "CAT012603PIC00058", docType: "Picking TKT", arvTime: "07:53", depTime: "07:53", status: "Scheduled" },
-    { sequence: 6, documentNo: "CAT012603PIC00059", docType: "Picking TKT", arvTime: "07:53", depTime: "07:53", status: "Scheduled" },
-  ]},
-  { id: "4", routeCode: "XVR-260311-CAT01-001", vehicle: "GAL002", trip: 1, driverId: "gstott", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/11/2026", schedDepTime: "00:16", schedRetDate: "03/11/2026", schedRetTime: "03:55", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/11/2026", actDepTime: "16:31", actRetDate: "", actRetTime: "", distanceKm: 222, timeH: 3, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00040", docType: "Picking TKT", arvTime: "00:30", depTime: "00:30", status: "Completed" },
-  ]},
-  { id: "5", routeCode: "XVR-260311-CAT01-002", vehicle: "GAL015", trip: 1, driverId: "hlinton", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/11/2026", schedDepTime: "07:00", schedRetDate: "03/11/2026", schedRetTime: "08:48", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "", actDepTime: "", actRetDate: "", actRetTime: "", distanceKm: 92, timeH: 1, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00041", docType: "Picking TKT", arvTime: "07:15", depTime: "07:15", status: "Scheduled" },
-    { sequence: 2, documentNo: "CAT012603PIC00042", docType: "Picking TKT", arvTime: "07:30", depTime: "07:30", status: "Scheduled" },
-  ]},
-  { id: "6", routeCode: "XVR-260311-IRE01-003", vehicle: "GAL015", trip: 2, driverId: "hlinton", carrier: "INTERNAL", site: "IRE01", schedDepDate: "03/11/2026", schedDepTime: "07:00", schedRetDate: "03/11/2026", schedRetTime: "17:00", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/11/2026", actDepTime: "11:38", actRetDate: "03/19/2026", actRetTime: "09:43", distanceKm: 50, timeH: 7, documents: [
-    { sequence: 1, documentNo: "IRE012603PIC00010", docType: "Picking TKT", arvTime: "11:50", depTime: "11:50", status: "Completed" },
-    { sequence: 2, documentNo: "IRE012603PIC00011", docType: "Picking TKT", arvTime: "12:15", depTime: "12:15", status: "Completed" },
-    { sequence: 3, documentNo: "IRE012603PIC00012", docType: "Picking TKT", arvTime: "13:00", depTime: "13:00", status: "Completed" },
-  ]},
-  { id: "7", routeCode: "XVR-260311-CAT01-004", vehicle: "GAL003", trip: 1, driverId: "srutherford", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/11/2026", schedDepTime: "07:00", schedRetDate: "03/11/2026", schedRetTime: "08:34", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/11/2026", actDepTime: "17:35", actRetDate: "03/11/2026", actRetTime: "17:39", distanceKm: 94, timeH: 1, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00043", docType: "Picking TKT", arvTime: "07:10", depTime: "07:10", status: "Completed" },
-  ]},
-  { id: "8", routeCode: "XVR-260310-CAT01-001", vehicle: "GAL015", trip: 1, driverId: "hlinton", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/10/2026", schedDepTime: "07:00", schedRetDate: "03/10/2026", schedRetTime: "10:51", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/10/2026", actDepTime: "15:31", actRetDate: "03/10/2026", actRetTime: "15:50", distanceKm: 218, timeH: 3, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00030", docType: "Picking TKT", arvTime: "07:20", depTime: "07:20", status: "Completed" },
-    { sequence: 2, documentNo: "CAT012603PIC00031", docType: "Picking TKT", arvTime: "08:00", depTime: "08:00", status: "Completed" },
-  ]},
-  { id: "9", routeCode: "XVR-260309-IRE01-001", vehicle: "GAL002", trip: 1, driverId: "gstott", carrier: "INTERNAL", site: "IRE01", schedDepDate: "03/09/2026", schedDepTime: "00:16", schedRetDate: "03/09/2026", schedRetTime: "00:32", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/09/2026", actDepTime: "13:33", actRetDate: "03/09/2026", actRetTime: "13:37", distanceKm: 4, timeH: 0, documents: [
-    { sequence: 1, documentNo: "IRE012603PIC00001", docType: "Picking TKT", arvTime: "13:35", depTime: "13:35", status: "Completed" },
-  ]},
-  { id: "10", routeCode: "XVR-260309-CAT01-002", vehicle: "GAL002", trip: 2, driverId: "gstott", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/09/2026", schedDepTime: "00:16", schedRetDate: "03/09/2026", schedRetTime: "03:15", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/09/2026", actDepTime: "14:33", actRetDate: "03/09/2026", actRetTime: "14:41", distanceKm: 162, timeH: 2, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00020", docType: "Picking TKT", arvTime: "14:40", depTime: "14:40", status: "Completed" },
-  ]},
-  { id: "11", routeCode: "XVR-260308-CAT01-001", vehicle: "GAL010", trip: 1, driverId: "jbrown", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/08/2026", schedDepTime: "06:00", schedRetDate: "03/08/2026", schedRetTime: "14:00", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/08/2026", actDepTime: "06:15", actRetDate: "03/08/2026", actRetTime: "13:45", distanceKm: 310, timeH: 7, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00010", docType: "Picking TKT", arvTime: "06:30", depTime: "06:30", status: "Completed" },
-    { sequence: 2, documentNo: "CAT012603PIC00011", docType: "Picking TKT", arvTime: "07:15", depTime: "07:15", status: "Completed" },
-    { sequence: 3, documentNo: "CAT012603PIC00012", docType: "Picking TKT", arvTime: "08:00", depTime: "08:00", status: "Completed" },
-    { sequence: 4, documentNo: "CAT012603PIC00013", docType: "Picking TKT", arvTime: "09:30", depTime: "09:30", status: "Completed" },
-  ]},
-  { id: "12", routeCode: "XVR-260307-CAT01-001", vehicle: "GAL005", trip: 1, driverId: "mconnor", carrier: "INTERNAL", site: "CAT01", schedDepDate: "03/07/2026", schedDepTime: "05:30", schedRetDate: "03/07/2026", schedRetTime: "12:00", corrDepDate: "", corrDepTime: "", corrRetDate: "", corrRetTime: "", actDepDate: "03/07/2026", actDepTime: "05:45", actRetDate: "03/07/2026", actRetTime: "11:30", distanceKm: 185, timeH: 5, documents: [
-    { sequence: 1, documentNo: "CAT012603PIC00001", docType: "Picking TKT", arvTime: "05:50", depTime: "05:50", status: "Completed" },
-    { sequence: 2, documentNo: "CAT012603PIC00002", docType: "Picking TKT", arvTime: "06:30", depTime: "06:30", status: "Completed" },
-  ]},
-];
-
-// Derive unique sites from data
-const allSites = Array.from(new Set(sampleData.map((r) => r.site)));
 
 // Derive unique months (MM/YYYY) from schedDepDate
 function getMonthKey(dateStr: string) {
   const [mm, , yyyy] = dateStr.split("/");
   return `${mm}/${yyyy}`;
 }
-const allMonths = Array.from(new Set(sampleData.map((r) => getMonthKey(r.schedDepDate)))).sort();
+
+// MM/YYYY keys sorted by year first, then month.
+const monthSortKey = (k: string) => { const [mm, yyyy] = k.split("/"); return `${yyyy}${mm}`; };
 
 export default function RouteList() {
   const [filterOpen, setFilterOpen] = useState(true);
@@ -114,9 +62,50 @@ export default function RouteList() {
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<RouteRecord | null>(null);
 
-  // Filter state
-  const [selectedSites, setSelectedSites] = useState<Set<string>>(new Set(allSites));
-  const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set(allMonths));
+  // Real routes (trips) from the database
+  const [data, setData] = useState<RouteRecord[]>([]);
+  const [siteList, setSiteList] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Sites and months come from the data, so every site and every month that has routes is listed.
+  const allSites = useMemo(
+    () => Array.from(new Set([...siteList, ...data.map((r) => r.site)])).filter(Boolean).sort(),
+    [siteList, data]
+  );
+  const allMonths = useMemo(
+    () => Array.from(new Set(data.map((r) => getMonthKey(r.schedDepDate)))).filter((k) => k.includes("/")).sort((a, b) => monthSortKey(a).localeCompare(monthSortKey(b))),
+    [data]
+  );
+
+  // Filter state (everything selected until the user narrows it)
+  const [selectedSites, setSelectedSites] = useState<Set<string>>(new Set());
+  const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetchTmsSites().then((rows) => setSiteList(rows.map((r) => r.siteCode))).catch(() => setSiteList([]));
+  }, []);
+
+  // Last 18 months up to the end of next month, so older and upcoming routes are all there.
+  useEffect(() => {
+    const fmtIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth() - 18, 1);
+    const to = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    fetchLiveReport<RouteRecord[]>("routes", null, fmtIso(from), fmtIso(to))
+      .then((rows) => {
+        if (cancelled) return;
+        setData(rows);
+        setSelectedSites(new Set(rows.map((r) => r.site)));
+        setSelectedMonths(new Set(rows.map((r) => getMonthKey(r.schedDepDate))));
+      })
+      .catch((e) => { if (!cancelled) { setData([]); setLoadError(String(e?.message ?? e)); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const toggleSite = (site: string) => {
     setSelectedSites((prev) => {
@@ -138,7 +127,7 @@ export default function RouteList() {
 
   const filtered = useMemo(() => {
     const q = searchText.trim().toLowerCase();
-    return sampleData.filter((r) => {
+    return data.filter((r) => {
       // Site filter
       if (!selectedSites.has(r.site)) return false;
       // Month filter
@@ -147,23 +136,23 @@ export default function RouteList() {
       if (q && ![r.routeCode, r.vehicle, r.driverId, r.carrier, r.site].some((v) => v.toLowerCase().includes(q))) return false;
       return true;
     });
-  }, [searchText, selectedSites, selectedMonths]);
+  }, [data, searchText, selectedSites, selectedMonths]);
 
   // Count per site/month for display
   const siteCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    sampleData.forEach((r) => { counts[r.site] = (counts[r.site] || 0) + 1; });
+    data.forEach((r) => { counts[r.site] = (counts[r.site] || 0) + 1; });
     return counts;
-  }, []);
+  }, [data]);
 
   const monthCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    sampleData.forEach((r) => {
+    data.forEach((r) => {
       const k = getMonthKey(r.schedDepDate);
       counts[k] = (counts[k] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [data]);
 
   const sort = useSortable(filtered);
   const totalPages = Math.max(1, Math.ceil(sort.sorted.length / pageSize));
@@ -246,6 +235,8 @@ export default function RouteList() {
               </button>
             )}
             <PageHeader title="Report of VR Details" subtitle="Vehicle route detail report" />
+            {loading && <p className="text-xs text-muted-foreground mt-1">Loading…</p>}
+            {loadError && <p className="text-xs text-destructive mt-1">Could not load routes: {loadError}</p>}
           </div>
 
           {/* Search Bar */}

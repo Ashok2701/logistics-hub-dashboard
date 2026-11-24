@@ -3,14 +3,31 @@ import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { fetchLiveReport } from "@/lib/reportsApi";
+import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
 
-const driverData = [
-  { name: "John Carter", deliveries: 142, distance: 4520 },
-  { name: "Sarah Miles", deliveries: 98, distance: 3210 },
-  { name: "Mike Chen", deliveries: 210, distance: 6780 },
-  { name: "Lisa Brown", deliveries: 65, distance: 2100 },
-  { name: "Tom Wilson", deliveries: 178, distance: 5430 },
-];
+interface DriverRow {
+  name: string;
+  deliveries: number;
+  distance: number;
+  trips: number;
+}
+
+type Range = "week" | "month" | "quarter" | "year";
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function rangeFor(r: Range): { from: string; to: string } {
+  const now = new Date();
+  if (r === "week") {
+    const day = now.getDay();                       // Monday to Sunday
+    const mon = new Date(now); mon.setDate(now.getDate() + (day === 0 ? -6 : 1 - day));
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    return { from: iso(mon), to: iso(sun) };
+  }
+  if (r === "month") return { from: iso(new Date(now.getFullYear(), now.getMonth(), 1)), to: iso(new Date(now.getFullYear(), now.getMonth() + 1, 0)) };
+  if (r === "quarter") return { from: iso(new Date(now.getFullYear(), now.getMonth() - 2, 1)), to: iso(new Date(now.getFullYear(), now.getMonth() + 1, 0)) };
+  return { from: iso(new Date(now.getFullYear(), 0, 1)), to: iso(new Date(now.getFullYear(), 11, 31)) };
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
@@ -27,11 +44,51 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function DriverReports() {
+  const [range, setRange] = useState<Range>("month");
+  const [site, setSite] = useState<string>("");
+  const [sites, setSites] = useState<RpSite[]>([]);
+  const [driverData, setDriverData] = useState<DriverRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTmsSites().then(setSites).catch(() => setSites([]));
+  }, []);
+
+  const { from, to } = useMemo(() => rangeFor(range), [range]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    fetchLiveReport<DriverRow[]>("drivers", site || null, from, to)
+      .then((rows) => { if (!cancelled) setDriverData(rows); })
+      .catch((e) => { if (!cancelled) { setDriverData([]); setLoadError(String(e?.message ?? e)); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [from, to, site]);
+
   const sort = useSortable(driverData);
   const sorted = sort.sorted;
   return (
     <div>
-      <PageHeader title="Driver Reports" subtitle="Performance analytics by driver" />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+        <PageHeader title="Driver Reports" subtitle="Performance analytics by driver" />
+        <div className="flex items-center gap-2 text-xs">
+          <select value={site} onChange={(e) => setSite(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-3 text-sm">
+            <option value="">All Sites</option>
+            {sites.map((st) => <option key={st.siteCode} value={st.siteCode}>{st.siteCode} — {st.siteName}</option>)}
+          </select>
+          <select value={range} onChange={(e) => setRange(e.target.value as Range)} className="h-9 rounded-lg border border-border bg-background px-3 text-sm">
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="quarter">Last 3 Months</option>
+            <option value="year">This Year</option>
+          </select>
+          <span className="font-mono text-muted-foreground">{from} → {to}</span>
+          {loading && <span className="text-muted-foreground">Loading…</span>}
+        </div>
+      </div>
+      {loadError && <p className="text-xs text-destructive mb-3">Could not load driver data: {loadError}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         {[
@@ -76,7 +133,7 @@ export default function DriverReports() {
                 <td className="font-medium text-foreground">{d.name}</td>
                 <td className="font-mono text-foreground">{d.deliveries}</td>
                 <td className="font-mono text-foreground">{d.distance.toLocaleString()}</td>
-                <td className="font-mono text-muted-foreground">{Math.round(d.distance / d.deliveries)} km</td>
+                <td className="font-mono text-muted-foreground">{d.trips ? Math.round(d.distance / d.trips) : 0} km</td>
               </motion.tr>
             ))}
           </tbody>

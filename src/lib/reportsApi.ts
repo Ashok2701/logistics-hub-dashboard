@@ -35,3 +35,19 @@ export function fetchVehicleReports(
   const qs = params.toString();
   return request<VehicleReportRow[]>(`/reports/vehiclereport${qs ? `?${qs}` : ""}`);
 }
+
+/**
+ * GET /api/reports/live/{name}?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&site=X
+ * Real trip and document data for the report screens. Leave site out for all sites.
+ * name: calendar | pod-tracking | routes | kpi | drivers
+ */
+export function fetchLiveReport<T = any>(
+  name: "calendar" | "pod-tracking" | "routes" | "kpi" | "drivers",
+  site: string | null,
+  startDate: string,
+  endDate: string
+): Promise<T> {
+  const params = new URLSearchParams({ startDate, endDate });
+  if (site) params.set("site", site);
+  return request<T>(`/reports/live/${name}?${params.toString()}`);
+}

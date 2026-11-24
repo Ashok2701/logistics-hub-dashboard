@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { fetchLiveReport } from "@/lib/reportsApi";
+import { fetchTmsSites } from "@/lib/routePlannerApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Group, ChevronDown, ChevronRight, FileText, PanelLeftClose, PanelLeft, ArrowLeft, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -96,74 +98,6 @@ interface PODRecord {
   podProducts?: PODProduct[];
   podImages?: PODImage[];
 }
-
-const sampleData: PODRecord[] = [
-  { id: "1", pod: true, site: "CAT01", document: "CAT012602SDH00210", date: "02-26-2026", type: "DELIVERY", status: "Completed", bp: "G819", bpName: "Tullyglass House Hotel Ltd", city: "BALLYMENA", state: "Co Antrim", deliveryMode: "OUR", pack: 0, weight: 0, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "02-26-2026", depTime: "06:30", arrivalDate: "02-26-2026", arrivalTime: "08:15", vehicle: "VH-101", driver: "J. Murphy",
-    reference: "POD-CAT012602SDH0021", lastUpdate: "02/26/2026 13:48:48", updatedBy: "TMSDV",
-    address: "", addressLine1: "178 Galgorm Road", zip: "BT42 1HJ", country: "XI", phone: "", web: "", gpsLong: "17.448565", gpsLat: "78.3617397",
-    route: "XVR-260226-CAT01-004", schedule: "", carrierCode: "INTERNAL", carrier: "", carrierEmail: "", grossWeight: 0, netWeight: 0, nbItems: 0,
-    etaDate: "02/26/2026", etaTime: "07:18", startUnloadingDate: "02/26/2026", startUnloadingTime: "19:18", qtyUpdateDate: "02/26/2026", qtyUpdateTime: "19:18", endUnloadingDate: "02/26/2026", endUnloadingTime: "19:18", departureDate: "02/26/2026", departureTime: "19:18", etdDate: "02/26/2026", etdTime: "07:28",
-    podProducts: [
-      { deliveryNum: "CAT012602SDH00210", product: "Mixing Glasses Starburst 700ml", orderedQty: 2, deliveredQty: 2, unit: "EA", packages: 0, mass: 0, massUnit: "KG", volume: 0, volumeUnit: "L", leftQtyToShip: 0 },
-    ],
-    podImages: [
-      { type: "SIGNATURE", document: "CAT012602SDH00210", contentUrl: "", postDate: "02/26/2026 13:48:32" },
-      { type: "PHOTO", document: "CAT012602SDH00210", contentUrl: "", postDate: "02/26/2026 13:48:32" },
-    ],
-    lineItems: [
-      { docNum: "CAT012602SDH00210", orderNumber: "CAT012602SON00217", productId: "11699", description: "Mixing Glasses Starburst 700ml", qtyToPrepare: 6, unit: "EA" },
-      { docNum: "CAT012602SDH00210", orderNumber: "CAT012602SON00217", productId: "11700", description: "Cocktail Shaker Boston 28oz", qtyToPrepare: 4, unit: "EA" },
-    ]},
-  { id: "2", pod: true, site: "CAT01", document: "CAT012602SDH00211", date: "02-26-2026", type: "DELIVERY", status: "Completed", bp: "G819", bpName: "Tullyglass House Hotel Ltd", city: "BALLYMENA", state: "Co Antrim", deliveryMode: "OUR", pack: 2, weight: 12, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "02-26-2026", depTime: "06:30", arrivalDate: "02-26-2026", arrivalTime: "08:15", vehicle: "VH-101", driver: "J. Murphy",
-    reference: "POD-CAT012602SDH0022", lastUpdate: "02/26/2026 14:10:00", updatedBy: "TMSDV",
-    address: "", addressLine1: "178 Galgorm Road", zip: "BT42 1HJ", country: "XI", phone: "", web: "", gpsLong: "17.448565", gpsLat: "78.3617397",
-    route: "XVR-260226-CAT01-004", schedule: "", carrierCode: "INTERNAL", carrier: "", carrierEmail: "", grossWeight: 12, netWeight: 10, nbItems: 2,
-    etaDate: "02/26/2026", etaTime: "07:18", startUnloadingDate: "02/26/2026", startUnloadingTime: "14:00", qtyUpdateDate: "02/26/2026", qtyUpdateTime: "14:05", endUnloadingDate: "02/26/2026", endUnloadingTime: "14:10", departureDate: "02/26/2026", departureTime: "14:15", etdDate: "02/26/2026", etdTime: "07:28",
-    podProducts: [{ deliveryNum: "CAT012602SDH00211", product: "Premium Bar Napkins 1000pk", orderedQty: 10, deliveredQty: 10, unit: "PK", packages: 2, mass: 12, massUnit: "KG", volume: 0, volumeUnit: "L", leftQtyToShip: 0 }],
-    podImages: [{ type: "SIGNATURE", document: "CAT012602SDH00211", contentUrl: "", postDate: "02/26/2026 14:10:00" }],
-    lineItems: [{ docNum: "CAT012602SDH00211", orderNumber: "CAT012602SON00218", productId: "22450", description: "Premium Bar Napkins 1000pk", qtyToPrepare: 10, unit: "PK" }]},
-  { id: "3", pod: true, site: "CAT01", document: "CAT012602SDH00212", date: "02-26-2026", type: "DELIVERY", status: "Completed", bp: "G819", bpName: "Tullyglass House Hotel Ltd", city: "BALLYMENA", state: "Co Antrim", deliveryMode: "OUR", pack: 1, weight: 5, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "02-26-2026", depTime: "07:00", arrivalDate: "02-26-2026", arrivalTime: "09:00", vehicle: "VH-102", driver: "S. O'Brien",
-    reference: "POD-CAT012602SDH0023", lastUpdate: "02/26/2026 09:30:00", updatedBy: "TMSDV", route: "XVR-260226-CAT01-005", carrierCode: "INTERNAL",
-    podProducts: [], podImages: [], lineItems: [] },
-  { id: "4", pod: false, site: "CAT01", document: "CAT012602SDH00213", date: "02-26-2026", type: "DELIVERY", status: "Planned", bp: "G819", bpName: "Tullyglass House Hotel Ltd", city: "BALLYMENA", state: "Co Antrim", deliveryMode: "OUR", pack: 0, weight: 0, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "", depTime: "", arrivalDate: "", arrivalTime: "", vehicle: "", driver: "", lineItems: [] },
-  { id: "5", pod: true, site: "CAT01", document: "CAT012602SDH00214", date: "02-26-2026", type: "DELIVERY", status: "Completed", bp: "G819", bpName: "Tullyglass House Hotel Ltd", city: "BALLYMENA", state: "Co Antrim", deliveryMode: "OUR", pack: 3, weight: 18, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "02-26-2026", depTime: "07:00", arrivalDate: "02-26-2026", arrivalTime: "09:30", vehicle: "VH-102", driver: "S. O'Brien",
-    reference: "POD-CAT012602SDH0025", lastUpdate: "02/26/2026 10:00:00", updatedBy: "TMSDV", route: "XVR-260226-CAT01-005", carrierCode: "INTERNAL",
-    podProducts: [{ deliveryNum: "CAT012602SDH00214", product: "Disposable Gloves Medium Box", orderedQty: 20, deliveredQty: 20, unit: "BX", packages: 3, mass: 18, massUnit: "KG", volume: 0, volumeUnit: "L", leftQtyToShip: 0 }],
-    podImages: [], lineItems: [{ docNum: "CAT012602SDH00214", orderNumber: "CAT012602SON00220", productId: "33100", description: "Disposable Gloves Medium Box", qtyToPrepare: 20, unit: "BX" }]},
-  { id: "6", pod: true, site: "CAT01", document: "CAT012602SDH00216", date: "02-26-2026", type: "DELIVERY", status: "Completed", bp: "G819", bpName: "Tullyglass House Hotel Ltd", city: "BALLYMENA", state: "Co Antrim", deliveryMode: "OUR", pack: 1, weight: 8, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "02-26-2026", depTime: "08:00", arrivalDate: "02-26-2026", arrivalTime: "10:00", vehicle: "VH-103", driver: "D. Kelly",
-    reference: "POD-CAT012602SDH0026", lastUpdate: "02/26/2026 10:30:00", updatedBy: "TMSDV", route: "XVR-260226-CAT01-006", carrierCode: "INTERNAL",
-    podProducts: [], podImages: [], lineItems: [] },
-  { id: "7", pod: false, site: "CAT01", document: "CAT012602SDH00220", date: "02-27-2026", type: "SHIPMENT PREP", status: "In Progress", bp: "H102", bpName: "Belfast Grand Central", city: "BELFAST", state: "Co Antrim", deliveryMode: "OUR", pack: 0, weight: 0, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "", depTime: "", arrivalDate: "", arrivalTime: "", vehicle: "", driver: "", lineItems: [] },
-  { id: "8", pod: false, site: "CAT01", document: "CAT012602SDH00221", date: "02-27-2026", type: "SHIPMENT PREP", status: "Planned", bp: "H102", bpName: "Belfast Grand Central", city: "BELFAST", state: "Co Antrim", deliveryMode: "OUR", pack: 0, weight: 0, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "", depTime: "", arrivalDate: "", arrivalTime: "", vehicle: "", driver: "", lineItems: [] },
-  { id: "9", pod: false, site: "HYG01", document: "HYG012602SDH00050", date: "02-26-2026", type: "DELIVERY", status: "To Plan", bp: "K445", bpName: "Hygeia Supplies Ltd", city: "DUBLIN", state: "Leinster", deliveryMode: "OUR", pack: 0, weight: 0, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "", depTime: "", arrivalDate: "", arrivalTime: "", vehicle: "", driver: "", lineItems: [] },
-  { id: "10", pod: true, site: "IRE01", document: "IRE012602SDH00101", date: "02-26-2026", type: "DELIVERY", status: "Completed", bp: "M201", bpName: "Galway Bay Seafoods", city: "GALWAY", state: "Connacht", deliveryMode: "OUR", pack: 5, weight: 45, weightUnit: "KG", volume: 2, volumeUnit: "M3", depDate: "02-26-2026", depTime: "05:00", arrivalDate: "02-26-2026", arrivalTime: "11:00", vehicle: "VH-201", driver: "P. Walsh",
-    reference: "POD-IRE012602SDH0010", lastUpdate: "02/26/2026 11:30:00", updatedBy: "TMSDV",
-    address: "", addressLine1: "Dock Road", zip: "H91 XY12", country: "IE", phone: "", web: "", gpsLong: "-9.0568", gpsLat: "53.2707",
-    route: "XVR-260226-IRE01-001", schedule: "", carrierCode: "INTERNAL", carrier: "", carrierEmail: "", grossWeight: 45, netWeight: 40, nbItems: 3,
-    etaDate: "02/26/2026", etaTime: "10:00", startUnloadingDate: "02/26/2026", startUnloadingTime: "11:05", qtyUpdateDate: "02/26/2026", qtyUpdateTime: "11:20", endUnloadingDate: "02/26/2026", endUnloadingTime: "11:25", departureDate: "02/26/2026", departureTime: "11:30", etdDate: "02/26/2026", etdTime: "10:30",
-    podProducts: [
-      { deliveryNum: "IRE012602SDH00101", product: "Fresh Atlantic Salmon 5kg", orderedQty: 8, deliveredQty: 8, unit: "EA", packages: 2, mass: 40, massUnit: "KG", volume: 1, volumeUnit: "L", leftQtyToShip: 0 },
-      { deliveryNum: "IRE012602SDH00101", product: "Smoked Mackerel Fillets 1kg", orderedQty: 12, deliveredQty: 12, unit: "EA", packages: 2, mass: 12, massUnit: "KG", volume: 0.5, volumeUnit: "L", leftQtyToShip: 0 },
-      { deliveryNum: "IRE012602SDH00101", product: "Prawns Tiger King 2kg", orderedQty: 5, deliveredQty: 5, unit: "EA", packages: 1, mass: 10, massUnit: "KG", volume: 0.5, volumeUnit: "L", leftQtyToShip: 0 },
-    ],
-    podImages: [
-      { type: "SIGNATURE", document: "IRE012602SDH00101", contentUrl: "", postDate: "02/26/2026 11:30:00" },
-      { type: "PHOTO", document: "IRE012602SDH00101", contentUrl: "", postDate: "02/26/2026 11:30:00" },
-    ],
-    lineItems: [
-      { docNum: "IRE012602SDH00101", orderNumber: "IRE012602SON00050", productId: "55200", description: "Fresh Atlantic Salmon 5kg", qtyToPrepare: 8, unit: "EA" },
-      { docNum: "IRE012602SDH00101", orderNumber: "IRE012602SON00050", productId: "55201", description: "Smoked Mackerel Fillets 1kg", qtyToPrepare: 12, unit: "EA" },
-      { docNum: "IRE012602SDH00101", orderNumber: "IRE012602SON00051", productId: "55300", description: "Prawns Tiger King 2kg", qtyToPrepare: 5, unit: "EA" },
-    ]},
-  { id: "11", pod: false, site: "IRE01", document: "IRE012602SDH00102", date: "02-26-2026", type: "DELIVERY", status: "Skipped", bp: "M201", bpName: "Galway Bay Seafoods", city: "GALWAY", state: "Connacht", deliveryMode: "OUR", pack: 0, weight: 0, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "", depTime: "", arrivalDate: "", arrivalTime: "", vehicle: "", driver: "", lineItems: [] },
-  { id: "12", pod: true, site: "IRE01", document: "IRE012602SDH00103", date: "02-27-2026", type: "DELIVERY", status: "Completed", bp: "N330", bpName: "Cork Harbour Foods", city: "CORK", state: "Munster", deliveryMode: "OUR", pack: 2, weight: 15, weightUnit: "KG", volume: 1, volumeUnit: "M3", depDate: "02-27-2026", depTime: "06:00", arrivalDate: "02-27-2026", arrivalTime: "10:30", vehicle: "VH-202", driver: "R. Byrne",
-    reference: "POD-IRE012602SDH0013", lastUpdate: "02/27/2026 10:45:00", updatedBy: "TMSDV", route: "XVR-270226-IRE01-002", carrierCode: "INTERNAL",
-    podProducts: [], podImages: [], lineItems: [] },
-  { id: "13", pod: false, site: "IRE01", document: "IRE012602SDH00104", date: "02-27-2026", type: "SHIPMENT PREP", status: "Planned", bp: "N330", bpName: "Cork Harbour Foods", city: "CORK", state: "Munster", deliveryMode: "OUR", pack: 0, weight: 0, weightUnit: "KG", volume: 0, volumeUnit: "", depDate: "", depTime: "", arrivalDate: "", arrivalTime: "", vehicle: "", driver: "", lineItems: [] },
-  { id: "14", pod: true, site: "IRE01", document: "IRE012602SDH00105", date: "02-27-2026", type: "DELIVERY", status: "Completed", bp: "P100", bpName: "Limerick Supply Co", city: "LIMERICK", state: "Munster", deliveryMode: "OUR", pack: 4, weight: 30, weightUnit: "KG", volume: 2, volumeUnit: "M3", depDate: "02-27-2026", depTime: "06:00", arrivalDate: "02-27-2026", arrivalTime: "12:00", vehicle: "VH-203", driver: "T. Flynn",
-    reference: "POD-IRE012602SDH0015", lastUpdate: "02/27/2026 12:15:00", updatedBy: "TMSDV", route: "XVR-270226-IRE01-003", carrierCode: "INTERNAL",
-    podProducts: [], podImages: [], lineItems: [] },
-];
 
 type FilterKey = "site" | "type" | "status";
 
@@ -440,12 +374,43 @@ export default function PODTracking() {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedPOD, setSelectedPOD] = useState<PODRecord | null>(null);
+  const [data, setData] = useState<PODRecord[]>([]);
+  const [allSiteCodes, setAllSiteCodes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // Local dates (not UTC), so the range is right in the early morning too.
+  const daysFromToday = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const [dateFrom, setDateFrom] = useState<string>(daysFromToday(-30));
+  const [dateTo, setDateTo] = useState<string>(daysFromToday(7));
+
+  // Every site, so the Site filter lists them all even when a site has no records in the range.
+  useEffect(() => {
+    fetchTmsSites().then((rows) => setAllSiteCodes(rows.map((r) => r.siteCode))).catch(() => setAllSiteCodes([]));
+  }, []);
+
+  // Real POD data for the chosen dates.
+  useEffect(() => {
+    if (!dateFrom || !dateTo || dateFrom > dateTo) return;
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    fetchLiveReport<PODRecord[]>("pod-tracking", null, dateFrom, dateTo)
+      .then((rows) => { if (!cancelled) setData(rows); })
+      .catch((e) => { if (!cancelled) { setData([]); setLoadError(String(e?.message ?? e)); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [dateFrom, dateTo]);
 
   const filterSections: FilterSection[] = useMemo(() => {
     const siteCounts: Record<string, number> = {};
     const typeCounts: Record<string, number> = {};
     const statusCounts: Record<string, number> = {};
-    sampleData.forEach((r) => {
+    allSiteCodes.forEach((c) => { siteCounts[c] = 0; });
+    data.forEach((r) => {
       siteCounts[r.site] = (siteCounts[r.site] || 0) + 1;
       typeCounts[r.type] = (typeCounts[r.type] || 0) + 1;
       statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
@@ -455,10 +420,10 @@ export default function PODTracking() {
       { key: "type" as FilterKey, label: "TYPE", options: Object.entries(typeCounts).map(([value, count]) => ({ value, count })) },
       { key: "status" as FilterKey, label: "STATUS", options: Object.entries(statusCounts).map(([value, count]) => ({ value, count })) },
     ];
-  }, []);
+  }, [data, allSiteCodes]);
 
   const filteredData = useMemo(() => {
-    return sampleData.filter((r) => {
+    return data.filter((r) => {
       if (selectedFilters.site.length && !selectedFilters.site.includes(r.site)) return false;
       if (selectedFilters.type.length && !selectedFilters.type.includes(r.type)) return false;
       if (selectedFilters.status.length && !selectedFilters.status.includes(r.status)) return false;
@@ -468,7 +433,7 @@ export default function PODTracking() {
       }
       return true;
     });
-  }, [selectedFilters, search]);
+  }, [data, selectedFilters, search]);
 
   const sort = useSortable(filteredData);
 
@@ -546,6 +511,15 @@ export default function PODTracking() {
           <span className="text-[10px] text-muted-foreground">Shipment & delivery tracking report</span>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <input type="date" value={dateFrom} max={dateTo} onChange={(e) => setDateFrom(e.target.value)}
+              className="px-1.5 py-0.5 text-[11px] border border-border rounded bg-background text-foreground" />
+            <span>to</span>
+            <input type="date" value={dateTo} min={dateFrom} onChange={(e) => setDateTo(e.target.value)}
+              className="px-1.5 py-0.5 text-[11px] border border-border rounded bg-background text-foreground" />
+            {loading && <span>Loading…</span>}
+            {loadError && <span className="text-destructive" title={loadError}>Could not load POD data</span>}
+          </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
             <input
