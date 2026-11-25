@@ -28,6 +28,27 @@ const PRESET_COLORS = [
   "#64748B", "#1F2937",
 ];
 
+const COLOR_NAMES: Record<string, string> = {
+  "#3B82F6": "Blue", "#6366F1": "Indigo", "#8B5CF6": "Violet", "#EC4899": "Pink", "#EF4444": "Red",
+  "#F97316": "Orange", "#F59E0B": "Amber", "#10B981": "Green", "#14B8A6": "Teal", "#0EA5E9": "Sky Blue",
+  "#64748B": "Slate", "#1F2937": "Charcoal",
+};
+
+// Friendly colour name: exact preset name, otherwise the nearest preset (shown as "Custom ...").
+const colorName = (hex: string): string => {
+  const h = (hex || "").toUpperCase();
+  if (COLOR_NAMES[h]) return COLOR_NAMES[h];
+  const m = /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/.exec(h);
+  if (!m) return "Custom";
+  const rgb = [1, 2, 3].map((i) => parseInt(m[i], 16));
+  let best = "Custom", bd = Infinity;
+  for (const [k, n] of Object.entries(COLOR_NAMES)) {
+    const d = [1, 3, 5].reduce((a, i, j) => a + (parseInt(k.slice(i, i + 2), 16) - rgb[j]) ** 2, 0);
+    if (d < bd) { bd = d; best = n; }
+  }
+  return `Custom ${best}`;
+};
+
 type DocRow = DocumentConfig;
 
 const TEMP_PREFIX = "__new__";
@@ -52,7 +73,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
         className="flex items-center gap-2 h-9 px-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
       >
         <span className="w-5 h-5 rounded-md border border-border/60" style={{ backgroundColor: value }} />
-        <span className="text-xs font-mono text-muted-foreground">{value}</span>
+        <span className="text-xs text-muted-foreground">{colorName(value)}</span>
       </button>
       {open && btnRef.current && createPortal (
         <>
@@ -68,6 +89,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
                   key={c}
                   type="button"
                   onClick={() => { onChange(c); setOpen(false); }}
+                  title={colorName(c)}
                   className="w-7 h-7 rounded-md border border-border/60 hover:scale-110 transition-transform"
                   style={{ backgroundColor: c }}
                 />
@@ -80,12 +102,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
                 onChange={(e) => onChange(e.target.value)}
                 className="w-8 h-8 rounded cursor-pointer bg-transparent border-0"
               />
-              <input
-                type="text"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="flex-1 h-8 px-2 rounded-md border border-border bg-background text-xs font-mono"
-              />
+              <span className="flex-1 text-xs text-muted-foreground">{colorName(value)}</span>
             </div>
           </div>
         </>,
@@ -324,7 +341,7 @@ export default function DocumentConfiguration() {
                       ) : (
                         <div className="flex items-center gap-2">
                           <span className="w-6 h-6 rounded-md border border-border/60 shadow-sm" style={{ backgroundColor: r.color }} />
-                          <span className="font-mono text-xs text-muted-foreground">{r.color}</span>
+                          <span className="text-xs text-muted-foreground">{colorName(r.color)}</span>
                         </div>
                       )}
                     </td>

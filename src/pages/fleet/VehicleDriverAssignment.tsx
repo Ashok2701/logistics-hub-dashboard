@@ -51,7 +51,7 @@ export default function VehicleDriverAssignment() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
-  const load = async () => {
+  const load = async (showMsg = false) => {
     setLoading(true);
     try {
       const [as, vs, ds] = await Promise.all([
@@ -62,22 +62,33 @@ export default function VehicleDriverAssignment() {
       setRows(as || []);
       setVehicles(vs || []);
       setDrivers(ds || []);
-    } catch (e: any) { toast.error(e.message || "Failed to load assignments"); }
+      if (showMsg) toast.success("Vehicle–Driver allocations refreshed successfully.");
+    } catch (e: any) { toast.error(e.message || "Failed to load allocations"); }
     finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
+  const plateByCode = useMemo(() => {
+    const m = new Map<string, string>();
+    vehicles.forEach((v) => m.set(v.vehicleCode, v.vehicleNumber));
+    return m;
+  }, [vehicles]);
+  const shownRows = useMemo(
+    () => rows.map((r) => ({ ...r, plate: plateByCode.get(r.vehicleCode) || r.vehicleName || "" })),
+    [rows, plateByCode],
+  );
+
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
-    if (!s) return rows;
-    return rows.filter((r) =>
+    if (!s) return shownRows;
+    return shownRows.filter((r) =>
       r.vehicleCode?.toLowerCase().includes(s) ||
-      r.vehicleName?.toLowerCase().includes(s) ||
+      r.plate?.toLowerCase().includes(s) ||
       r.driverId?.toLowerCase().includes(s) ||
       r.driverName?.toLowerCase().includes(s) ||
       r.remarks?.toLowerCase().includes(s)
     );
-  }, [rows, search]);
+  }, [shownRows, search]);
   const sort = useSortable(filtered);
 
   const openAdd = () => { setEditingId(null); setForm(emptyForm); setView("form"); };
@@ -95,15 +106,19 @@ export default function VehicleDriverAssignment() {
   };
 
   const remove = async (r: VehicleDriverAssignment) => {
-    if (!confirm(`Delete assignment for ${r.vehicleCode} → ${r.driverId}?`)) return;
+    if (!confirm(`Are you sure you want to delete the allocation of driver ${r.driverId} to vehicle ${r.vehicleCode}? This action cannot be undone.`)) return;
     try {
       await vehicleDriverAssignmentApi.remove(r.assignmentId);
-      toast.success("Assignment Deleted Successfully");
+      toast.success("Allocation deleted successfully.");
       await load();
-    } catch (e: any) { toast.error(e.message || "Delete failed"); }
+    } catch (e: any) { toast.error(e.message || "Allocation could not be deleted. Please try again."); }
   };
 
-  const clear = () => setForm(emptyForm);
+  const clear = () => {
+    if (!confirm("Are you sure you want to clear the form? All entered details will be removed.")) return;
+    setForm(emptyForm);
+    toast.success("Form cleared.");
+  };
 
   const save = async () => {
     if (!form.vehicleCode.trim()) { toast.error("Vehicle is required"); return; }
@@ -124,13 +139,13 @@ export default function VehicleDriverAssignment() {
       } as Partial<VehicleDriverAssignment>;
       if (editingId) {
         await vehicleDriverAssignmentApi.update(editingId, body);
-        toast.success("Assignment Updated Successfully");
+        toast.success("Allocation updated successfully.");
       } else {
         await vehicleDriverAssignmentApi.create(body);
-        toast.success("Assignment Saved Successfully");
+        toast.success("Allocation saved successfully.");
       }
       setView("list"); await load();
-    } catch (e: any) { toast.error(e.message || "Save failed"); }
+    } catch (e: any) { toast.error(e.message || "Allocation could not be saved. Please try again."); }
     finally { setSaving(false); }
   };
 
@@ -145,8 +160,8 @@ export default function VehicleDriverAssignment() {
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">{editingId ? "Update Assignment" : "New Assignment"}</h1>
-              <p className="text-xs text-muted-foreground">Fleet › Vehicle Driver Assignment</p>
+              <h1 className="text-lg font-semibold text-foreground">{editingId ? "Update Allocation" : "New Allocation"}</h1>
+              <p className="text-xs text-muted-foreground">Fleet › Vehicle–Driver Allocation</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -197,7 +212,7 @@ export default function VehicleDriverAssignment() {
             </Field>
             <Field label="Remarks" className="md:col-span-2">
               <textarea value={form.remarks} maxLength={250} onChange={(e) => upd("remarks", e.target.value)}
-                className="form-input min-h-[90px] py-2" placeholder="Primary Vehicle Assignment" />
+                className="form-input min-h-[90px] py-2" placeholder="Primary Vehicle Allocation" />
               <span className="text-[11px] text-muted-foreground">{form.remarks.length}/250</span>
             </Field>
           </div>
@@ -211,15 +226,15 @@ export default function VehicleDriverAssignment() {
   return (
     <div>
       <PageHeader
-        title="Vehicle Driver Assignment"
-        subtitle="Fleet › Vehicle Driver Assignment"
+        title="Vehicle–Driver Allocation"
+        subtitle="Fleet › Vehicle–Driver Allocation"
         actions={
           <>
-            <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
+            <button onClick={() => load(true)} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
               <RefreshCw className="w-4 h-4" />
             </button>
             <button onClick={openAdd} className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-primary/90 hover:shadow-md transition-all">
-              <Plus className="w-4 h-4" /> New Assignment
+              <Plus className="w-4 h-4" /> New Allocation
             </button>
           </>
         }
@@ -228,10 +243,10 @@ export default function VehicleDriverAssignment() {
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="relative group flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <input placeholder="Search assignments…" value={search} onChange={(e) => setSearch(e.target.value)}
+          <input placeholder="Search allocations…" value={search} onChange={(e) => setSearch(e.target.value)}
             className="w-full h-9 pl-10 pr-4 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 shadow-soft" />
         </div>
-        <p className="text-xs text-muted-foreground">{filtered.length} Assignment{filtered.length !== 1 ? "s" : ""}</p>
+        <p className="text-xs text-muted-foreground">{filtered.length} Allocation{filtered.length !== 1 ? "s" : ""}</p>
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-card overflow-x-auto">
@@ -239,7 +254,7 @@ export default function VehicleDriverAssignment() {
           <thead>
             <tr>
               <SortableTh sortKey="vehicleCode" sort={sort}>Vehicle Code</SortableTh>
-              <SortableTh sortKey="vehicleName" sort={sort}>Vehicle Name</SortableTh>
+              <SortableTh sortKey="plate" sort={sort}>Vehicle Registration Plate</SortableTh>
               <SortableTh sortKey="driverId" sort={sort}>Driver Id</SortableTh>
               <SortableTh sortKey="driverName" sort={sort}>Driver Name</SortableTh>
               <SortableTh sortKey="startDate" sort={sort}>Start Date</SortableTh>
@@ -255,12 +270,12 @@ export default function VehicleDriverAssignment() {
             ) : sort.sorted.length === 0 ? (
               <tr><td colSpan={9} className="text-center py-12">
                 <FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No assignments</p>
+                <p className="text-sm text-muted-foreground">No allocations</p>
               </td></tr>
             ) : sort.sorted.map((r, i) => (
               <motion.tr key={r.assignmentId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}>
                 <td><span className="font-mono text-xs px-2 py-1 rounded-md bg-muted text-foreground">{r.vehicleCode}</span></td>
-                <td className="font-medium text-foreground">{r.vehicleName}</td>
+                <td className="font-medium text-foreground">{r.plate}</td>
                 <td className="font-mono text-xs text-foreground">{r.driverId}</td>
                 <td className="text-foreground">{r.driverName}</td>
                 <td className="font-mono text-foreground">{fmtDate(r.startDate)}</td>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
-  Plus, Search, RefreshCw, Edit, Trash2, FolderOpen, Loader2, ArrowLeft, Upload,
+  Plus, Search, RefreshCw, Edit, Trash2, FolderOpen, Loader2, ArrowLeft, Upload, X, User,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
@@ -15,6 +15,41 @@ import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { driverImportConfig } from "@/lib/bulkImportConfigs";
 
 type FormState = Driver;
+
+// ── MM/DD/YYYY helpers (values are stored as ISO yyyy-mm-dd) ──
+const isoToUs = (iso?: string | null) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
+  return m ? `${m[2]}/${m[3]}/${m[1]}` : "";
+};
+const usToIso = (us: string): string | null => {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(us.trim());
+  if (!m) return null;
+  const [mm, dd, yy] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const d = new Date(yy, mm - 1, dd);
+  if (d.getFullYear() !== yy || d.getMonth() !== mm - 1 || d.getDate() !== dd) return null;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+};
+
+function UsDateInput({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  const [text, setText] = useState(isoToUs(value));
+  useEffect(() => { setText(isoToUs(value)); }, [value]);
+  const commit = (t: string) => {
+    if (!t.trim()) { onChange(""); return; }
+    const iso = usToIso(t);
+    if (iso) onChange(iso);
+    else { toast.error("Enter the date as MM/DD/YYYY."); setText(isoToUs(value)); }
+  };
+  const onType = (raw: string) => {
+    const d = raw.replace(/\D/g, "").slice(0, 8);
+    const t = d.length > 4 ? `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}` : d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
+    setText(t);
+    if (t.length === 10) { const iso = usToIso(t); if (iso) onChange(iso); }
+  };
+  return (
+    <input value={text} inputMode="numeric" placeholder="MM/DD/YYYY" maxLength={10}
+      onChange={(e) => onType(e.target.value)} onBlur={() => commit(text)} className="form-input font-mono" />
+  );
+}
 
 const emptyForm: FormState = {
   driverId: "",
@@ -37,6 +72,12 @@ const emptyForm: FormState = {
   site: "",
   username: "",
   password: "",
+  allowSkip: false,
+  allowReschedule: false,
+  allowPayment: false,
+  allowInvoiceControl: false,
+  allowQtyModification: false,
+  image: null,
 };
 
 export default function Drivers() {
@@ -52,7 +93,7 @@ export default function Drivers() {
 
   const emailInputRef = useRef(null);
 
-  const load = async () => {
+  const load = async (showMsg = false) => {
     setLoading(true);
     try {
       const [data] = await Promise.all([
@@ -60,6 +101,7 @@ export default function Drivers() {
         fetchTmsSites().then(setSites).catch(() => setSites([])),
       ]);
       setRows(data || []);
+      if (showMsg) toast.success("Drivers refreshed successfully.");
     } catch (e: any) { toast.error(e.message || "Failed to load drivers"); }
     finally { setLoading(false); }
   };
@@ -103,6 +145,12 @@ export default function Drivers() {
       allowAllVehicles: r.allowAllVehicles ?? true,
       longHaulDriver: r.longHaulDriver ?? false,
       notes: r.notes ?? "",
+      allowSkip: !!r.allowSkip,
+      allowReschedule: !!r.allowReschedule,
+      allowPayment: !!r.allowPayment,
+      allowInvoiceControl: !!r.allowInvoiceControl,
+      allowQtyModification: !!r.allowQtyModification,
+      image: r.image ?? null,
       username: r.username ?? "",
       // Deliberately blank, not r.password — the API never returns the
       // password (write-only), so there's nothing to pre-fill. Leaving
@@ -113,13 +161,13 @@ export default function Drivers() {
   };
 
   const remove = async (r: Driver) => {
-    if (!confirm(`Delete driver "${r.driverId}"?`)) return;
-    try { await driverApi.remove(r.driverId); toast.success("Deleted"); await load(); }
-    catch (e: any) { toast.error(e.message || "Delete failed"); }
+    if (!confirm(`Are you sure you want to delete driver "${r.driverId}"? This action cannot be undone.`)) return;
+    try { await driverApi.remove(r.driverId); toast.success(`Driver "${r.driverId}" deleted successfully.`); await load(); }
+    catch (e: any) { toast.error(e.message || "Driver could not be deleted. Please try again."); }
   };
 
   const save = async () => {
-    if (!form.driverId.trim()) { toast.error("Driver ID required"); return; }
+    if (!form.driverId.trim()) { toast.error("User ID is required"); return; }
     if (!form.driverName.trim()) { toast.error("Driver name required"); return; }
     // mobile number validation: must be 10 digits and valid Indian mobile number
       let normalizedMobile = "";
@@ -162,18 +210,29 @@ export default function Drivers() {
         driverStatus: Number(form.driverStatus) || 0,
         issuedBy: form.issuedBy.trim(),
         notes: form.notes.trim(),
+        // "" removes the stored image, null keeps it
+        image: form.image === null ? undefined : form.image,
       };
       // Username always mirrors Driver ID — set after the trim/uppercase
       // above so it matches exactly what driverId actually ends up as.
       body.username = body.driverId;
-      if (editingId) { await driverApi.update(editingId, body); toast.success("Driver updated"); }
-      else { await driverApi.create(body); toast.success("Driver created"); }
+      if (editingId) { await driverApi.update(editingId, body); toast.success(`Driver "${body.driverId}" updated successfully.`); }
+      else { await driverApi.create(body); toast.success(`Driver "${body.driverId}" created successfully.`); }
       setView("list"); await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
     finally { setSaving(false); }
   };
 
   const upd = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const onFile = (f: File | null) => {
+    if (!f) return;
+    if (!/^image\/(png|jpe?g)$/i.test(f.type)) { toast.error("Please choose a PNG or JPG image."); return; }
+    if (f.size > 2 * 1024 * 1024) { toast.error("Image must be under 2MB."); return; }
+    const reader = new FileReader();
+    reader.onload = () => upd("image", String(reader.result || ""));
+    reader.readAsDataURL(f);
+  };
 
   if (view === "form") {
     return (
@@ -199,7 +258,7 @@ export default function Drivers() {
 
         <div className="bg-card rounded-xl border border-border shadow-card p-6 max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Field label="Driver ID *">
+            <Field label="User ID *">
               <input value={form.driverId} disabled={!!editingId}
                 onChange={(e) => upd("driverId", e.target.value.toUpperCase())}
                 className="form-input font-mono" placeholder="DRV001" />
@@ -237,22 +296,20 @@ export default function Drivers() {
                 className="form-input" placeholder="1" />
             </Field>
             <Field label="License Issue Date">
-              <input type="date" value={form.licenseIssueDate} onChange={(e) => upd("licenseIssueDate", e.target.value)}
-                className="form-input" />
+              <UsDateInput value={form.licenseIssueDate} onChange={(v) => upd("licenseIssueDate", v)} />
             </Field>
             <Field label="License Expiry Date">
-              <input type="date" value={form.licenseExpiryDate} onChange={(e) => upd("licenseExpiryDate", e.target.value)}
-                className="form-input" />
+              <UsDateInput value={form.licenseExpiryDate} onChange={(v) => upd("licenseExpiryDate", v)} />
             </Field>
             <Field label="Issued By">
               <input value={form.issuedBy} onChange={(e) => upd("issuedBy", e.target.value)}
                 className="form-input" placeholder="RTO Hyderabad" />
             </Field>
-            <Field label="Max Hours / Day">
+            <Field label="Working Hrs / Day">
               <input type="number" value={form.maxHoursPerDay} onChange={(e) => upd("maxHoursPerDay", Number(e.target.value))}
                 className="form-input" placeholder="8" />
             </Field>
-            <Field label="Max Hours / Week">
+            <Field label="Working Hrs / Week">
               <input type="number" value={form.maxHoursPerWeek} onChange={(e) => upd("maxHoursPerWeek", Number(e.target.value))}
                 className="form-input" placeholder="48" />
             </Field>
@@ -278,6 +335,49 @@ export default function Drivers() {
                 <option value="0">Inactive</option>
               </select>
             </Field>
+            <div className="md:col-span-3 pt-2 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Driver Photo</p>
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-full border border-border bg-muted overflow-hidden flex items-center justify-center">
+                  {form.image ? <img src={form.image} alt="Driver" className="w-full h-full object-cover" /> : <User className="w-8 h-8 text-muted-foreground/50" />}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="h-9 px-4 rounded-lg border border-border text-sm font-medium flex items-center gap-2 cursor-pointer hover:border-primary/40 hover:text-primary">
+                      <Upload className="w-4 h-4" /> {form.image ? "Replace Image" : "Upload Image"}
+                      <input type="file" accept="image/png,image/jpeg" className="hidden"
+                        onChange={(e) => { onFile(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+                    </label>
+                    {form.image && (
+                      <button type="button" onClick={() => upd("image", "")} className="h-9 px-3 rounded-lg border border-border text-sm text-muted-foreground hover:text-destructive flex items-center gap-1">
+                        <X className="w-4 h-4" /> Remove
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">PNG, JPG up to 2MB</span>
+                </div>
+              </div>
+            </div>
+            <div className="md:col-span-3 pt-2 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Delivery App Permissions</p>
+              <p className="text-xs text-muted-foreground mb-3">Choose what this driver is allowed to do on a stop in the delivery app.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {([
+                  ["allowSkip", "Skip"],
+                  ["allowReschedule", "Reschedule"],
+                  ["allowPayment", "Payment"],
+                  ["allowInvoiceControl", "Invoice Control"],
+                  ["allowQtyModification", "Quantity Modification"],
+                ] as const).map(([k, label]) => (
+                  <Field key={k} label={label}>
+                    <select value={form[k] ? "1" : "0"} onChange={(e) => upd(k, e.target.value === "1")} className="form-input">
+                      <option value="1">Allowed</option>
+                      <option value="0">Not allowed</option>
+                    </select>
+                  </Field>
+                ))}
+              </div>
+            </div>
             <div className="md:col-span-3 pt-2 border-t border-border">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">POD App Login</p>
             </div>
@@ -310,7 +410,7 @@ export default function Drivers() {
         subtitle="Manage fleet drivers"
         actions={
           <>
-            <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
+            <button onClick={() => load(true)} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
               <RefreshCw className="w-4 h-4" />
             </button>
             <button onClick={() => setShowBulkImport(true)} className="h-9 px-4 rounded-lg bg-card border border-border text-sm font-medium flex items-center gap-2 shadow-sm hover:border-primary/40 hover:text-primary transition-all">
@@ -336,23 +436,22 @@ export default function Drivers() {
         <table className="data-table min-w-[1100px]">
           <thead>
             <tr>
-              <SortableTh sortKey="driverId" sort={sort}>ID</SortableTh>
+              <SortableTh sortKey="driverId" sort={sort}>User ID</SortableTh>
               <SortableTh sortKey="driverName" sort={sort}>Name</SortableTh>
-              <SortableTh sortKey="employeeCode" sort={sort}>Employee</SortableTh>
               <SortableTh sortKey="mobileNo" sort={sort}>Mobile</SortableTh>
               <SortableTh sortKey="email" sort={sort}>Email</SortableTh>
               <SortableTh sortKey="licenseNumber" sort={sort}>License</SortableTh>
               <SortableTh sortKey="licenseExpiryDate" sort={sort}>Expiry</SortableTh>
-              <SortableTh sortKey="maxHoursPerDay" sort={sort}>Hrs/Day</SortableTh>
+              <SortableTh sortKey="maxHoursPerDay" sort={sort}>Working Hrs/Day</SortableTh>
               <th className="w-24">Active</th>
               <th className="w-28 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={10} className="text-center py-12"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></td></tr>
+              <tr><td colSpan={9} className="text-center py-12"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></td></tr>
             ) : sort.sorted.length === 0 ? (
-              <tr><td colSpan={10} className="text-center py-12">
+              <tr><td colSpan={9} className="text-center py-12">
                 <FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No drivers</p>
               </td></tr>
@@ -360,11 +459,10 @@ export default function Drivers() {
               <motion.tr key={r.driverId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}>
                 <td><span className="font-mono text-xs px-2 py-1 rounded-md bg-muted text-foreground">{r.driverId}</span></td>
                 <td className="font-medium text-foreground">{r.driverName}</td>
-                <td className="font-mono text-xs text-muted-foreground">{r.employeeCode}</td>
                 <td className="font-mono text-xs text-foreground">{r.mobileNo}</td>
                 <td className="text-foreground">{r.email}</td>
                 <td className="font-mono text-xs text-foreground">{r.licenseNumber}</td>
-                <td className="font-mono text-xs text-muted-foreground">{(r.licenseExpiryDate || "").slice(0, 10)}</td>
+                <td className="font-mono text-xs text-muted-foreground">{isoToUs(r.licenseExpiryDate)}</td>
                 <td className="font-mono text-foreground">{r.maxHoursPerDay}</td>
                 <td>
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${r.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>

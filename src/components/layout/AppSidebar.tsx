@@ -49,7 +49,7 @@ const menuItems: MenuItem[] = [
       { label: "Vehicle Categories",  icon: Car,     path: "/fleet/categories" },
       { label: "Vehicles",            icon: Truck,   path: "/fleet/vehicles" },
       { label: "Drivers",             icon: Users,   path: "/fleet/drivers" },
-      { label: "Vehicle-Driver",      icon: LinkIcon,path: "/fleet/vehicle-driver" },
+      { label: "Vehicle-Driver Allocation",      icon: LinkIcon,path: "/fleet/vehicle-driver" },
       { label: "Bulk Activity",       icon: Upload,  path: "/fleet/bulk-activity" },
     ],
   },

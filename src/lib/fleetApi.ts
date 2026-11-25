@@ -94,6 +94,13 @@ export interface Vehicle {
   driverId: string;
   active: boolean;
   vehicleStatus: number;
+  maxTotalDistance?: number | null;
+  maxTotalTravel?: number | null;
+  loadingTime?: number | null;
+  unloadingTime?: number | null;
+  allowedDrivers?: string[];
+  allowedCustomers?: string[];
+  allowedProductCategories?: string[];
   site?: string | null;
   departureSite?: string | null;
   arrivalSite?: string | null;
@@ -152,6 +159,14 @@ export interface Driver {
   allowAllVehicles: boolean;
   longHaulDriver: boolean;
   notes: string;
+  /** Delivery-app permissions. */
+  allowSkip?: boolean;
+  allowReschedule?: boolean;
+  allowPayment?: boolean;
+  allowInvoiceControl?: boolean;
+  allowQtyModification?: boolean;
+  /** Base64 data URL. Send "" to remove the image; omit to keep it. */
+  image?: string | null;
   /** Home site (site_code) — also used for POD app scoping. */
   site: string;
   /** POD app login username. */

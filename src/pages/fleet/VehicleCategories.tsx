@@ -23,7 +23,6 @@ interface FormState {
   maxCapacityVol: number;
   volumeUnit: string;
   weightUnit: string;
-  skillNumber: number;
 }
 
 const emptyForm: FormState = {
@@ -37,7 +36,6 @@ const emptyForm: FormState = {
   maxCapacityVol: 0,
   volumeUnit: "CBM",
   weightUnit: "KG",
-  skillNumber: 1,
 };
 
 export default function VehicleCategories() {
@@ -50,9 +48,9 @@ export default function VehicleCategories() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [showBulkImport, setShowBulkImport] = useState(false);
 
-  const load = async () => {
+  const load = async (showMsg = false) => {
     setLoading(true);
-    try { setRows(await vehicleCategoryApi.list()); }
+    try { setRows(await vehicleCategoryApi.list()); if (showMsg) toast.success("Vehicle categories refreshed successfully."); }
     catch (e: any) { toast.error(e.message || "Failed to load vehicle categories"); }
     finally { setLoading(false); }
   };
@@ -85,15 +83,14 @@ export default function VehicleCategories() {
       maxCapacityVol: Number(r.maxCapacityVol ?? 0),
       volumeUnit: r.volumeUnit ?? "CBM",
       weightUnit: r.weightUnit ?? "KG",
-      skillNumber: Number(r.skillNumber ?? 1),
     });
     setView("form");
   };
 
   const remove = async (r: VehicleCategory) => {
-    if (!confirm(`Delete vehicle category "${r.categoryCode}"?`)) return;
-    try { await vehicleCategoryApi.remove(r.categoryCode); toast.success("Deleted"); await load(); }
-    catch (e: any) { toast.error(e.message || "Delete failed"); }
+    if (!confirm(`Are you sure you want to delete vehicle category "${r.categoryCode}"? This action cannot be undone.`)) return;
+    try { await vehicleCategoryApi.remove(r.categoryCode); toast.success(`Vehicle category "${r.categoryCode}" deleted successfully.`); await load(); }
+    catch (e: any) { toast.error(e.message || "Vehicle category could not be deleted. Please try again."); }
   };
 
   const save = async () => {
@@ -112,10 +109,10 @@ export default function VehicleCategories() {
         maxCapacityVol: Number(form.maxCapacityVol) || 0,
         volumeUnit: form.volumeUnit.trim().toUpperCase(),
         weightUnit: form.weightUnit.trim().toUpperCase(),
-        skillNumber: Number(form.skillNumber) || 0,
+        skillNumber: Number(rows.find((x) => x.categoryCode === editingCode)?.skillNumber ?? 1),
       };
-      if (editingCode) { await vehicleCategoryApi.update(editingCode, body); toast.success("Vehicle category updated"); }
-      else { await vehicleCategoryApi.create(body); toast.success("Vehicle category created"); }
+      if (editingCode) { await vehicleCategoryApi.update(editingCode, body); toast.success(`Vehicle category "${body.categoryCode}" updated successfully.`); }
+      else { await vehicleCategoryApi.create(body); toast.success(`Vehicle category "${body.categoryCode}" created successfully.`); }
       setView("list"); await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
     finally { setSaving(false); }
@@ -176,10 +173,6 @@ export default function VehicleCategories() {
               <input value={form.weightUnit} onChange={(e) => upd("weightUnit", e.target.value.toUpperCase())}
                 className="form-input font-mono" placeholder="KG" />
             </Field>
-            <Field label="Skill Number">
-              <input type="number" value={form.skillNumber} onChange={(e) => upd("skillNumber", Number(e.target.value))}
-                className="form-input" placeholder="1" />
-            </Field>
             <Field label="Max Capacity Volume">
               <input type="number" value={form.maxCapacityVol} onChange={(e) => upd("maxCapacityVol", Number(e.target.value))}
                 className="form-input" placeholder="50" />
@@ -209,7 +202,7 @@ export default function VehicleCategories() {
         subtitle="Manage vehicle classification types"
         actions={
           <>
-            <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
+            <button onClick={() => load(true)} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
               <RefreshCw className="w-4 h-4" />
             </button>
             <button onClick={() => setShowBulkImport(true)} className="h-9 px-4 rounded-lg bg-card border border-border text-sm font-medium flex items-center gap-2 shadow-sm hover:border-primary/40 hover:text-primary transition-all">
@@ -242,16 +235,15 @@ export default function VehicleCategories() {
               <SortableTh sortKey="axleCount" sort={sort}>Axles</SortableTh>
               <SortableTh sortKey="maxCapacityWt" sort={sort}>Max Wt</SortableTh>
               <SortableTh sortKey="maxCapacityVol" sort={sort}>Max Vol</SortableTh>
-              <SortableTh sortKey="skillNumber" sort={sort}>Skill</SortableTh>
               <th className="w-24">Active</th>
               <th className="w-28 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={10} className="text-center py-12"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></td></tr>
+              <tr><td colSpan={9} className="text-center py-12"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></td></tr>
             ) : sort.sorted.length === 0 ? (
-              <tr><td colSpan={10} className="text-center py-12">
+              <tr><td colSpan={9} className="text-center py-12">
                 <FolderOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No vehicle categories</p>
               </td></tr>
@@ -264,7 +256,6 @@ export default function VehicleCategories() {
                 <td className="font-mono text-foreground">{r.axleCount}</td>
                 <td className="font-mono text-foreground">{r.maxCapacityWt} <span className="text-xs text-muted-foreground">{r.weightUnit}</span></td>
                 <td className="font-mono text-foreground">{r.maxCapacityVol} <span className="text-xs text-muted-foreground">{r.volumeUnit}</span></td>
-                <td className="font-mono text-foreground">{r.skillNumber}</td>
                 <td>
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${r.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-success" : "bg-muted-foreground/50"}`} />

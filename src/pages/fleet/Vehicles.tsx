@@ -11,7 +11,7 @@ import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
 import { cn } from "@/lib/utils";
 import {
-  vehicleApi, vehicleCategoryApi,
+  vehicleApi, vehicleCategoryApi, driverApi, customerApi, productApi,
   type Vehicle, type VehicleCategory,
 } from "@/lib/fleetApi";
 import { fetchTmsSites, type RpSite } from "@/lib/routePlannerApi";
@@ -40,7 +40,17 @@ interface FormState {
   arrivalSite: string;
   imageUrl: string;
   location: string;
+  maxTotalDistance: string;
+  maxTotalTravel: string;
+  loadingTime: string;
+  unloadingTime: string;
+  allowedDrivers: string[];
+  allowedCustomers: string[];
+  allowedProductCategories: string[];
 }
+
+const MAX_ALLOWED = 15;
+type Opt = { value: string; label: string };
 
 const emptyForm: FormState = {
   vehicleCode: "",
@@ -63,6 +73,13 @@ const emptyForm: FormState = {
   arrivalSite: "",
   imageUrl: "",
   location: "",
+  maxTotalDistance: "",
+  maxTotalTravel: "",
+  loadingTime: "",
+  unloadingTime: "",
+  allowedDrivers: [],
+  allowedCustomers: [],
+  allowedProductCategories: [],
 };
 
 export default function Vehicles() {
@@ -79,7 +96,7 @@ export default function Vehicles() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [showBulkImport, setShowBulkImport] = useState(false);
 
-  const load = async () => {
+  const load = async (showMsg = false) => {
     setLoading(true);
     try {
       const [vs, cs, ss] = await Promise.all([
@@ -90,10 +107,23 @@ export default function Vehicles() {
       setRows(vs || []);
       setCategories(cs || []);
       setSites(ss || []);
+      if (showMsg) toast.success("Vehicles refreshed successfully.");
     } catch (e: any) { toast.error(e.message || "Failed to load vehicles"); }
     finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
+
+  const [driverOpts, setDriverOpts] = useState<Opt[]>([]);
+  const [customerOpts, setCustomerOpts] = useState<Opt[]>([]);
+  const [categoryOpts, setCategoryOpts] = useState<Opt[]>([]);
+  useEffect(() => {
+    driverApi.list().then((l) => setDriverOpts((l || []).map((d) => ({ value: d.driverId, label: `${d.driverId} — ${d.driverName}` })))).catch(() => {});
+    customerApi.list().then((l) => setCustomerOpts((l || []).map((c) => ({ value: c.customerCode, label: `${c.customerCode} — ${c.customerName}` })))).catch(() => {});
+    productApi.list().then((l) => {
+      const cats = Array.from(new Set((l || []).map((p) => p.productCategory).filter(Boolean) as string[])).sort();
+      setCategoryOpts(cats.map((c) => ({ value: c, label: c })));
+    }).catch(() => {});
+  }, []);
 
   const siteMap = useMemo(() => {
     const m = new Map<string, RpSite>();
@@ -142,14 +172,21 @@ export default function Vehicles() {
       arrivalSite: r.arrivalSite ?? "",
       imageUrl: r.imageUrl ?? "",
       location: r.location ?? "",
+      maxTotalDistance: r.maxTotalDistance != null ? String(r.maxTotalDistance) : "",
+      maxTotalTravel: r.maxTotalTravel != null ? String(r.maxTotalTravel) : "",
+      loadingTime: r.loadingTime != null ? String(r.loadingTime) : "",
+      unloadingTime: r.unloadingTime != null ? String(r.unloadingTime) : "",
+      allowedDrivers: r.allowedDrivers ?? [],
+      allowedCustomers: r.allowedCustomers ?? [],
+      allowedProductCategories: r.allowedProductCategories ?? [],
     });
     setView("form");
   };
 
   const remove = async (r: Vehicle) => {
-    if (!confirm(`Delete vehicle "${r.vehicleCode}"?`)) return;
-    try { await vehicleApi.remove(r.vehicleCode); toast.success("Deleted"); await load(); }
-    catch (e: any) { toast.error(e.message || "Delete failed"); }
+    if (!confirm(`Are you sure you want to delete vehicle "${r.vehicleCode}"? This action cannot be undone.`)) return;
+    try { await vehicleApi.remove(r.vehicleCode); toast.success(`Vehicle "${r.vehicleCode}" deleted successfully.`); await load(); }
+    catch (e: any) { toast.error(e.message || "Vehicle could not be deleted. Please try again."); }
   };
 
   // "Location" button — calls X3's XX10CVTLOC to create/register this
@@ -207,9 +244,16 @@ export default function Vehicles() {
         arrivalSite: form.arrivalSite.trim() || null,
         imageUrl: form.imageUrl || null,
         location: form.location?.trim() || null,
+        maxTotalDistance: form.maxTotalDistance === "" ? null : Number(form.maxTotalDistance),
+        maxTotalTravel: form.maxTotalTravel === "" ? null : Number(form.maxTotalTravel),
+        loadingTime: form.loadingTime === "" ? null : Math.round(Number(form.loadingTime)),
+        unloadingTime: form.unloadingTime === "" ? null : Math.round(Number(form.unloadingTime)),
+        allowedDrivers: form.allowedDrivers,
+        allowedCustomers: form.allowedCustomers,
+        allowedProductCategories: form.allowedProductCategories,
       };
-      if (editingCode) { await vehicleApi.update(editingCode, body); toast.success("Vehicle updated"); }
-      else { await vehicleApi.create(body); toast.success("Vehicle created"); }
+      if (editingCode) { await vehicleApi.update(editingCode, body); toast.success(`Vehicle "${body.vehicleCode}" updated successfully.`); }
+      else { await vehicleApi.create(body); toast.success(`Vehicle "${body.vehicleCode}" created successfully.`); }
       setView("list"); await load();
     } catch (e: any) { toast.error(e.message || "Save failed"); }
     finally { setSaving(false); }
@@ -367,18 +411,47 @@ export default function Vehicles() {
 
             <SectionCard title="Capacity" icon={<Package className="w-4 h-4" />} accent="from-[#f7931e] to-[#ff6b35]">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Field label="Capacity Weight">
+                <Field label="Max. Allowed Weight">
                   <input type="number" value={form.capacityWeight} onChange={(e) => upd("capacityWeight", Number(e.target.value))} className="form-input" placeholder="15000" />
                 </Field>
                 <Field label="Weight Unit">
                   <input value={form.weightUnit} onChange={(e) => upd("weightUnit", e.target.value.toUpperCase())} className="form-input font-mono" placeholder="KG" />
                 </Field>
-                <Field label="Capacity Volume">
+                <Field label="Max. Allowed Volume">
                   <input type="number" value={form.capacityVolume} onChange={(e) => upd("capacityVolume", Number(e.target.value))} className="form-input" placeholder="75" />
                 </Field>
                 <Field label="Volume Unit">
                   <input value={form.volumeUnit} onChange={(e) => upd("volumeUnit", e.target.value.toUpperCase())} className="form-input font-mono" placeholder="CBM" />
                 </Field>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Trip Limits & Timing" icon={<Gauge className="w-4 h-4" />} accent="from-[#6c5ce7] to-[#e84393]">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Field label="Total Allowed Distance (km)">
+                  <input type="number" min={0} value={form.maxTotalDistance} onChange={(e) => upd("maxTotalDistance", e.target.value)} className="form-input" placeholder="500" />
+                </Field>
+                <Field label="Maximum Travel Time (min)">
+                  <input type="number" min={0} value={form.maxTotalTravel} onChange={(e) => upd("maxTotalTravel", e.target.value)} className="form-input" placeholder="480" />
+                </Field>
+                <Field label="Loading Time (min)">
+                  <input type="number" min={0} value={form.loadingTime} onChange={(e) => upd("loadingTime", e.target.value)} className="form-input" placeholder="30" />
+                </Field>
+                <Field label="Unloading Time (min)">
+                  <input type="number" min={0} value={form.unloadingTime} onChange={(e) => upd("unloadingTime", e.target.value)} className="form-input" placeholder="20" />
+                </Field>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Allowed for Trips" icon={<User className="w-4 h-4" />} accent="from-[#10b981] to-[#0ea5e9]">
+              <p className="text-xs text-muted-foreground mb-4">
+                When a trip is generated, this vehicle is used only for the drivers, customers and product categories selected here
+                (up to {MAX_ALLOWED} each). Leave a list empty to allow all.
+              </p>
+              <div className="space-y-5">
+                <MultiPick label="Allowed Drivers" options={driverOpts} value={form.allowedDrivers} onChange={(v) => upd("allowedDrivers", v)} />
+                <MultiPick label="Allowed Customers" options={customerOpts} value={form.allowedCustomers} onChange={(v) => upd("allowedCustomers", v)} />
+                <MultiPick label="Allowed Product Categories" options={categoryOpts} value={form.allowedProductCategories} onChange={(v) => upd("allowedProductCategories", v)} />
               </div>
             </SectionCard>
           </div>
@@ -425,9 +498,6 @@ export default function Vehicles() {
                     <option value="0">Inactive</option>
                   </select>
                 </Field>
-                <Field label="Vehicle Status">
-                  <input type="number" value={form.vehicleStatus} onChange={(e) => upd("vehicleStatus", Number(e.target.value))} className="form-input" placeholder="1" />
-                </Field>
               </SectionCard>
             </div>
           </div>
@@ -451,7 +521,7 @@ export default function Vehicles() {
         subtitle="Fleet vehicle inventory"
         actions={
           <>
-            <button onClick={load} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
+            <button onClick={() => load(true)} className="h-9 w-9 rounded-lg bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/40 flex items-center justify-center shadow-sm transition-all" title="Refresh">
               <RefreshCw className="w-4 h-4" />
             </button>
             <button onClick={() => setShowBulkImport(true)} className="h-9 px-4 rounded-lg bg-card border border-border text-sm font-medium flex items-center gap-2 shadow-sm hover:border-primary/40 hover:text-primary transition-all">
@@ -485,8 +555,8 @@ export default function Vehicles() {
               <SortableTh sortKey="site" sort={sort}>Site</SortableTh>
               <SortableTh sortKey="brand" sort={sort}>Brand</SortableTh>
               <SortableTh sortKey="model" sort={sort}>Model</SortableTh>
-              <SortableTh sortKey="capacityWeight" sort={sort}>Cap Wt</SortableTh>
-              <SortableTh sortKey="capacityVolume" sort={sort}>Cap Vol</SortableTh>
+              <SortableTh sortKey="capacityWeight" sort={sort}>Max. Allowed Weight</SortableTh>
+              <SortableTh sortKey="capacityVolume" sort={sort}>Max. Allowed Volume</SortableTh>
               <SortableTh sortKey="driverId" sort={sort}>Driver</SortableTh>
               <th className="w-24">Active</th>
               <th className="w-28 text-right">Actions</th>
@@ -598,6 +668,39 @@ function SiteChip({ label, site, tone }: { label: string; site: RpSite | undefin
       <div className="text-sm font-semibold mt-1">{site.siteName}</div>
       <div className="text-[11px] opacity-70 font-mono mt-0.5">{site.siteCode}</div>
       {site.city && <div className="text-[11px] opacity-70 mt-0.5">{site.city}{site.countryCode ? `, ${site.countryCode}` : ""}</div>}
+    </div>
+  );
+}
+
+function MultiPick({ label, options, value, onChange }: { label: string; options: Opt[]; value: string[]; onChange: (v: string[]) => void }) {
+  const [sel, setSel] = useState("");
+  const full = value.length >= MAX_ALLOWED;
+  const labelOf = (v: string) => options.find((o) => o.value === v)?.label ?? v;
+  const add = (v: string) => {
+    if (!v || value.includes(v)) return;
+    if (full) { toast.error(`You can select at most ${MAX_ALLOWED} items.`); return; }
+    onChange([...value, v]);
+    setSel("");
+  };
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
+        <span className="text-[11px] text-muted-foreground">{value.length} / {MAX_ALLOWED}</span>
+      </div>
+      <select value={sel} disabled={full} onChange={(e) => add(e.target.value)} className="form-input">
+        <option value="">{full ? "Maximum reached" : "Select to add…"}</option>
+        {options.filter((o) => !value.includes(o.value)).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        {value.length === 0 && <span className="text-xs text-muted-foreground/70">None selected — all allowed</span>}
+        {value.map((v) => (
+          <span key={v} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs text-foreground">
+            {labelOf(v)}
+            <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} className="text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
