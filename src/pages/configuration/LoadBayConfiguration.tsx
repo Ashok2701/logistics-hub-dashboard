@@ -75,9 +75,8 @@ export default function LoadBayConfiguration() {
     // Item 53 bug fix: duplicate load bay names were allowed - nothing
     // checked for an existing row with the same description before
     // saving. Case-insensitive, excludes the row currently being edited.
-    const dup = rows.some(
-      (r) => r.id !== draft.id && r.description.trim().toLowerCase() === draft.description.trim().toLowerCase()
-    );
+    const norm = (t: string) => t.trim().replace(/\s+/g, " ").toLowerCase();
+    const dup = rows.some((r) => r.id !== draft.id && norm(r.description) === norm(draft.description));
     if (dup) { toast.error("A load bay with this description already exists"); return; }
     setSaving(true);
     try {
