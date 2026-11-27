@@ -332,6 +332,18 @@ export interface Customer {
   countryCode?: string | null;
   currencyCode?: string | null;
   active: boolean;
+  customerCategory?: string | null;
+  customerCategoryDesc?: string | null;
+  taxRule?: string | null;
+  taxRuleDesc?: string | null;
+  paymentTerm?: string | null;
+  paymentTermDesc?: string | null;
+  creditControl?: number | null;
+  creditControlDesc?: string | null;
+  creditLimit?: number | null;
+  shipToAddress?: string | null;
+  /** 7 characters Monday..Sunday, "1" = works that day. */
+  workingDays?: string | null;
   syncedAt?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -400,6 +412,15 @@ export interface Product {
   shortDescription?: string | null;
   productCategory?: string | null;
   unitOfMeasure?: string | null;
+  stockManagement?: number | null;
+  lotManagement?: number | null;
+  serialManagement?: number | null;
+  accountingCode?: string | null;
+  taxCode?: string | null;
+  /** Total stock over all sites (from the last sync). */
+  availableQty?: number | null;
+  /** Sites that hold stock. */
+  sites?: string[];
   salesUnit?: string | null;
   netWeight?: number | null;
   grossWeight?: number | null;
@@ -421,6 +442,7 @@ export interface ProductTmsPayload {
 export const productApi = {
   list: () => syncRequest<Product[]>("/products"),
   get: (code: string) => syncRequest<Product>(`/products/${code}`),
+  stock: (code: string) => syncRequest<{ siteCode: string; quantity: number; syncedAt?: string | null }[]>(`/products/${code}/stock`),
   updateTms: (code: string, b: ProductTmsPayload) =>
     syncRequest<Product>(`/products/${code}/tms`, { method: "PUT", body: JSON.stringify(b) }),
 };

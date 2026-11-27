@@ -25,6 +25,9 @@ import {
   type VehicleCategory, type Driver,
 } from "@/lib/fleetApi";
 
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const withDesc = (code?: string | null, desc?: string | null) => (code ? (desc ? `${code} — ${desc}` : code) : "");
+
 type InfoForm = { serviceTime: string; waitingTime: string; };
 const emptyInfo: InfoForm = { serviceTime: "", waitingTime: "" };
 
@@ -390,6 +393,10 @@ export default function CustomerManagement() {
   // ───── Detail view ─────
   if (view === "form" && detail) {
     const addresses = detail.addresses ?? [];
+    const shipTo = addresses.find((x) => x.addressCode === detail.shipToAddress);
+    const shipToLabel = detail.shipToAddress
+      ? `${detail.shipToAddress}${shipTo?.addressDescription ? " — " + shipTo.addressDescription : ""}`
+      : "";
     const selectedAddress = addresses.find((a) => a.addressCode === selectedAddrCode) ?? null;
 
     return (
@@ -453,6 +460,27 @@ export default function CustomerManagement() {
                   <Field label="Currency Code"><ReadOnly value={detail.currencyCode ?? ""} mono /></Field>
                   <Field label="Active"><ReadOnly value={detail.active ? "Yes" : "No"} /></Field>
                   <Field label="Last Synced"><ReadOnly value={fmtSyncedAt(detail.syncedAt)} /></Field>
+                </div>
+              </Section>
+
+              <Separator />
+
+              <Section title="Customer Details (from X3)">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Field label="Customer Category"><ReadOnly value={withDesc(detail.customerCategory, detail.customerCategoryDesc)} /></Field>
+                  <Field label="Customer Tax"><ReadOnly value={withDesc(detail.taxRule, detail.taxRuleDesc)} /></Field>
+                  <Field label="Payment Term"><ReadOnly value={withDesc(detail.paymentTerm, detail.paymentTermDesc)} /></Field>
+                  <Field label="Credit Control"><ReadOnly value={detail.creditControlDesc ?? ""} /></Field>
+                  <Field label="Credit Limit"><ReadOnly value={detail.creditLimit != null ? Number(detail.creditLimit).toLocaleString() : ""} /></Field>
+                  <Field label="Ship-to Address"><ReadOnly value={shipToLabel} /></Field>
+                  <Field label="Working Days">
+                    <div className="flex flex-wrap gap-1.5 h-9 items-center">
+                      {DAY_LABELS.map((d, i) => (
+                        <span key={d} className={cn("px-2 py-0.5 rounded-md text-[11px] font-medium",
+                          (detail.workingDays ?? "")[i] === "1" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/60 line-through")}>{d}</span>
+                      ))}
+                    </div>
+                  </Field>
                 </div>
               </Section>
 
@@ -706,8 +734,8 @@ export default function CustomerManagement() {
               <SortableTableHead sortKey="countryCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Country</SortableTableHead>
               <SortableTableHead sortKey="currencyCode" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Currency</SortableTableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Active</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Service</TableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Waiting</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Payment Term</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Tax</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell text-right">No. of Addresses</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
@@ -728,8 +756,8 @@ export default function CustomerManagement() {
                 <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{c.countryCode ?? "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground font-mono hidden lg:table-cell">{c.currencyCode ?? "—"}</TableCell>
                 <TableCell><StatusBadge status={c.active ? "Active" : "Inactive"} variant={c.active ? "primary" : "muted"} /></TableCell>
-                <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{c.serviceTime ?? "—"}</TableCell>
-                <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{c.waitingTime ?? "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground hidden lg:table-cell" title={c.paymentTermDesc ?? ""}>{c.paymentTerm || "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground hidden lg:table-cell" title={c.taxRuleDesc ?? ""}>{c.taxRule || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground hidden md:table-cell text-right">{c.addressCount ?? c.addresses?.length ?? 0}</TableCell>
                 <TableCell className="text-right">
                   <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"><Pencil className="w-4 h-4" /></button>

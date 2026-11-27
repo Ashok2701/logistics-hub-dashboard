@@ -13,42 +13,19 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { productApi, type Product } from "@/lib/fleetApi";
 
-type FormState = { serviceTime: string };
-const emptyForm: FormState = { serviceTime: "" };
-
-const isTmsActive = (p: Product) => !!p.serviceTime;
-function currentUser(): string {
-  try { return JSON.parse(localStorage.getItem("vanguard-user") || "{}").username || "admin"; }
-  catch { return "admin"; }
-}
+// X3 management codes: 1 = not managed. Higher codes are different kinds of management (X3 has 3 stock,
+// 4 lot and 3 serial options); the code is shown until the exact X3 wording is mapped.
+const mgmt = (v?: number | null) => (v == null || v === 0 ? "" : v === 1 ? "Not managed" : `Managed (code ${v})`);
+const fmtQty = (n?: number | null) => (n == null ? "—" : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }));
 
 export default function ProductManagement() {
   const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [view, setView] = useState<"list" | "form">("list");
   const [editing, setEditing] = useState<Product | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [activeSection, setActiveSection] = useState<string>("general");
-
-  useEffect(() => {
-    if (view !== "form") return;
-    const ids = ["general", "tms"];
-    const els = ids.map((id) => document.getElementById(`section-${id}`)).filter(Boolean) as HTMLElement[];
-    if (els.length === 0) return;
-    const scrollRoot = (els[0].closest("main") as HTMLElement | null) ?? null;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]) setActiveSection(visible[0].target.id.replace("section-", ""));
-      },
-      { root: scrollRoot, rootMargin: "-130px 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },
-    );
-    els.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [view, editing]);
+  const [siteStock, setSiteStock] = useState<{ siteCode: string; quantity: number }[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -64,7 +41,7 @@ export default function ProductManagement() {
       const m = (p.productName ?? "").toLowerCase().includes(q) ||
                 (p.productCode ?? "").toLowerCase().includes(q) ||
                 (p.productCategory ?? "").toLowerCase().includes(q);
-      const s = statusFilter === "all" || (statusFilter === "active" ? isTmsActive(p) : !isTmsActive(p));
+      const s = statusFilter === "all" || (statusFilter === "active" ? !!p.active : !p.active);
       return m && s;
     });
   }, [items, search, statusFilter]);
@@ -72,25 +49,11 @@ export default function ProductManagement() {
 
   const openEdit = (p: Product) => {
     setEditing(p);
-    setForm({ serviceTime: p.serviceTime ?? "" });
-    setActiveSection("general");
+    setSiteStock([]);
+    productApi.stock(p.productCode).then((r) => setSiteStock(r ?? [])).catch(() => setSiteStock([]));
     setView("form");
   };
   const goBack = () => { setView("list"); setEditing(null); };
-
-  const handleSave = async () => {
-    if (!editing) return;
-    setSaving(true);
-    try {
-      const payload = { serviceTime: form.serviceTime || null, updatedBy: currentUser() };
-      const updated = await productApi.updateTms(editing.productCode, payload);
-      setItems((p) => p.map((x) => x.productCode === editing.productCode ? { ...x, ...updated, ...payload } as Product : x));
-      toast({ title: "Product updated" });
-      goBack();
-    } catch (err: any) {
-      toast({ title: "Failed to update product", description: err?.message ?? String(err), variant: "destructive" });
-    } finally { setSaving(false); }
-  };
 
   if (view === "form" && editing) {
     return (
@@ -103,42 +66,10 @@ export default function ProductManagement() {
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <div>
-                <h1 className="text-lg font-semibold text-foreground">Edit Product</h1>
+                <h1 className="text-lg font-semibold text-foreground">Product Details</h1>
                 <p className="text-xs text-muted-foreground">{editing.productCode} — {editing.productName}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={goBack} disabled={saving} className="h-9 px-4 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-secondary transition-colors duration-150 disabled:opacity-50">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="btn-gradient h-9 px-5 rounded-lg text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}Save
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 h-11">
-            {[
-              { id: "general", label: "General" },
-              { id: "tms", label: "TMS Configuration" },
-            ].map((t) => {
-              const active = activeSection === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    const el = document.getElementById(`section-${t.id}`);
-                    if (el) { setActiveSection(t.id); el.scrollIntoView({ behavior: "smooth", block: "start" }); }
-                  }}
-                  className={cn(
-                    "relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-200",
-                    active ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
-                  )}
-                >
-                  {t.label}
-                  {active && (
-                    <motion.span layoutId="product-active-section-underline" className="absolute left-2 right-2 -bottom-[5px] h-0.5 bg-primary rounded-full" />
-                  )}
-                </button>
-              );
-            })}
           </div>
         </div>
 
@@ -162,11 +93,40 @@ export default function ProductManagement() {
 
             <Separator />
 
-            <section id="section-tms" className="scroll-mt-40">
-              <Section title="TMS Configuration">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <section id="section-stock" className="scroll-mt-40">
+              <Section title="Stock & Accounting (from X3)">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Field label="Stock Management"><ReadOnly value={mgmt(editing.stockManagement)} /></Field>
+                  <Field label="Lot Management"><ReadOnly value={mgmt(editing.lotManagement)} /></Field>
+                  <Field label="Serial Management"><ReadOnly value={mgmt(editing.serialManagement)} /></Field>
+                  <Field label="Accounting Code"><ReadOnly value={editing.accountingCode ?? ""} mono /></Field>
+                  <Field label="Tax Code"><ReadOnly value={editing.taxCode ?? ""} mono /></Field>
+                  <Field label="Available Quantity (all sites)"><ReadOnly value={fmtQty(editing.availableQty)} /></Field>
                 </div>
               </Section>
+              <div className="mt-4">
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">Stock by Site</h4>
+                {siteStock.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No stock recorded at any site.</p>
+                ) : (
+                  <div className="rounded-lg border border-border overflow-hidden max-w-md">
+                    <Table>
+                      <TableHeader><TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                        <TableHead className="text-xs uppercase">Site</TableHead>
+                        <TableHead className="text-xs uppercase text-right">Available Qty</TableHead>
+                      </TableRow></TableHeader>
+                      <TableBody>
+                        {siteStock.map((x) => (
+                          <TableRow key={x.siteCode}>
+                            <TableCell className="font-mono text-sm">{x.siteCode}</TableCell>
+                            <TableCell className="text-sm text-right">{fmtQty(x.quantity)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
             </section>
           </div>
         </div>
@@ -176,7 +136,7 @@ export default function ProductManagement() {
 
   return (
     <div>
-      <PageHeader title="Products" subtitle="Manage product TMS configuration" />
+      <PageHeader title="Products" subtitle="Product master data from X3" />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
@@ -184,9 +144,9 @@ export default function ProductManagement() {
         </div>
         <div className="flex items-end gap-3 w-full sm:w-auto">
           <div className="flex flex-col gap-1">
-            <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">TMS Status</Label>
+            <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Status</Label>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-              <SelectTrigger className="h-9 w-36 rounded-lg bg-secondary/50 border-border/50 text-sm"><SelectValue placeholder="TMS Status" /></SelectTrigger>
+              <SelectTrigger className="h-9 w-36 rounded-lg bg-secondary/50 border-border/50 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
@@ -208,24 +168,28 @@ export default function ProductManagement() {
               <SortableTableHead sortKey="productName" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Name</SortableTableHead>
               <SortableTableHead sortKey="productCategory" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">Category</SortableTableHead>
               <SortableTableHead sortKey="unitOfMeasure" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">UOM</SortableTableHead>
-              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">TMS</TableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Product Site</TableHead>
+              <SortableTableHead sortKey="availableQty" sort={sort} className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell text-right">Available Qty</SortableTableHead>
+              <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70">Status</TableHead>
               <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading products…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm"><Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading products…</TableCell></TableRow>
             ) : sort.sorted.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground text-sm">No products found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No products found</TableCell></TableRow>
             ) : sort.sorted.map((p, i) => {
-              const tms = isTmsActive(p);
+              const on = !!p.active;
               return (
                 <TableRow key={p.productCode} onClick={() => openEdit(p)} className={cn("transition-colors cursor-pointer", i % 2 === 1 && "bg-secondary/20", "hover:bg-primary/[0.05]")}>
                   <TableCell className="font-medium text-sm font-mono">{p.productCode}</TableCell>
                   <TableCell className="text-sm">{p.productName}</TableCell>
                   <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{p.productCategory ?? "—"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">{p.unitOfMeasure ?? "—"}</TableCell>
-                  <TableCell><StatusBadge status={tms ? "Active" : "Inactive"} variant={tms ? "primary" : "muted"} /></TableCell>
+                  <TableCell className="text-xs text-muted-foreground font-mono hidden lg:table-cell">{p.sites && p.sites.length ? p.sites.join(", ") : "—"}</TableCell>
+                  <TableCell className="text-sm text-right hidden lg:table-cell">{fmtQty(p.availableQty)}</TableCell>
+                  <TableCell><StatusBadge status={on ? "Active" : "Inactive"} variant={on ? "primary" : "muted"} /></TableCell>
                   <TableCell className="text-right">
                     <button onClick={(e) => { e.stopPropagation(); openEdit(p); }} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"><Pencil className="w-4 h-4" /></button>
                   </TableCell>
