@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { cn } from "@/lib/utils";
 import { PageHeader, DataTableShell } from "@/components/shared/MetricCard";
 import { SortableTh } from "@/components/shared/SortableTh";
 import { useSortable } from "@/hooks/useSortable";
@@ -22,31 +23,38 @@ const DOC_OPTIONS = [
   "Pick Ticket",
 ];
 
-const PRESET_COLORS = [
-  "#3B82F6", "#6366F1", "#8B5CF6", "#EC4899", "#EF4444",
-  "#F97316", "#F59E0B", "#10B981", "#14B8A6", "#0EA5E9",
-  "#64748B", "#1F2937",
+const PALETTE: { hex: string; name: string }[] = [
+  { hex: "#EF4444", name: "Red" },          { hex: "#DC2626", name: "Crimson" },     { hex: "#B91C1C", name: "Dark Red" },
+  { hex: "#F97316", name: "Orange" },       { hex: "#EA580C", name: "Burnt Orange" },{ hex: "#F59E0B", name: "Amber" },
+  { hex: "#EAB308", name: "Yellow" },       { hex: "#CA8A04", name: "Gold" },        { hex: "#84CC16", name: "Lime" },
+  { hex: "#22C55E", name: "Light Green" },  { hex: "#10B981", name: "Emerald Green" },{ hex: "#16A34A", name: "Green" },
+  { hex: "#15803D", name: "Forest Green" }, { hex: "#14B8A6", name: "Teal" },        { hex: "#0D9488", name: "Dark Teal" },
+  { hex: "#06B6D4", name: "Cyan" },         { hex: "#0EA5E9", name: "Sky Blue" },    { hex: "#3B82F6", name: "Blue" },
+  { hex: "#2563EB", name: "Royal Blue" },   { hex: "#1D4ED8", name: "Navy Blue" },   { hex: "#6366F1", name: "Indigo" },
+  { hex: "#8B5CF6", name: "Violet" },       { hex: "#7C3AED", name: "Purple" },      { hex: "#A855F7", name: "Light Purple" },
+  { hex: "#D946EF", name: "Magenta" },      { hex: "#EC4899", name: "Pink" },        { hex: "#F43F5E", name: "Rose" },
+  { hex: "#FB7185", name: "Coral" },        { hex: "#A16207", name: "Brown" },       { hex: "#78350F", name: "Dark Brown" },
+  { hex: "#94A3B8", name: "Light Slate" },  { hex: "#64748B", name: "Slate" },       { hex: "#475569", name: "Dark Slate" },
+  { hex: "#9CA3AF", name: "Grey" },         { hex: "#6B7280", name: "Dark Grey" },   { hex: "#374151", name: "Graphite" },
+  { hex: "#1F2937", name: "Charcoal" },     { hex: "#111827", name: "Near Black" },  { hex: "#000000", name: "Black" },
 ];
 
-const COLOR_NAMES: Record<string, string> = {
-  "#3B82F6": "Blue", "#6366F1": "Indigo", "#8B5CF6": "Violet", "#EC4899": "Pink", "#EF4444": "Red",
-  "#F97316": "Orange", "#F59E0B": "Amber", "#10B981": "Green", "#14B8A6": "Teal", "#0EA5E9": "Sky Blue",
-  "#64748B": "Slate", "#1F2937": "Charcoal",
-};
+const COLOR_NAMES: Record<string, string> = Object.fromEntries(PALETTE.map((c) => [c.hex, c.name]));
 
-// Friendly colour name: exact preset name, otherwise the nearest preset (shown as "Custom ...").
+// Colour name: the exact palette name when the colour is one of them (any letter case),
+// otherwise the nearest palette name, shown as "Custom <name>".
 const colorName = (hex: string): string => {
-  const h = (hex || "").toUpperCase();
+  const h = (hex || "").trim().toUpperCase();
   if (COLOR_NAMES[h]) return COLOR_NAMES[h];
   const m = /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/.exec(h);
   if (!m) return "Custom";
   const rgb = [1, 2, 3].map((i) => parseInt(m[i], 16));
-  let best = "Custom", bd = Infinity;
-  for (const [k, n] of Object.entries(COLOR_NAMES)) {
-    const d = [1, 3, 5].reduce((a, i, j) => a + (parseInt(k.slice(i, i + 2), 16) - rgb[j]) ** 2, 0);
-    if (d < bd) { bd = d; best = n; }
+  let best = "", bd = Infinity;
+  for (const c of PALETTE) {
+    const d = [1, 3, 5].reduce((a, i, j) => a + (parseInt(c.hex.slice(i, i + 2), 16) - rgb[j]) ** 2, 0);
+    if (d < bd) { bd = d; best = c.name; }
   }
-  return `Custom ${best}`;
+  return best ? `Custom (${best})` : "Custom";
 };
 
 type DocRow = DocumentConfig;
@@ -61,48 +69,65 @@ const emptyRow = (id: string): DocRow => ({
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const current = (value || "").toUpperCase();
 
-  const toggle = () => setOpen((o) => !o);
+  // Keep the popup inside the window: open it to the left when there is no room on the right.
+  const rect = open && btnRef.current ? btnRef.current.getBoundingClientRect() : null;
+  const POP_W = 320;
+  const left = rect ? Math.max(8, Math.min(rect.left, window.innerWidth - POP_W - 8)) : 0;
 
   return (
     <div className="relative">
       <button
         ref={btnRef}
         type="button"
-        onClick={toggle}
-        className="flex items-center gap-2 h-9 px-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 h-9 px-2.5 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors min-w-[150px]"
       >
-        <span className="w-5 h-5 rounded-md border border-border/60" style={{ backgroundColor: value }} />
-        <span className="text-xs text-muted-foreground">{colorName(value)}</span>
+        <span className="w-5 h-5 shrink-0 rounded-md border border-border/60" style={{ backgroundColor: value }} />
+        <span className="text-xs text-foreground whitespace-nowrap">{colorName(value)}</span>
       </button>
-      {open && btnRef.current && createPortal (
+      {open && rect && createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="fixed z-50 top-full mt-1 left-0 bg-card border border-border rounded-xl shadow-elevated p-3 w-56"
-                      style={{
-              top: btnRef.current.getBoundingClientRect().bottom + 4,
-              left: btnRef.current.getBoundingClientRect().left,
-            }}>
-            <div className="grid grid-cols-6 gap-1.5 mb-2">
-              {PRESET_COLORS.map((c) => (
+          <div className="fixed z-50 bg-card border border-border rounded-xl shadow-elevated p-3"
+               style={{ top: rect.bottom + 4, left, width: POP_W }}>
+            <div className="grid grid-cols-8 gap-1.5 mb-3">
+              {PALETTE.map((c) => (
                 <button
-                  key={c}
+                  key={c.hex}
                   type="button"
-                  onClick={() => { onChange(c); setOpen(false); }}
-                  title={colorName(c)}
-                  className="w-7 h-7 rounded-md border border-border/60 hover:scale-110 transition-transform"
-                  style={{ backgroundColor: c }}
+                  onClick={() => { onChange(c.hex); setOpen(false); }}
+                  title={c.name}
+                  className={cn(
+                    "w-8 h-8 rounded-md border hover:scale-110 transition-transform",
+                    current === c.hex ? "border-foreground ring-2 ring-primary/40" : "border-border/60",
+                  )}
+                  style={{ backgroundColor: c.hex }}
                 />
               ))}
             </div>
-            <div className="flex items-center gap-2 pt-2 border-t border-border">
-              <input
-                type="color"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer bg-transparent border-0"
-              />
-              <span className="flex-1 text-xs text-muted-foreground">{colorName(value)}</span>
+            <div className="pt-2 border-t border-border space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : "#3B82F6"}
+                  onChange={(e) => onChange(e.target.value.toUpperCase())}
+                  className="w-8 h-8 shrink-0 rounded cursor-pointer bg-transparent border-0"
+                  title="Pick any colour"
+                />
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="w-28 h-8 px-2 rounded-md border border-border bg-background text-xs font-mono"
+                  placeholder="#3B82F6"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="w-3 h-3 rounded-sm border border-border/60" style={{ backgroundColor: value }} />
+                <span>Selected: <span className="text-foreground font-medium">{colorName(value)}</span></span>
+              </div>
             </div>
           </div>
         </>,
