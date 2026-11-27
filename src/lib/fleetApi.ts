@@ -237,6 +237,8 @@ export interface SyncLog {
   failedCount: number;
   status: string;
   errorMessage: string | null;
+  /** Full technical error, only sent when the backend has sync.expose-technical-errors=true. */
+  errorDetail?: string | null;
 }
 
 export const syncApi = {

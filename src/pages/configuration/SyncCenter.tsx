@@ -110,6 +110,13 @@ export default function SyncCenter() {
     try {
       const data = await syncApi.logs(objectCode);
       setLogs(Array.isArray(data) ? data : []);
+      // Developers: the real error is in the Network tab response (field "errorDetail") and in this console group.
+      const withDetail = (Array.isArray(data) ? data : []).filter((l) => l.errorDetail);
+      if (withDetail.length) {
+        console.groupCollapsed(`[Sync] ${objectCode}: ${withDetail.length} technical error(s)`);
+        withDetail.forEach((l) => console.warn(l.startedAt, l.errorDetail));
+        console.groupEnd();
+      }
     } catch (e: any) {
       toast.error(e?.message || "Failed to load logs");
     } finally {
